@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Ulukbek",
+      "email": "uluk@example.com",
+      "password": "123456",
+      "balance": 0
+    },
+    {
+      "id": "d450",
+      "name": "мага",
+      "email": "dono@gmail.com",
+      "password": "123456789",
+      "balance": 0,
+      "isLoggedIn": true
+    }
+  ],
+  "tours": []
+}
