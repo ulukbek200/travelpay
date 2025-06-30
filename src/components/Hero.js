@@ -36,7 +36,7 @@ const Hero = () => {
           <h2 style={{ ...styles.title, opacity: fade ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}>
             {messages[messageIndex]} <span style={styles.orange}>TravelPay</span>
           </h2>
-          <p style={styles.subtitle}>Легкое и надежное бронирование</p>
+          <p style={styles.subtitle}>Мечтай, Копи, Путешествуй</p>
           <button style={styles.button} onClick={() => {
             const aboutSection = document.getElementById('about');
             if (aboutSection) {

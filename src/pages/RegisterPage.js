@@ -17,19 +17,22 @@ const RegisterPage = () => {
     };
 
     try {
-      const res = await fetch(`http://localhost:3001/users?email=${encodeURIComponent(email)}`);
-      const existingUsers = await res.json();
-
+      const API_BASE = "https://travelpay-backend-production.up.railway.app";
+      const res = await fetch(`${API_BASE}/users?email=${encodeURIComponent(email)}`);
+            const existingUsers = await res.json();
+    
       if (existingUsers.length > 0) {
         alert('Такой email уже зарегистрирован');
         return;
       }
-
-      const addRes = await fetch('http://localhost:3001/users', {
+    
+      const addRes = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
       });
+      
+    
 
       if (!addRes.ok) throw new Error('Ошибка при регистрации');
 
