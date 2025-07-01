@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -13,25 +14,28 @@ const LoginPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     const { email, password } = formData;
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const existingUser = users.find(
-      (user) => user.email === email && user.password === password
-    );
+    try {
+      const response = await axios.get(
+        'https://travelpay-backend-production.up.railway.app/users',
+        { params: { email, password } }
+      );
 
-    if (!existingUser) {
-      return setError('Неверный email или пароль');
+      if (response.data.length === 0) {
+        setError('Неверный email или пароль');
+        return;
+      }
+
+      const user = response.data[0];
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      navigate('/profile');
+    } catch (err) {
+      console.error(err);
+      setError('Ошибка при входе. Попробуйте позже.');
     }
-
-    // ✅ Добавляем isLoggedIn флаг при входе
-    const userWithLogin = { ...existingUser, isLoggedIn: true };
-    localStorage.setItem('currentUser', JSON.stringify(userWithLogin));
-
-    navigate('/profile');
   };
 
   return (

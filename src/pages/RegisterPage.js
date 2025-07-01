@@ -5,43 +5,45 @@ const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const API_BASE = 'https://travelpay-backend-production.up.railway.app';
+
   const handleRegister = async () => {
-    const user = {
+    const newUser = {
       name,
       email,
       password,
       balance: 0,
-      isLoggedIn: true, // 🟡 Добавлено поле isLoggedIn
+      isLoggedIn: true,
     };
 
     try {
-      const API_BASE = "https://travelpay-backend-production.up.railway.app";
+      // Проверка: есть ли пользователь с таким email
       const res = await fetch(`${API_BASE}/users?email=${encodeURIComponent(email)}`);
-            const existingUsers = await res.json();
-    
-      if (existingUsers.length > 0) {
-        alert('Такой email уже зарегистрирован');
+      const users = await res.json();
+
+      if (users.length > 0) {
+        setError('Такой email уже зарегистрирован');
         return;
       }
-    
+
+      // Добавление нового пользователя
       const addRes = await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
+        body: JSON.stringify(newUser),
       });
-      
-    
 
       if (!addRes.ok) throw new Error('Ошибка при регистрации');
 
       const savedUser = await addRes.json();
       localStorage.setItem('currentUser', JSON.stringify(savedUser));
       navigate('/profile');
-    } catch (error) {
-      console.error(error);
-      alert('Ошибка при регистрации');
+    } catch (err) {
+      console.error(err);
+      setError('Ошибка при регистрации. Попробуйте позже.');
     }
   };
 
@@ -49,6 +51,7 @@ const RegisterPage = () => {
     <div style={styles.container}>
       <div style={styles.box}>
         <h2>Регистрация</h2>
+        {error && <p style={styles.error}>{error}</p>}
         <input
           type="text"
           placeholder="Имя"
@@ -70,7 +73,7 @@ const RegisterPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           style={styles.input}
         />
-        <button style={styles.button} onClick={handleRegister}>
+        <button onClick={handleRegister} style={styles.button}>
           Зарегистрироваться
         </button>
       </div>
@@ -113,6 +116,10 @@ const styles = {
     borderRadius: '6px',
     cursor: 'pointer',
     fontWeight: 'bold',
+  },
+  error: {
+    color: 'red',
+    marginBottom: '10px',
   },
 };
 
