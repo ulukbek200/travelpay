@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaHistory, FaSignOutAlt, FaBars, FaHome } from 'react-icons/fa';
+import { FaUser, FaHistory, FaSignOutAlt, FaBars, FaHome, FaCog } from 'react-icons/fa';
 
-const Header = () => {
+const HeaderPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const fontFamily = "'Poppins', sans-serif";
+  const bgColor = '#1d3557';
+  const sidebarWidth = sidebarOpen ? '220px' : '70px';
 
   useEffect(() => {
     const user = localStorage.getItem('currentUser');
@@ -37,13 +31,11 @@ const Header = () => {
     navigate('/');
   };
 
-  const sidebarWidth = sidebarOpen ? '200px' : '70px';
-  const bgColor = '#1b2b45';
-
   const sidebarIcons = [
     { icon: <FaHome />, label: 'Главная', action: () => navigate('/') },
     { icon: <FaUser />, label: 'Профиль', action: () => navigate('/profile') },
     { icon: <FaHistory />, label: 'История', action: () => alert('Скоро появится') },
+    { icon: <FaCog />, label: 'Настройки', action: () => alert('Скоро появится') },
     { icon: <FaSignOutAlt />, label: 'Выход', action: handleLogout },
   ];
 
@@ -64,7 +56,8 @@ const Header = () => {
           alignItems: 'center',
           paddingTop: '20px',
           transition: 'width 0.3s ease-in-out',
-          borderBottomRightRadius: '20px'
+          borderBottomRightRadius: '20px',
+          fontFamily,
         }}
       >
         <button
@@ -72,10 +65,11 @@ const Header = () => {
           style={{
             background: 'none',
             border: 'none',
-            color: '#FFA500',
+            color: '#fca311',
             fontSize: '22px',
             marginBottom: '20px',
             cursor: 'pointer',
+            fontFamily,
           }}
         >
           <FaBars />
@@ -86,18 +80,20 @@ const Header = () => {
             onClick={action}
             style={{
               color: '#B0C4DE',
-              fontSize: '20px',
+              fontSize: '19px',
+              fontFamily,
               margin: '20px 0',
               display: 'flex',
               alignItems: 'center',
               cursor: 'pointer',
               width: '100%',
               justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              paddingLeft: sidebarOpen ? '20px' : 0,
+              paddingLeft: sidebarOpen ? '45px' : 0,
+              transition: 'all 0.3s ease-in-out',
             }}
           >
             {icon}
-            {sidebarOpen && <span style={{ marginLeft: '10px' }}>{label}</span>}
+            {sidebarOpen && <span style={{ marginLeft: '20px' }}>{label}</span>}
           </div>
         ))}
       </div>
@@ -112,24 +108,48 @@ const Header = () => {
           position: 'fixed',
           top: 0,
           left: sidebarWidth,
-          height: '60px',
+          height: '65px',
           display: 'flex',
           alignItems: 'center',
           padding: '0 20px',
           transition: 'left 0.3s ease-in-out, width 0.3s ease-in-out',
-          borderBottomLeftRadius: '0px',
+          fontFamily,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         }}
       >
         <h1
-          style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, cursor: 'pointer' }}
+          style={{
+            fontSize: '22px',
+            fontWeight: 'bold',
+            margin: 0,
+            cursor: 'pointer',
+            fontFamily,
+          }}
           onClick={() => navigate('/')}
         >
           TravelPay
         </h1>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          style={{
+            marginLeft: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontFamily,
+          }}
+        >
           {currentUser ? (
-            <span style={{ fontWeight: '500' }}>
+            <span
+              style={{
+                fontWeight: '500',
+                backgroundColor: '#fca311',
+                color: '#fff',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 10px rgba(252, 163, 17, 0.4)',
+              }}
+            >
               {currentUser.name} | {Number(currentUser.balance).toLocaleString()}₽
             </span>
           ) : (
@@ -137,28 +157,39 @@ const Header = () => {
               <button
                 onClick={() => navigate('/login')}
                 style={{
-                  backgroundColor: '#FFA500',
+                  backgroundColor: '#fca311',
                   color: 'white',
                   border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
+                  padding: '10px 20px',
+                  borderRadius: '30px',
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'transform 0.2s ease',
                 }}
+                onMouseEnter={(e) => (e.target.style.transform = 'scale(1.06)')}
+                onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
               >
                 Войти
               </button>
+
               <button
                 onClick={() => navigate('/register')}
                 style={{
-                  backgroundColor: '#007BFF',
+                  backgroundColor: '#457b9d',
                   color: 'white',
                   border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
+                  padding: '10px 20px',
+                  borderRadius: '30px',
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'transform 0.2s ease',
                 }}
+                onMouseEnter={(e) => (e.target.style.transform = 'scale(1.06)')}
+                onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
               >
-                Присоединиться
+                Зарегистрироваться
               </button>
             </>
           )}
@@ -168,4 +199,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default HeaderPage;

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import heroVideo from '../video/hero.mp4';
 
 const messages = [
   'Открой мир с',
@@ -13,14 +12,12 @@ const Hero = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFade(false); // Начинаем затемнение
-
+      setFade(false);
       setTimeout(() => {
         setMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
-        setFade(true); // Появление новой фразы
-      }, 500); // Время затемнения
-    }, 3000); // Каждые 3 секунды
-
+        setFade(true);
+      }, 500);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -28,21 +25,30 @@ const Hero = () => {
     <div style={styles.root}>
       <section style={styles.hero}>
         <video autoPlay loop muted playsInline style={styles.video}>
-          <source src={heroVideo} type="video/mp4" />
+          <source
+            src="https://cdn.pixabay.com/video/2021/07/18/81945-577442929_tiny.mp4"
+            type="video/mp4"
+          />
           Ваш браузер не поддерживает видео.
         </video>
 
         <div style={styles.heroText}>
-          <h2 style={{ ...styles.title, opacity: fade ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}>
+          <h2
+            style={{
+              ...styles.title,
+              opacity: fade ? 1 : 0,
+              transition: 'opacity 0.5s ease-in-out',
+            }}
+          >
             {messages[messageIndex]} <span style={styles.orange}>TravelPay</span>
           </h2>
           <p style={styles.subtitle}>Мечтай, Копи, Путешествуй</p>
-          <button style={styles.button} onClick={() => {
-            const aboutSection = document.getElementById('about');
-            if (aboutSection) {
-              aboutSection.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}>
+          <button
+            style={styles.button}
+            onClick={() => {
+              window.open('https://travelpay.kg', '_blank');
+            }}
+          >
             Узнать больше
           </button>
         </div>
@@ -54,14 +60,16 @@ const Hero = () => {
 const styles = {
   root: {
     overflowX: 'hidden',
+    fontFamily: "'Poppins', sans-serif",
   },
   hero: {
     position: 'relative',
     width: '100vw',
     height: '100vh',
     overflow: 'hidden',
-    padding: 0,
     margin: 0,
+    padding: 0,
+    fontFamily: "'Poppins', sans-serif",
     zIndex: 1,
   },
   video: {
@@ -72,9 +80,9 @@ const styles = {
     height: '100vh',
     objectFit: 'cover',
     zIndex: -1,
+    filter: 'brightness(0.6)',
   },
   heroText: {
-    animation: 'fadeIn 2s ease-in-out',
     position: 'absolute',
     top: '50%',
     left: '50%',
@@ -82,10 +90,13 @@ const styles = {
     color: 'white',
     textAlign: 'center',
     zIndex: 2,
+    maxWidth: '90%',
+    padding: '0 20px',
+    fontFamily: "'Poppins', sans-serif",
   },
   title: {
     fontSize: '48px',
-    fontWeight: 'bold',
+    fontWeight: 700,
     marginBottom: '10px',
   },
   orange: {
@@ -93,16 +104,18 @@ const styles = {
   },
   subtitle: {
     fontSize: '20px',
-    marginBottom: '20px',
+    marginBottom: '30px',
   },
   button: {
-    padding: '10px 24px',
-    fontSize: '16px',
-    backgroundColor: '#fca311',
-    color: '#fff',
+    padding: '17px',
+    borderRadius: '40px',
     border: 'none',
-    borderRadius: '10px',
+    background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: '17px',
     cursor: 'pointer',
+    transition: 'background 0.3s ease, transform 0.2s ease',
   },
 };
 

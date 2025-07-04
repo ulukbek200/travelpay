@@ -1,59 +1,88 @@
 import React from 'react';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const ContactUs = () => {
+const Footer = () => {
+  const styles = {
+    footer: {
+      backgroundColor: '#0a1a2f',
+      width: '100%',
+      marginTop: 'auto',
+      fontFamily: "'Poppins', sans-serif",
+    },
+    footerContainer: {
+      padding: '40px 30px 20px',
+      textAlign: 'center',
+    },
+    sectionTitle: {
+      color: 'white',
+      fontSize: '1.8em',
+      marginBottom: '50px',
+      fontWeight: '500',
+    },
+    socialIcons: {
+      display: 'flex',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      gap: '40px',
+    },
+    socialLink: {
+      textDecoration: 'none',
+      padding: '13px',
+      backgroundColor: 'white',
+      borderRadius: '50%',
+      transition: '0.5s',
+    },
+    icon: {
+      fontSize: '2em',
+      color: '#0a1a2f',
+    },
+    footerBottom: {
+      backgroundColor: '#081421',
+      padding: '10px 0',
+      textAlign: 'center',
+    },
+    bottomText: {
+      color: 'white',
+      fontSize: '13px',
+    },
+    designer: {
+      opacity: 0.7,
+      textTransform: 'uppercase',
+      letterSpacing: '1px',
+      fontWeight: 400,
+      marginLeft: '5px',
+    },
+  };
+
   return (
-    <section style={styles.section} id="contact">
-      <h2 style={styles.title}>Связаться с нами</h2>
-      <p style={styles.text}>Вы можете связаться с нами через любые из этих платформ:</p>
-      <div style={styles.icons}>
-        <a href="https://instagram.com/010105ml" target="_blank" rel="noopener noreferrer" style={styles.iconLink} aria-label="Instagram">
-          <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style={styles.icon} />
-        </a>
-        <a href="https://wa.me/+996990909109" target="_blank" rel="noopener noreferrer" style={styles.iconLink} aria-label="WhatsApp">
-          <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp" style={styles.icon} />
-        </a>
-        <a href="https://t.me/uli77701" target="_blank" rel="noopener noreferrer" style={styles.iconLink} aria-label="Telegram">
-          <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram" style={styles.icon} />
-        </a>
-        <a href="https://www.tiktok.com/@yourusername" target="_blank" rel="noopener noreferrer" style={styles.iconLink} aria-label="TikTok">
-          <img src="https://cdn-icons-png.flaticon.com/512/3046/3046123.png" alt="TikTok" style={styles.icon} />
-        </a>
+    <footer style={styles.footer}>
+      <div style={styles.footerContainer}>
+        <h3 style={styles.sectionTitle}>Связаться с нами</h3>
+
+        <div style={styles.socialIcons}>
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
+            <i className="fa-brands fa-facebook" style={styles.icon}></i>
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
+            <i className="fa-brands fa-instagram" style={styles.icon}></i>
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
+            <i className="fa-brands fa-twitter" style={styles.icon}></i>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
+            <i className="fa-brands fa-youtube" style={styles.icon}></i>
+          </a>
+        </div>
       </div>
-    </section>
+
+      <div style={styles.footerBottom}>
+        <p style={styles.bottomText}>
+          &copy; 2025 TravelPay
+          <span style={styles.designer}> — Все права защищены</span>
+        </p>
+      </div>
+    </footer>
   );
 };
 
-const styles = {
-  section: {
-    padding: '60px 20px',
-    backgroundColor: '#1d3557',
-    color: 'white',
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: '32px',
-    marginBottom: '10px',
-  },
-  text: {
-    fontSize: '18px',
-    marginBottom: '30px',
-  },
-  icons: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '40px',
-  },
-  iconLink: {
-    display: 'inline-block',
-    width: '50px',
-    height: '50px',
-    transition: 'transform 0.3s',
-  },
-  icon: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-  },
-};
-
-export default ContactUs;
+export default Footer;
