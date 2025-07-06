@@ -63,7 +63,7 @@ const Footer = () => {
           <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
             <i className="fa-brands fa-facebook" style={styles.icon}></i>
           </a>
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
+          <a href="https://www.instagram.com/xnsonik/" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
             <i className="fa-brands fa-instagram" style={styles.icon}></i>
           </a>
           <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={styles.socialLink}>
