@@ -1,206 +1,178 @@
-// AdminToursPage.js
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 
-const API_URL = 'https://travelpay-backend-production.up.railway.app/tours';
-
-const AdminToursPage = () => {
+const AdminPanel = () => {
   const [tours, setTours] = useState([]);
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     title: '',
-    country: '',
-    duration: '',
     description: '',
+    duration: '',
     price: '',
     image: '',
-    sales: 0,
   });
-  const [editingId, setEditingId] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchTours();
-  }, []);
-
-  const fetchTours = async () => {
-    try {
-      const res = await axios.get(API_URL);
-      setTours(res.data);
-    } catch (err) {
-      console.error('Ошибка загрузки туров:', err);
-    }
-  };
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingId) {
-        await axios.put(`${API_URL}/${editingId}`, formData);
-        setEditingId(null);
-      } else {
-        await axios.post(API_URL, formData);
-      }
-      setFormData({ title: '', country: '', duration: '', description: '', price: '', image: '', sales: 0 });
-      fetchTours();
-    } catch (err) {
-      console.error('Ошибка сохранения:', err);
-    }
+  const addTour = () => {
+    if (!form.title || !form.description || !form.image) return;
+    setTours([...tours, form]);
+    setForm({ title: '', description: '', duration: '', price: '', image: '' });
   };
 
-  const handleEdit = (tour) => {
-    setFormData(tour);
-    setEditingId(tour.id);
+  const deleteTour = (index) => {
+    const newTours = [...tours];
+    newTours.splice(index, 1);
+    setTours(newTours);
   };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Удалить тур?')) {
-      await axios.delete(`${API_URL}/${id}`);
-      fetchTours();
-    }
-  };
-
-  const sortedTours = [...tours].sort((a, b) => b.sales - a.sales);
 
   return (
-    <div style={styles.wrapper}>
-      <h1 style={styles.heading}>Админ: Управление турами</h1>
+    <div>
+      <style>{`
+        body {
+          font-family: 'Poppins', sans-serif;
+          background: #f4f7fa;
+          margin: 0;
+          padding: 0;
+        }
+        .admin-container {
+          max-width: 1000px;
+          margin: auto;
+          padding: 40px 20px;
+        }
+        h1 {
+          text-align: center;
+          color: #1d3557;
+        }
+        .form {
+          background: #ffffff;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+          margin-bottom: 30px;
+        }
+        .form input, .form textarea {
+          width: 100%;
+          margin-bottom: 15px;
+          padding: 10px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          font-size: 16px;
+        }
+        .form button {
+          background: linear-gradient(to right, #1e88e5, #1565c0);
+          color: white;
+          border: none;
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .tour-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
+        }
+        .tour-card {
+          background: white;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .tour-card img {
+          width: 100%;
+          height: 180px;
+          object-fit: cover;
+        }
+        .tour-info {
+          padding: 16px;
+        }
+        .tour-info h3 {
+          margin: 0 0 8px;
+          color: #1d3557;
+        }
+        .tour-info p {
+          font-size: 14px;
+          color: #555;
+        }
+        .tour-meta {
+          display: flex;
+          justify-content: space-between;
+          font-size: 14px;
+          margin-top: 10px;
+        }
+        .delete-btn {
+          background: #e57373;
+          border: none;
+          color: white;
+          padding: 8px 12px;
+          border-radius: 8px;
+          margin-top: 12px;
+          cursor: pointer;
+        }
+      `}</style>
+      <div className="admin-container">
+        <h1>Админка туров</h1>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input name="title" placeholder="Название тура" value={formData.title} onChange={handleChange} required />
-        <input name="country" placeholder="Страна" value={formData.country} onChange={handleChange} required />
-        <input name="duration" placeholder="Длительность" value={formData.duration} onChange={handleChange} required />
-        <textarea name="description" placeholder="Описание" value={formData.description} onChange={handleChange} required />
-        <input name="price" placeholder="Цена" value={formData.price} onChange={handleChange} required />
-        <input name="image" placeholder="Ссылка на изображение" value={formData.image} onChange={handleChange} required />
-        <button type="submit" style={styles.submitBtn}>
-          {editingId ? 'Сохранить изменения' : 'Добавить тур'}
-        </button>
-      </form>
+        <div className="form">
+          <input
+            type="text"
+            placeholder="Название тура"
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+          />
+          <textarea
+            placeholder="Описание"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+          ></textarea>
+          <input
+            type="text"
+            placeholder="Продолжительность (напр. 3 дня)"
+            name="duration"
+            value={form.duration}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            placeholder="Цена (напр. от 9000 сом)"
+            name="price"
+            value={form.price}
+            onChange={handleChange}
+          />
+          <input
+            type="text"
+            placeholder="URL картинки"
+            name="image"
+            value={form.image}
+            onChange={handleChange}
+          />
+          <button onClick={addTour}>Добавить тур</button>
+        </div>
 
-      <h2 style={styles.subheading}>Статистика по продажам</h2>
-      <ul style={styles.statsList}>
-        {sortedTours.map(t => (
-          <li key={t.id}>{t.title} — <b>{t.sales}</b> продаж</li>
-        ))}
-      </ul>
-
-      <div style={styles.cardGrid}>
-        {tours.map((tour) => (
-          <div key={tour.id} style={styles.card}>
-            <img src={tour.image} alt={tour.title} style={styles.image} />
-            <h3>{tour.title}</h3>
-            <p><b>Страна:</b> {tour.country}</p>
-            <p><b>Длительность:</b> {tour.duration}</p>
-            <p><b>Цена:</b> {tour.price} сом</p>
-            <p><b>Продажи:</b> {tour.sales}</p>
-            <p>{tour.description}</p>
-            <div style={styles.cardActions}>
-              <button onClick={() => handleEdit(tour)} style={styles.editBtn}>✏️</button>
-              <button onClick={() => handleDelete(tour.id)} style={styles.deleteBtn}>🗑️</button>
+        <div className="tour-list">
+          {tours.map((tour, index) => (
+            <div key={index} className="tour-card">
+              <img src={tour.image} alt={tour.title} />
+              <div className="tour-info">
+                <h3>{tour.title}</h3>
+                <p>{tour.description}</p>
+                <div className="tour-meta">
+                  <span>{tour.duration}</span>
+                  <span>{tour.price}</span>
+                </div>
+                <button className="delete-btn" onClick={() => deleteTour(index)}>
+                  Удалить
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-
-      <button onClick={() => navigate('/admin')} style={styles.backBtn}>
-        ← Назад в админ-панель
-      </button>
     </div>
   );
 };
 
-const styles = {
-  wrapper: {
-    padding: '30px',
-    backgroundColor: '#f0f2f5',
-    minHeight: '100vh',
-    fontFamily: 'sans-serif',
-  },
-  heading: {
-    fontSize: '28px',
-    marginBottom: '25px',
-    color: '#1d3557',
-  },
-  subheading: {
-    fontSize: '22px',
-    marginTop: '40px',
-    marginBottom: '15px',
-    color: '#333',
-  },
-  statsList: {
-    listStyle: 'none',
-    paddingLeft: 0,
-    marginBottom: '30px',
-  },
-  form: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '12px',
-    marginBottom: '40px',
-  },
-  submitBtn: {
-    gridColumn: '1/-1',
-    padding: '12px',
-    backgroundColor: '#1d3557',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    cursor: 'pointer',
-  },
-  cardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '20px',
-  },
-  card: {
-    background: '#ffffff',
-    padding: '15px',
-    borderRadius: '10px',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-  },
-  image: {
-    width: '100%',
-    height: '200px',
-    objectFit: 'cover',
-    borderRadius: '8px',
-    marginBottom: '10px',
-  },
-  cardActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '10px',
-    marginTop: '10px',
-  },
-  editBtn: {
-    backgroundColor: '#fbc02d',
-    border: 'none',
-    padding: '8px 12px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  deleteBtn: {
-    backgroundColor: '#e63946',
-    color: '#fff',
-    border: 'none',
-    padding: '8px 12px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  backBtn: {
-    marginTop: '40px',
-    padding: '12px 20px',
-    backgroundColor: '#a8dadc',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-};
-
-export default AdminToursPage;
+export default AdminPanel;  

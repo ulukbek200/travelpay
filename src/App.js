@@ -67,6 +67,7 @@ import ActualToursPage from './pages/ActualToursPage';
 import ActualToursAdmin from './pages/ActualToursAdmin';
 import TravelBot from './components/TravelBot';
 import { ThemeProvider } from './context/ThemeContext';
+import TourBookingPage from './pages/TourBookingPage';
 
 
 function AppContent() {
@@ -79,20 +80,24 @@ function AppContent() {
       {!hideLayout && <TravelBot />}
 
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/tours" element={<ActualToursPage />} />
-        <Route path="/admin/tours" element={<ActualToursAdmin />} />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+  <Route path="/" element={<HomePage />} />
+  <Route path="/register" element={<RegisterPage />} />
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/tours" element={<ActualToursPage />} />
+  <Route path="/admin/tours" element={<ActualToursAdmin />} />
+
+  <Route
+    path="/profile"
+    element={
+      <ProtectedRoute>
+        <ProfilePage />
+      </ProtectedRoute>
+    }
+  />
+
+  <Route path="/booking" element={<TourBookingPage />} />
+</Routes>
+
     </>
   );
 }
