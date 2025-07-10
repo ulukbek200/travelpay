@@ -20,19 +20,30 @@ const LoginPage = () => {
     const { email, password } = formData;
 
     try {
+      // 👇 Получаем всех пользователей с таким email
       const response = await axios.get(
         'https://travelpay-backend-production.up.railway.app/users',
-        { params: { email, password } }
+        { params: { email } }
       );
 
-      if (response.data.length === 0) {
+      // 👇 Находим среди них пользователя с правильным паролем
+      const user = response.data.find(u => u.password === password);
+
+      if (!user) {
         setError('Неверный email или пароль');
         return;
       }
 
-      const user = response.data[0];
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      navigate('/profile');
+      const userToLogin = {
+        name: user.name,
+        email: user.email,
+        balance: user.balance || 0,
+        avatar: user.avatar || 'https://www.w3schools.com/howto/img_avatar.png',
+        isLoggedIn: true,
+      };
+
+      localStorage.setItem('currentUser', JSON.stringify(userToLogin));
+      window.location.href = '/profile'; // 👈 обновление header
     } catch (err) {
       console.error(err);
       setError('Ошибка при входе. Попробуйте позже.');
@@ -51,8 +62,6 @@ const LoginPage = () => {
       >
         Ваш браузер не поддерживает видео.
       </video>
-
-      <div style={styles.overlay}></div>
 
       <div style={styles.formBox}>
         <h2 style={styles.title}>
@@ -115,6 +124,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: '40px',
     padding: '20px',
     backgroundColor: '#000',
   },
@@ -127,15 +137,6 @@ const styles = {
     objectFit: 'cover',
     zIndex: 0,
     filter: 'brightness(0.65) contrast(1.1) saturate(1.2)',
-  },
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    zIndex: 1,
   },
   formBox: {
     position: 'relative',

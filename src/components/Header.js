@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaHistory, FaSignOutAlt, FaBars, FaHome, FaCog } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaBars, FaHome, FaGlobe } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
 const HeaderPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,28 +34,28 @@ const HeaderPage = () => {
   const sidebarIcons = [
     { icon: <FaHome />, label: 'Главная', action: () => navigate('/') },
     { icon: <FaUser />, label: 'Профиль', action: () => navigate('/profile') },
-    { icon: <FaHistory />, label: 'История', action: () => alert('Скоро появится') },
-    { icon: <FaCog />, label: 'Настройки', action: () => alert('Скоро появится') },
+    { icon: <FaGlobe />, label: 'Туры', action: () => navigate('/tours') },
     { icon: <FaSignOutAlt />, label: 'Выход', action: handleLogout },
   ];
 
   return (
     <>
       {/* Sidebar */}
-      <div
+      <motion.div
+        initial={{ width: '70px' }}
+        animate={{ width: sidebarWidth }}
+        transition={{ duration: 0.3 }}
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           height: '100vh',
-          width: sidebarWidth,
           backgroundColor: bgColor,
           zIndex: 998,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           paddingTop: '20px',
-          transition: 'width 0.3s ease-in-out',
           borderBottomRightRadius: '20px',
           fontFamily,
         }}
@@ -74,14 +74,15 @@ const HeaderPage = () => {
         >
           <FaBars />
         </button>
+
         {sidebarIcons.map(({ icon, label, action }, i) => (
-          <div
+          <motion.div
             key={i}
             onClick={action}
+            whileHover={{ scale: 1.05 }}
             style={{
               color: '#B0C4DE',
               fontSize: '19px',
-              fontFamily,
               margin: '20px 0',
               display: 'flex',
               alignItems: 'center',
@@ -89,17 +90,20 @@ const HeaderPage = () => {
               width: '100%',
               justifyContent: sidebarOpen ? 'flex-start' : 'center',
               paddingLeft: sidebarOpen ? '45px' : 0,
-              transition: 'all 0.3s ease-in-out',
+              fontFamily,
             }}
           >
             {icon}
             {sidebarOpen && <span style={{ marginLeft: '20px' }}>{label}</span>}
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Header */}
-      <header
+      <motion.header
+        initial={{ y: -80 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
         style={{
           width: `calc(100% - ${sidebarWidth})`,
           backgroundColor: bgColor,
@@ -117,44 +121,60 @@ const HeaderPage = () => {
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
         }}
       >
+        {/* iPhone notch-like center bar */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#333',
+            borderRadius: '10px',
+            width: '120px',
+            height: '8px',
+            opacity: 0.5,
+          }}
+        />
+
         <h1
           style={{
             fontSize: '22px',
             fontWeight: 'bold',
             margin: 0,
             cursor: 'pointer',
-            fontFamily,
           }}
           onClick={() => navigate('/')}
         >
           TravelPay
         </h1>
 
-        <div
-          style={{
-            marginLeft: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontFamily,
-          }}
-        >
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
           {currentUser ? (
-            <span
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               style={{
-                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
                 backgroundColor: '#fca311',
                 color: '#fff',
                 padding: '8px 14px',
-                borderRadius: '8px',
+                borderRadius: '30px',
                 boxShadow: '0 4px 10px rgba(252, 163, 17, 0.4)',
               }}
             >
-              {currentUser.name} | {Number(currentUser.balance).toLocaleString()}₽
-            </span>
+              <img
+                src={currentUser.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
+                alt="avatar"
+                style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+              />
+              <span>{currentUser.name} | {Number(currentUser.balance).toLocaleString()}₽</span>
+            </motion.div>
           ) : (
             <>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
                 onClick={() => navigate('/login')}
                 style={{
                   backgroundColor: '#fca311',
@@ -165,15 +185,13 @@ const HeaderPage = () => {
                   fontSize: '15px',
                   cursor: 'pointer',
                   fontWeight: '600',
-                  transition: 'transform 0.2s ease',
                 }}
-                onMouseEnter={(e) => (e.target.style.transform = 'scale(1.06)')}
-                onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
               >
                 Войти
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
                 onClick={() => navigate('/register')}
                 style={{
                   backgroundColor: '#457b9d',
@@ -184,17 +202,14 @@ const HeaderPage = () => {
                   fontSize: '15px',
                   cursor: 'pointer',
                   fontWeight: '600',
-                  transition: 'transform 0.2s ease',
                 }}
-                onMouseEnter={(e) => (e.target.style.transform = 'scale(1.06)')}
-                onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
               >
                 Зарегистрироваться
-              </button>
+              </motion.button>
             </>
           )}
         </div>
-      </header>
+      </motion.header>
     </>
   );
 };

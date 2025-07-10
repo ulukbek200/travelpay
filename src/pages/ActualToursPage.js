@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ToursPage = () => {
+  const navigate = useNavigate();
+
   const tours = [
     {
       title: 'Летний тур на Иссык-Куль',
@@ -73,6 +76,7 @@ const ToursPage = () => {
       image: 'https://modo.kg/wp-content/uploads/2023/07/22-1024x599.jpg',
     },
   ];
+
   return (
     <div>
       <style>{`
@@ -262,7 +266,12 @@ const ToursPage = () => {
                 <span>{tour.price}</span>
               </div>
               <div className="tour-buttons">
-                <button className="book-btn">Забронировать</button>
+                <button
+                  className="book-btn"
+                  onClick={() => navigate('/booking', { state: { tour } })}
+                >
+                  Забронировать
+                </button>
                 <button className="fav-btn">♥️ В избранное</button>
               </div>
             </div>

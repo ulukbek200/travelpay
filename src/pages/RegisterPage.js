@@ -1,14 +1,20 @@
+// src/pages/RegisterPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
@@ -16,28 +22,41 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { name, email, password } = formData;
+    const { name, email, password, confirmPassword } = formData;
+
+    if (password !== confirmPassword) {
+      setError('Пароли не совпадают');
+      return;
+    }
 
     try {
-      const response = await axios.get(
+      const existing = await axios.get(
         'https://travelpay-backend-production.up.railway.app/users',
         { params: { email } }
       );
 
-      if (response.data.length > 0) {
+      if (existing.data.length > 0) {
         setError('Пользователь с таким email уже существует');
         return;
       }
 
-      await axios.post('https://travelpay-backend-production.up.railway.app/users', {
+      const newUser = {
         name,
         email,
         password,
         balance: 0,
-        orders: [],
-      });
+        avatar: 'https://www.w3schools.com/howto/img_avatar.png',
+        isLoggedIn: true,
+      };
 
-      navigate('/login');
+      const response = await axios.post(
+        'https://travelpay-backend-production.up.railway.app/users',
+        newUser
+      );
+
+      localStorage.setItem('currentUser', JSON.stringify(response.data));
+      window.location.href = '/profile'; // обновление header
+
     } catch (err) {
       console.error(err);
       setError('Ошибка при регистрации. Попробуйте позже.');
@@ -51,13 +70,11 @@ const RegisterPage = () => {
         muted
         loop
         style={styles.video}
-        src="https://cdn.pixabay.com/video/2019/09/12/26818-361092071_large.mp4"
+        src="https://cdn.pixabay.com/video/2024/12/24/248445_large.mp4"
         type="video/webm"
       >
         Ваш браузер не поддерживает видео.
       </video>
-
-      <div style={styles.overlay}></div>
 
       <div style={styles.formBox}>
         <h2 style={styles.title}>
@@ -66,29 +83,27 @@ const RegisterPage = () => {
             style={styles.logoClickable}
             onClick={() => navigate('/')}
             role="button"
-            tabIndex={0}
-            onKeyDown={e => { if (e.key === 'Enter') navigate('/'); }}
           >
             TravelPay
           </span>
         </h2>
-        <p style={styles.subtitle}>Создайте свой аккаунт</p>
+        <p style={styles.subtitle}>Создайте новый аккаунт</p>
 
         {error && <div style={styles.error}>{error}</div>}
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <input
-            name="name"
             type="text"
-            placeholder="Ваше имя"
+            name="name"
+            placeholder="Имя"
             value={formData.name}
             onChange={handleChange}
             required
             style={styles.input}
           />
           <input
-            name="email"
             type="email"
+            name="email"
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
@@ -96,10 +111,19 @@ const RegisterPage = () => {
             style={styles.input}
           />
           <input
-            name="password"
             type="password"
+            name="password"
             placeholder="Пароль"
             value={formData.password}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Подтвердите пароль"
+            value={formData.confirmPassword}
             onChange={handleChange}
             required
             style={styles.input}
@@ -110,9 +134,9 @@ const RegisterPage = () => {
         </form>
 
         <p style={styles.footerText}>
-          Уже есть аккаунт?{' '}
+          Уже есть аккаунт?
           <a href="/login" style={styles.link}>
-            Войдите
+            Войти
           </a>
         </p>
       </div>
@@ -129,6 +153,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: '50px',
     padding: '20px',
     backgroundColor: '#000',
   },
@@ -141,15 +166,6 @@ const styles = {
     objectFit: 'cover',
     zIndex: 0,
     filter: 'brightness(0.6) contrast(1.1) saturate(1.2)',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 1,
   },
   formBox: {
     position: 'relative',
@@ -211,7 +227,8 @@ const styles = {
     padding: '14px',
     borderRadius: '40px',
     border: 'none',
-    background: 'linear-gradient(90deg, #f57c00 0%, #ef6c00 100%)',
+    background:
+      'linear-gradient(90deg, #f57c00 0%, #ef6c00 100%)',
     color: '#fff',
     fontWeight: '700',
     fontSize: '18px',

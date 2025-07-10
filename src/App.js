@@ -72,32 +72,51 @@ import TourBookingPage from './pages/TourBookingPage';
 
 function AppContent() {
   const location = useLocation();
-  const hideLayout = ['/login', '/register'].includes(location.pathname);
+  const hideLayout = ['/login', '/register', '/tours', '/booking', '/admin/tours'].includes(location.pathname);
 
   return (
     <>
       {!hideLayout && <Header />}
       {!hideLayout && <TravelBot />}
 
+      {/* Логотип для страницы /tours */}
+      {location.pathname === '/tours' && (
+        <div
+          onClick={() => window.location.href = '/'}
+          style={{
+            position: 'fixed',
+            top: 20,
+            left: 20,
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: 'white',
+            cursor: 'pointer',
+            zIndex: 1000,
+            userSelect: 'none',
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          TravelPay
+        </div>
+      )}
+
+
       <Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/register" element={<RegisterPage />} />
-  <Route path="/login" element={<LoginPage />} />
-  <Route path="/tours" element={<ActualToursPage />} />
-  <Route path="/admin/tours" element={<ActualToursAdmin />} />
-
-  <Route
-    path="/profile"
-    element={
-      <ProtectedRoute>
-        <ProfilePage />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route path="/booking" element={<TourBookingPage />} />
-</Routes>
-
+        <Route path="/" element={<HomePage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/tours" element={<ActualToursPage />} />
+        <Route path="/booking" element={<TourBookingPage />} />
+        <Route path="/admin/tours" element={<ActualToursAdmin />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </>
   );
 }

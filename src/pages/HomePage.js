@@ -202,7 +202,6 @@ import HowItWorksSection from '../components/HowItWorksSection';
 import Destinations from '../components/Destinations';
 import Reviews from '../components/Reviews';
 import FAQ from '../components/FAQ';
-import Contact from '../components/Contact';
 import Footer from '../components/Footer';
 import PromoBlocks from '../components/PromoBlocks';
 import JoinTravelPay from '../components/JoinTravelPay';
@@ -228,8 +227,7 @@ const HomePage = () => {
       <JoinTravelPay />
       <Reviews />
       <FAQ />
-      
-      <Contact />
+
      
       <Footer />
     </>
