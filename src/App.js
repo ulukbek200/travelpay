@@ -57,7 +57,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
+// import Header from './components/Header';
 import Header from './components/Header';
+
+
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
@@ -77,6 +80,8 @@ function AppContent() {
   return (
     <>
       {!hideLayout && <Header />}
+
+
       {!hideLayout && <TravelBot />}
 
       {/* Логотип для страницы /tours */}
