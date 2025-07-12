@@ -13,6 +13,7 @@ import TravelBot from './components/TravelBot';
 import { ThemeProvider } from './context/ThemeContext';
 import TourBookingPage from './pages/TourBookingPage';
 import AgreementsPage from './pages/AgreementsPage';
+import VisaPaymentPage from './pages/VisaPaymentPage';
 
 function AppContent() {
   const location = useLocation();
@@ -52,6 +53,9 @@ function AppContent() {
         <Route path="/booking" element={<TourBookingPage />} />
         <Route path="/admin/tours" element={<ActualToursAdmin />} />
         <Route path="/AgreePage" element={<AgreementsPage />} />
+        <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
+
+
 
 
         <Route

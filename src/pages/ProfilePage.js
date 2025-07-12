@@ -112,10 +112,15 @@ const ProfilePage = () => {
               </div>
             </div>
             <div style={styles.balanceBox}>
-              <p style={styles.balanceLabel}>Ваш Баланс</p>
-              <p style={styles.balance}>{(user.balance ?? 0).toLocaleString()} ₽</p>
-              <button style={styles.topUpBtn} onClick={() => setShowTopUp(true)}>Пополнить баланс</button>
-            </div>
+  <p style={styles.balanceLabel}>Ваш Баланс</p>
+  <p style={styles.balance}>{(user.balance ?? 0).toLocaleString()} ₽</p>
+  <button 
+    style={styles.topUpBtn} 
+    onClick={() => navigate('/VisaPaymentPage')}
+  >
+    Пополнить баланс
+  </button>
+</div>
           </div>
 
           {isEditing && (
