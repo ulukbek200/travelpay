@@ -222,11 +222,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// import { FaUser, FaSignOutAlt, FaChevronRight, FaHome, FaGlobe } from 'react-icons/fa';
-// import { FaUser, FaSignOutAlt, FaChevronRight, FaHome, FaGlobe, FaBars } from 'react-icons/fa';
 import { FaUser, FaSignOutAlt, FaChevronRight, FaHome, FaGlobe, FaBars } from 'react-icons/fa';
-
-
 import { motion, useAnimation } from 'framer-motion';
 
 const HeaderPage = () => {
@@ -280,10 +276,11 @@ const HeaderPage = () => {
 
   return (
     <>
-       {/* Sidebar */}
-<motion.div
+      {/* Sidebar */}
+      <motion.div
         animate={{ width: sidebarOpen ? 180 : 50 }}
-        transition={{ duration: 0.3 }}
+        initial={false}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
         style={{
           position: 'fixed',
           top: 0,
@@ -295,7 +292,7 @@ const HeaderPage = () => {
           flexDirection: 'column',
           alignItems: sidebarOpen ? 'flex-start' : 'center',
           paddingTop: '80px',
-          borderTopRightRadius: '20px',
+          borderTopRightRadius: '0px',
           borderBottomRightRadius: '20px',
           fontFamily,
           boxShadow: '4px 0 12px rgba(0,0,0,0.3)',
@@ -339,10 +336,11 @@ const HeaderPage = () => {
               width: '100%',
               paddingLeft: sidebarOpen ? '20px' : '0px',
               justifyContent: sidebarOpen ? 'flex-start' : 'center',
+              transition: 'padding-left 0.4s ease',
             }}
           >
             {icon}
-            {sidebarOpen && <span style={{ marginLeft: '10px' }}>{label}</span>}
+            {sidebarOpen && <span style={{ marginLeft: '10px', transition: 'opacity 0.3s ease' }}>{label}</span>}
           </motion.div>
         ))}
       </motion.div>
@@ -367,7 +365,7 @@ const HeaderPage = () => {
           transition: 'all 0.3s ease-in-out',
           fontFamily,
           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          borderBottomLeftRadius: '20px',
+          borderBottomLeftRadius: '0px',
           borderBottomRightRadius: '20px',
         }}
       >
@@ -389,25 +387,33 @@ const HeaderPage = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              onClick={() => navigate('/profile')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 backgroundColor: '#fca311',
                 color: '#fff',
-                padding: isShrunk ? '4px 10px' : '10px 16px',
+                padding: isShrunk ? '4px 10px' : '6px 16px',
                 borderRadius: '40px',
                 boxShadow: '0 4px 10px rgba(252, 163, 17, 0.4)',
                 fontWeight: '600',
-                fontSize: isShrunk ? '13px' : '16px',
+                fontSize: isShrunk ? '14px' : '16px',
+                marginRight: '15px',
+                cursor: 'pointer',
               }}
             >
               <img
                 src={currentUser.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
                 alt="avatar"
-                style={{ width: isShrunk ? '24px' : '34px', height: isShrunk ? '24px' : '34px', borderRadius: '50%' }}
+                style={{
+                  width: isShrunk ? '24px' : '34px',
+                  height: isShrunk ? '24px' : '34px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                }}
               />
-              <span>
+              <span style={{ whiteSpace: 'nowrap' }}>
                 {currentUser.name} | {Number(currentUser.balance).toLocaleString()}₽
               </span>
             </motion.div>

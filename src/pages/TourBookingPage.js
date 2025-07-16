@@ -28,26 +28,31 @@ const TourBookingPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Спасибо за бронирование тура "${tour.title}"!`);
-    navigate('/');
+    navigate('/VisaPaymentPage', {
+      state: {
+        tour,
+        total,
+        people,
+      },
+    });
   };
 
   return (
     <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", maxWidth: 960, margin: '40px auto', padding: 20, position: 'relative' }}>
       {/* Логотип в верхнем левом углу */}
       <div
-        onClick={() => navigate('/')}
-        style={{
-          position: 'fixed',
-          top: 20,
-          left: 20,
-          cursor: 'pointer',
-          fontWeight: '700',
-          fontSize: 24,
-          color: '#1e40af',
-          userSelect: 'none',
-          zIndex: 1000,
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+       onClick={() => window.location.href = '/'}
+       style={{
+         position: 'fixed',
+         top: 20,
+         left: 20,
+         fontSize: '24px',
+         fontWeight: 'bold',
+         color: '#1e40af',
+         cursor: 'pointer',
+         zIndex: 1000,
+         userSelect: 'none',
+         fontFamily: "'Poppins', sans-serif",
         }}
         aria-label="Перейти на главную"
         title="Перейти на главную"
@@ -260,4 +265,5 @@ const TourBookingPage = () => {
 };
 
 export default TourBookingPage;
+
 

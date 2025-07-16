@@ -199,7 +199,7 @@ import Hero from '../components/Hero';
 import About from '../components/About';
 import HowItWorksSection from '../components/HowItWorksSection';
 
-import Destinations from '../components/Destinations';
+// import Destinations from '../components/Destinations';
 import Reviews from '../components/Reviews';
 import FAQ from '../components/FAQ';
 import Footer from '../components/Footer';
@@ -223,7 +223,6 @@ const HomePage = () => {
       <About />
       <HowItWorksSection />
 
-      <Destinations />
       <JoinTravelPay />
       <Reviews />
       <FAQ />

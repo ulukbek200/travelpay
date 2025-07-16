@@ -1,30 +1,49 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation
+} from 'react-router-dom';
 
 import Header from './components/Header';
+import TravelBot from './components/TravelBot';
+import ProtectedRoute from './components/ProtectedRoute';
+import ScrollToTop from './components/ScrollToTop';
+
+import { ThemeProvider } from './context/ThemeContext';
+
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
-import ProtectedRoute from './components/ProtectedRoute';
 import ActualToursPage from './pages/ActualToursPage';
 import ActualToursAdmin from './pages/ActualToursAdmin';
-import TravelBot from './components/TravelBot';
-import { ThemeProvider } from './context/ThemeContext';
 import TourBookingPage from './pages/TourBookingPage';
 import AgreementsPage from './pages/AgreementsPage';
 import VisaPaymentPage from './pages/VisaPaymentPage';
+import FavoritesPage from './pages/FavoritesPage';
 
-function AppContent() {
+function AppContent({ favorites, setFavorites }) {
   const location = useLocation();
-  const hideLayout = ['/login', '/register', '/tours', '/booking', '/admin/tours'].includes(location.pathname);
+
+  const hideLayoutPaths = [
+    '/login',
+    '/register',
+    '/tours',
+    '/booking',
+    '/admin/tours',
+    '/VisaPaymentPage',
+    '/favorites'
+  ];
+
+  const hideLayout = hideLayoutPaths.includes(location.pathname);
 
   return (
     <>
       {!hideLayout && <Header />}
       {!hideLayout && <TravelBot />}
 
-      {/* Логотип для страницы /tours */}
       {location.pathname === '/tours' && (
         <div
           onClick={() => window.location.href = '/'}
@@ -49,15 +68,12 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/tours" element={<ActualToursPage />} />
+        <Route path="/tours" element={<ActualToursPage favorites={favorites} setFavorites={setFavorites} />} />
+        <Route path="/favorites" element={<FavoritesPage favorites={favorites} setFavorites={setFavorites} />} />
         <Route path="/booking" element={<TourBookingPage />} />
         <Route path="/admin/tours" element={<ActualToursAdmin />} />
         <Route path="/AgreePage" element={<AgreementsPage />} />
         <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
-
-
-
-
         <Route
           path="/profile"
           element={
@@ -75,10 +91,16 @@ function AppContent() {
 }
 
 function App() {
+  const [favorites, setFavorites] = useState(() => {
+    const stored = localStorage.getItem('favorites');
+    return stored ? JSON.parse(stored) : [];
+  });
+
   return (
     <ThemeProvider>
       <Router>
-        <AppContent />
+        <ScrollToTop />
+        <AppContent favorites={favorites} setFavorites={setFavorites} />
       </Router>
     </ThemeProvider>
   );

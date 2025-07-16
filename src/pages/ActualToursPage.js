@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ToursPage = () => {
+const ActualToursPage = ({ favorites, setFavorites }) => {
   const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [regionQuery, setRegionQuery] = useState('');
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [notification, setNotification] = useState('');
 
   const tours = [
     {
@@ -75,14 +80,26 @@ const ToursPage = () => {
       price: 'от 8 000 сом',
       image: 'https://modo.kg/wp-content/uploads/2023/07/22-1024x599.jpg',
     },
-  ];
+  ];       
+
+  const handleAddToFavorites = (tour) => {
+    if (!favorites.find((f) => f.title === tour.title)) {
+      setFavorites([...favorites, tour]);
+      setNotification(`«${tour.title}» добавлен в избранное`);
+      setTimeout(() => setNotification(''), 3000);
+    }
+  };
+
+  const filteredTours = tours.filter(
+    (tour) =>
+      tour.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      tour.description.toLowerCase().includes(regionQuery.toLowerCase())
+  );
 
   return (
     <div>
       <style>{`
-        * {
-          box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
           margin: 0;
           font-family: 'Poppins', sans-serif;
@@ -112,19 +129,14 @@ const ToursPage = () => {
           background: rgba(0, 0, 0, 0.4);
           height: 100%;
         }
-        .header-overlay h1 {
-          font-size: 42px;
-          margin: 0;
-        }
-        .header-overlay p {
-          font-size: 18px;
-          margin-top: 10px;
-        }
+        .header-overlay h1 { font-size: 42px; margin: 0; }
+        .header-overlay p { font-size: 18px; margin-top: 10px; }
 
         .search-bar {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
+          align-items: center;
           gap: 12px;
           padding: 30px 20px;
           max-width: 900px;
@@ -148,8 +160,25 @@ const ToursPage = () => {
           cursor: pointer;
           transition: 0.3s;
         }
+        .search-bar .fav-toggle-btn {
+          background: #ffcdd2;
+          color: #b71c1c;
+          font-size: 20px;
+        }
         .search-bar button:hover {
           background: linear-gradient(to right, #1565c0, #0d47a1);
+        }
+
+        .notification {
+          text-align: center;
+          background: #c8e6c9;
+          color: #2e7d32;
+          padding: 10px;
+          margin-top: 10px;
+          border-radius: 10px;
+          font-weight: 600;
+          max-width: 400px;
+          margin: 10px auto;
         }
 
         .tour-list {
@@ -225,7 +254,7 @@ const ToursPage = () => {
           transition: 0.3s;
         }
         .fav-btn:hover {
-          background: #bbdefb;
+          background: darkpink;
         }
 
         @media (max-width: 500px) {
@@ -249,13 +278,50 @@ const ToursPage = () => {
       </header>
 
       <div className="search-bar">
-        <input type="text" placeholder="Название тура..." />
-        <input type="text" placeholder="Регион..." />
-        <button>🔍 Найти</button>
+        <input
+          type="text"
+          placeholder="Название тура..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Регион..."
+          value={regionQuery}
+          onChange={(e) => setRegionQuery(e.target.value)}
+        />
+        <button>Найти</button>
+
+        {/* Кнопка переключения избранного */}
+        {/* <button
+          className="fav-toggle-btn"
+          onClick={() => setShowFavorites(!showFavorites)}
+        >
+          ♥
+        </button> */}
+
+        {/* 🆕 Кнопка перехода на страницу /favorites */}
+        <button
+          style={{
+            background: '#ffe0b2',
+            color: '#ef6c00',
+            fontWeight: 'bold',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: '0.3s',
+          }}
+          onClick={() => navigate('/favorites')}
+        >
+          Перейти в избранное
+        </button>
       </div>
 
+      {notification && <div className="notification">{notification}</div>}
+
       <section className="tour-list">
-        {tours.map((tour, index) => (
+        {filteredTours.map((tour, index) => (
           <div className="tour-card" key={index}>
             <img src={tour.image} alt={tour.title} />
             <div className="tour-content">
@@ -272,14 +338,123 @@ const ToursPage = () => {
                 >
                   Забронировать
                 </button>
-                <button className="fav-btn">♥️ В избранное</button>
+                <button
+                  className="fav-btn"
+                  onClick={() => handleAddToFavorites(tour)}
+                >
+                  ♥ В избранное
+                </button>
               </div>
             </div>
           </div>
         ))}
       </section>
+      
+      {showFavorites && favorites.length > 0 && (
+        <section className="tour-list">
+          <h2 style={{ textAlign: 'center', gridColumn: '1 / -1' }}>Избранные туры</h2>
+          {favorites.map((tour, index) => (
+            <div className="tour-card" key={`fav-${index}`}>
+              <img src={tour.image} alt={tour.title} />
+              <div className="tour-content">
+                <h3>{tour.title}</h3>
+                <p>{tour.description}</p>
+                <div className="tour-meta">
+                  <span>{tour.duration}</span>
+                  <span>{tour.price}</span>
+                </div>
+                <div className="tour-buttons">
+                  <button
+                    className="book-btn"
+                    onClick={() => navigate('/booking', { state: { tour } })}
+                  >
+                    Забронировать
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
     </div>
   );
 };
 
-export default ToursPage;
+export default ActualToursPage;
+
+
+
+
+
+
+// {
+//   title: 'Летний тур на Иссык-Куль',
+//   description: 'Купание, солнце и природа самого известного озера Кыргызстана.',
+//   duration: '4 дня',
+//   price: 'от 14 000 сом',
+//   image: 'https://sputnik.kg/img/102749/78/1027497816_0:0:5241:3494_600x0_80_0_0_1de71c91552a01c3bc55f0df20f16329.jpg',
+// },
+// {
+//   title: 'Исторический тур в Бурана',
+//   description: 'Посети одну из самых древних башен Великого Шёлкового пути.',
+//   duration: '1 день',
+//   price: 'от 2 500 сом',
+//   image: 'https://central-asia.live/_next/image?url=https%3A%2F%2Fcentral-asia.live%2Fuploads%2Fburana-tower.jpg&w=3840&q=75',
+// },
+// {
+//   title: 'Приключение в Беш-Арал',
+//   description: 'Горы, реки и водопады в дикой красоте юга Кыргызстана.',
+//   duration: '3 дня',
+//   price: 'от 9 000 сом',
+//   image: 'https://rivers.help/wp-content/uploads/2024/07/besh-aral.jpg',
+// },
+// {
+//   title: 'Озеро Сон-Куль',
+//   description: 'Живописное озеро на высоте 3000 м и ночёвка в юртах.',
+//   duration: '3 дня',
+//   price: 'от 12 000 сом',
+//   image: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/14/12/24/52/road-to-song-kul.jpg?w=500&h=-1&s=1',
+// },
+// {
+//   title: 'Горы Тянь-Шань',
+//   description: 'Горы и невероятные пейзажи для настоящих искателей приключений.',
+//   duration: '5 дней',
+//   price: 'от 18 000 сом',
+//   image: 'https://cdn.tripzaza.com/ru/destinations/wp-content/uploads/2018/05/2-The-Issyk-Kul-_ake-e1527736626675.jpg',
+// },
+// {
+//   title: 'Поездка в Алай',
+//   description: 'Место силы, невероятные горы и гостеприимство.',
+//   duration: '4 дня',
+//   price: 'от 13 000 сом',
+//   image: 'https://cdn.tripster.ru/thumbs2/46a3ce6e-bc28-11ed-ab44-ee2fa366151b.1220x600.jpeg',
+// },
+// {
+//   title: 'Культурный тур Чуй',
+//   description: 'Открой для себя культурное наследие и жизнь местных жителей.',
+//   duration: '2 дня',
+//   price: 'от 7 500 сом',
+//   image: 'https://mustvisit.ru/wa-data/public/shop/products/85/10/21085/images/16211/16211.970.jpg',
+// },
+// {
+//   title: 'Башня Бурана',
+//   description: 'Посети древнюю башню и узнай историю Великого Шёлкового пути.',
+//   duration: '1 день',
+//   price: 'от 2 000 сом',
+//   image: 'https://zstrela.ru/sites/default/files/images/news/07-19/zstrela_kyrgyz_2.jpg',
+// },
+// {
+//   title: 'Кёк-Джайык',
+//   description: 'Горный треккинг и пастбища на высоте.',
+//   duration: '3 дня',
+//   price: 'от 11 000 сом',
+//   image: 'https://marakandatravel.asia/wp-content/uploads/2019/11/obshhaya-kartina.jpg',
+// },
+// {
+//   title: 'Нарын и Таш-Рабат',
+//   description: 'Средневековый караван-сарай среди гор.',
+//   duration: '2 дня',
+//   price: 'от 8 000 сом',
+//   image: 'https://modo.kg/wp-content/uploads/2023/07/22-1024x599.jpg',
+// },
+// ];       

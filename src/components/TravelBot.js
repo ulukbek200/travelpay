@@ -53,10 +53,19 @@ const TravelBot = () => {
   }, [messages, isTyping]);
 
   const handleAnswer = (input) => {
+    if (!input || input.length < 2) {
+      setMessages(prev => [
+        ...prev,
+        { sender: 'user', text: input },
+        { sender: 'bot', text: 'Пожалуйста, введите корректный ответ (дату, город, бюджет и т.д.)' }
+      ]);
+      return;
+    }
+  
     if (step === 1 && /не знаю|не определил|не решил|не уверен/i.test(input)) {
       input = 'Будет определено позже';
     }
-
+  
     setMessages(prev => [
       ...prev,
       { sender: 'user', text: input },
@@ -64,7 +73,7 @@ const TravelBot = () => {
     ]);
     setAnswers(prev => ({ ...prev, [step]: input }));
     setStep(prev => prev + 1);
-  };
+  };  
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== '') {

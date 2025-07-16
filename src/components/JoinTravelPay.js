@@ -6,7 +6,6 @@ import * as THREE from 'three';
 const Earth = () => {
   const ref = useRef();
 
-  // Загрузим текстуры: цвет, карта нормалей и карта отражений
   const [colorMap, normalMap, specularMap] = useTexture([
     'https://raw.githubusercontent.com/turban/webgl-earth/master/images/2_no_clouds_4k.jpg',
     'https://raw.githubusercontent.com/turban/webgl-earth/master/images/elev_bump_4k.jpg',

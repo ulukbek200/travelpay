@@ -17,13 +17,13 @@ const Footer = () => {
       color: 'white',
       fontSize: '1.8em',
       marginBottom: '50px',
-      marginLeft:'50px',
+      marginLeft: '50px',
       fontWeight: '500',
     },
     socialIcons: {
       display: 'flex',
       justifyContent: 'center',
-      marginLeft:'50px',
+      marginLeft: '50px',
       flexWrap: 'wrap',
       gap: '40px',
     },
@@ -45,8 +45,8 @@ const Footer = () => {
     },
     bottomText: {
       color: 'white',
-      fontSize:'13px',
-      marginLeft: '50px'
+      fontSize: '13px',
+      marginLeft: '50px',
     },
     designer: {
       opacity: 0.7,
@@ -58,7 +58,7 @@ const Footer = () => {
   };
 
   return (
-    <footer style={styles.footer}>
+    <footer id="footer" style={styles.footer}>
       <div style={styles.footerContainer}>
         <h3 style={styles.sectionTitle}>Связаться с нами</h3>
 
@@ -80,7 +80,7 @@ const Footer = () => {
 
       <div style={styles.footerBottom}>
         <p style={styles.bottomText}>
-           &copy; 2025 Travel.Pay <span style={styles.designer}></span>
+          &copy; 2025 Travel.Pay <span style={styles.designer}></span>
         </p>
       </div>
     </footer>

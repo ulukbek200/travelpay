@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const HowItWorks = () => {
+  const navigate = useNavigate();
+
   const styles = {
     section: {
       maxWidth: '900px',
       margin: '60px auto',
       padding: '0 15px',
-      marginLeft:'190px',
+      marginLeft: '190px',
       fontFamily: "'Poppins', sans-serif",
       color: '#2c3e50',
       textAlign: 'center',
@@ -84,8 +87,8 @@ const HowItWorks = () => {
     },
   };
 
-  const [hoveredIndex, setHoveredIndex] = React.useState(null);
-  const [btnHoveredIndex, setBtnHoveredIndex] = React.useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [btnHoveredIndex, setBtnHoveredIndex] = useState(null);
 
   const steps = [
     {
@@ -93,38 +96,55 @@ const HowItWorks = () => {
       title: 'Выберите направление',
       text: 'Просмотрите туры, круизы или апартаменты в любимом городе или стране.',
       button: 'Перейти к турам',
+      path: '/tours',
     },
     {
       icon: '🧾',
       title: 'Забронируйте онлайн',
       text: 'Быстрое и удобное бронирование без скрытых платежей.',
       button: 'Перейти к бронированию',
+      path: '/booking',
     },
     {
       icon: '🧳',
       title: 'Отправляйтесь в путешествие',
       text: 'Соберите чемоданы и наслаждайтесь — мы позаботимся обо всём остальном.',
       button: 'Готов к путешествию',
+      path: '/VisaPaymentPage',
     },
     {
       icon: '💰',
       title: 'Накопите на поездку',
       text: 'Соберите нужную сумму за срок и забронируйте без переплат.',
       button: 'Начать копить',
+      path: '/profile',
     },
     {
       icon: '📦',
       title: 'Управляйте планом',
       text: 'Контролируйте накопления и редактируйте план в любое время.',
       button: 'Управление планом',
+      path: '/profile',
     },
     {
       icon: '🌍',
       title: 'Консультация с экспертом',
       text: 'Наши специалисты помогут выбрать направление и составят расчёт.',
       button: 'Связаться с экспертом',
+      path: null, // нет перехода
     },
   ];
+
+  const handleClick = (path) => {
+    if (path) {
+      navigate(path);
+    } else {
+      const footer = document.getElementById('footer');
+      if (footer) {
+        footer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <section style={styles.section}>
@@ -150,7 +170,7 @@ const HowItWorks = () => {
               }}
               onMouseEnter={() => setBtnHoveredIndex(i)}
               onMouseLeave={() => setBtnHoveredIndex(null)}
-              onClick={() => alert(`Вы нажали: ${step.button}`)}
+              onClick={() => handleClick(step.path)}
             >
               {step.button}
             </button>
@@ -162,3 +182,5 @@ const HowItWorks = () => {
 };
 
 export default HowItWorks;
+
+  

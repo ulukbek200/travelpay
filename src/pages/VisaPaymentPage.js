@@ -76,7 +76,7 @@ const VisaPaymentPage = () => {
     logo: {
       display: 'block',
       height: '40px',
-      margin: '0 auto 20px',
+      margin: '0 auto 10px',
     },
     formGroup: {
       marginBottom: '18px',
@@ -85,6 +85,7 @@ const VisaPaymentPage = () => {
       display: 'block',
       fontWeight: 600,
       marginBottom: '6px',
+      marginLeft:'-5px'
     },
     input: {
       width: '100%',
@@ -93,6 +94,7 @@ const VisaPaymentPage = () => {
       fontSize: '16px',
       border: '1px solid #ccc',
       outline: 'none',
+      marginLeft:'-10px'
     },
     error: {
       color: 'red',
@@ -207,7 +209,7 @@ const VisaPaymentPage = () => {
             style={styles.icon}
           />
           <img
-            src="https://upload.wikimedia.org/wikipedia/commons/3/30/МИР_платежная_система.svg"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/%D0%9C%D0%B8%D1%80_%D0%A2%D0%92_logo.svg/2048px-%D0%9C%D0%B8%D1%80_%D0%A2%D0%92_logo.svg.png"
             alt="МИР"
             style={styles.icon}
           />

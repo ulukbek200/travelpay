@@ -106,7 +106,7 @@ const ProfilePage = () => {
               <h2 style={styles.name}>{user.name}</h2>
               <p style={styles.email}>{user.email}</p>
               <div style={styles.actions}>
-                <button style={styles.editBtn} onClick={() => setIsEditing(true)}>Редактировать профиль</button>
+              <button style={styles.editBtn} onClick={() => setIsEditing(prev => !prev)}>Редактировать профиль</button>
                 <button style={styles.agreeBtn} onClick={() => navigate('/AgreePage')}>Соглашение</button>
                 <button style={styles.logoutBtn} onClick={handleLogout}>Выйти</button>
               </div>
@@ -161,10 +161,144 @@ const ProfilePage = () => {
         </div>
       </div>
     </div>
-  );
+  );  
 };
 
 const styles = {
+  wrapper: {
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  darkBar: {
+    height: '200px',
+    backgroundColor: '#25436D',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+
+  sidebar: {
+    position: 'absolute',
+    top: '200px',
+    bottom: 0,
+    left: 0,
+    width: '6px',
+    backgroundColor: '#25436D',
+    borderTopRightRadius: '6px',
+    borderBottomRightRadius: '6px',
+    zIndex: 1,
+  },
+
+  bgOverlay: {
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    zIndex: 1,
+  },
+
+  container: {
+    position: 'relative',
+    zIndex: 2,
+    maxWidth: '1100px',
+    margin: '0 auto',
+    padding: '100px 50px 40px 110px',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  profileCard: {
+    backgroundColor: '#fff',
+    borderRadius: '16px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    padding: '30px',
+    marginBottom: '40px',
+    borderLeft: '5px solid #1d3557',
+  },
+
+  profileHeader: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '30px',
+  },
+
+  avatarWrap: {
+    position: 'relative',
+    flex: '0 0 auto',
+  },
+
+  avatarLabel: {
+    position: 'relative',
+    cursor: 'pointer',
+    display: 'inline-block',
+  },
+
+  avatar: {
+    width: '120px',
+    height: '120px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '3px solid #fca311',
+    boxShadow: '0 4px 15px rgba(246, 147, 30, 0.4)',
+    transition: 'box-shadow 0.3s ease',
+  },
+
+  avatarEditIcon: {
+    position: 'absolute',
+    bottom: '5px',
+    right: '5px',
+    backgroundColor: '#fca311',
+    borderRadius: '50%',
+    padding: '6px 9px',
+    fontSize: '14px',
+    color: '#fff',
+    boxShadow: '0 0 8px #fca311',
+  },
+
+  avatarInput: {
+    display: 'none',
+  },
+
+  info: {
+    flex: 1,
+    minWidth: '220px',
+  },
+
+  name: {
+    fontSize: '26px',
+    fontWeight: '700',
+    color: '#1d3557',
+    marginBottom: '8px',
+  },
+
+  email: {
+    fontSize: '14px',
+    color: '#555',
+    marginBottom: '15px',
+  },
+
+  actions: {
+    display: 'flex',
+    gap: '14px',
+    flexWrap: 'wrap',
+  },
+
+  editBtn: {
+    backgroundColor: '#fca311',
+    color: '#fff',
+    padding: '12px 26px',
+    borderRadius: '30px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '15px',
+    boxShadow: '0 6px 15px rgba(252, 163, 17, 0.7)',
+    transition: 'background-color 0.3s ease',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
   agreeBtn: {
     backgroundColor: '#457b9d',
     color: '#fff',
@@ -176,255 +310,141 @@ const styles = {
     fontSize: '15px',
     boxShadow: '0 6px 15px rgba(69, 123, 157, 0.7)',
     transition: 'background-color 0.3s ease',
+    fontFamily: "'Poppins', sans-serif",
   },
 
-// const styles = {
-//   agreeBtn: {
-//     backgroundColor: '#457b9d',
-//     color: '#fff',
-//     padding: '12px 26px',
-//     borderRadius: '30px',
-//     border: 'none',
-//     cursor: 'pointer',
-//     fontWeight: '600',
-//     fontSize: '15px',
-//     boxShadow: '0 6px 15px rgba(69, 123, 157, 0.7)',
-//     transition: 'background-color 0.3s ease',
-//   },
- 
+  logoutBtn: {
+    backgroundColor: '#e63946',
+    color: '#fff',
+    padding: '12px 26px',
+    borderRadius: '30px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '15px',
+    boxShadow: '0 6px 15px rgba(230, 57, 70, 0.7)',
+    transition: 'background-color 0.3s ease',
+    fontFamily: "'Poppins', sans-serif",
+  },
 
+  balanceBox: {
+    textAlign: 'center',
+    minWidth: '160px',
+    backgroundColor: '#e8f5e9',
+    borderRadius: '16px',
+    padding: '18px 30px',
+    boxShadow: '0 6px 20px rgba(102, 187, 106, 0.3)',
+    fontWeight: '600',
+    color: '#2e7d32',
+    fontFamily: "'Poppins', sans-serif",
+  },
 
+  balanceLabel: {
+    fontSize: '14px',
+    marginBottom: '6px',
+  },
 
-   
-        darkBar: {
-          height: '200px',
-          backgroundColor: '#25436D',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 0,
-        },
-        sidebar: {
-          position: 'absolute',
-          top: '200px',
-          bottom: 0,
-          left: 0,
-          width: '6px',
-          backgroundColor: '#25436D',
-          borderTopRightRadius: '6px',
-          borderBottomRightRadius: '6px',
-          zIndex: 1,
-        },
-        bgOverlay: {
-          position: 'absolute',
-          inset: 0,
-          backgroundColor: 'rgba(255,255,255,0.95)',
-          zIndex: 1,
-        },
-        container: {
-          position: 'relative',
-          zIndex: 2,
-          maxWidth: '1100px',
-          margin: '0 auto',
-          padding: '60px 20px 40px',
-          paddingLeft: '110px',
-        },
-        profileCard: {
-          backgroundColor: '#fff',
-          borderRadius: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          padding: '30px',
-          marginBottom: '40px',
-          borderLeft: '5px solid #1d3557',
-        },
-        profileHeader: {
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '30px',
-          flexWrap: 'wrap',
-        },
-        avatarWrap: {
-          flex: '0 0 auto',
-          position: 'relative',
-        },
-        avatarLabel: {
-          position: 'relative',
-          cursor: 'pointer',
-          display: 'inline-block',
-        },
-        avatar: {
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          objectFit: 'cover',
-          border: '3px solid #fca311',
-          boxShadow: '0 4px 15px rgba(246, 147, 30, 0.4)',
-          transition: 'box-shadow 0.3s ease',
-        },
-        avatarEditIcon: {
-          position: 'absolute',
-          bottom: '5px',
-          right: '5px',
-          backgroundColor: '#fca311',
-          borderRadius: '50%',
-          padding: '6px 9px',
-          fontSize: '14px',
-          color: '#fff',
-          boxShadow: '0 0 8px #fca311',
-        },
-        avatarInput: {
-          display: 'none',
-        },
-        info: {
-          flex: '1',
-          minWidth: '220px',
-        },
-        name: {
-          fontSize: '26px',
-          fontWeight: '700',
-          color: '#1d3557',
-          marginBottom: '8px',
-        },
-        email: {
-          color: '#555',
-          fontSize: '14px',
-          marginBottom: '15px',
-        },
-        actions: {
-          display: 'flex',
-          gap: '14px',
-          flexWrap: 'wrap',
-        },
-        editBtn: {
-          backgroundColor: '#fca311',
-          color: '#fff',
-          padding: '12px 26px',
-          borderRadius: '30px',
-          border: 'none',
-          cursor: 'pointer',
-          fontWeight: '600',
-          fontSize: '15px',
-          boxShadow: '0 6px 15px rgba(252, 163, 17, 0.7)',
-          transition: 'background-color 0.3s ease',
-        },
-        logoutBtn: {
-          backgroundColor: '#e63946',
-          color: '#fff',
-          padding: '12px 26px',
-          borderRadius: '30px',
-          cursor: 'pointer',
-          fontWeight: '600',
-          fontSize: '15px',
-          boxShadow: '0 6px 15px rgba(230, 57, 70, 0.7)',
-          transition: 'background-color 0.3s ease',
-        },
-        balanceBox: {
-          textAlign: 'center',
-          minWidth: '160px',
-          backgroundColor: '#e8f5e9',
-          borderRadius: '16px',
-          padding: '18px 30px',
-          boxShadow: '0 6px 20px rgba(102, 187, 106, 0.3)',
-          userSelect: 'none',
-          fontWeight: '600',
-          color: '#2e7d32',
-          transition: 'transform 0.3s ease',
-        },
-        balanceLabel: {
-          fontSize: '14px',
-          marginBottom: '6px',
-        },
-        balance: {
-          fontSize: '28px',
-          fontWeight: '700',
-          color: '#388e3c',
-          marginBottom: '10px',
-        },
-        topUpBtn: {
-          backgroundColor: '#66bb6a',
-          color: '#fff',
-          padding: '10px 26px',
-          border: 'none',
-          borderRadius: '30px',
-          cursor: 'pointer',
-          fontWeight: '700',
-          fontSize: '15px',
-          boxShadow: '0 6px 15px rgba(102, 187, 106, 0.7)',
-          transition: 'background-color 0.3s ease',
-        },
-        editForm: {
-          marginTop: '30px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '18px',
-          maxWidth: '500px',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        },
-        editInput: {
-          padding: '14px 16px',
-          fontSize: '16px',
-          borderRadius: '12px',
-          border: '1.5px solid #fca311',
-          outline: 'none',
-          fontWeight: '500',
-          color: '#333',
-          transition: 'border-color 0.3s ease',
-        },
-        saveBtn: {
-          padding: '14px 0',
-          borderRadius: '30px',
-          backgroundColor: '#1d3557',
-          color: '#fff',
-          fontWeight: '700',
-          fontSize: '18px',
-          border: 'none',
-          cursor: 'pointer',
-          boxShadow: '0 8px 25px rgba(29, 53, 87, 0.8)',
-          transition: 'background-color 0.3s ease',
-        },
-        infoSection: {
-          marginTop: '20px',
-          maxWidth: '900px',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        },
-        infoHeader: {
-          fontWeight: '600',
-          fontSize: '22px',
-          color: '#25436D',
-          marginBottom: '12px',
-        },
-        infoCard: {
-          backgroundColor: '#e9f0f7',
-          padding: '22px',
-          borderRadius: '14px',
-          marginBottom: '14px',
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-          cursor: 'pointer',
-          outline: 'none',
-        },
-        infoCardTitle: {
-          fontWeight: '600',
-          fontSize: '18px',
-          marginBottom: '6px',
-          color: '#1d3557',
-        },
-        infoCardText: {
-          fontWeight: '400',
-          fontSize: '14px',
-          color: '#444',
-          marginBottom: '6px',
-        },
-        readMore: {
-          color: '#fca311',
-          fontWeight: '600',
-          textDecoration: 'none',
-          fontSize: '14px',
-        },
-      
-      };
+  balance: {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#388e3c',
+    marginBottom: '10px',
+  },
 
-      export default ProfilePage;
+  topUpBtn: {
+    backgroundColor: '#66bb6a',
+    color: '#fff',
+    padding: '10px 26px',
+    border: 'none',
+    borderRadius: '30px',
+    cursor: 'pointer',
+    fontWeight: '700',
+    fontSize: '15px',
+    boxShadow: '0 6px 15px rgba(102, 187, 106, 0.7)',
+    transition: 'background-color 0.3s ease',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  editForm: {
+    marginTop: '30px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px',
+    maxWidth: '500px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+
+  editInput: {
+    padding: '14px 16px',
+    fontSize: '16px',
+    borderRadius: '12px',
+    border: '1.5px solid #fca311',
+    outline: 'none',
+    fontWeight: '500',
+    color: '#333',
+    transition: 'border-color 0.3s ease',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  saveBtn: {
+    padding: '14px 0',
+    borderRadius: '30px',
+    backgroundColor: '#1d3557',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: '18px',
+    border: 'none',
+    cursor: 'pointer',
+    boxShadow: '0 8px 25px rgba(29, 53, 87, 0.8)',
+    transition: 'background-color 0.3s ease',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  infoSection: {
+    marginTop: '60px',
+    maxWidth: '900px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+
+  infoHeader: {
+    fontWeight: '600',
+    fontSize: '22px',
+    color: '#25436D',
+    marginBottom: '12px',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  infoCard: {
+    backgroundColor: '#e9f0f7',
+    padding: '22px',
+    borderRadius: '14px',
+    marginBottom: '14px',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+    cursor: 'pointer',
+    fontFamily: "'Poppins', sans-serif",
+  },
+
+  infoCardTitle: {
+    fontWeight: '600',
+    fontSize: '18px',
+    marginBottom: '6px',
+    color: '#1d3557',
+  },
+
+  infoCardText: {
+    fontWeight: '400',
+    fontSize: '14px',
+    color: '#444',
+    marginBottom: '6px',
+  },
+
+  readMore: {
+    color: '#fca311',
+    fontWeight: '600',
+    textDecoration: 'none',
+    fontSize: '14px',
+  },
+};
+export default ProfilePage;

@@ -55,6 +55,7 @@ const styles = {
     backgroundPosition: 'center',
     borderRadius: 10,
     overflow: 'hidden',
+    marginRight:'10px',
     minWidth: 280,
     boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
     transition: 'transform 0.3s ease',

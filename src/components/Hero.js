@@ -11,6 +11,14 @@ const Hero = () => {
   const [fade, setFade] = useState(true);
 
   useEffect(() => {
+    // Убираем отступы у body и html
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    document.documentElement.style.margin = '0';
+    document.documentElement.style.padding = '0';
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setFade(false);
       setTimeout(() => {
@@ -59,7 +67,9 @@ const Hero = () => {
 
 const styles = {
   root: {
-    overflowX: 'hidden',
+    overflow: 'hidden',
+    margin: 0,
+    padding: 0,
     fontFamily: "'Poppins', sans-serif",
   },
   hero: {
@@ -69,15 +79,14 @@ const styles = {
     overflow: 'hidden',
     margin: 0,
     padding: 0,
-    fontFamily: "'Poppins', sans-serif",
     zIndex: 1,
   },
   video: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '100vw',
-    height: '100vh',
+    width: '100%',
+    height: '100%',
     objectFit: 'cover',
     zIndex: -1,
     filter: 'brightness(0.6)',
@@ -92,7 +101,6 @@ const styles = {
     zIndex: 2,
     maxWidth: '90%',
     padding: '0 20px',
-    fontFamily: "'Poppins', sans-serif",
   },
   title: {
     fontSize: '48px',

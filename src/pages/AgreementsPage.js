@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
 const AgreementsPage = () => {
   const [openIndex, setOpenIndex] = useState(null);
@@ -15,31 +15,31 @@ const AgreementsPage = () => {
     setSubmitted(true);
   };
 
-  const accordionData = [
+  const agreements = [
     {
-      title: '📘 Договор о туристических услугах',
+      title: 'Договор о туристических услугах',
       content:
-        'Вы соглашаетесь с программой тура, сроками, обязанностями сторон. Условия касаются маршрутов, сроков отмены, страхования и безопасности. Все обязательства сторон регулируются действующим законодательством.',
+        'Вы соглашаетесь с программой тура, сроками, обязанностями сторон. Условия касаются маршрутов, сроков отмены, страхования и безопасности.',
     },
     {
-      title: '📝 Договор-оферта',
+      title: 'Договор-оферта',
       content:
-        'Договор вступает в силу с момента бронирования. Условия оплаты, изменение маршрута, отмена регулируются стандартами оферты. Покупка тура означает полное согласие с условиями.',
+        'Договор вступает в силу с момента бронирования. Условия оплаты, изменение маршрута, отмена регулируются стандартами оферты.',
     },
     {
-      title: '🤝 Агентский договор',
+      title: 'Агентский договор',
       content:
-        'TravelPay действует от вашего имени при бронировании транспорта, отелей и других услуг. Мы обязуемся действовать добросовестно и в интересах клиента. Вы соглашаетесь с этим представлением.',
+        'TravelPay действует от вашего имени при бронировании транспорта, отелей и других услуг. Мы обязуемся действовать добросовестно и в интересах клиента.',
     },
     {
-      title: '🔐 Пользовательское соглашение',
+      title: 'Пользовательское соглашение',
       content:
-        'Вы используете сайт в соответствии с правилами. Персональные данные защищаются в соответствии с законом. Несанкционированное копирование материалов запрещено.',
+        'Вы используете сайт в соответствии с правилами. Персональные данные защищаются по закону. Несанкционированное копирование запрещено.',
     },
     {
-      title: '💸 Политика возврата и отмены бронирования',
+      title: 'Политика возврата и отмены',
       content:
-        'Бесплатная отмена — за 7 дней до начала тура. При отмене по вине агентства — полный возврат или замена. Меньше 7 дней — частичный возврат, по договору.',
+        'Бесплатная отмена за 7 дней до начала тура. Меньше — частичный возврат. При отмене по вине агентства — полный возврат.',
     },
   ];
 
@@ -49,23 +49,21 @@ const AgreementsPage = () => {
         <h1 style={styles.heading}>Соглашения и условия TravelPay</h1>
 
         <div style={styles.accordion}>
-          {accordionData.map((item, index) => (
+          {agreements.map((item, index) => (
             <div key={index} style={styles.accordionItem}>
               <div
+                onClick={() => toggleAccordion(index)}
                 style={{
                   ...styles.accordionHeader,
                   ...(openIndex === index ? styles.activeHeader : {}),
                 }}
-                onClick={() => toggleAccordion(index)}
               >
                 {item.title}
                 <span
                   style={{
                     ...styles.toggleIcon,
                     transform:
-                      openIndex === index
-                        ? 'rotate(135deg)'
-                        : 'rotate(45deg)',
+                      openIndex === index ? 'rotate(135deg)' : 'rotate(45deg)',
                   }}
                 />
               </div>
@@ -74,10 +72,10 @@ const AgreementsPage = () => {
                   ...styles.accordionContent,
                   maxHeight: openIndex === index ? '300px' : '0',
                   padding:
-                    openIndex === index ? '20px 24px' : '0px 24px',
+                    openIndex === index ? '18px 24px' : '0px 24px',
                 }}
               >
-                <p style={{ margin: 0 }}>{item.content}</p>
+                <p style={styles.accordionText}>{item.content}</p>
               </div>
             </div>
           ))}
@@ -110,13 +108,9 @@ const AgreementsPage = () => {
             }}
             disabled={!(agree1 && agree2)}
           >
-            ✅ Подтвердить и продолжить
+            Подтвердить и продолжить
           </button>
-          {submitted && (
-            <div style={styles.success}>
-              Спасибо, всё подтверждено!
-            </div>
-          )}
+          {submitted && <div style={styles.success}>Спасибо, всё подтверждено!</div>}
         </form>
       </div>
     </div>
@@ -125,23 +119,26 @@ const AgreementsPage = () => {
 
 const styles = {
   body: {
-    fontFamily: 'Inter, sans-serif',
-    background: 'linear-gradient(135deg, #e0f7fa, #e3f2fd)',
-    margin: 0,
-    color: '#333',
+    fontFamily: "'Poppins', sans-serif",
+    background: '#ffffff',
     minHeight: '100vh',
+    margin: 0,
+    padding: 0,
+    color: '#333',
   },
   container: {
-    maxWidth: '960px',
+    maxWidth: '900px',
     margin: '50px auto',
     padding: '40px',
-    background: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '24px',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+    paddingLeft: '60px',          
+    marginLeft: '155px',        
+    background: '#fff',
+    borderRadius: '20px',
+    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.1)', 
   },
   heading: {
     textAlign: 'center',
-    fontSize: '34px',
+    fontSize: '32px',
     color: '#0d47a1',
     marginBottom: '40px',
   },
@@ -159,20 +156,21 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    fontWeight: '600',
-    fontSize: '18px',
+    fontWeight: 600,
+    fontSize: '17px',
     color: '#1565c0',
-    transition: 'background 0.3s ease',
     userSelect: 'none',
+    transition: 'background 0.3s ease',
   },
   activeHeader: {
-    background: '#f0faff',
+    backgroundColor: '#e0f7fa',
   },
   toggleIcon: {
     width: '12px',
     height: '12px',
     borderRight: '3px solid #42a5f5',
     borderBottom: '3px solid #42a5f5',
+    transform: 'rotate(45deg)',
     transition: 'transform 0.3s ease',
     marginLeft: '10px',
   },
@@ -183,6 +181,10 @@ const styles = {
     color: '#444',
     transition: 'max-height 0.4s ease, padding 0.4s ease',
   },
+  accordionText: {
+    margin: 0,
+    lineHeight: '1.6',
+  },
   checkboxGroup: {
     marginTop: '30px',
   },
@@ -190,6 +192,7 @@ const styles = {
     fontSize: '15px',
     display: 'block',
     marginBottom: '10px',
+    fontWeight: 500,
   },
   checkbox: {
     marginRight: '10px',
@@ -207,7 +210,7 @@ const styles = {
     fontWeight: '600',
     fontSize: '16px',
     cursor: 'pointer',
-    transition: '0.3s ease',
+    transition: 'background 0.3s ease',
   },
   buttonDisabled: {
     background: '#ccc',
@@ -221,4 +224,4 @@ const styles = {
   },
 };
 
-export default AgreementsPage;
+export default AgreementsPage;
