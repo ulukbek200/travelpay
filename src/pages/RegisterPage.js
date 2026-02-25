@@ -1,7 +1,8 @@
-// src/pages/RegisterPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+const API = "https://travelpay-backend-2.onrender.com";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: '',
   });
+
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -30,16 +32,17 @@ const RegisterPage = () => {
     }
 
     try {
-      const existing = await axios.get(
-        'https://travelpay-backend-production.up.railway.app/users',
-        { params: { email } }
-      );
+      // ✅ Проверяем существующего пользователя
+      const existing = await axios.get(`${API}/users`, {
+        params: { email }
+      });
 
       if (existing.data.length > 0) {
         setError('Пользователь с таким email уже существует');
         return;
       }
 
+      // ✅ Новый пользователь
       const newUser = {
         name,
         email,
@@ -49,13 +52,11 @@ const RegisterPage = () => {
         isLoggedIn: true,
       };
 
-      const response = await axios.post(
-        'https://travelpay-backend-production.up.railway.app/users',
-        newUser
-      );
+      const response = await axios.post(`${API}/users`, newUser);
 
       localStorage.setItem('currentUser', JSON.stringify(response.data));
-      window.location.href = '/profile'; // обновление header
+
+      window.location.href = '/profile';
 
     } catch (err) {
       console.error(err);
@@ -71,10 +72,7 @@ const RegisterPage = () => {
         loop
         style={styles.video}
         src="https://cdn.pixabay.com/video/2024/12/24/248445_large.mp4"
-        type="video/webm"
-      >
-        Ваш браузер не поддерживает видео.
-      </video>
+      />
 
       <div style={styles.formBox}>
         <h2 style={styles.title}>
@@ -82,11 +80,11 @@ const RegisterPage = () => {
           <span
             style={styles.logoClickable}
             onClick={() => navigate('/')}
-            role="button"
           >
             TravelPay
           </span>
         </h2>
+
         <p style={styles.subtitle}>Создайте новый аккаунт</p>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -101,6 +99,7 @@ const RegisterPage = () => {
             required
             style={styles.input}
           />
+
           <input
             type="email"
             name="email"
@@ -110,6 +109,7 @@ const RegisterPage = () => {
             required
             style={styles.input}
           />
+
           <input
             type="password"
             name="password"
@@ -119,6 +119,7 @@ const RegisterPage = () => {
             required
             style={styles.input}
           />
+
           <input
             type="password"
             name="confirmPassword"
@@ -128,6 +129,7 @@ const RegisterPage = () => {
             required
             style={styles.input}
           />
+
           <button type="submit" style={styles.button}>
             Зарегистрироваться
           </button>
@@ -153,10 +155,9 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: '50px',
-    padding: '20px',
     backgroundColor: '#000',
   },
+
   video: {
     position: 'fixed',
     top: 0,
@@ -165,86 +166,72 @@ const styles = {
     height: '100%',
     objectFit: 'cover',
     zIndex: 0,
-    filter: 'brightness(0.6) contrast(1.1) saturate(1.2)',
+    filter: 'brightness(0.6)',
   },
+
   formBox: {
     position: 'relative',
     zIndex: 2,
-    backgroundColor: 'rgba(255, 245, 225, 0.15)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     backdropFilter: 'blur(10px)',
-    padding: '20px 50px',
+    padding: '30px',
     borderRadius: '20px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
     width: '100%',
-    maxWidth: '420px',
-    marginTop: '-60px',
-    color: '#fbe9d0',
+    maxWidth: '400px',
+    color: 'white',
     textAlign: 'center',
   },
+
   title: {
-    fontSize: '28px',
+    fontSize: '26px',
     fontWeight: '700',
-    marginBottom: '10px',
-    color: 'white',
-    textShadow: '1px 1px 4px rgba(0,0,0,0.7)',
   },
+
   logoClickable: {
-    color: 'white',
-    fontWeight: '700',
     cursor: 'pointer',
-    textShadow: '1px 1px 4px rgba(0,0,0,0.6)',
+    fontWeight: '700',
   },
+
   subtitle: {
-    fontSize: '16px',
-    marginBottom: '30px',
-    color: 'white',
-    textShadow: '1px 1px 3px rgba(0,0,0,0.5)',
+    marginBottom: '20px',
   },
+
   error: {
     backgroundColor: '#e53935',
-    color: '#fff',
-    padding: '12px 20px',
-    borderRadius: '14px',
-    fontWeight: 600,
-    marginBottom: '24px',
-    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+    padding: '10px',
+    borderRadius: '10px',
+    marginBottom: '15px',
   },
+
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '15px',
   },
+
   input: {
-    padding: '14px 18px',
-    borderRadius: '12px',
+    padding: '12px',
+    borderRadius: '10px',
     border: 'none',
-    fontSize: '16px',
-    outline: 'none',
-    fontWeight: '500',
-    color: '#333',
   },
+
   button: {
-    padding: '14px',
-    borderRadius: '40px',
+    padding: '12px',
+    borderRadius: '30px',
     border: 'none',
-    background:
-      'linear-gradient(90deg, #f57c00 0%, #ef6c00 100%)',
-    color: '#fff',
+    backgroundColor: '#f57c00',
+    color: 'white',
     fontWeight: '700',
-    fontSize: '18px',
     cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(245, 124, 0, 0.7)',
-    transition: 'background 0.3s ease',
   },
+
   footerText: {
-    marginTop: '28px',
-    fontSize: '14px',
-    color: '#ffecb3',
+    marginTop: '15px',
   },
+
   link: {
-    marginLeft: '6px',
+    marginLeft: '5px',
     color: '#ffd54f',
-    fontWeight: '600',
     textDecoration: 'none',
   },
 };
