@@ -23,6 +23,7 @@ import TourBookingPage from './pages/TourBookingPage';
 import AgreementsPage from './pages/AgreementsPage';
 import VisaPaymentPage from './pages/VisaPaymentPage';
 import FavoritesPage from './pages/FavoritesPage';
+import SavingsPlanPage from './pages/SavingsPlanPage';
 
 function AppContent({ favorites, setFavorites }) {
   const location = useLocation();
@@ -34,7 +35,8 @@ function AppContent({ favorites, setFavorites }) {
     '/booking',
     '/admin/tours',
     '/VisaPaymentPage',
-    '/favorites'
+    '/favorites',
+    '/savings-plan'
   ];
 
   const hideLayout = hideLayoutPaths.includes(location.pathname);
@@ -68,12 +70,19 @@ function AppContent({ favorites, setFavorites }) {
         <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/tours" element={<ActualToursPage favorites={favorites} setFavorites={setFavorites} />} />
-        <Route path="/favorites" element={<FavoritesPage favorites={favorites} setFavorites={setFavorites} />} />
+        <Route
+          path="/tours"
+          element={<ActualToursPage favorites={favorites} setFavorites={setFavorites} />}
+        />
+        <Route
+          path="/favorites"
+          element={<FavoritesPage favorites={favorites} setFavorites={setFavorites} />}
+        />
         <Route path="/booking" element={<TourBookingPage />} />
         <Route path="/admin/tours" element={<ActualToursAdmin />} />
         <Route path="/AgreePage" element={<AgreementsPage />} />
         <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
+        <Route path="/savings-plan" element={<SavingsPlanPage />} />
         <Route
           path="/profile"
           element={
