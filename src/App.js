@@ -33,7 +33,10 @@ function AppContent({ favorites, setFavorites }) {
     '/register',
     '/tours',
     '/booking',
+    '/admin',
     '/admin/tours',
+    '/admin/users',
+    '/admin/stats',
     '/VisaPaymentPage',
     '/favorites',
     '/savings-plan'
@@ -48,7 +51,7 @@ function AppContent({ favorites, setFavorites }) {
 
       {location.pathname === '/tours' && (
         <div
-          onClick={() => window.location.href = '/'}
+          onClick={() => (window.location.href = '/')}
           style={{
             position: 'fixed',
             top: 20,
@@ -70,19 +73,38 @@ function AppContent({ favorites, setFavorites }) {
         <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+
         <Route
           path="/tours"
-          element={<ActualToursPage favorites={favorites} setFavorites={setFavorites} />}
+          element={
+            <ActualToursPage
+              favorites={favorites}
+              setFavorites={setFavorites}
+            />
+          }
         />
+
         <Route
           path="/favorites"
-          element={<FavoritesPage favorites={favorites} setFavorites={setFavorites} />}
+          element={
+            <FavoritesPage
+              favorites={favorites}
+              setFavorites={setFavorites}
+            />
+          }
         />
+
         <Route path="/booking" element={<TourBookingPage />} />
+
+        <Route path="/admin" element={<ActualToursAdmin />} />
         <Route path="/admin/tours" element={<ActualToursAdmin />} />
+        <Route path="/admin/users" element={<ActualToursAdmin />} />
+        <Route path="/admin/stats" element={<ActualToursAdmin />} />
+
         <Route path="/AgreePage" element={<AgreementsPage />} />
         <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
         <Route path="/savings-plan" element={<SavingsPlanPage />} />
+
         <Route
           path="/profile"
           element={
