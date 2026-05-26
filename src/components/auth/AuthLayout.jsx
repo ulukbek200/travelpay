@@ -14,11 +14,16 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
       <style>{`
   .auth-page {
     position: relative;
-    overflow: hidden;
+    min-height: 100svh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: grid;
+    place-items: center;
+    padding: 88px 18px 32px;
   }
 
   .auth-bg-image {
-    position: absolute;
+    position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
@@ -26,64 +31,50 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   }
 
   .auth-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    background: linear-gradient(
-      rgba(7, 17, 35, 0.65),
-      rgba(7, 17, 35, 0.75)
-    );
+    background: linear-gradient(180deg, rgba(7, 17, 35, 0.68), rgba(7, 17, 35, 0.84));
     backdrop-filter: blur(3px);
   }
 
   .auth-back {
-    position: absolute;
-    top: 28px;
-    left: 28px;
+    position: fixed;
+    top: 22px;
+    left: 22px;
     z-index: 10;
     height: 42px;
     padding: 0 16px;
-    border-radius: 14px;
-    border: none;
-    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.24);
+    background: rgba(255,255,255,0.14);
     color: white;
     backdrop-filter: blur(10px);
+    font-weight: 800;
   }
 
   .auth-center-shell {
     position: relative;
     z-index: 5;
-
-    width: 100%;
-    max-width: 410px;
-
-    /* ИДЕАЛЬНО ПО ЦЕНТРУ */
+    width: min(100%, 430px);
     margin: 0 auto;
-
-    padding: 16px;
   }
 
   .auth-card {
-    border-radius: 28px !important;
+    border-radius: 22px !important;
     overflow: hidden;
-
-    border: 1px solid rgba(255,255,255,0.15);
-
-    background: rgba(255,255,255,0.92) !important;
-
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    background: rgba(255,255,255,0.94) !important;
     backdrop-filter: blur(20px);
-
-    box-shadow:
-      0 20px 60px rgba(0,0,0,0.22),
-      0 0 0 1px rgba(255,255,255,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.24);
   }
 
   .auth-card .ant-card-body {
-    padding: 30px !important;
+    padding: 28px !important;
   }
 
   .auth-card-head {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
   }
 
   .auth-logo-tag {
@@ -93,7 +84,7 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     border: none;
     background: linear-gradient(135deg, #1677ff, #00b4d8);
     color: white;
-    font-weight: 700;
+    font-weight: 800;
     display: inline-flex;
     align-items: center;
     margin-bottom: 14px;
@@ -104,15 +95,16 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     margin-bottom: 8px;
     color: #1677ff;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    font-weight: 800;
+    letter-spacing: 0;
     text-transform: uppercase;
   }
 
   .auth-card h2 {
-    margin-bottom: 8px !important;
+    margin: 0 0 8px !important;
     font-size: 28px !important;
-    font-weight: 800 !important;
+    line-height: 1.16 !important;
+    font-weight: 850 !important;
     color: #0f172a !important;
   }
 
@@ -121,43 +113,94 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     line-height: 1.6;
   }
 
-  .auth-form .ant-input-affix-wrapper {
-    height: 48px;
+  .auth-form .ant-form-item {
+    margin-bottom: 16px;
+  }
+
+  .auth-form .ant-input-affix-wrapper,
+  .auth-form .ant-input {
+    min-height: 48px;
     border-radius: 12px;
   }
 
-  .auth-form .ant-btn-primary {
+  .auth-form-row,
+  .auth-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .auth-submit {
     height: 48px;
-    border-radius: 12px;
-    font-weight: 700;
+    border-radius: 12px !important;
+    font-weight: 800;
     font-size: 15px;
-
-    background: linear-gradient(135deg, #1677ff, #00b4d8);
-    border: none;
-
-    box-shadow: 0 12px 24px rgba(22,119,255,0.3);
+    background: linear-gradient(135deg, #1677ff, #00b4d8) !important;
+    border: none !important;
+    box-shadow: 0 12px 24px rgba(22,119,255,0.28);
   }
 
-  .auth-form .ant-btn-primary:hover {
-    transform: translateY(-2px);
+  .auth-socials {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
-  @media (max-width: 768px) {
-    .auth-center-shell {
-      max-width: 100%;
-      padding: 18px;
+  .auth-socials .ant-btn {
+    width: 100%;
+    border-radius: 12px !important;
+  }
+
+  @media (max-width: 520px) {
+    .auth-page {
+      place-items: start center;
+      padding: 78px 12px 20px;
+    }
+
+    .auth-back {
+      top: 14px;
+      left: 12px;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 10px;
+    }
+
+    .auth-card {
+      border-radius: 18px !important;
     }
 
     .auth-card .ant-card-body {
-      padding: 24px !important;
+      padding: 20px !important;
     }
 
     .auth-card h2 {
-      font-size: 24px !important;
+      font-size: 23px !important;
+    }
+
+    .auth-card-head {
+      margin-bottom: 18px;
+    }
+
+    .auth-form-row,
+    .auth-footer {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .auth-form-row .ant-btn,
+    .auth-footer .ant-btn {
+      padding-left: 0;
+    }
+
+    .auth-socials {
+      grid-template-columns: 1fr;
     }
   }
 `}</style>
-      <main className="auth-page tw-min-h-screen tw-grid tw-place-items-center">
+      <main className="auth-page">
         <video autoPlay muted loop playsInline className="auth-bg-image">
           <source
             src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4"
@@ -181,11 +224,11 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
 
         <motion.section
           className="auth-center-shell"
-          initial={{ opacity: 0, y: 28, scale: 0.98 }}
+          initial={{ opacity: 0, y: 22, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.55, ease: 'easeOut' }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
         >
-          <Card className="auth-card tw-rounded-2xl tw-shadow-xl">
+          <Card className="auth-card">
             <div className="auth-card-head">
               <Tag className="auth-logo-tag">TravelPay</Tag>
               <Text className="auth-eyebrow">{eyebrow}</Text>

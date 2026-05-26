@@ -29,10 +29,10 @@ const LoginPage = () => {
       const user = { ...response.data, isLoggedIn: true };
 
       saveCurrentUser(user);
-      message.success('Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ TravelPay');
+      message.success('Добро пожаловать в TravelPay');
       navigate(user.role === 'admin' ? '/admin/tours' : '/profile');
     } catch (err) {
-      message.error('РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕР№С‚Рё. РџСЂРѕРІРµСЂСЊС‚Рµ backend.');
+      message.error('Не удалось войти. Проверьте email, пароль и доступность backend.');
     } finally {
       setLoading(false);
     }
@@ -40,32 +40,32 @@ const LoginPage = () => {
 
   return (
     <AuthLayout
-      eyebrow="Welcome back"
-      title="Р’РѕР№С‚Рё РІ Р°РєРєР°СѓРЅС‚"
-      subtitle="РџСЂРѕРґРѕР»Р¶РёС‚Рµ Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ С‚СѓСЂРѕРІ, РёР·Р±СЂР°РЅРЅРѕРµ Рё РїРµСЂСЃРѕРЅР°Р»СЊРЅС‹Рµ СЂРµРєРѕРјРµРЅРґР°С†РёРё."
+      eyebrow="С возвращением"
+      title="Войти в аккаунт"
+      subtitle="Продолжайте бронирование туров, смотрите избранное и управляйте своим профилем."
     >
       <Form layout="vertical" onFinish={handleSubmit} className="auth-form">
         <Form.Item name="email" label="Email" rules={emailRules}>
           <Input size="large" prefix={<MailOutlined />} type="email" placeholder="you@example.com" />
         </Form.Item>
 
-        <Form.Item name="password" label="РџР°СЂРѕР»СЊ" rules={loginPasswordRules}>
-          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ" />
+        <Form.Item name="password" label="Пароль" rules={loginPasswordRules}>
+          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Введите пароль" />
         </Form.Item>
 
         <div className="auth-form-row">
           <Form.Item name="remember" valuePropName="checked" noStyle>
-            <Checkbox>Р—Р°РїРѕРјРЅРёС‚СЊ РјРµРЅСЏ</Checkbox>
+            <Checkbox>Запомнить меня</Checkbox>
           </Form.Item>
-          <Button type="link" className="auth-inline-link">Р—Р°Р±С‹Р»Рё РїР°СЂРѕР»СЊ?</Button>
+          <Button type="link" className="auth-inline-link">Забыли пароль?</Button>
         </div>
 
         <Button type="primary" htmlType="submit" size="large" loading={loading} block className="auth-submit">
-          Р’РѕР№С‚Рё
+          Войти
         </Button>
       </Form>
 
-      <Divider plain>РёР»Рё РІРѕР№С‚Рё С‡РµСЂРµР·</Divider>
+      <Divider plain>или войти через</Divider>
 
       <Space.Compact block className="auth-socials">
         <Button size="large" icon={<GoogleOutlined />}>Google</Button>
@@ -73,8 +73,8 @@ const LoginPage = () => {
       </Space.Compact>
 
       <div className="auth-footer">
-        <Text type="secondary">РќРµС‚ Р°РєРєР°СѓРЅС‚Р°?</Text>
-        <Button type="link" onClick={() => navigate('/register')}>Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ</Button>
+        <Text type="secondary">Нет аккаунта?</Text>
+        <Button type="link" onClick={() => navigate('/register')}>Зарегистрироваться</Button>
       </div>
     </AuthLayout>
   );

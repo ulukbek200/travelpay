@@ -35,7 +35,7 @@ const RegisterPage = () => {
       const existing = await api.get('/users', { params: { email } });
 
       if (existing.data.length > 0) {
-        message.error('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј email СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.');
+        message.error('Пользователь с таким email уже существует.');
         return;
       }
 
@@ -52,10 +52,10 @@ const RegisterPage = () => {
       });
 
       saveCurrentUser({ ...response.data, isLoggedIn: true });
-      message.success('РђРєРєР°СѓРЅС‚ СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ');
+      message.success('Аккаунт успешно создан');
       navigate('/profile');
     } catch (err) {
-      message.error('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ. РџСЂРѕРІРµСЂСЊС‚Рµ, С‡С‚Рѕ backend Р·Р°РїСѓС‰РµРЅ.');
+      message.error('Не удалось зарегистрироваться. Проверьте доступность backend.');
     } finally {
       setLoading(false);
     }
@@ -63,46 +63,46 @@ const RegisterPage = () => {
 
   return (
     <AuthLayout
-      eyebrow="Create profile"
-      title="РЎРѕР·РґР°С‚СЊ Р°РєРєР°СѓРЅС‚"
-      subtitle="РџРѕР»СѓС‡РёС‚Рµ РґРѕСЃС‚СѓРї Рє Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏРј, РёР·Р±СЂР°РЅРЅС‹Рј С‚СѓСЂР°Рј Рё premium travel-СЃРµСЂРІРёСЃСѓ."
+      eyebrow="Новый профиль"
+      title="Создать аккаунт"
+      subtitle="Получите доступ к бронированиям, избранным турам и персональным рекомендациям TravelPay."
     >
       <Form layout="vertical" onFinish={handleSubmit} className="auth-form">
-        <Form.Item name="name" label="РРјСЏ" rules={[requiredRule('Р’РІРµРґРёС‚Рµ РёРјСЏ')]}>
-          <Input size="large" prefix={<UserOutlined />} placeholder="Р’Р°С€Рµ РёРјСЏ" />
+        <Form.Item name="name" label="Имя" rules={[requiredRule('Введите имя')]}>
+          <Input size="large" prefix={<UserOutlined />} placeholder="Ваше имя" />
         </Form.Item>
 
         <Form.Item name="email" label="Email" rules={emailRules}>
           <Input size="large" prefix={<MailOutlined />} type="email" placeholder="you@example.com" />
         </Form.Item>
 
-        <Form.Item name="phone" label="РўРµР»РµС„РѕРЅ" rules={phoneRules}>
+        <Form.Item name="phone" label="Телефон" rules={phoneRules}>
           <Input size="large" prefix={<PhoneOutlined />} placeholder="+996 555 123 456" />
         </Form.Item>
 
-        <Form.Item name="password" label="РџР°СЂРѕР»СЊ" rules={passwordRules}>
-          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ" />
+        <Form.Item name="password" label="Пароль" rules={passwordRules}>
+          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Введите пароль" />
         </Form.Item>
 
         <Form.Item
           name="confirmPassword"
-          label="РџРѕРІС‚РѕСЂРёС‚СЊ РїР°СЂРѕР»СЊ"
+          label="Повторите пароль"
           dependencies={['password']}
           rules={confirmPasswordRules}
         >
-          <Input.Password size="large" prefix={<LockOutlined />} placeholder="РџРѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ" />
+          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Повторите пароль" />
         </Form.Item>
 
         <Form.Item name="agreement" valuePropName="checked" rules={agreementRules}>
-          <Checkbox>РЇ СЃРѕРіР»Р°СЃРµРЅ СЃ СѓСЃР»РѕРІРёСЏРјРё СЃРµСЂРІРёСЃР° Рё РїРѕР»РёС‚РёРєРѕР№ РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё</Checkbox>
+          <Checkbox>Я согласен с условиями сервиса и политикой конфиденциальности</Checkbox>
         </Form.Item>
 
         <Button type="primary" htmlType="submit" size="large" loading={loading} block className="auth-submit">
-          Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ
+          Зарегистрироваться
         </Button>
       </Form>
 
-      <Divider plain>РёР»Рё Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ С‡РµСЂРµР·</Divider>
+      <Divider plain>или зарегистрироваться через</Divider>
 
       <Space.Compact block className="auth-socials">
         <Button size="large" icon={<GoogleOutlined />}>Google</Button>
@@ -110,8 +110,8 @@ const RegisterPage = () => {
       </Space.Compact>
 
       <div className="auth-footer">
-        <Text type="secondary">РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚?</Text>
-        <Button type="link" onClick={() => navigate('/login')}>Р’РѕР№С‚Рё</Button>
+        <Text type="secondary">Уже есть аккаунт?</Text>
+        <Button type="link" onClick={() => navigate('/login')}>Войти</Button>
       </div>
     </AuthLayout>
   );
