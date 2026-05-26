@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Dropdown, Layout, Menu, Space, Typography } from 'antd';
+import { Avatar, Button, Drawer, Dropdown, Layout, Menu, Space, Typography } from 'antd';
 import {
+  CloseOutlined,
   DownOutlined,
   GlobalOutlined,
   LoginOutlined,
   LogoutOutlined,
+  MenuOutlined,
   MoonOutlined,
   SunOutlined,
   UserOutlined,
@@ -19,6 +21,13 @@ const BRAND_BLUE = '#1d3557';
 const BRAND_NAVY = '#24486f';
 const BRAND_GOLD = '#fca311';
 
+const navItems = [
+  { key: '/', label: 'Главная' },
+  { key: '/tours', label: 'Туры' },
+  { key: '/favorites', label: 'Избранное' },
+  { key: 'partnership', label: 'Партнерство' },
+];
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,15 +35,13 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
   const [theme, setTheme] = useState(() => localStorage.getItem('travelpay_theme') || 'light');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isHome = location.pathname === '/';
 
   useEffect(() => {
-    const syncCurrentUser = () => {
-      const parsedUser = readCurrentUser();
-      setCurrentUser(parsedUser?.isLoggedIn ? parsedUser : null);
-    };
+    const parsedUser = readCurrentUser();
+    setCurrentUser(parsedUser?.isLoggedIn ? parsedUser : null);
 
-    syncCurrentUser();
     return subscribeToCurrentUser((user) => {
       setCurrentUser(user?.isLoggedIn ? user : null);
     });
@@ -52,34 +59,6 @@ const Header = () => {
     localStorage.setItem('travelpay_theme', theme);
   }, [theme]);
 
-  const handleLanguageChange = (value) => {
-    setLanguage(value);
-    localStorage.setItem('travelpay_language', value);
-    window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
-  };
-
-  const handleLogout = () => {
-    clearCurrentUser();
-    setCurrentUser(null);
-    navigate('/');
-  };
-
-  const goToPartnership = () => {
-    if (location.pathname !== '/') {
-      navigate('/');
-      setTimeout(() => document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' }), 120);
-      return;
-    }
-    document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const navItems = [
-    { key: '/', label: 'Главная' },
-    { key: '/tours', label: 'Туры' },
-    { key: '/favorites', label: 'Избранное' },
-    { key: 'partnership', label: 'Партнёрство' },
-  ];
-
   const selectedKey = location.pathname === '/'
     ? '/'
     : location.pathname.startsWith('/tours')
@@ -90,6 +69,38 @@ const Header = () => {
 
   const glassMode = isHome && !isScrolled;
   const menuTextColor = glassMode || theme === 'dark' ? '#f6fbff' : BRAND_NAVY;
+
+  const handleLanguageChange = (value) => {
+    setLanguage(value);
+    localStorage.setItem('travelpay_language', value);
+    window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
+  };
+
+  const goToPartnership = () => {
+    setMobileMenuOpen(false);
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' }), 120);
+      return;
+    }
+    document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleNavigate = (key) => {
+    setMobileMenuOpen(false);
+    if (key === 'partnership') {
+      goToPartnership();
+      return;
+    }
+    navigate(key);
+  };
+
+  const handleLogout = () => {
+    clearCurrentUser();
+    setCurrentUser(null);
+    setMobileMenuOpen(false);
+    navigate('/');
+  };
 
   const languageMenu = {
     selectedKeys: [language],
@@ -116,16 +127,95 @@ const Header = () => {
     },
   };
 
+  const drawer = (
+    <Drawer
+      open={mobileMenuOpen}
+      onClose={() => setMobileMenuOpen(false)}
+      placement="right"
+      width="min(86vw, 360px)"
+      closeIcon={<CloseOutlined />}
+      className="travelpay-mobile-drawer"
+      styles={{
+        body: styles.drawerBody,
+        header: styles.drawerHeader,
+      }}
+      title={
+        <span style={styles.drawerTitle}>
+          TravelPay
+          <small style={styles.drawerSubtitle}>by Barsbek Travel</small>
+        </span>
+      }
+    >
+      <div style={styles.drawerNav}>
+        {navItems.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => handleNavigate(item.key)}
+            style={{
+              ...styles.drawerNavButton,
+              ...(selectedKey === item.key ? styles.drawerNavButtonActive : {}),
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={styles.drawerSection}>
+        <Text strong>Язык</Text>
+        <div style={styles.drawerSegment}>
+          {['KG', 'RU', 'EN'].map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => handleLanguageChange(item)}
+              style={{ ...styles.drawerSegmentButton, ...(language === item ? styles.drawerSegmentButtonActive : {}) }}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Button
+        block
+        icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+        onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
+        style={styles.drawerActionButton}
+      >
+        {theme === 'dark' ? 'Светлая тема' : 'Темная тема'}
+      </Button>
+
+      {currentUser ? (
+        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+          <Button block icon={<UserOutlined />} onClick={() => handleNavigate('/profile')} style={styles.drawerPrimaryButton}>
+            Профиль
+          </Button>
+          <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>
+            Выйти
+          </Button>
+        </Space>
+      ) : (
+        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+          <Button block icon={<LoginOutlined />} onClick={() => handleNavigate('/login')} style={styles.drawerActionButton}>
+            Войти
+          </Button>
+          <Button block type="primary" onClick={() => handleNavigate('/tours')} style={styles.drawerPrimaryButton}>
+            Book Tour
+          </Button>
+        </Space>
+      )}
+    </Drawer>
+  );
+
   return (
-    <AntHeader 
-    
+    <AntHeader
       className="premium-site-header"
       style={{
-        
         ...styles.header,
         ...(theme === 'dark' && !glassMode ? styles.darkHeader : {}),
         ...(glassMode ? styles.transparentHeader : {}),
-        
       }}
     >
       <div style={styles.inner}>
@@ -142,12 +232,12 @@ const Header = () => {
           mode="horizontal"
           selectedKeys={selectedKey ? [selectedKey] : []}
           items={navItems}
-          onClick={({ key }) => (key === 'partnership' ? goToPartnership() : navigate(key))}
+          onClick={({ key }) => handleNavigate(key)}
           className="premium-header-menu"
           style={{ ...styles.menu, color: menuTextColor }}
         />
 
-        <Space size={10} style={styles.actions}>
+        <Space size={10} className="desktop-header-actions" style={styles.actions}>
           <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
             <Button style={{ ...styles.dropdownButton, ...(glassMode ? styles.glassButton : {}) }}>
               <GlobalOutlined />
@@ -181,7 +271,16 @@ const Header = () => {
             </>
           )}
         </Space>
+
+        <Button
+          aria-label="Open menu"
+          className="mobile-menu-button"
+          icon={<MenuOutlined />}
+          onClick={() => setMobileMenuOpen(true)}
+          style={{ ...styles.mobileMenuButton, ...(glassMode ? styles.mobileGlassButton : {}) }}
+        />
       </div>
+      {drawer}
     </AntHeader>
   );
 };
@@ -219,7 +318,6 @@ const styles = {
     alignItems: 'center',
     gap: 30,
   },
-  
   logoButton: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -265,18 +363,33 @@ const styles = {
   actions: {
     flexShrink: 0,
   },
- dropdownButton: {
-  height: 38,
-  borderRadius: 999,
-  border: '1px solid rgba(59,130,246,0.24)',
-  color: '#ffffff',
-  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-  fontWeight: 800,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  boxShadow: '0 10px 22px rgba(37,99,235,0.20)',
-},
+  mobileMenuButton: {
+    display: 'none',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    border: '1px solid rgba(29,53,87,0.12)',
+    color: BRAND_BLUE,
+    background: 'rgba(255,255,255,0.92)',
+    flexShrink: 0,
+  },
+  mobileGlassButton: {
+    color: '#fff',
+    background: 'rgba(29,53,87,0.72)',
+    borderColor: 'rgba(255,255,255,0.22)',
+  },
+  dropdownButton: {
+    height: 38,
+    borderRadius: 999,
+    border: '1px solid rgba(59,130,246,0.24)',
+    color: '#ffffff',
+    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+    fontWeight: 800,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    boxShadow: '0 10px 22px rgba(37,99,235,0.20)',
+  },
   glassButton: {
     background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
     borderColor: 'rgba(252,163,17,0.34)',
@@ -331,29 +444,104 @@ const styles = {
     fontWeight: 760,
     fontSize: 13,
   },
-loginButton: {
-  height: 38,
-  borderRadius: 999,
-  border: '1px solid rgba(59,130,246,0.24)',
-  background: 'rgba(255,255,255,0.9)',
-  color: '#2563eb',
-  fontWeight: 800,
-  boxShadow: '0 8px 18px rgba(37,99,235,0.12)',
-},
+  loginButton: {
+    height: 38,
+    borderRadius: 999,
+    border: '1px solid rgba(59,130,246,0.24)',
+    background: 'rgba(255,255,255,0.9)',
+    color: '#2563eb',
+    fontWeight: 800,
+    boxShadow: '0 8px 18px rgba(37,99,235,0.12)',
+  },
   loginGlass: {
     background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
     borderColor: 'rgba(252,163,17,0.34)',
     color: '#f6fbff',
   },
- bookButton: {
-  height: 38,
-  borderRadius: 999,
-  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-  border: 'none',
-  color: '#ffffff',
-  fontWeight: 850,
-  boxShadow: '0 10px 22px rgba(37,99,235,0.28)',
-},
+  bookButton: {
+    height: 38,
+    borderRadius: 999,
+    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+    border: 'none',
+    color: '#ffffff',
+    fontWeight: 850,
+    boxShadow: '0 10px 22px rgba(37,99,235,0.28)',
+  },
+  drawerHeader: {
+    borderBottom: '1px solid rgba(29,53,87,0.08)',
+  },
+  drawerBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+    padding: 18,
+  },
+  drawerTitle: {
+    display: 'grid',
+    gap: 2,
+    color: BRAND_BLUE,
+    fontWeight: 900,
+    lineHeight: 1.1,
+  },
+  drawerSubtitle: {
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: 700,
+  },
+  drawerNav: {
+    display: 'grid',
+    gap: 8,
+  },
+  drawerNavButton: {
+    minHeight: 46,
+    border: '1px solid rgba(29,53,87,0.08)',
+    borderRadius: 12,
+    background: '#fff',
+    color: BRAND_BLUE,
+    cursor: 'pointer',
+    fontWeight: 850,
+    textAlign: 'left',
+    padding: '0 14px',
+  },
+  drawerNavButtonActive: {
+    background: 'rgba(252,163,17,0.14)',
+    borderColor: 'rgba(252,163,17,0.36)',
+  },
+  drawerSection: {
+    display: 'grid',
+    gap: 10,
+  },
+  drawerSegment: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 8,
+  },
+  drawerSegmentButton: {
+    height: 40,
+    border: '1px solid rgba(29,53,87,0.08)',
+    borderRadius: 12,
+    background: '#fff',
+    color: BRAND_BLUE,
+    cursor: 'pointer',
+    fontWeight: 900,
+  },
+  drawerSegmentButtonActive: {
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    borderColor: BRAND_GOLD,
+  },
+  drawerActionButton: {
+    height: 44,
+    borderRadius: 12,
+    fontWeight: 850,
+  },
+  drawerPrimaryButton: {
+    height: 44,
+    borderRadius: 12,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    borderColor: BRAND_GOLD,
+    color: BRAND_BLUE,
+    fontWeight: 900,
+  },
 };
 
 export default Header;

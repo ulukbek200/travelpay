@@ -1082,6 +1082,27 @@ body[data-theme="dark"] .booking-summary-list {
 }
 
 @media (max-width: 980px) {
+  .premium-site-header {
+    height: 64px !important;
+  }
+
+  .premium-site-header > div {
+    padding-inline: 16px !important;
+    gap: 12px !important;
+  }
+
+  .premium-header-menu,
+  .desktop-header-actions {
+    display: none !important;
+  }
+
+  .premium-site-header .mobile-menu-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+  }
+
   .ant-layout-header .ant-menu {
     background: transparent !important;
   }
@@ -1113,6 +1134,29 @@ body[data-theme="dark"] .booking-summary-list {
 
   .tour-filters-shell {
     grid-template-columns: 1fr 1fr !important;
+    max-width: calc(100% - 32px) !important;
+    border-radius: 22px !important;
+  }
+
+  .tours-page > section:first-of-type {
+    min-height: 440px !important;
+    padding: 112px 18px 76px !important;
+    margin-top: -64px !important;
+  }
+
+  .tours-page h1.ant-typography {
+    font-size: 42px !important;
+    line-height: 1.08 !important;
+  }
+
+  .tours-page .ant-row {
+    margin-left: -10px !important;
+    margin-right: -10px !important;
+  }
+
+  .tours-page .ant-col {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
   }
 }
 
@@ -1128,8 +1172,21 @@ body[data-theme="dark"] .booking-summary-list {
 
   .tour-filters-shell {
     grid-template-columns: 1fr !important;
-    margin-left: 14px !important;
-    margin-right: 14px !important;
+    margin: -34px 12px 32px !important;
+    padding: 14px !important;
+    gap: 12px !important;
+    max-width: none !important;
+    border-radius: 18px !important;
+  }
+
+  .tour-filters-shell .ant-input-affix-wrapper,
+  .tour-filters-shell .ant-select-selector {
+    min-height: 44px !important;
+    border-radius: 12px !important;
+  }
+
+  .tour-filters-shell .ant-rate {
+    font-size: 15px !important;
   }
 
   .tour-catalog-head,
@@ -1137,6 +1194,62 @@ body[data-theme="dark"] .booking-summary-list {
   .booking-step-actions {
     flex-direction: column !important;
     align-items: flex-start !important;
+  }
+
+  .tour-catalog-head {
+    gap: 12px !important;
+  }
+
+  .tour-catalog-head .ant-btn {
+    width: 100%;
+  }
+
+  .tours-page > section:first-of-type {
+    min-height: 390px !important;
+    padding: 100px 16px 72px !important;
+  }
+
+  .tours-page h1.ant-typography {
+    font-size: 32px !important;
+  }
+
+  .tours-page h2.ant-typography {
+    font-size: 24px !important;
+  }
+
+  .tours-page .ant-typography {
+    max-width: 100%;
+  }
+
+  .tours-page section[style*="max-width: 1180"] {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .premium-tour-card {
+    border-radius: 20px !important;
+  }
+
+  .premium-tour-card [style*="height: 250px"] {
+    height: 205px !important;
+  }
+
+  .premium-tour-card [style*="padding: 22px"] {
+    padding: 16px !important;
+  }
+
+  .premium-tour-card h3.ant-typography {
+    font-size: 20px !important;
+  }
+
+  .premium-tour-card [style*="justify-content: space-between"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .premium-tour-card [style*="justify-content: space-between"] .ant-space {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .tour-detail-page iframe {
@@ -1205,6 +1318,62 @@ body[data-theme="dark"] .booking-summary-list {
 
   .booking-summary-card {
     position: static;
+  }
+}
+
+@media (max-width: 520px) {
+  .premium-site-header {
+    height: 60px !important;
+  }
+
+  .premium-site-header > div {
+    padding-inline: 12px !important;
+  }
+
+  .premium-site-header [aria-label="TravelPay home"] span span:first-child {
+    font-size: 18px !important;
+  }
+
+  .premium-site-header [aria-label="TravelPay home"] span span:last-child {
+    font-size: 9.5px !important;
+  }
+
+  .tours-page > section:first-of-type {
+    min-height: 360px !important;
+    padding: 92px 14px 66px !important;
+    margin-top: -60px !important;
+  }
+
+  .tours-page h1.ant-typography {
+    font-size: 28px !important;
+  }
+
+  .tours-page p.ant-typography {
+    font-size: 15px !important;
+    line-height: 1.55 !important;
+  }
+
+  .tours-page .ant-row {
+    row-gap: 16px !important;
+  }
+
+  .tours-page .ant-empty {
+    padding: 42px 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .premium-tour-card [style*="height: 205px"],
+  .premium-tour-card [style*="height: 250px"] {
+    height: 190px !important;
+  }
+
+  .premium-tour-card .tour-card-reveal {
+    display: none !important;
+  }
+
+  .travelpay-mobile-drawer .ant-drawer-content {
+    border-top-left-radius: 18px;
+    border-bottom-left-radius: 18px;
   }
 }
 
