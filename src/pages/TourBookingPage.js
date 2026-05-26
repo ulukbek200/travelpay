@@ -1,269 +1,481 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Row,
+  Select,
+  Space,
+  Tag,
+  Typography,
+} from 'antd';
+import {
+  ArrowLeftOutlined,
+  CalendarOutlined,
+  CarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CompassOutlined,
+  CreditCardOutlined,
+  EnvironmentOutlined,
+  TeamOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import { motion } from 'framer-motion';
+
+const { Title, Paragraph, Text } = Typography;
+
+const BRAND_BLUE = '#1d3557';
+const BRAND_GOLD = '#fca311';
+
+const formatPrice = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 
 const TourBookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { tour } = location.state || {};
-
-  const pricePerPerson = tour ? Number(tour.price.replace(/[^0-9]/g, '')) : 0;
+  const [form] = Form.useForm();
   const [people, setPeople] = useState(2);
-  const [total, setTotal] = useState(pricePerPerson * 2);
+  const [submitting, setSubmitting] = useState(false);
+
+  const pricePerPerson = Number(String(tour?.price || 0).replace(/[^0-9]/g, '')) || 0;
+  const total = useMemo(() => pricePerPerson * people, [pricePerPerson, people]);
 
   if (!tour) {
     return (
-      <div style={{ padding: 40, fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-        <h2>Ошибка</h2>
-        <p>Данные тура не были переданы. Пожалуйста, вернитесь на страницу туров.</p>
-        <button onClick={() => navigate('/tours')}>Назад к турам</button>
-      </div>
+      <main style={styles.emptyPage}>
+        <Card style={styles.emptyCard}>
+          <Title level={2}>Данные тура не найдены</Title>
+          <Paragraph>Пожалуйста, вернитесь на страницу туров и выберите тур для бронирования.</Paragraph>
+          <Button type="primary" icon={<ArrowLeftOutlined />} style={styles.goldButton} onClick={() => navigate('/tours')}>
+            Назад к турам
+          </Button>
+        </Card>
+      </main>
     );
   }
 
-  const handlePeopleChange = (e) => {
-    const qty = parseInt(e.target.value);
-    setPeople(qty);
-    setTotal(qty * pricePerPerson);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    navigate('/VisaPaymentPage', {
-      state: {
-        tour,
-        total,
-        people,
-      },
-    });
+  const handleSubmit = async (values) => {
+    setSubmitting(true);
+    setTimeout(() => {
+      setSubmitting(false);
+      navigate('/VisaPaymentPage', {
+        state: {
+          tour,
+          total,
+          people,
+          booking: values,
+        },
+      });
+    }, 700);
   };
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", maxWidth: 960, margin: '40px auto', padding: 20, position: 'relative' }}>
-      {/* Логотип в верхнем левом углу */}
-      <div
-       onClick={() => window.location.href = '/'}
-       style={{
-         position: 'fixed',
-         top: 20,
-         left: 20,
-         fontSize: '24px',
-         fontWeight: 'bold',
-         color: '#1e40af',
-         cursor: 'pointer',
-         zIndex: 1000,
-         userSelect: 'none',
-         fontFamily: "'Poppins', sans-serif",
-        }}
-        aria-label="Перейти на главную"
-        title="Перейти на главную"
-      >
-        TravelPay
-      </div>
+    <main className="booking-page" style={styles.page}>
+      <video autoPlay muted loop playsInline style={styles.backgroundVideo}>
+        <source src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4" type="video/mp4" />
+        <source src="https://cdn.pixabay.com/video/2021/08/10/84776-587945089_large.mp4" type="video/mp4" />
+      </video>
+      <div style={styles.overlay} />
 
-      <style>{`
-        * {
-          box-sizing: border-box;
-        }
-        body {
-          margin: 0;
-          background-color: #f9fafb;
-        }
-        .container {
-          display: flex;
-          gap: 40px;
-          flex-wrap: wrap;
-          background: #fff;
-          padding: 40px;
-          border-radius: 12px;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-          margin-top: -10px;
-        }
-        .tour-info {
-          flex: 1 1 420px;
-          color: #374151;
-        }
-        .tour-info img {
-          width: 100%;
-          height: 280px;
-          object-fit: cover;
-          border-radius: 12px;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-          transition: transform 0.3s ease;
-        }
-        .tour-info img:hover {
-          transform: scale(1.04);
-        }
-        .tour-info h2 {
-          margin-top: 20px;
-          font-weight: 700;
-          font-size: 28px;
-          color: #000000;
-          text-align: center;
-        }
-        .tour-info p.description {
-          font-size: 16px;
-          margin: 12px 0 16px;
-          line-height: 1.6;
-          text-align: center;
-          color: #374151;
-        }
-        .tour-info .price {
-          font-weight: 700;
-          font-size: 22px;
-          color: #2563eb;
-          margin-top: 10px;
-          margin-bottom: 25px;
-          text-align: center;
-        }
-        .tour-info ul {
-          list-style: disc inside;
-          margin-bottom: 25px;
-          font-size: 15px;
-          color: black;
-          line-height: 1.5;
-          padding-left: 20px;
-        }
-        .tour-info ul li {
-          margin-bottom: 8px;
-        }
-        .booking-form {
-          flex: 1 1 400px;
-        }
-        .booking-form h3 {
-          font-weight: 700;
-          font-size: 26px;
-          margin-bottom: 30px;
-          color: black;
-          text-align: center;
-        }
-        .booking-form label {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 8px;
-          color: #374151;
-          font-size: 15px;
-        }
-        .booking-form input,
-        .booking-form select,
-        .booking-form textarea {
-          width: 100%;
-          padding: 12px 15px;
-          border: 1.5px solid #d1d5db;
-          border-radius: 10px;
-          margin-bottom: 20px;
-          font-size: 16px;
-          transition: border-color 0.3s ease;
-          font-family: inherit;
-        }
-        .booking-form input:focus,
-        .booking-form select:focus,
-        .booking-form textarea:focus {
-          outline: none;
-          border-color: #2563eb;
-          box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
-        }
-        .summary {
-          font-weight: 700;
-          font-size: 20px;
-          color: #1e40af;
-          margin-bottom: 25px;
-          text-align: center;
-        }
-        .booking-form button {
-          width: 100%;
-          background-color: #2563eb;
-          color: white;
-          padding: 15px 0;
-          border: none;
-          border-radius: 12px;
-          font-weight: 700;
-          font-size: 18px;
-          cursor: pointer;
-          transition: background-color 0.3s ease;
-          user-select: none;
-        }
-        .booking-form button:hover {
-          background-color: #1e40af;
-        }
-        @media (max-width: 720px) {
-          .container {
-            flex-direction: column;
-            padding: 30px 20px;
-          }
-          .tour-info,
-          .booking-form {
-            flex: 1 1 100%;
-          }
-          .booking-form h3 {
-            font-size: 22px;
-          }
-          .tour-info h2 {
-            font-size: 24px;
-          }
-        }
-      `}</style>
+      <button type="button" style={styles.logo} onClick={() => navigate('/')}>
+        <span>TravelPay</span>
+        <small>by Barsbek Travel</small>
+      </button>
 
-      <div className="container">
-        <div className="tour-info">
-          <img src="https://cabar.asia/wp-content/uploads/2024/09/Zapovednik-Kyrgyz-Ata-Oshskaya-oblast-Kyrgyzstan.-Foto-PROON-Kyrgyzstan.jpeg" alt={tour.title} />
-          <h2>{tour.title}</h2>
-          <p className="description">{tour.description || 'Описание тура отсутствует.'}</p>
+      <section style={styles.shell}>
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          style={styles.header}
+        >
+          <Tag style={styles.heroTag}>Premium booking</Tag>
+          <Title style={styles.title}>Забронировать тур</Title>
+          <Paragraph style={styles.subtitle}>
+            Подтвердите детали поездки. Онлайн-оплата пока не списывается: менеджер свяжется с вами для финального подтверждения.
+          </Paragraph>
+        </motion.div>
 
-          <ul>
-            <li><strong>Страна:</strong> {tour.country || 'Кыргызстан'}</li>
-            <li><strong>Длительность:</strong> {tour.duration}</li>
-            <li><strong>Цена:</strong> от {tour.price} / человек</li>
-            <li><strong>Места посещения:</strong> {tour.visitedPlaces || 'включает основные достопримечательности региона'}</li>
-            <li><strong>Включено питание:</strong> {tour.meals || 'завтраки и обеды'}</li>
-            <li><strong>Уровень сложности:</strong> {tour.difficulty || 'средний'}</li>
-            <li><strong>Рекомендуемые вещи:</strong> {tour.recommendedItems || 'удобная обувь, головной убор, вода'}</li>
-            <li><strong>Контакты для вопросов:</strong> {tour.contact || '+996 555 123 456'}</li>
-          </ul>
+        <Row gutter={[26, 26]} align="stretch">
+          <Col xs={24} lg={10}>
+            <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
+              <Card style={styles.tourCard} bodyStyle={{ padding: 0 }}>
+                <div style={styles.imageWrap}>
+                  <img
+                    src={tour.image || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80'}
+                    alt={tour.title}
+                    style={styles.tourImage}
+                  />
+                  <div style={styles.imageGradient} />
+                  <Tag style={styles.locationTag}><EnvironmentOutlined /> {tour.location || tour.country || 'Кыргызстан'}</Tag>
+                </div>
+                <div style={styles.tourBody}>
+                  <Title level={2} style={styles.tourTitle}>{tour.title}</Title>
+                  <Paragraph style={styles.tourText}>{tour.description || 'Премиальный маршрут с локальным гидом, комфортным транспортом и красивыми локациями.'}</Paragraph>
 
-          <p className="price">от {tour.price} / человек</p>
-        </div>
+                  <div style={styles.featureGrid}>
+                    <div style={styles.feature}><CalendarOutlined /><span>{tour.duration || 'Срок уточняется'}</span></div>
+                    <div style={styles.feature}><TeamOutlined /><span>{people} туриста</span></div>
+                    <div style={styles.feature}><CompassOutlined /><span>Локальный гид</span></div>
+                    <div style={styles.feature}><CarOutlined /><span>Комфорт трансфер</span></div>
+                  </div>
 
-        <form className="booking-form" onSubmit={handleSubmit}>
-          <h3>Забронировать и оплатить</h3>
+                  <div style={styles.pricePanel}>
+                    <Text>Цена за человека</Text>
+                    <strong>{formatPrice(pricePerPerson)}</strong>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-          <label>Количество участников:</label>
-          <select value={people} onChange={handlePeopleChange}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
+          <Col xs={24} lg={14}>
+            <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.22 }}>
+              <Card style={styles.formCard}>
+                <Alert
+                  showIcon
+                  type="info"
+                  style={styles.alert}
+                  message="Бронирование пока не оплачивается онлайн — менеджер свяжется с вами для подтверждения"
+                />
 
-          <label>Дата начала тура:</label>
-          <input type="date" required />
+                <Form
+                  form={form}
+                  layout="vertical"
+                  initialValues={{
+                    people: 2,
+                    transport: 'comfort',
+                    guide: 'group',
+                  }}
+                  onFinish={handleSubmit}
+                >
+                  <Row gutter={[16, 14]}>
+                    <Col xs={24} md={12}>
+                      <Form.Item name="name" label="Имя" rules={[{ required: true, message: 'Введите имя' }]}>
+                        <Input size="large" prefix={<UserOutlined />} placeholder="Ваше имя" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item name="phone" label="Телефон" rules={[{ required: true, message: 'Введите телефон' }]}>
+                        <Input size="large" placeholder="+996 555 123 456" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item name="date" label="Дата начала тура" rules={[{ required: true, message: 'Выберите дату' }]}>
+                        <DatePicker size="large" style={{ width: '100%' }} suffixIcon={<CalendarOutlined />} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item name="time" label="Желаемое время выезда">
+                        <Input size="large" prefix={<ClockCircleOutlined />} placeholder="09:00" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item name="people" label="Количество участников">
+                        <InputNumber
+                          size="large"
+                          min={1}
+                          max={12}
+                          style={{ width: '100%' }}
+                          onChange={(value) => setPeople(Number(value || 1))}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item name="transport" label="Тип транспорта">
+                        <Select
+                          size="large"
+                          options={[
+                            { value: 'minivan', label: 'Минивэн' },
+                            { value: 'comfort', label: 'Комфорт-класс' },
+                            { value: 'jeep', label: 'Джип / SUV' },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item name="guide" label="Гид">
+                        <Select
+                          size="large"
+                          options={[
+                            { value: 'group', label: 'Групповой' },
+                            { value: 'personal', label: 'Персональный' },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24}>
+                      <Form.Item name="comment" label="Пожелания">
+                        <Input.TextArea
+                          rows={4}
+                          placeholder="Например: питание, место посадки, дети, особые пожелания..."
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
 
-          <label>Желаемое время выезда:</label>
-          <input type="time" />
+                  <div style={styles.summaryCard}>
+                    <Space direction="vertical" size={4}>
+                      <Text style={styles.summaryLabel}>Итоговая стоимость</Text>
+                      <Title level={2} style={styles.total}>{formatPrice(total)}</Title>
+                      <Text style={styles.summaryNote}>{people} × {formatPrice(pricePerPerson)}</Text>
+                    </Space>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      size="large"
+                      loading={submitting}
+                      icon={<CreditCardOutlined />}
+                      style={styles.submitButton}
+                    >
+                      Продолжить
+                    </Button>
+                  </div>
+                </Form>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
 
-          <label>Тип транспорта:</label>
-          <select>
-            <option>Минивэн</option>
-            <option>Комфорт-класс</option>
-            <option>Джип</option>
-          </select>
-
-          <label>Гид:</label>
-          <select>
-            <option>Групповой</option>
-            <option>Персональный</option>
-          </select>
-
-          <label>Пожелания:</label>
-          <textarea placeholder="Например: вегетарианское питание, место у окна..." />
-
-          <div className="summary">Итого: {total.toLocaleString()} сом</div>
-
-          <button type="submit"> Оплатить тур</button>
-        </form>
-      </div>
-    </div>
+        <motion.div
+          style={styles.trustRow}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.34 }}
+        >
+          {['Безопасное подтверждение', 'Локальный менеджер', 'KG / RU / EN поддержка'].map((item) => (
+            <span key={item}><CheckCircleOutlined /> {item}</span>
+          ))}
+        </motion.div>
+      </section>
+    </main>
   );
 };
 
+const styles = {
+  page: {
+    minHeight: '100vh',
+    position: 'relative',
+    overflow: 'hidden',
+    padding: '30px 20px 70px',
+    color: '#fff',
+    fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+  },
+  backgroundVideo: {
+    position: 'fixed',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    filter: 'saturate(1.08) contrast(1.04) brightness(0.86)',
+    transform: 'scale(1.03)',
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'linear-gradient(135deg, rgba(5,13,24,0.86), rgba(12,31,54,0.62), rgba(5,13,24,0.82)), radial-gradient(circle at 72% 18%, rgba(252,163,17,0.22), transparent 34%)',
+  },
+  logo: {
+    position: 'relative',
+    zIndex: 5,
+    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: 18,
+    background: 'rgba(255,255,255,0.10)',
+    color: '#fff',
+    padding: '10px 14px',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    backdropFilter: 'blur(18px)',
+    fontWeight: 850,
+    boxShadow: '0 18px 46px rgba(0,0,0,0.18)',
+  },
+  shell: {
+    position: 'relative',
+    zIndex: 2,
+    maxWidth: 1180,
+    margin: '34px auto 0',
+  },
+  header: {
+    maxWidth: 820,
+    margin: '0 auto 28px',
+    textAlign: 'center',
+  },
+  heroTag: {
+    borderRadius: 999,
+    padding: '7px 14px',
+    background: 'rgba(255,255,255,0.14)',
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.22)',
+    fontWeight: 850,
+    backdropFilter: 'blur(18px)',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 'clamp(34px, 5vw, 62px)',
+    lineHeight: 1.04,
+    margin: '18px 0 12px',
+    fontWeight: 850,
+    textShadow: '0 22px 70px rgba(0,0,0,0.34)',
+  },
+  subtitle: {
+    color: 'rgba(255,255,255,0.80)',
+    fontSize: 17,
+    lineHeight: 1.7,
+  },
+  tourCard: {
+    height: '100%',
+    overflow: 'hidden',
+    borderRadius: 30,
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.18)',
+    boxShadow: '0 28px 80px rgba(0,0,0,0.26)',
+    backdropFilter: 'blur(24px)',
+  },
+  imageWrap: {
+    position: 'relative',
+    height: 300,
+    overflow: 'hidden',
+  },
+  tourImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  },
+  imageGradient: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.58))',
+  },
+  locationTag: {
+    position: 'absolute',
+    left: 18,
+    bottom: 18,
+    borderRadius: 999,
+    background: 'rgba(255,255,255,0.16)',
+    border: '1px solid rgba(255,255,255,0.22)',
+    color: '#fff',
+    backdropFilter: 'blur(14px)',
+    fontWeight: 750,
+  },
+  tourBody: {
+    padding: 24,
+  },
+  tourTitle: {
+    color: '#fff',
+    fontWeight: 850,
+    marginBottom: 10,
+  },
+  tourText: {
+    color: 'rgba(255,255,255,0.76)',
+    lineHeight: 1.65,
+  },
+  featureGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 10,
+    margin: '22px 0',
+  },
+  feature: {
+    minHeight: 58,
+    borderRadius: 18,
+    padding: 12,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    color: '#fff',
+    background: 'rgba(255,255,255,0.10)',
+    border: '1px solid rgba(255,255,255,0.12)',
+  },
+  pricePanel: {
+    padding: 18,
+    borderRadius: 22,
+    background: 'linear-gradient(135deg, rgba(252,163,17,0.18), rgba(255,255,255,0.10))',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    color: '#fff',
+  },
+  formCard: {
+    borderRadius: 30,
+    background: 'rgba(255,255,255,0.92)',
+    border: '1px solid rgba(255,255,255,0.64)',
+    boxShadow: '0 28px 80px rgba(0,0,0,0.22)',
+    backdropFilter: 'blur(24px)',
+  },
+  alert: {
+    marginBottom: 22,
+    borderRadius: 18,
+    background: 'rgba(22,182,196,0.09)',
+    borderColor: 'rgba(22,182,196,0.22)',
+  },
+  summaryCard: {
+    marginTop: 10,
+    padding: 18,
+    borderRadius: 24,
+    background: 'linear-gradient(135deg, rgba(29,53,87,0.08), rgba(252,163,17,0.14))',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 18,
+  },
+  summaryLabel: {
+    color: '#64748b',
+    fontWeight: 750,
+  },
+  total: {
+    color: BRAND_BLUE,
+    margin: 0,
+    fontWeight: 900,
+  },
+  summaryNote: {
+    color: '#64748b',
+  },
+  submitButton: {
+    minWidth: 190,
+    height: 50,
+    borderRadius: 999,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    borderColor: BRAND_GOLD,
+    color: BRAND_BLUE,
+    fontWeight: 900,
+    boxShadow: '0 18px 42px rgba(252,163,17,0.32)',
+  },
+  goldButton: {
+    borderRadius: 999,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    borderColor: BRAND_GOLD,
+    color: BRAND_BLUE,
+    fontWeight: 850,
+  },
+  trustRow: {
+    marginTop: 24,
+    display: 'flex',
+    justifyContent: 'center',
+    gap: 14,
+    flexWrap: 'wrap',
+  },
+  emptyPage: {
+    minHeight: '100vh',
+    display: 'grid',
+    placeItems: 'center',
+    padding: 24,
+    background: 'linear-gradient(135deg, #eef5fb, #f8fbff)',
+  },
+  emptyCard: {
+    maxWidth: 520,
+    borderRadius: 28,
+    boxShadow: '0 24px 70px rgba(29,53,87,0.12)',
+  },
+};
+
 export default TourBookingPage;
-
-

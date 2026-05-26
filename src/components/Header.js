@@ -1,462 +1,359 @@
-// import React, { useState, useEffect } from 'react';
-// import { useNavigate, useLocation } from 'react-router-dom';
-// import { FaUser, FaSignOutAlt, FaBars, FaHome, FaGlobe } from 'react-icons/fa';
-// import { motion, useAnimation } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { Avatar, Button, Dropdown, Layout, Menu, Space, Typography } from 'antd';
+import {
+  DownOutlined,
+  GlobalOutlined,
+  LoginOutlined,
+  LogoutOutlined,
+  MoonOutlined,
+  SunOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { clearCurrentUser, readCurrentUser, subscribeToCurrentUser } from '../utils/currentUser';
 
-// const HeaderPage = () => {
-//   const [currentUser, setCurrentUser] = useState(null);
-//   const [sidebarOpen, setSidebarOpen] = useState(false);
-//   const [scrollY, setScrollY] = useState(0);
-//   const [isShrunk, setIsShrunk] = useState(false);
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const controls = useAnimation();
+const { Header: AntHeader } = Layout;
+const { Text } = Typography;
 
-//   const fontFamily = "'Poppins', sans-serif";
-//   const bgColor = '#1d3557';
+const BRAND_BLUE = '#1d3557';
+const BRAND_NAVY = '#24486f';
+const BRAND_GOLD = '#fca311';
 
-//   useEffect(() => {
-//     const user = localStorage.getItem('currentUser');
-//     if (user) {
-//       const parsed = JSON.parse(user);
-//       setCurrentUser(parsed?.isLoggedIn ? parsed : null);
-//     } else {
-//       setCurrentUser(null);
-//     }
-//   }, [location.pathname]);
-
-//   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
-//   const handleLogout = () => {
-//     localStorage.removeItem('currentUser');
-//     setCurrentUser(null);
-//     navigate('/');
-//   };
-
-//   const handleScroll = () => {
-//     const currentScrollY = window.scrollY;
-//     setScrollY(currentScrollY);
-//     setIsShrunk(currentScrollY > 100);
-//   };
-
-//   useEffect(() => {
-//     window.addEventListener('scroll', handleScroll);
-//     return () => window.removeEventListener('scroll', handleScroll);
-//   }, []);
-
-//   const sidebarIcons = [
-//     { icon: <FaHome />, label: 'Главная', action: () => navigate('/') },
-//     { icon: <FaUser />, label: 'Профиль', action: () => navigate('/profile') },
-//     { icon: <FaGlobe />, label: 'Туры', action: () => navigate('/tours') },
-//     { icon: <FaSignOutAlt />, label: 'Выход', action: handleLogout },
-//   ];
-
-//   return (
-//     <>
-//       {/* Sidebar */}
-//       <motion.div
-//         animate={{ width: sidebarOpen ? 180 : 50 }}
-//         transition={{ duration: 0.3 }}
-//         style={{
-//           position: 'fixed',
-//           top: 0,
-//           left: 0,
-//           height: '100vh',
-//           backgroundColor: bgColor,
-//           zIndex: 998,
-//           display: 'flex',
-//           flexDirection: 'column',
-//           alignItems: sidebarOpen ? 'flex-start' : 'center',
-//           paddingTop: '80px',
-//           borderTopRightRadius: '20px',
-//           borderBottomRightRadius: '20px',
-//           fontFamily,
-//           boxShadow: '4px 0 12px rgba(0,0,0,0.3)',
-//           overflow: 'hidden',
-//         }}
-//       >
-//         <motion.div
-//           onClick={toggleSidebar}
-//           whileTap={{ scale: 0.95 }}
-//           style={{
-//             position: 'absolute',
-//             top: '20px',
-//             left: '5px',
-//             background: 'transparent',
-//             width: '40px',
-//             height: '40px',
-//             display: 'flex',
-//             alignItems: 'center',
-//             justifyContent: 'center',
-//             cursor: 'pointer',
-//             zIndex: 999,
-//             color: '#fca311',
-//             fontSize: '20px'
-//           }}
-//         >
-//           <FaBars />
-//         </motion.div>
-
-//         {sidebarIcons.map(({ icon, label, action }, i) => (
-//           <motion.div
-//             key={i}
-//             onClick={action}
-//             whileHover={{ scale: 1.05 }}
-//             style={{
-//               color: '#B0C4DE',
-//               fontSize: '19px',
-//               margin: '20px 0',
-//               display: 'flex',
-//               alignItems: 'center',
-//               cursor: 'pointer',
-//               width: '100%',
-//               paddingLeft: sidebarOpen ? '20px' : '0px',
-//               justifyContent: sidebarOpen ? 'flex-start' : 'center',
-//             }}
-//           >
-//             {icon}
-//             {sidebarOpen && <span style={{ marginLeft: '10px' }}>{label}</span>}
-//           </motion.div>
-//         ))}
-//       </motion.div>
-
-//       {/* Header */}
-//       <motion.header
-//         animate={controls}
-//         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-//         style={{
-//           width: '100%',
-//           backgroundColor: bgColor,
-//           color: 'white',
-//           zIndex: 997,
-//           position: 'sticky',
-//           top: 0,
-//           height: isShrunk ? '45px' : '65px',
-//           display: 'flex',
-//           alignItems: 'center',
-//           justifyContent: 'space-between',
-//           padding: isShrunk ? '0 10px' : '0 18px',
-//           transition: 'all 0.3s ease-in-out',
-//           fontFamily,
-//           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-//           borderBottomLeftRadius: '20px',
-//           borderBottomRightRadius: '20px',
-//         }}
-//       >
-//         {/* Logo */}
-//         <h1 style={{ margin: 0, fontSize: isShrunk ? '18px' : '22px', fontWeight: 'bold' }}>TravelPay</h1>
-
-//         {/* Auth Controls */}
-//         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1001 }}>
-//           {currentUser ? (
-//             <motion.div
-//               initial={{ opacity: 0 }}
-//               animate={{ opacity: 1 }}
-//               style={{
-//                 display: 'flex',
-//                 alignItems: 'center',
-//                 gap: '10px',
-//                 backgroundColor: '#fca311',
-//                 color: '#fff',
-//                 padding: isShrunk ? '4px 10px' : '10px 16px',
-//                 borderRadius: '40px',
-//                 boxShadow: '0 4px 10px rgba(252, 163, 17, 0.4)',
-//                 fontWeight: '600',
-//                 fontSize: isShrunk ? '13px' : '16px',
-//               }}
-//             >
-//               <img
-//                 src={currentUser.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
-//                 alt="avatar"
-//                 style={{ width: isShrunk ? '24px' : '34px', height: isShrunk ? '24px' : '34px', borderRadius: '50%' }}
-//               />
-//               <span>
-//                 {currentUser.name} | {Number(currentUser.balance).toLocaleString()}₽
-//               </span>
-//             </motion.div>
-//           ) : (
-//             <>
-//               <motion.button
-//                 whileHover={{ scale: 1.05 }}
-//                 onClick={() => navigate('/login')}
-//                 style={{
-//                   backgroundColor: '#fca311',
-//                   color: 'white',
-//                   border: 'none',
-//                   padding: '10px 20px',
-//                   borderRadius: '30px',
-//                   fontSize: '15px',
-//                   cursor: 'pointer',
-//                   fontWeight: '600',
-//                 }}
-//               >
-//                 Войти
-//               </motion.button>
-//               <motion.button
-//                 whileHover={{ scale: 1.05 }}
-//                 onClick={() => navigate('/register')}
-//                 style={{
-//                   backgroundColor: '#457b9d',
-//                   color: 'white',
-//                   border: 'none',
-//                   padding: '10px 20px',
-//                   borderRadius: '30px',
-//                   fontSize: '15px',
-//                   cursor: 'pointer',
-//                   fontWeight: '600',
-//                 }}
-//               >
-//                 Зарегистрироваться
-//               </motion.button>
-//             </>
-//           )}
-//         </div>
-//       </motion.header>
-//     </>
-//   );
-// };
-
-// export default HeaderPage;
-
-
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaSignOutAlt, FaChevronRight, FaHome, FaGlobe, FaBars } from 'react-icons/fa';
-import { motion, useAnimation } from 'framer-motion';
-
-const HeaderPage = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-  const [isShrunk, setIsShrunk] = useState(false);
+const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const controls = useAnimation();
-
-  const fontFamily = "'Poppins', sans-serif";
-  const bgColor = '#1d3557';
-  const sidebarWidth = sidebarOpen ? '180px' : '50px';
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
+  const [theme, setTheme] = useState(() => localStorage.getItem('travelpay_theme') || 'light');
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      const parsed = JSON.parse(user);
-      setCurrentUser(parsed?.isLoggedIn ? parsed : null);
-    } else {
-      setCurrentUser(null);
-    }
+    const syncCurrentUser = () => {
+      const parsedUser = readCurrentUser();
+      setCurrentUser(parsedUser?.isLoggedIn ? parsedUser : null);
+    };
+
+    syncCurrentUser();
+    return subscribeToCurrentUser((user) => {
+      setCurrentUser(user?.isLoggedIn ? user : null);
+    });
   }, [location.pathname]);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
-    navigate('/');
-  };
-
-  const handleScroll = () => {
-    const currentScrollY = window.scrollY;
-    setScrollY(currentScrollY);
-    setIsShrunk(currentScrollY > 100);
-  };
-
   useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 28);
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const sidebarIcons = [
-    { icon: <FaHome />, label: 'Главная', action: () => navigate('/') },
-    { icon: <FaUser />, label: 'Профиль', action: () => navigate('/profile') },
-    { icon: <FaGlobe />, label: 'Туры', action: () => navigate('/tours') },
-    { icon: <FaSignOutAlt />, label: 'Выход', action: handleLogout },
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('travelpay_theme', theme);
+  }, [theme]);
+
+  const handleLanguageChange = (value) => {
+    setLanguage(value);
+    localStorage.setItem('travelpay_language', value);
+    window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
+  };
+
+  const handleLogout = () => {
+    clearCurrentUser();
+    setCurrentUser(null);
+    navigate('/');
+  };
+
+  const goToPartnership = () => {
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' }), 120);
+      return;
+    }
+    document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const navItems = [
+    { key: '/', label: 'Главная' },
+    { key: '/tours', label: 'Туры' },
+    { key: '/favorites', label: 'Избранное' },
+    { key: 'partnership', label: 'Партнёрство' },
   ];
 
+  const selectedKey = location.pathname === '/'
+    ? '/'
+    : location.pathname.startsWith('/tours')
+      ? '/tours'
+      : location.pathname.startsWith('/favorites')
+        ? '/favorites'
+        : '';
+
+  const glassMode = isHome && !isScrolled;
+  const menuTextColor = glassMode || theme === 'dark' ? '#f6fbff' : BRAND_NAVY;
+
+  const languageMenu = {
+    selectedKeys: [language],
+    items: ['KG', 'RU', 'EN'].map((key) => ({
+      key,
+      label: (
+        <span style={key === language ? styles.languageActiveLabel : styles.languageLabel}>
+          {key}
+        </span>
+      ),
+    })),
+    onClick: ({ key }) => handleLanguageChange(key),
+  };
+
+  const userMenu = {
+    items: [
+      { key: 'profile', icon: <UserOutlined />, label: 'Профиль' },
+      { type: 'divider' },
+      { key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', danger: true },
+    ],
+    onClick: ({ key }) => {
+      if (key === 'profile') navigate('/profile');
+      if (key === 'logout') handleLogout();
+    },
+  };
+
   return (
-    <>
-      {/* Sidebar */}
-      <motion.div
-        animate={{ width: sidebarOpen ? 180 : 50 }}
-        initial={false}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          height: '100vh',
-          backgroundColor: bgColor,
-          zIndex: 998,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: sidebarOpen ? 'flex-start' : 'center',
-          paddingTop: '80px',
-          borderTopRightRadius: '0px',
-          borderBottomRightRadius: '20px',
-          fontFamily,
-          boxShadow: '4px 0 12px rgba(0,0,0,0.3)',
-          overflow: 'hidden',
-        }}
-      >
-        <motion.div
-          onClick={toggleSidebar}
-          whileTap={{ scale: 0.95 }}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            left: '5px',
-            background: 'transparent',
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 999,
-            color: '#fca311',
-            fontSize: '20px'
-          }}
-        >
-          <FaBars />
-        </motion.div>
+    <AntHeader 
+    
+      className="premium-site-header"
+      style={{
+        
+        ...styles.header,
+        ...(theme === 'dark' && !glassMode ? styles.darkHeader : {}),
+        ...(glassMode ? styles.transparentHeader : {}),
+        
+      }}
+    >
+      <div style={styles.inner}>
+        <button type="button" onClick={() => navigate('/')} style={styles.logoButton} aria-label="TravelPay home">
+          <span style={styles.brandStack}>
+            <span style={{ ...styles.logoText, color: menuTextColor }}>TravelPay</span>
+            <span style={{ ...styles.logoSub, color: glassMode || theme === 'dark' ? 'rgba(246,251,255,0.68)' : 'rgba(29,53,87,0.58)' }}>
+              by Barsbek Travel
+            </span>
+          </span>
+        </button>
 
-        {sidebarIcons.map(({ icon, label, action }, i) => (
-          <motion.div
-            key={i}
-            onClick={action}
-            whileHover={{ scale: 1.05 }}
-            style={{
-              color: '#B0C4DE',
-              fontSize: '19px',
-              margin: '20px 0',
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              width: '100%',
-              paddingLeft: sidebarOpen ? '20px' : '0px',
-              justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              transition: 'padding-left 0.4s ease',
-            }}
-          >
-            {icon}
-            {sidebarOpen && <span style={{ marginLeft: '10px', transition: 'opacity 0.3s ease' }}>{label}</span>}
-          </motion.div>
-        ))}
-      </motion.div>
+        <Menu
+          mode="horizontal"
+          selectedKeys={selectedKey ? [selectedKey] : []}
+          items={navItems}
+          onClick={({ key }) => (key === 'partnership' ? goToPartnership() : navigate(key))}
+          className="premium-header-menu"
+          style={{ ...styles.menu, color: menuTextColor }}
+        />
 
-      {/* Header */}
-      <motion.header
-        animate={controls}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        style={{
-          width: `calc(100% - ${sidebarWidth})`,
-          backgroundColor: bgColor,
-          color: 'white',
-          zIndex: 997,
-          position: 'fixed',
-          top: 0,
-          left: sidebarWidth,
-          height: isShrunk ? '45px' : '65px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: isShrunk ? '0 10px' : '0 18px',
-          transition: 'all 0.3s ease-in-out',
-          fontFamily,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          borderBottomLeftRadius: '0px',
-          borderBottomRightRadius: '20px',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: isShrunk ? '16px' : '22px',
-            fontWeight: 'bold',
-            margin: 0,
-            cursor: 'pointer',
-            zIndex: 1001,
-          }}
-          onClick={() => navigate('/')}
-        >
-          TravelPay
-        </h1>
+        <Space size={10} style={styles.actions}>
+          <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
+            <Button style={{ ...styles.dropdownButton, ...(glassMode ? styles.glassButton : {}) }}>
+              <GlobalOutlined />
+              {language}
+              <DownOutlined style={{ fontSize: 10 }} />
+            </Button>
+          </Dropdown>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px', zIndex: 1001 }}>
+          <Button
+            aria-label="Toggle light and dark theme"
+            icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+            onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
+            style={{ ...styles.themeButton, ...(glassMode ? styles.themeGlass : {}) }}
+          />
+
           {currentUser ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              onClick={() => navigate('/profile')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                backgroundColor: '#fca311',
-                color: '#fff',
-                padding: isShrunk ? '4px 10px' : '6px 16px',
-                borderRadius: '40px',
-                boxShadow: '0 4px 10px rgba(252, 163, 17, 0.4)',
-                fontWeight: '600',
-                fontSize: isShrunk ? '14px' : '16px',
-                marginRight: '15px',
-                cursor: 'pointer',
-              }}
-            >
-              <img
-                src={currentUser.avatar || 'https://www.w3schools.com/howto/img_avatar.png'}
-                alt="avatar"
-                style={{
-                  width: isShrunk ? '24px' : '34px',
-                  height: isShrunk ? '24px' : '34px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                }}
-              />
-              <span style={{ whiteSpace: 'nowrap' }}>
-                {currentUser.name} | {Number(currentUser.balance).toLocaleString()}₽
-              </span>
-            </motion.div>
+            <Dropdown menu={userMenu} trigger={['click']} placement="bottomRight">
+              <Button style={{ ...styles.profileButton, ...(glassMode ? styles.profileGlass : {}) }}>
+                <Avatar size={24} src={currentUser.avatar} icon={<UserOutlined />} />
+                <Text style={{ ...styles.profileName, color: menuTextColor }}>{currentUser.name}</Text>
+              </Button>
+            </Dropdown>
           ) : (
             <>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                onClick={() => navigate('/login')}
-                style={{
-                  backgroundColor: '#fca311',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 20px',
-                  borderRadius: '30px',
-                  fontSize: '15px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                }}
-              >
+              <Button icon={<LoginOutlined />} onClick={() => navigate('/login')} style={{ ...styles.loginButton, ...(glassMode ? styles.loginGlass : {}) }}>
                 Войти
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                onClick={() => navigate('/register')}
-                style={{
-                  backgroundColor: '#457b9d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '10px 20px',
-                  borderRadius: '30px',
-                  fontSize: '15px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                }}
-              >
-                Зарегистрироваться
-              </motion.button>
+              </Button>
+              <Button type="primary" onClick={() => navigate('/tours')} style={styles.bookButton}>
+                Book Tour
+              </Button>
             </>
           )}
-        </div>
-      </motion.header>
-    </>
+        </Space>
+      </div>
+    </AntHeader>
   );
 };
 
-export default HeaderPage;
+const styles = {
+  header: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 900,
+    height: 72,
+    padding: 0,
+    background: 'rgba(255,255,255,0.84)',
+    borderBottom: '1px solid rgba(29,53,87,0.08)',
+    boxShadow: '0 14px 40px rgba(29,53,87,0.08)',
+    backdropFilter: 'blur(22px)',
+    transition: 'background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+  },
+  transparentHeader: {
+    background: 'rgba(6,17,31,0.20)',
+    borderBottom: '1px solid rgba(255,255,255,0.12)',
+    boxShadow: '0 18px 46px rgba(0,0,0,0.08)',
+    backdropFilter: 'blur(22px)',
+  },
+  darkHeader: {
+    background: 'rgba(8,19,33,0.92)',
+    borderBottom: '1px solid rgba(255,255,255,0.10)',
+    boxShadow: '0 12px 30px rgba(0,0,0,0.24)',
+  },
+  inner: {
+    maxWidth: 1200,
+    height: '100%',
+    margin: '0 auto',
+    padding: '0 22px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 30,
+  },
+  
+  logoButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    padding: 0,
+    flexShrink: 0,
+    fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+  },
+  brandStack: {
+    display: 'inline-flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  logoText: {
+    display: 'block',
+    fontSize: 20,
+    fontWeight: 850,
+    lineHeight: 1,
+    letterSpacing: 0,
+  },
+  logoSub: {
+    display: 'block',
+    fontSize: 10.5,
+    fontWeight: 650,
+    lineHeight: 1.1,
+    letterSpacing: 0.25,
+    borderBottom: 'none',
+  },
+  menu: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    borderBottom: 'none',
+    background: 'transparent',
+    fontSize: 13,
+    fontWeight: 760,
+    fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+  },
+  actions: {
+    flexShrink: 0,
+  },
+ dropdownButton: {
+  height: 38,
+  borderRadius: 999,
+  border: '1px solid rgba(59,130,246,0.24)',
+  color: '#ffffff',
+  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+  fontWeight: 800,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  boxShadow: '0 10px 22px rgba(37,99,235,0.20)',
+},
+  glassButton: {
+    background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
+    borderColor: 'rgba(252,163,17,0.34)',
+    color: '#f6fbff',
+  },
+  themeButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    borderColor: 'rgba(252,163,17,0.46)',
+    color: BRAND_BLUE,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    boxShadow: '0 10px 24px rgba(252,163,17,0.24)',
+  },
+  themeGlass: {
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    borderColor: 'rgba(252,163,17,0.52)',
+    color: BRAND_BLUE,
+  },
+  languageLabel: {
+    fontWeight: 750,
+  },
+  languageActiveLabel: {
+    color: BRAND_BLUE,
+    fontWeight: 850,
+    background: 'rgba(252,163,17,0.18)',
+    borderRadius: 8,
+    padding: '3px 8px',
+  },
+  profileButton: {
+    height: 38,
+    borderRadius: 999,
+    borderColor: 'rgba(29,53,87,0.18)',
+    color: '#ffffff',
+    background: `linear-gradient(135deg, ${BRAND_BLUE}, #2e5d86)`,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '0 10px',
+    boxShadow: '0 10px 22px rgba(29,53,87,0.18)',
+  },
+  profileGlass: {
+    background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
+    borderColor: 'rgba(252,163,17,0.34)',
+    color: '#f6fbff',
+  },
+  profileName: {
+    maxWidth: 96,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontWeight: 760,
+    fontSize: 13,
+  },
+loginButton: {
+  height: 38,
+  borderRadius: 999,
+  border: '1px solid rgba(59,130,246,0.24)',
+  background: 'rgba(255,255,255,0.9)',
+  color: '#2563eb',
+  fontWeight: 800,
+  boxShadow: '0 8px 18px rgba(37,99,235,0.12)',
+},
+  loginGlass: {
+    background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
+    borderColor: 'rgba(252,163,17,0.34)',
+    color: '#f6fbff',
+  },
+ bookButton: {
+  height: 38,
+  borderRadius: 999,
+  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+  border: 'none',
+  color: '#ffffff',
+  fontWeight: 850,
+  boxShadow: '0 10px 22px rgba(37,99,235,0.28)',
+},
+};
+
+export default Header;

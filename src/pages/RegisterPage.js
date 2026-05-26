@@ -1,239 +1,120 @@
 import React, { useState } from 'react';
+import { Button, Checkbox, Divider, Form, Input, Space, Typography, message } from 'antd';
+import {
+  FacebookFilled,
+  GoogleOutlined,
+  LockOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
+import AuthLayout from '../components/auth/AuthLayout';
+import {
+  agreementRules,
+  confirmPasswordRules,
+  emailRules,
+  passwordRules,
+  phoneRules,
+  requiredRule,
+} from '../components/auth/authValidation';
+import { saveCurrentUser } from '../utils/currentUser';
 
-const API = "https://travelpay-backend-2.onrender.com";
+const { Text } = Typography;
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { name, email, password, confirmPassword } = formData;
-
-    if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
-      return;
-    }
+  const handleSubmit = async (values) => {
+    setLoading(true);
 
     try {
-      // ✅ Проверяем существующего пользователя
-      const existing = await axios.get(`${API}/users`, {
-        params: { email }
-      });
+      const email = values.email.trim().toLowerCase();
+      const existing = await api.get('/users', { params: { email } });
 
       if (existing.data.length > 0) {
-        setError('Пользователь с таким email уже существует');
+        message.error('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ С‚Р°РєРёРј email СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.');
         return;
       }
 
-      // ✅ Новый пользователь
-      const newUser = {
-        name,
+      const response = await api.post('/users', {
+        name: values.name.trim(),
         email,
-        password,
+        phone: values.phone,
+        password: values.password,
         balance: 0,
+        role: 'user',
         avatar: 'https://www.w3schools.com/howto/img_avatar.png',
         isLoggedIn: true,
-      };
+        favorites: [],
+      });
 
-      const response = await axios.post(`${API}/users`, newUser);
-
-      localStorage.setItem('currentUser', JSON.stringify(response.data));
-
-      window.location.href = '/profile';
-
+      saveCurrentUser({ ...response.data, isLoggedIn: true });
+      message.success('РђРєРєР°СѓРЅС‚ СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ');
+      navigate('/profile');
     } catch (err) {
-      console.error(err);
-      setError('Ошибка при регистрации. Попробуйте позже.');
+      message.error('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ. РџСЂРѕРІРµСЂСЊС‚Рµ, С‡С‚Рѕ backend Р·Р°РїСѓС‰РµРЅ.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <video
-        autoPlay
-        muted
-        loop
-        style={styles.video}
-        src="https://cdn.pixabay.com/video/2024/12/24/248445_large.mp4"
-      />
+    <AuthLayout
+      eyebrow="Create profile"
+      title="РЎРѕР·РґР°С‚СЊ Р°РєРєР°СѓРЅС‚"
+      subtitle="РџРѕР»СѓС‡РёС‚Рµ РґРѕСЃС‚СѓРї Рє Р±СЂРѕРЅРёСЂРѕРІР°РЅРёСЏРј, РёР·Р±СЂР°РЅРЅС‹Рј С‚СѓСЂР°Рј Рё premium travel-СЃРµСЂРІРёСЃСѓ."
+    >
+      <Form layout="vertical" onFinish={handleSubmit} className="auth-form">
+        <Form.Item name="name" label="РРјСЏ" rules={[requiredRule('Р’РІРµРґРёС‚Рµ РёРјСЏ')]}>
+          <Input size="large" prefix={<UserOutlined />} placeholder="Р’Р°С€Рµ РёРјСЏ" />
+        </Form.Item>
 
-      <div style={styles.formBox}>
-        <h2 style={styles.title}>
-          Регистрация в{' '}
-          <span
-            style={styles.logoClickable}
-            onClick={() => navigate('/')}
-          >
-            TravelPay
-          </span>
-        </h2>
+        <Form.Item name="email" label="Email" rules={emailRules}>
+          <Input size="large" prefix={<MailOutlined />} type="email" placeholder="you@example.com" />
+        </Form.Item>
 
-        <p style={styles.subtitle}>Создайте новый аккаунт</p>
+        <Form.Item name="phone" label="РўРµР»РµС„РѕРЅ" rules={phoneRules}>
+          <Input size="large" prefix={<PhoneOutlined />} placeholder="+996 555 123 456" />
+        </Form.Item>
 
-        {error && <div style={styles.error}>{error}</div>}
+        <Form.Item name="password" label="РџР°СЂРѕР»СЊ" rules={passwordRules}>
+          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ" />
+        </Form.Item>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Имя"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+        <Form.Item
+          name="confirmPassword"
+          label="РџРѕРІС‚РѕСЂРёС‚СЊ РїР°СЂРѕР»СЊ"
+          dependencies={['password']}
+          rules={confirmPasswordRules}
+        >
+          <Input.Password size="large" prefix={<LockOutlined />} placeholder="РџРѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ" />
+        </Form.Item>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+        <Form.Item name="agreement" valuePropName="checked" rules={agreementRules}>
+          <Checkbox>РЇ СЃРѕРіР»Р°СЃРµРЅ СЃ СѓСЃР»РѕРІРёСЏРјРё СЃРµСЂРІРёСЃР° Рё РїРѕР»РёС‚РёРєРѕР№ РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё</Checkbox>
+        </Form.Item>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Пароль"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+        <Button type="primary" htmlType="submit" size="large" loading={loading} block className="auth-submit">
+          Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ
+        </Button>
+      </Form>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Подтвердите пароль"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+      <Divider plain>РёР»Рё Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ С‡РµСЂРµР·</Divider>
 
-          <button type="submit" style={styles.button}>
-            Зарегистрироваться
-          </button>
-        </form>
+      <Space.Compact block className="auth-socials">
+        <Button size="large" icon={<GoogleOutlined />}>Google</Button>
+        <Button size="large" icon={<FacebookFilled />}>Facebook</Button>
+      </Space.Compact>
 
-        <p style={styles.footerText}>
-          Уже есть аккаунт?
-          <a href="/login" style={styles.link}>
-            Войти
-          </a>
-        </p>
+      <div className="auth-footer">
+        <Text type="secondary">РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚?</Text>
+        <Button type="link" onClick={() => navigate('/login')}>Р’РѕР№С‚Рё</Button>
       </div>
-    </div>
+    </AuthLayout>
   );
-};
-
-const styles = {
-  container: {
-    fontFamily: "'Poppins', sans-serif",
-    position: 'relative',
-    minHeight: '100vh',
-    overflow: 'hidden',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
-
-  video: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    zIndex: 0,
-    filter: 'brightness(0.6)',
-  },
-
-  formBox: {
-    position: 'relative',
-    zIndex: 2,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    backdropFilter: 'blur(10px)',
-    padding: '30px',
-    borderRadius: '20px',
-    width: '100%',
-    maxWidth: '400px',
-    color: 'white',
-    textAlign: 'center',
-  },
-
-  title: {
-    fontSize: '26px',
-    fontWeight: '700',
-  },
-
-  logoClickable: {
-    cursor: 'pointer',
-    fontWeight: '700',
-  },
-
-  subtitle: {
-    marginBottom: '20px',
-  },
-
-  error: {
-    backgroundColor: '#e53935',
-    padding: '10px',
-    borderRadius: '10px',
-    marginBottom: '15px',
-  },
-
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-  },
-
-  input: {
-    padding: '12px',
-    borderRadius: '10px',
-    border: 'none',
-  },
-
-  button: {
-    padding: '12px',
-    borderRadius: '30px',
-    border: 'none',
-    backgroundColor: '#f57c00',
-    color: 'white',
-    fontWeight: '700',
-    cursor: 'pointer',
-  },
-
-  footerText: {
-    marginTop: '15px',
-  },
-
-  link: {
-    marginLeft: '5px',
-    color: '#ffd54f',
-    textDecoration: 'none',
-  },
 };
 
 export default RegisterPage;

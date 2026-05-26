@@ -1,504 +1,292 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { Button, Card, Col, InputNumber, Progress, Row, Space, Statistic, Steps, Tag, Timeline, Typography, message } from 'antd';
+import { BankOutlined, CalendarOutlined, CheckCircleOutlined, CompassOutlined, DollarOutlined, RiseOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
+import { Link, useSearchParams } from 'react-router-dom';
 
-const fontFamily = "'Poppins', sans-serif";
+const { Title, Text, Paragraph } = Typography;
+const BRAND_BLUE = '#1d3557';
+const BRAND_GOLD = '#fca311';
 
-const formatMoney = (value) => {
-  const number = Number(value || 0);
-  return `${number.toLocaleString()} $`;
-};
+const formatMoney = (value) => `${Number(value || 0).toLocaleString()} сом`;
 
 const SavingsPlanPage = () => {
   const [searchParams] = useSearchParams();
 
-  const destination = searchParams.get('destination') || 'Не выбрано';
-  const budget = Number(searchParams.get('budget') || 0);
+  const destination = searchParams.get('destination') || 'Выберите тур';
+  const budget = Number(searchParams.get('budget') || 45000);
   const months = Number(searchParams.get('months') || 6);
-  const initial = Number(searchParams.get('initial') || 0);
-  const monthly = Number(searchParams.get('monthly') || 0);
+  const initial = Number(searchParams.get('initial') || 8000);
+  const monthly = Number(searchParams.get('monthly') || Math.ceil((budget - initial) / months));
 
   const [savedAmount, setSavedAmount] = useState(initial);
-  const [customAdd, setCustomAdd] = useState('');
+  const [customAdd, setCustomAdd] = useState(null);
 
-  const remainingAmount = useMemo(() => {
-    return Math.max(budget - savedAmount, 0);
-  }, [budget, savedAmount]);
-
+  const remainingAmount = useMemo(() => Math.max(budget - savedAmount, 0), [budget, savedAmount]);
   const progress = useMemo(() => {
     if (!budget || budget <= 0) return 0;
     return Math.min(Math.round((savedAmount / budget) * 100), 100);
   }, [savedAmount, budget]);
-
   const monthsLeft = useMemo(() => {
     if (!monthly || monthly <= 0) return 0;
     return Math.ceil(remainingAmount / monthly);
   }, [remainingAmount, monthly]);
+  const isGoalReady = progress >= 100;
 
-  const handleAddMonthly = () => {
-    setSavedAmount((prev) => Math.min(prev + monthly, budget));
-  };
-
-  const handleAddCustom = () => {
-    const value = Number(customAdd);
+  const addAmount = (value) => {
     if (!value || value <= 0) return;
     setSavedAmount((prev) => Math.min(prev + value, budget));
-    setCustomAdd('');
+    message.success(`Добавлено ${formatMoney(value)}`);
   };
 
-  const handleReset = () => {
-    setSavedAmount(initial);
-    setCustomAdd('');
+  const handleCustomAdd = () => {
+    addAmount(customAdd);
+    setCustomAdd(null);
   };
+
+  const resetPlan = () => {
+    setSavedAmount(initial);
+    setCustomAdd(null);
+    message.info('План сброшен к стартовой сумме');
+  };
+
+  const stepItems = [
+    { title: 'Старт', description: formatMoney(initial) },
+    { title: 'Накопление', description: `${formatMoney(monthly)} / месяц` },
+    { title: 'Бронирование', description: isGoalReady ? 'Готово' : `осталось ${monthsLeft} мес.` },
+  ];
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%)',
-        padding: '40px 20px',
-        fontFamily
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '1100px',
-          margin: '0 auto'
-        }}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1.2fr 0.8fr',
-            gap: '24px'
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '24px',
-              padding: '28px',
-              boxShadow: '0 18px 45px rgba(15,23,42,0.08)',
-              border: '1px solid #e5e7eb'
-            }}
-          >
-            <div
-              style={{
-                display: 'inline-block',
-                background: '#fca311',
-                color: '#1d3557',
-                fontWeight: 700,
-                fontSize: '13px',
-                padding: '8px 12px',
-                borderRadius: '999px',
-                marginBottom: '16px'
-              }}
-            >
-              TravelPay Savings Plan
-            </div>
+    <main style={styles.page}>
+      <section style={styles.hero}>
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+          <Tag color="gold" style={styles.heroTag}>TravelPay Savings</Tag>
+          <Title level={1} style={styles.heroTitle}>План накопления на поездку</Title>
+          <Paragraph style={styles.heroText}>
+            Реалистичный план, который показывает цель, прогресс, ежемесячный взнос и дату, когда поездку можно бронировать.
+          </Paragraph>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} style={styles.goalCard}>
+          <Text style={styles.goalLabel}>Цель</Text>
+          <Title level={2} style={styles.goalAmount}>{formatMoney(budget)}</Title>
+          <Text style={styles.goalDestination}><CompassOutlined /> {destination}</Text>
+        </motion.div>
+      </section>
 
-            <h1
-              style={{
-                margin: 0,
-                fontSize: '32px',
-                color: '#1d3557',
-                lineHeight: 1.2
-              }}
-            >
-              План накопления на поездку
-            </h1>
+      <section style={styles.content}>
+        <Row gutter={[18, 18]}>
+          <Col xs={24} md={8}>
+            <Card style={styles.metricCard}>
+              <Statistic title="Накоплено" value={savedAmount} suffix="сом" prefix={<BankOutlined />} valueStyle={{ color: BRAND_BLUE }} />
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card style={styles.metricCard}>
+              <Statistic title="Осталось" value={remainingAmount} suffix="сом" prefix={<DollarOutlined />} valueStyle={{ color: BRAND_GOLD }} />
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card style={styles.metricCard}>
+              <Statistic title="До цели" value={monthsLeft} suffix="мес." prefix={<CalendarOutlined />} valueStyle={{ color: BRAND_BLUE }} />
+            </Card>
+          </Col>
+        </Row>
 
-            <p
-              style={{
-                marginTop: '12px',
-                color: '#475569',
-                fontSize: '16px',
-                lineHeight: 1.7
-              }}
-            >
-              Здесь пользователь видит, сколько уже накоплено, сколько осталось,
-              и какой ежемесячный платеж нужен для поездки в <strong>{destination}</strong>.
-            </p>
-
-            <div
-              style={{
-                marginTop: '24px',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '14px'
-              }}
-            >
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '18px',
-                  padding: '18px'
-                }}
-              >
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
-                  Направление
-                </div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#1d3557' }}>
-                  {destination}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '18px',
-                  padding: '18px'
-                }}
-              >
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
-                  Общий бюджет
-                </div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#1d3557' }}>
-                  {formatMoney(budget)}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '18px',
-                  padding: '18px'
-                }}
-              >
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
-                  Первоначальный взнос
-                </div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#1d3557' }}>
-                  {formatMoney(initial)}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '18px',
-                  padding: '18px'
-                }}
-              >
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
-                  Ежемесячный платеж
-                </div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: '#1d3557' }}>
-                  {formatMoney(monthly)}
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: '24px',
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '20px',
-                padding: '20px'
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                  marginBottom: '10px'
-                }}
-              >
+        <Row gutter={[18, 18]} style={{ marginTop: 18 }}>
+          <Col xs={24} lg={15}>
+            <Card style={styles.mainCard}>
+              <Space direction="vertical" size={22} style={{ width: '100%' }}>
                 <div>
-                  <div style={{ fontSize: '14px', color: '#64748b' }}>Накоплено</div>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: '#1d3557' }}>
-                    {formatMoney(savedAmount)}
+                  <Text strong style={{ color: BRAND_BLUE }}>Прогресс цели</Text>
+                  <Progress
+                    percent={progress}
+                    strokeColor={{ '0%': BRAND_BLUE, '100%': BRAND_GOLD }}
+                    trailColor="#e8edf5"
+                    size={[undefined, 16]}
+                    style={{ marginTop: 10 }}
+                  />
+                  <div style={styles.progressMeta}>
+                    <span>Срок плана: <strong>{months} мес.</strong></span>
+                    <span>Платеж: <strong>{formatMoney(monthly)}</strong></span>
                   </div>
                 </div>
 
-                <div>
-                  <div style={{ fontSize: '14px', color: '#64748b' }}>Осталось</div>
-                  <div style={{ fontSize: '28px', fontWeight: 800, color: '#1d3557' }}>
-                    {formatMoney(remainingAmount)}
-                  </div>
+                <Steps current={isGoalReady ? 2 : progress > 0 ? 1 : 0} items={stepItems} />
+
+                <div style={styles.actionPanel}>
+                  <Button type="primary" size="large" onClick={() => addAmount(monthly)} style={styles.primaryButton}>
+                    Добавить месячный взнос
+                  </Button>
+                  <Button size="large" onClick={() => addAmount(Math.ceil(monthly / 2))}>
+                    + половина взноса
+                  </Button>
+                  <Button size="large" onClick={resetPlan}>
+                    Сбросить
+                  </Button>
                 </div>
-              </div>
 
-              <div
-                style={{
-                  width: '100%',
-                  height: '14px',
-                  borderRadius: '999px',
-                  background: '#e2e8f0',
-                  overflow: 'hidden',
-                  marginTop: '14px',
-                  marginBottom: '10px'
-                }}
-              >
-                <div
-                  style={{
-                    width: `${progress}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #1d3557, #fca311)',
-                    borderRadius: '999px',
-                    transition: 'width 0.3s ease'
-                  }}
-                />
-              </div>
+                <div style={styles.customAdd}>
+                  <InputNumber
+                    min={1}
+                    value={customAdd}
+                    onChange={setCustomAdd}
+                    placeholder="Своя сумма"
+                    style={{ flex: 1, minWidth: 180 }}
+                    size="large"
+                  />
+                  <Button size="large" onClick={handleCustomAdd} style={styles.goldButton}>
+                    Добавить
+                  </Button>
+                </div>
+              </Space>
+            </Card>
+          </Col>
 
-              <div
-                style={{
-                  fontSize: '14px',
-                  color: '#475569',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  flexWrap: 'wrap'
-                }}
-              >
-                <span>Прогресс: <strong>{progress}%</strong></span>
-                <span>Срок плана: <strong>{months} мес.</strong></span>
-                <span>Осталось месяцев: <strong>{monthsLeft}</strong></span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: '24px',
-                display: 'flex',
-                gap: '12px',
-                flexWrap: 'wrap'
-              }}
-            >
-              <button
-                onClick={handleAddMonthly}
-                style={{
-                  background: '#1d3557',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '14px',
-                  padding: '14px 18px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                + Добавить месячный платеж
-              </button>
-
-              <button
-                onClick={handleReset}
-                style={{
-                  background: '#eef2f7',
-                  color: '#1d3557',
-                  border: 'none',
-                  borderRadius: '14px',
-                  padding: '14px 18px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Сбросить
-              </button>
-            </div>
-
-            <div
-              style={{
-                marginTop: '18px',
-                display: 'flex',
-                gap: '10px',
-                flexWrap: 'wrap'
-              }}
-            >
-              <input
-                type="number"
-                value={customAdd}
-                onChange={(e) => setCustomAdd(e.target.value)}
-                placeholder="Добавить сумму вручную"
-                style={{
-                  flex: 1,
-                  minWidth: '220px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '14px',
-                  padding: '14px',
-                  fontSize: '14px',
-                  outline: 'none'
-                }}
+          <Col xs={24} lg={9}>
+            <Card title="Финансовый маршрут" style={styles.mainCard}>
+              <Timeline
+                items={[
+                  {
+                    dot: <CheckCircleOutlined style={{ color: BRAND_GOLD }} />,
+                    children: (
+                      <>
+                        <Text strong>Стартовый взнос</Text>
+                        <Paragraph type="secondary">{formatMoney(initial)} уже в плане.</Paragraph>
+                      </>
+                    ),
+                  },
+                  {
+                    dot: <RiseOutlined style={{ color: BRAND_BLUE }} />,
+                    children: (
+                      <>
+                        <Text strong>Ежемесячное пополнение</Text>
+                        <Paragraph type="secondary">Вносите {formatMoney(monthly)} каждый месяц.</Paragraph>
+                      </>
+                    ),
+                  },
+                  {
+                    color: isGoalReady ? 'green' : 'gray',
+                    children: (
+                      <>
+                        <Text strong>{isGoalReady ? 'Цель достигнута' : 'Финальный шаг'}</Text>
+                        <Paragraph type="secondary">
+                          {isGoalReady ? 'Можно переходить к бронированию тура.' : `Осталось накопить ${formatMoney(remainingAmount)}.`}
+                        </Paragraph>
+                      </>
+                    ),
+                  },
+                ]}
               />
 
-              <button
-                onClick={handleAddCustom}
-                style={{
-                  background: '#fca311',
-                  color: '#1d3557',
-                  border: 'none',
-                  borderRadius: '14px',
-                  padding: '14px 18px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Добавить
-              </button>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '20px'
-            }}
-          >
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '24px',
-                padding: '24px',
-                boxShadow: '0 18px 45px rgba(15,23,42,0.08)',
-                border: '1px solid #e5e7eb'
-              }}
-            >
-              <h2
-                style={{
-                  marginTop: 0,
-                  marginBottom: '14px',
-                  color: '#1d3557',
-                  fontSize: '22px'
-                }}
-              >
-                Краткий план
-              </h2>
-
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div
-                  style={{
-                    background: '#f8fafc',
-                    borderRadius: '16px',
-                    padding: '14px',
-                    border: '1px solid #e2e8f0'
-                  }}
-                >
-                  <div style={{ fontSize: '13px', color: '#64748b' }}>Шаг 1</div>
-                  <div style={{ fontWeight: 700, color: '#1d3557', marginTop: '4px' }}>
-                    Внести первый взнос
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
-                    Начни с {formatMoney(initial)}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: '#f8fafc',
-                    borderRadius: '16px',
-                    padding: '14px',
-                    border: '1px solid #e2e8f0'
-                  }}
-                >
-                  <div style={{ fontSize: '13px', color: '#64748b' }}>Шаг 2</div>
-                  <div style={{ fontWeight: 700, color: '#1d3557', marginTop: '4px' }}>
-                    Откладывать каждый месяц
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
-                    По {formatMoney(monthly)} в течение {months} месяцев
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: '#f8fafc',
-                    borderRadius: '16px',
-                    padding: '14px',
-                    border: '1px solid #e2e8f0'
-                  }}
-                >
-                  <div style={{ fontSize: '13px', color: '#64748b' }}>Шаг 3</div>
-                  <div style={{ fontWeight: 700, color: '#1d3557', marginTop: '4px' }}>
-                    Забронировать поездку
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#475569', marginTop: '4px' }}>
-                    Когда сумма будет полностью накоплена
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '24px',
-                padding: '24px',
-                boxShadow: '0 18px 45px rgba(15,23,42,0.08)',
-                border: '1px solid #e5e7eb'
-              }}
-            >
-              <h2
-                style={{
-                  marginTop: 0,
-                  marginBottom: '14px',
-                  color: '#1d3557',
-                  fontSize: '22px'
-                }}
-              >
-                Действия
-              </h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <Link
-                  to="/register"
-                  style={{
-                    textDecoration: 'none',
-                    textAlign: 'center',
-                    background: '#1d3557',
-                    color: '#fff',
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    fontWeight: 700
-                  }}
-                >
-                  Перейти к регистрации
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Link to="/tours">
+                  <Button block type="primary" style={styles.primaryButton}>Выбрать тур</Button>
                 </Link>
-
-                <Link
-                  to="/tours"
-                  style={{
-                    textDecoration: 'none',
-                    textAlign: 'center',
-                    background: '#fca311',
-                    color: '#1d3557',
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    fontWeight: 700
-                  }}
-                >
-                  Смотреть все туры
+                <Link to="/favorites">
+                  <Button block>Открыть избранное</Button>
                 </Link>
-
-                <Link
-                  to="/"
-                  style={{
-                    textDecoration: 'none',
-                    textAlign: 'center',
-                    background: '#eef2f7',
-                    color: '#1d3557',
-                    padding: '14px 16px',
-                    borderRadius: '14px',
-                    fontWeight: 700
-                  }}
-                >
-                  Вернуться на главную
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+      </section>
+    </main>
   );
+};
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#f5f7fb',
+    paddingBottom: 60,
+  },
+  hero: {
+    background: `linear-gradient(135deg, ${BRAND_BLUE} 0%, #27486f 70%, ${BRAND_GOLD} 100%)`,
+    padding: '58px 24px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 24,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  heroTag: {
+    color: BRAND_BLUE,
+    fontWeight: 900,
+    border: 'none',
+  },
+  heroTitle: {
+    color: '#fff',
+    margin: '12px 0 10px',
+  },
+  heroText: {
+    color: '#dce8f7',
+    maxWidth: 680,
+    fontSize: 16,
+    margin: 0,
+  },
+  goalCard: {
+    minWidth: 260,
+    borderRadius: 20,
+    padding: 24,
+    background: 'rgba(255,255,255,0.14)',
+    border: '1px solid rgba(255,255,255,0.24)',
+    boxShadow: '0 18px 38px rgba(0,0,0,0.16)',
+  },
+  goalLabel: {
+    color: '#fff',
+    fontWeight: 800,
+  },
+  goalAmount: {
+    color: BRAND_GOLD,
+    margin: '8px 0',
+  },
+  goalDestination: {
+    color: '#fff',
+    fontWeight: 800,
+  },
+  content: {
+    maxWidth: 1120,
+    margin: '0 auto',
+    padding: '26px 20px 0',
+  },
+  metricCard: {
+    borderRadius: 16,
+    border: 'none',
+    boxShadow: '0 14px 34px rgba(29,53,87,0.08)',
+  },
+  mainCard: {
+    borderRadius: 16,
+    border: 'none',
+    boxShadow: '0 14px 34px rgba(29,53,87,0.08)',
+  },
+  progressMeta: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 12,
+    flexWrap: 'wrap',
+    color: '#64748b',
+  },
+  actionPanel: {
+    display: 'flex',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  customAdd: {
+    display: 'flex',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  primaryButton: {
+    background: BRAND_BLUE,
+    borderColor: BRAND_BLUE,
+    fontWeight: 900,
+  },
+  goldButton: {
+    background: BRAND_GOLD,
+    borderColor: BRAND_GOLD,
+    color: BRAND_BLUE,
+    fontWeight: 900,
+  },
 };
 
 export default SavingsPlanPage;

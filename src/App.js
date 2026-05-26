@@ -7,23 +7,26 @@ import {
 } from 'react-router-dom';
 
 import Header from './components/Header';
-import TravelBot from './components/TravelBot';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import TravelBotWidget from "./components/TravelBotWidget";
 
 import { ThemeProvider } from './context/ThemeContext';
+
 
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ActualToursPage from './pages/ActualToursPage';
+import TourDetailPage from './pages/TourDetailPage';
 import ActualToursAdmin from './pages/ActualToursAdmin';
 import TourBookingPage from './pages/TourBookingPage';
 import AgreementsPage from './pages/AgreementsPage';
 import VisaPaymentPage from './pages/VisaPaymentPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SavingsPlanPage from './pages/SavingsPlanPage';
+import { readCurrentUser, subscribeToCurrentUser } from './utils/currentUser';
 
 function AppContent({ favorites, setFavorites }) {
   const location = useLocation();
@@ -31,44 +34,23 @@ function AppContent({ favorites, setFavorites }) {
   const hideLayoutPaths = [
     '/login',
     '/register',
-    '/tours',
     '/booking',
+    '/profile',
     '/admin',
     '/admin/tours',
     '/admin/users',
     '/admin/stats',
     '/VisaPaymentPage',
-    '/favorites',
-    '/savings-plan'
   ];
 
   const hideLayout = hideLayoutPaths.includes(location.pathname);
 
   return (
     <>
+      {/* HEADER */}
       {!hideLayout && <Header />}
-      {!hideLayout && <TravelBot />}
 
-      {location.pathname === '/tours' && (
-        <div
-          onClick={() => (window.location.href = '/')}
-          style={{
-            position: 'fixed',
-            top: 20,
-            left: 20,
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: 'white',
-            cursor: 'pointer',
-            zIndex: 1000,
-            userSelect: 'none',
-            fontFamily: "'Poppins', sans-serif",
-          }}
-        >
-          TravelPay
-        </div>
-      )}
-
+      {/* ROUTES */}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -84,6 +66,8 @@ function AppContent({ favorites, setFavorites }) {
           }
         />
 
+        <Route path="/tours/:id" element={<TourDetailPage />} />
+
         <Route
           path="/favorites"
           element={
@@ -96,10 +80,38 @@ function AppContent({ favorites, setFavorites }) {
 
         <Route path="/booking" element={<TourBookingPage />} />
 
-        <Route path="/admin" element={<ActualToursAdmin />} />
-        <Route path="/admin/tours" element={<ActualToursAdmin />} />
-        <Route path="/admin/users" element={<ActualToursAdmin />} />
-        <Route path="/admin/stats" element={<ActualToursAdmin />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tours"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/stats"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/AgreePage" element={<AgreementsPage />} />
         <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
@@ -109,23 +121,26 @@ function AppContent({ favorites, setFavorites }) {
           path="/profile"
           element={
             <ProtectedRoute>
-              <>
-                <ProfilePage />
-                <AgreementsPage />
-              </>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
       </Routes>
+
+      {/* 🔥 AI CHAT WIDGET (ГЛОБАЛЬНО НА ВСЁМ САЙТЕ) */}
+      <TravelBotWidget />
     </>
   );
 }
 
 function App() {
   const [favorites, setFavorites] = useState(() => {
-    const stored = localStorage.getItem('favorites');
-    return stored ? JSON.parse(stored) : [];
+    return readCurrentUser()?.favorites || [];
   });
+
+  React.useEffect(() => subscribeToCurrentUser((user) => {
+    setFavorites(user?.favorites || []);
+  }), []);
 
   return (
     <ThemeProvider>
