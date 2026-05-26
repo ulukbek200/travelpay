@@ -226,7 +226,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
 
   const handleAddToFavorites = (tour) => {
     if (favorites.some((favorite) => favorite.id === tour.id || favorite.title === tour.title)) {
-      message.info('This tour is already in favorites.');
+      message.info('Этот тур уже есть в избранном.');
       return;
     }
 
@@ -234,7 +234,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
     const currentUser = readCurrentUser();
 
     if (!currentUser?.id) {
-      message.info('Please sign in to save tours to favorites.');
+      message.info('Войдите в аккаунт, чтобы сохранять туры в избранное.');
       navigate('/login');
       return;
     }
@@ -243,10 +243,11 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
       .then((response) => {
         setFavorites(response.data?.favorites || updatedFavorites);
         saveCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
-        message.success('Tour added to favorites.');
+        message.success('Тур добавлен в избранное.');
       })
-      .catch(() => {
-        message.error('Could not save favorites on the server.');
+      .catch((err) => {
+        const serverMessage = err.response?.data?.message;
+        message.error(serverMessage || 'Не удалось сохранить избранное на сервере.');
       });
   };
 

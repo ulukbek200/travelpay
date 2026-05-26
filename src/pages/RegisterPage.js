@@ -55,7 +55,8 @@ const RegisterPage = () => {
       message.success('Аккаунт успешно создан');
       navigate('/profile');
     } catch (err) {
-      message.error('Не удалось зарегистрироваться. Проверьте доступность backend.');
+      const serverMessage = err.response?.data?.message;
+      message.error(serverMessage || 'Не удалось зарегистрироваться. Проверьте доступность backend.');
     } finally {
       setLoading(false);
     }
