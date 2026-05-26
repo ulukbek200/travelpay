@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/travelpay-backend
 /.pnp
 .pnp.js
 
