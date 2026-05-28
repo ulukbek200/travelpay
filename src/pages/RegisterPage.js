@@ -19,6 +19,7 @@ import {
   phoneRules,
   requiredRule,
 } from '../components/auth/authValidation';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import { saveCurrentUser } from '../utils/currentUser';
 
 const { Text } = Typography;
@@ -55,8 +56,10 @@ const RegisterPage = () => {
       message.success('Аккаунт успешно создан');
       navigate('/profile');
     } catch (err) {
-      const serverMessage = err.response?.data?.message;
-      message.error(serverMessage || 'Не удалось зарегистрироваться. Проверьте доступность backend.');
+      message.error(getApiErrorMessage(
+        err,
+        'Не удалось зарегистрироваться. Проверьте доступность backend.',
+      ));
     } finally {
       setLoading(false);
     }

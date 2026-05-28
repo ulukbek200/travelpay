@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
 import { emailRules, loginPasswordRules } from '../components/auth/authValidation';
+import { getApiErrorMessage } from '../utils/apiErrors';
 import { saveCurrentUser } from '../utils/currentUser';
 
 const { Text } = Typography;
@@ -32,7 +33,10 @@ const LoginPage = () => {
       message.success('Добро пожаловать в TravelPay');
       navigate(user.role === 'admin' ? '/admin/tours' : '/profile');
     } catch (err) {
-      message.error('Не удалось войти. Проверьте email, пароль и доступность backend.');
+      message.error(getApiErrorMessage(
+        err,
+        'Не удалось войти. Проверьте email, пароль и доступность backend.',
+      ));
     } finally {
       setLoading(false);
     }
