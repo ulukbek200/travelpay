@@ -4,11 +4,9 @@ import {
   Badge,
   Button,
   Card,
-  Col,
   Empty,
   Input,
   Rate,
-  Row,
   Select,
   Skeleton,
   Slider,
@@ -270,7 +268,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
         </motion.div>
       </section>
 
-      <motion.section className="tour-filters-shell" style={styles.filters} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <motion.section className="tour-filters-shell tours-container" style={styles.filters} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Input
           size="large"
           prefix={<SearchOutlined />}
@@ -290,21 +288,21 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
             { value: 'Kazakhstan', label: 'Казахстан / Алматы' },
           ]}
         />
-        <div style={styles.filterPanel}>
+        <div className="tour-filter-panel" style={styles.filterPanel}>
           <Text strong>Цена</Text>
           <Slider range min={0} max={70000} step={5000} value={priceRange} onChange={setPriceRange} tooltip={{ formatter: formatPrice }} />
         </div>
-        <div style={styles.filterPanel}>
+        <div className="tour-filter-panel" style={styles.filterPanel}>
           <Text strong>Длительность</Text>
           <Slider range min={1} max={7} value={durationRange} onChange={setDurationRange} tooltip={{ formatter: (value) => `${value} дн.` }} />
         </div>
-        <div style={styles.filterPanel}>
+        <div className="tour-filter-panel" style={styles.filterPanel}>
           <Text strong>Рейтинг</Text>
           <Rate allowHalf value={minRating} onChange={setMinRating} style={{ color: BRAND_GOLD, fontSize: 16 }} />
         </div>
       </motion.section>
 
-      <section style={styles.popularSection}>
+      <section className="tours-section tours-container" style={styles.popularSection}>
         <div style={styles.sectionHead}>
           <Tag style={styles.softTag}>Популярные направления</Tag>
           <Title level={2} style={styles.sectionTitle}>Места, ради которых хочется ехать</Title>
@@ -322,7 +320,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
         </div>
       </section>
 
-      <section style={styles.catalog}>
+      <section className="tours-section tours-container" style={styles.catalog}>
         <div className="tour-catalog-head" style={styles.catalogHead}>
           <div>
             <Tag style={styles.softTag}><ThunderboltOutlined /> Найдено {filteredTours.length}</Tag>
@@ -334,23 +332,20 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
         </div>
 
         {loading ? (
-          <Row gutter={[24, 24]}>
+          <div className="tours-grid" style={styles.toursGrid}>
             {[1, 2, 3, 4, 5, 6].map((item) => (
-              <Col xs={24} md={12} xl={8} key={item}>
-                <Card style={styles.card}><Skeleton active paragraph={{ rows: 5 }} /></Card>
-              </Col>
+              <Card className="tour-card" style={styles.card} key={item}><Skeleton active paragraph={{ rows: 5 }} /></Card>
             ))}
-          </Row>
+          </div>
         ) : filteredTours.length === 0 ? (
           <Empty description="Туры не найдены. Попробуйте изменить фильтры." style={styles.empty} />
         ) : (
-          <Row gutter={[24, 24]}>
+          <div className="tours-grid" style={styles.toursGrid}>
             {filteredTours.map((tour, index) => (
-              <Col xs={24} md={12} xl={8} key={tour.id || tour.title}>
-                <motion.article initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.04 }} whileHover={{ y: -8, scale: 1.01 }}>
+              <motion.article className="tour-card-shell" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.04 }} whileHover={{ y: -8, scale: 1.01 }} key={tour.id || tour.title}>
                   <Card
                     hoverable
-                    className="premium-tour-card"
+                    className="premium-tour-card tour-card"
                     style={styles.card}
                     bodyStyle={{ padding: 0 }}
                     onClick={() => openTour(tour)}
@@ -389,9 +384,8 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                     </div>
                   </Card>
                 </motion.article>
-              </Col>
             ))}
-          </Row>
+          </div>
         )}
       </section>
     </main>
@@ -460,14 +454,15 @@ const styles = {
     margin: '0 auto',
   },
   filters: {
-    maxWidth: 1180,
+    width: 'min(100% - 32px, 1200px)',
+    maxWidth: '100%',
     margin: '-48px auto 42px',
     position: 'relative',
     zIndex: 4,
     display: 'grid',
-    gridTemplateColumns: '1.4fr 220px repeat(3, 1fr)',
-    gap: 16,
-    padding: 18,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
+    gap: 'clamp(12px, 2vw, 20px)',
+    padding: 'clamp(16px, 4vw, 28px)',
     borderRadius: 28,
     background: 'rgba(255,255,255,0.84)',
     border: '1px solid rgba(255,255,255,0.72)',
@@ -476,18 +471,23 @@ const styles = {
   },
   search: {
     borderRadius: 18,
+    width: '100%',
+    minWidth: 0,
   },
   select: {
     width: '100%',
+    minWidth: 0,
   },
   filterPanel: {
     minWidth: 0,
-    padding: '3px 8px',
+    width: '100%',
+    padding: '2px 4px',
   },
   popularSection: {
-    maxWidth: 1180,
+    width: 'min(100% - 32px, 1200px)',
+    maxWidth: '100%',
     margin: '0 auto',
-    padding: '18px 24px 58px',
+    padding: '18px 0 58px',
   },
   sectionHead: {
     textAlign: 'center',
@@ -503,12 +503,14 @@ const styles = {
   },
   sectionTitle: {
     color: BRAND_BLUE,
+    fontSize: 'clamp(28px, 6vw, 48px)',
+    lineHeight: 1.1,
     fontWeight: 840,
     marginTop: 14,
   },
   destinationStrip: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
     gap: 16,
   },
   destinationPill: {
@@ -530,9 +532,10 @@ const styles = {
     objectFit: 'cover',
   },
   catalog: {
-    maxWidth: 1180,
+    width: 'min(100% - 32px, 1200px)',
+    maxWidth: '100%',
     margin: '0 auto',
-    padding: '0 24px',
+    padding: 0,
   },
   catalogHead: {
     display: 'flex',
@@ -547,11 +550,18 @@ const styles = {
     fontWeight: 800,
   },
   empty: {
-    padding: 80,
+    padding: 'clamp(36px, 8vw, 80px)',
     background: 'rgba(255,255,255,0.72)',
     borderRadius: 28,
   },
+  toursGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+    gap: 'clamp(16px, 3vw, 28px)',
+  },
   card: {
+    width: '100%',
+    minWidth: 0,
     overflow: 'hidden',
     borderRadius: 30,
     border: '1px solid rgba(29,53,87,0.08)',
@@ -560,12 +570,14 @@ const styles = {
   },
   imageWrap: {
     position: 'relative',
-    height: 250,
+    width: '100%',
+    aspectRatio: '16 / 10',
     overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: '100%',
+    aspectRatio: '16 / 10',
     objectFit: 'cover',
     display: 'block',
   },
@@ -596,6 +608,7 @@ const styles = {
   },
   cardBody: {
     padding: 22,
+    minWidth: 0,
   },
   countryTag: {
     borderRadius: 999,
@@ -627,6 +640,7 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 14,
+    flexWrap: 'wrap',
     marginTop: 18,
   },
   priceLabel: {
