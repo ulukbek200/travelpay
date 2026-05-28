@@ -272,10 +272,11 @@ const TravelBotWidget = () => {
 const styles = {
   floatingButton: {
     position: 'fixed',
-    right: 24,
-    bottom: 24,
+    right: 'clamp(12px, 3vw, 32px)',
+    bottom: 20,
     zIndex: 1000,
     minHeight: 56,
+    maxWidth: 'calc(100vw - 24px)',
     borderRadius: 999,
     border: '1px solid rgba(252,163,17,0.55)',
     background: 'linear-gradient(135deg, rgba(10,24,39,0.96), rgba(29,53,87,0.94))',

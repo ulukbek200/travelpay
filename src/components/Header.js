@@ -220,6 +220,7 @@ const Header = () => {
     >
       <div style={styles.inner}>
         <button type="button" onClick={() => navigate('/')} style={styles.logoButton} aria-label="TravelPay home">
+          <span style={styles.logoMark}>TP</span>
           <span style={styles.brandStack}>
             <span style={{ ...styles.logoText, color: menuTextColor }}>TravelPay</span>
             <span style={{ ...styles.logoSub, color: glassMode || theme === 'dark' ? 'rgba(246,251,255,0.68)' : 'rgba(29,53,87,0.58)' }}>
@@ -272,6 +273,16 @@ const Header = () => {
           )}
         </Space>
 
+        <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
+          <Button
+            className="mobile-language-action"
+            style={{ ...styles.mobileLanguageButton, ...(glassMode ? styles.mobileGlassButton : {}) }}
+          >
+            <GlobalOutlined />
+            {language}
+          </Button>
+        </Dropdown>
+
         <Button
           aria-label="Open menu"
           className="mobile-menu-button"
@@ -290,8 +301,11 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 900,
-    height: 72,
+    width: '100%',
+    maxWidth: '100%',
+    height: 60,
     padding: 0,
+    overflow: 'hidden',
     background: 'rgba(255,255,255,0.84)',
     borderBottom: '1px solid rgba(29,53,87,0.08)',
     boxShadow: '0 14px 40px rgba(29,53,87,0.08)',
@@ -310,44 +324,65 @@ const styles = {
     boxShadow: '0 12px 30px rgba(0,0,0,0.24)',
   },
   inner: {
+    width: '100%',
     maxWidth: 1200,
     height: '100%',
     margin: '0 auto',
-    padding: '0 22px',
+    padding: '0 clamp(12px, 4vw, 24px)',
     display: 'flex',
     alignItems: 'center',
-    gap: 30,
+    justifyContent: 'space-between',
+    gap: 12,
+    overflow: 'hidden',
   },
   logoButton: {
     display: 'inline-flex',
     alignItems: 'center',
+    gap: 8,
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
     padding: 0,
+    minWidth: 0,
+    maxWidth: 'min(220px, 48vw)',
     flexShrink: 0,
     fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
   },
+  logoMark: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    display: 'grid',
+    placeItems: 'center',
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    color: BRAND_BLUE,
+    fontWeight: 900,
+    fontSize: 10,
+    letterSpacing: 0,
+    boxShadow: '0 8px 18px rgba(252,163,17,0.18)',
+    flexShrink: 0,
+  },
   brandStack: {
     display: 'inline-flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'baseline',
     justifyContent: 'center',
-    gap: 3,
+    gap: 6,
+    minWidth: 0,
+    whiteSpace: 'nowrap',
   },
   logoText: {
     display: 'block',
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 850,
     lineHeight: 1,
     letterSpacing: 0,
   },
   logoSub: {
     display: 'block',
-    fontSize: 10.5,
+    fontSize: 9,
     fontWeight: 650,
     lineHeight: 1.1,
-    letterSpacing: 0.25,
+    letterSpacing: 0,
     borderBottom: 'none',
   },
   menu: {
@@ -362,12 +397,13 @@ const styles = {
   },
   actions: {
     flexShrink: 0,
+    minWidth: 0,
   },
   mobileMenuButton: {
     display: 'none',
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     border: '1px solid rgba(29,53,87,0.12)',
     color: BRAND_BLUE,
     background: 'rgba(255,255,255,0.92)',
@@ -378,8 +414,23 @@ const styles = {
     background: 'rgba(29,53,87,0.72)',
     borderColor: 'rgba(255,255,255,0.22)',
   },
+  mobileLanguageButton: {
+    display: 'none',
+    height: 36,
+    minWidth: 62,
+    borderRadius: 999,
+    border: '1px solid rgba(59,130,246,0.20)',
+    color: '#ffffff',
+    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+    fontWeight: 850,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    padding: '0 10px',
+    flexShrink: 0,
+  },
   dropdownButton: {
-    height: 38,
+    height: 34,
     borderRadius: 999,
     border: '1px solid rgba(59,130,246,0.24)',
     color: '#ffffff',
@@ -396,8 +447,8 @@ const styles = {
     color: '#f6fbff',
   },
   themeButton: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: 999,
     borderColor: 'rgba(252,163,17,0.46)',
     color: BRAND_BLUE,
@@ -420,7 +471,7 @@ const styles = {
     padding: '3px 8px',
   },
   profileButton: {
-    height: 38,
+    height: 34,
     borderRadius: 999,
     borderColor: 'rgba(29,53,87,0.18)',
     color: '#ffffff',
@@ -437,7 +488,7 @@ const styles = {
     color: '#f6fbff',
   },
   profileName: {
-    maxWidth: 96,
+    maxWidth: 82,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -445,7 +496,7 @@ const styles = {
     fontSize: 13,
   },
   loginButton: {
-    height: 38,
+    height: 34,
     borderRadius: 999,
     border: '1px solid rgba(59,130,246,0.24)',
     background: 'rgba(255,255,255,0.9)',
@@ -459,7 +510,7 @@ const styles = {
     color: '#f6fbff',
   },
   bookButton: {
-    height: 38,
+    height: 34,
     borderRadius: 999,
     background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
     border: 'none',

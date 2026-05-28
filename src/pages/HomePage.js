@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Collapse, Row, Col, Space, Tag, Typography, Segmented } from 'antd';
+import { Button, Card, Collapse, Input, Row, Col, Space, Tag, Typography, Segmented } from 'antd';
 import {
   ArrowRightOutlined,
   CarOutlined,
@@ -7,19 +7,24 @@ import {
   CustomerServiceOutlined,
   EnvironmentOutlined,
   GlobalOutlined,
-  ShopOutlined,
+  InstagramOutlined,
+  MailOutlined,
+  PhoneOutlined,
   SafetyCertificateOutlined,
+  ShopOutlined,
   StarFilled,
   TeamOutlined,
+  WhatsAppOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Paragraph, Text } = Typography;
+const { TextArea } = Input;
 
-const BRAND_BLUE = '#1d3557';
-const BRAND_GOLD = '#fca311';
-const TURQUOISE = '#16b6c4';
+const BRAND_BLUE = '#16324f';
+const BRAND_GOLD = '#f0b24a';
+const BRAND_TURQUOISE = '#2bb8c5';
 
 const copy = {
   EN: {
@@ -29,7 +34,6 @@ const copy = {
     heroText: 'Premium routes, AI Concierge, local guides, and comfortable journeys through Central Asia.',
     primary: 'Choose Tour',
     secondary: 'AI will plan route',
-    stats: [['16', 'Signature destinations'], ['24/7', 'Concierge support'], ['3', 'Languages']],
     trusted: 'Trusted by travelers seeking premium mountain, lake, and nomadic experiences',
     destinationsTitle: 'Popular Destinations',
     destinationsText: 'Only Kyrgyzstan and Kazakhstan routes, curated for cinematic landscapes and authentic culture.',
@@ -43,17 +47,22 @@ const copy = {
     partnerTitle: 'Partnership for tour companies',
     partnerText: 'Cooperate with us, publish your tours, receive clients, and grow your tourism business in Kyrgyzstan and Kazakhstan.',
     partnerCta: 'Become a Partner',
+    partnerFormTitle: 'Tell us about your company',
+    partnerFormText: 'Leave your details and we will help connect your company to premium clients and curated routes.',
+    partnerFormName: 'Your name',
+    partnerFormCompany: 'Company',
+    partnerFormEmail: 'Email',
+    partnerFormMessage: 'What kind of partnership do you need?',
+    partnerFormCta: 'Send partnership request',
   },
   RU: {
     navBook: 'Бронировать',
     heroTag: 'Премиальные туры по Центральной Азии',
     heroTitle: 'Эксклюзивные туры по Кыргызстану и Алматы',
-    heroText:
-      'Премиальные маршруты, AI Concierge, локальные гиды и комфортные путешествия по Центральной Азии.',
+    heroText: 'Премиальные маршруты, AI Concierge, локальные гиды и комфортные путешествия по Центральной Азии.',
     primary: 'Выбрать тур',
     secondary: 'AI подберёт маршрут',
-    stats: [['16', 'направлений'], ['24/7', 'поддержка'], ['3', 'языка']],
-    trusted: 'Нам доверяют путешественники, выбирающие премиальные горные и озерные маршруты',
+    trusted: 'Нам доверяют путешественники, выбирающие премиальные горные, озёрные и кочевые маршруты',
     destinationsTitle: 'Популярные направления',
     destinationsText: 'Только Кыргызстан и Казахстан: кинематографичные пейзажи и настоящая культура региона.',
     toursTitle: 'Эксклюзивные туры',
@@ -66,16 +75,21 @@ const copy = {
     partnerTitle: 'Партнёрство для тур компаний',
     partnerText: 'Сотрудничайте с нами, размещайте свои туры, получайте клиентов и развивайте туристический бизнес в Кыргызстане и Казахстане.',
     partnerCta: 'Стать партнёром',
+    partnerFormTitle: 'Расскажите о вашей компании',
+    partnerFormText: 'Оставьте контакты, и мы поможем подключить вашу компанию к премиальной аудитории и curated-маршрутам.',
+    partnerFormName: 'Ваше имя',
+    partnerFormCompany: 'Компания',
+    partnerFormEmail: 'Email',
+    partnerFormMessage: 'Какой формат сотрудничества вас интересует?',
+    partnerFormCta: 'Отправить заявку',
   },
   KG: {
     navBook: 'Тур брондоо',
     heroTag: 'Премиум Борбор Азия турлары',
     heroTitle: 'Кыргызстан жана Алматы боюнча өзгөчө турлар',
-    heroText:
-      'Премиум маршруттар, AI Concierge, жергиликтүү гиддер жана Борбор Азия боюнча ыңгайлуу саякаттар.',
+    heroText: 'Премиум маршруттар, AI Concierge, жергиликтүү гиддер жана Борбор Азия боюнча ыңгайлуу саякаттар.',
     primary: 'Тур тандоо',
     secondary: 'AI маршрут тандайт',
-    stats: [['16', 'багыт'], ['24/7', 'колдоо'], ['3', 'тил']],
     trusted: 'Премиум тоо, көл жана көчмөн тажрыйбасын тандаган саякатчылар бизге ишенет',
     destinationsTitle: 'Популярдуу багыттар',
     destinationsText: 'Кыргызстан жана Казахстан гана: кооз табият жана чыныгы жергиликтүү маданият.',
@@ -89,6 +103,13 @@ const copy = {
     partnerTitle: 'Тур компаниялар үчүн өнөктөштүк',
     partnerText: 'Биз менен кызматташып, турларыңызды жайгаштырып, кардарларды алып, Кыргызстан жана Казахстандагы туризм бизнесин өнүктүрүңүз.',
     partnerCta: 'Өнөктөш болуу',
+    partnerFormTitle: 'Компанияңыз тууралуу жазыңыз',
+    partnerFormText: 'Байланыш маалыматтарыңызды калтырыңыз, биз сизди премиум аудитория жана мыкты маршруттар менен байланыштырабыз.',
+    partnerFormName: 'Атыңыз',
+    partnerFormCompany: 'Компания',
+    partnerFormEmail: 'Email',
+    partnerFormMessage: 'Кайсы өнөктөштүк форматы керек?',
+    partnerFormCta: 'Өтүнмө жөнөтүү',
   },
 };
 
@@ -144,6 +165,27 @@ const testimonials = [
   ['Sofia K.', 'Nomad Experience', 'Song-Kol with yurts and horses was unforgettable, but still comfortable and very well planned.'],
 ];
 
+const socialLinks = [
+  { key: 'instagram', label: 'Instagram', href: 'https://instagram.com', icon: <InstagramOutlined /> },
+  { key: 'whatsapp', label: 'WhatsApp', href: 'https://wa.me/996555123456', icon: <WhatsAppOutlined /> },
+  { key: 'email', label: 'Email', href: 'mailto:hello@travelpay.kg', icon: <MailOutlined /> },
+];
+
+const footerColumns = [
+  {
+    title: 'Explore',
+    links: ['Popular Destinations', 'Exclusive Tours', 'Tour Gallery', 'Partnership'],
+  },
+  {
+    title: 'Destinations',
+    links: ['Issyk-Kul', 'Karakol', 'Song-Kol', 'Almaty', 'Charyn Canyon'],
+  },
+  {
+    title: 'Contact',
+    links: ['+996 555 123 456', 'hello@travelpay.kg', 'Bishkek, Kyrgyzstan', 'Daily 09:00 - 21:00'],
+  },
+];
+
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
   whileInView: { opacity: 1, y: 0 },
@@ -154,10 +196,19 @@ const fadeUp = {
 const HomePage = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'EN');
+  const [partnerForm, setPartnerForm] = useState({
+    name: '',
+    company: '',
+    email: '',
+    message: '',
+  });
   const t = copy[language] || copy.EN;
 
   useEffect(() => {
-    const handleLanguageChange = (event) => setLanguage(event.detail || localStorage.getItem('travelpay_language') || 'EN');
+    const handleLanguageChange = (event) => {
+      setLanguage(event.detail || localStorage.getItem('travelpay_language') || 'EN');
+    };
+
     window.addEventListener('travelpay-language-change', handleLanguageChange);
     return () => window.removeEventListener('travelpay-language-change', handleLanguageChange);
   }, []);
@@ -180,6 +231,16 @@ const HomePage = () => {
     },
   ], [language]);
 
+  const handlePartnerInput = (key) => (event) => {
+    const value = event?.target?.value || '';
+    setPartnerForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handlePartnerSubmit = (event) => {
+    event.preventDefault();
+    navigate('/register');
+  };
+
   return (
     <main className="home-page" style={styles.page}>
       <section className="home-hero-section" style={styles.hero}>
@@ -192,123 +253,165 @@ const HomePage = () => {
         <div className="hero-gradient-layer hero-gradient-layer-three" />
         <div style={styles.heroOverlay} />
 
-        <motion.div style={styles.heroContent} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75 }}>
-          <Tag style={styles.heroTag}>{t.heroTag}</Tag>
-          <Title style={styles.heroTitle}>{t.heroTitle}</Title>
-          <Paragraph style={styles.heroText}>{t.heroText}</Paragraph>
-          <Space size={14} wrap style={styles.heroActions}>
-            <Button size="large" type="primary" style={styles.goldButton} className="premium-cta" onClick={() => navigate('/tours')}>
-              {t.primary} <ArrowRightOutlined />
-            </Button>
-            <Button size="large" style={styles.consultButton} className="premium-cta secondary" onClick={() => window.dispatchEvent(new Event('open-ai-concierge'))}>
-              {t.secondary}
-            </Button>
-          </Space>
-        </motion.div>
-
-      </section>
-
-      <section style={styles.trustSection}>
-        <Text style={styles.trustText}>{t.trusted}</Text>
-        <div style={styles.logoStrip}>
-          {['Issyk-Kul', 'Karakol', 'Song-Kol', 'Almaty', 'Kolsai Lakes', 'Charyn Canyon'].map((brand) => (
-            <span key={brand}>{brand}</span>
-          ))}
+        <div className="home-shell home-hero-shell" style={styles.heroShell}>
+          <motion.div className="home-hero-content" style={styles.heroContent} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75 }}>
+            <Tag style={styles.heroTag}>{t.heroTag}</Tag>
+            <Title style={styles.heroTitle}>{t.heroTitle}</Title>
+            <Paragraph style={styles.heroText}>{t.heroText}</Paragraph>
+            <Space size={14} wrap className="home-hero-actions" style={styles.heroActions}>
+              <Button size="large" type="primary" style={styles.goldButton} className="premium-cta" onClick={() => navigate('/tours')}>
+                {t.primary} <ArrowRightOutlined />
+              </Button>
+              <Button size="large" style={styles.consultButton} className="premium-cta secondary" onClick={() => window.dispatchEvent(new Event('open-ai-concierge'))}>
+                {t.secondary}
+              </Button>
+            </Space>
+          </motion.div>
         </div>
       </section>
 
-      <section id="destinations" style={styles.section}>
-        <motion.div {...fadeUp} style={styles.sectionHeader}>
-          <Tag style={styles.sectionTag}><EnvironmentOutlined /> {t.destinationsTitle}</Tag>
-          <Title level={2} style={styles.sectionTitle}>{t.destinationsTitle}</Title>
-          <Paragraph style={styles.sectionText}>{t.destinationsText}</Paragraph>
-        </motion.div>
-
-        <div style={styles.destinationGrid}>
-          {destinations.map(([title, country, text, image], index) => (
-            <motion.article key={title} style={styles.destinationCard} {...fadeUp} transition={{ delay: index * 0.035, duration: 0.5 }} whileHover={{ y: -8 }}>
-              <img src={image} alt={title} style={styles.destinationImage} />
-              <div style={styles.destinationOverlay}>
-                <Tag style={styles.countryTag}>{country}</Tag>
-                <Title level={3} style={styles.destinationTitle}>{title}</Title>
-                <Text style={styles.destinationText}>{text}</Text>
-              </div>
-            </motion.article>
-          ))}
-        </div>
-      </section>
-
-      <section style={styles.darkSection}>
-        <motion.div {...fadeUp} style={styles.sectionHeader}>
-          <Tag style={styles.darkTag}>{t.toursTitle}</Tag>
-          <Title level={2} style={styles.darkTitle}>{t.toursTitle}</Title>
-        </motion.div>
-
-        <Row gutter={[20, 20]}>
-          {tours.map(([title, text], index) => (
-            <Col xs={24} md={12} key={title}>
-              <motion.div {...fadeUp} transition={{ delay: index * 0.08 }}>
-                <Card style={styles.tourCard}>
-                  <Title level={3} style={styles.tourTitle}>{title}</Title>
-                  <Paragraph style={styles.tourText}>{text}</Paragraph>
-                  <Button type="link" style={styles.tourLink} onClick={() => navigate('/tours')}>
-                    {t.primary} <ArrowRightOutlined />
-                  </Button>
-                </Card>
-              </motion.div>
-            </Col>
-          ))}
-        </Row>
-      </section>
-
-      <section style={styles.section}>
-        <motion.div {...fadeUp} style={styles.sectionHeader}>
-          <Tag style={styles.sectionTag}>{t.whyTitle}</Tag>
-          <Title level={2} style={styles.sectionTitle}>{t.whyTitle}</Title>
-        </motion.div>
-
-        <Row gutter={[20, 20]}>
-          {why.map(([title, text, icon], index) => (
-            <Col xs={24} md={12} lg={6} key={title}>
-              <motion.div {...fadeUp} transition={{ delay: index * 0.06 }}>
-                <Card style={styles.whyCard}>
-                  <div style={styles.whyIcon}>{icon}</div>
-                  <Title level={4} style={styles.cardTitle}>{title}</Title>
-                  <Paragraph style={styles.cardText}>{text}</Paragraph>
-                </Card>
-              </motion.div>
-            </Col>
-          ))}
-        </Row>
-      </section>
-
-      <section style={styles.gallerySection}>
-        <motion.div {...fadeUp} style={styles.sectionHeader}>
-          <Tag style={styles.darkTag}>{t.galleryTitle}</Tag>
-          <Title level={2} style={styles.darkTitle}>{t.galleryTitle}</Title>
-        </motion.div>
-        <div style={styles.galleryGrid}>
-          {gallery.map((image, index) => (
-            <motion.img key={image} src={image} alt="Central Asia tour" style={{ ...styles.galleryImage, gridRow: index === 0 || index === 3 ? 'span 2' : 'span 1' }} whileHover={{ scale: 1.025 }} />
-          ))}
-        </div>
-      </section>
-
-      <section id="partnership" style={styles.partnershipSection}>
-        <motion.div className="partner-shell" {...fadeUp} style={styles.partnerShell}>
-          <div style={styles.partnerIntro}>
-            <Tag style={styles.darkTag}>{t.partnership}</Tag>
-            <Title level={2} style={styles.partnerTitle}>{t.partnerTitle}</Title>
-            <Paragraph style={styles.partnerText}>{t.partnerText}</Paragraph>
-            <Button size="large" type="primary" style={styles.goldButton} className="premium-cta" onClick={() => navigate('/register')}>
-              {t.partnerCta} <ArrowRightOutlined />
-            </Button>
+      <section className="home-trust-section" style={styles.trustSection}>
+        <div className="home-shell" style={styles.trustShell}>
+          <Text style={styles.trustText}>{t.trusted}</Text>
+          <div className="home-logo-strip" style={styles.logoStrip}>
+            {['Issyk-Kul', 'Karakol', 'Song-Kol', 'Almaty', 'Kolsai Lakes', 'Charyn Canyon'].map((brand) => (
+              <span key={brand}>{brand}</span>
+            ))}
           </div>
+        </div>
+      </section>
 
-          <div style={styles.partnerGrid}>
+      <section id="destinations" className="home-section" style={styles.section}>
+        <div className="home-shell" style={styles.sectionInner}>
+          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
+            <Tag style={styles.sectionTag}><EnvironmentOutlined /> {t.destinationsTitle}</Tag>
+            <Title level={2} style={styles.sectionTitle}>{t.destinationsTitle}</Title>
+            <Paragraph style={styles.sectionText}>{t.destinationsText}</Paragraph>
+          </motion.div>
+
+          <div className="home-destination-grid" style={styles.destinationGrid}>
+            {destinations.map(([title, country, text, image], index) => (
+              <motion.article className="home-destination-card" key={title} style={styles.destinationCard} {...fadeUp} transition={{ delay: index * 0.03, duration: 0.48 }} whileHover={{ y: -6 }}>
+                <img src={image} alt={title} style={styles.destinationImage} />
+                <div style={styles.destinationOverlay}>
+                  <Tag style={styles.countryTag}>{country}</Tag>
+                  <Title level={3} style={styles.destinationTitle}>{title}</Title>
+                  <Text style={styles.destinationText}>{text}</Text>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="home-dark-section" style={styles.darkSection}>
+        <div className="home-shell" style={styles.sectionInner}>
+          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
+            <Tag style={styles.darkTag}>{t.toursTitle}</Tag>
+            <Title level={2} style={styles.darkTitle}>{t.toursTitle}</Title>
+          </motion.div>
+
+          <Row gutter={[18, 18]}>
+            {tours.map(([title, text], index) => (
+              <Col xs={24} md={12} key={title}>
+                <motion.div {...fadeUp} transition={{ delay: index * 0.06 }}>
+                  <Card className="home-tour-card" style={styles.tourCard}>
+                    <div style={styles.tourCardTop}>
+                      <Tag style={styles.tourTag}>Premium Format</Tag>
+                    </div>
+                    <Title level={3} style={styles.tourTitle}>{title}</Title>
+                    <Paragraph style={styles.tourText}>{text}</Paragraph>
+                    <div style={styles.tourFooter}>
+                      <span style={styles.tourMeta}>Curated itinerary</span>
+                      <Button type="link" style={styles.tourLink} onClick={() => navigate('/tours')}>
+                        {t.primary} <ArrowRightOutlined />
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </section>
+
+      <section className="home-section" style={styles.section}>
+        <div className="home-shell" style={styles.sectionInner}>
+          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
+            <Tag style={styles.sectionTag}>{t.whyTitle}</Tag>
+            <Title level={2} style={styles.sectionTitle}>{t.whyTitle}</Title>
+          </motion.div>
+
+          <Row gutter={[18, 18]}>
+            {why.map(([title, text, icon], index) => (
+              <Col xs={24} sm={12} lg={6} key={title}>
+                <motion.div {...fadeUp} transition={{ delay: index * 0.06 }}>
+                  <Card className="home-why-card" style={styles.whyCard}>
+                    <div style={styles.whyIcon}>{icon}</div>
+                    <Title level={4} style={styles.cardTitle}>{title}</Title>
+                    <Paragraph style={styles.cardText}>{text}</Paragraph>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </section>
+
+      <section className="home-gallery-section" style={styles.gallerySection}>
+        <div className="home-shell" style={styles.sectionInner}>
+          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
+            <Tag style={styles.darkTag}>{t.galleryTitle}</Tag>
+            <Title level={2} style={styles.darkTitle}>{t.galleryTitle}</Title>
+          </motion.div>
+
+          <div className="home-gallery-grid" style={styles.galleryGrid}>
+            {gallery.map((image, index) => (
+              <motion.div
+                key={image}
+                className={`home-gallery-item ${index === 0 || index === 3 ? 'is-tall' : ''}`}
+                style={styles.galleryItem}
+                whileHover={{ y: -4 }}
+              >
+                <img src={image} alt="Central Asia tour" style={styles.galleryImage} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="partnership" className="home-partnership-section" style={styles.partnershipSection}>
+        <div className="home-shell">
+          <motion.div className="partner-shell" {...fadeUp} style={styles.partnerShell}>
+            <div style={styles.partnerIntro}>
+              <Tag style={styles.darkTag}>{t.partnership}</Tag>
+              <Title level={2} style={styles.partnerTitle}>{t.partnerTitle}</Title>
+              <Paragraph style={styles.partnerText}>{t.partnerText}</Paragraph>
+              <Button size="large" type="primary" style={styles.goldButton} className="premium-cta" onClick={() => navigate('/register')}>
+                {t.partnerCta} <ArrowRightOutlined />
+              </Button>
+            </div>
+
+            <Card className="home-partner-form-card" style={styles.partnerFormCard}>
+              <Text style={styles.partnerFormEyebrow}>TravelPay B2B</Text>
+              <Title level={3} style={styles.partnerFormTitle}>{t.partnerFormTitle}</Title>
+              <Paragraph style={styles.partnerFormText}>{t.partnerFormText}</Paragraph>
+              <form className="home-partner-form" style={styles.partnerForm} onSubmit={handlePartnerSubmit}>
+                <Input value={partnerForm.name} onChange={handlePartnerInput('name')} placeholder={t.partnerFormName} style={styles.partnerInput} />
+                <Input value={partnerForm.company} onChange={handlePartnerInput('company')} placeholder={t.partnerFormCompany} style={styles.partnerInput} />
+                <Input value={partnerForm.email} onChange={handlePartnerInput('email')} placeholder={t.partnerFormEmail} style={styles.partnerInput} />
+                <TextArea value={partnerForm.message} onChange={handlePartnerInput('message')} rows={4} placeholder={t.partnerFormMessage} style={styles.partnerTextarea} />
+                <Button htmlType="submit" type="primary" style={styles.partnerSubmit}>
+                  {t.partnerFormCta}
+                </Button>
+              </form>
+            </Card>
+          </motion.div>
+
+          <div className="home-partner-grid" style={styles.partnerGrid}>
             {partnerCards.map(([title, text, icon]) => (
-              <motion.div key={title} whileHover={{ y: -7 }} transition={{ duration: 0.2 }}>
-                <Card style={styles.partnerCard}>
+              <motion.div key={title} whileHover={{ y: -6 }} transition={{ duration: 0.2 }}>
+                <Card className="home-partner-card" style={styles.partnerCard}>
                   <div style={styles.partnerIcon}>{icon}</div>
                   <Title level={4} style={styles.partnerCardTitle}>{title}</Title>
                   <Paragraph style={styles.partnerCardText}>{text}</Paragraph>
@@ -316,73 +419,104 @@ const HomePage = () => {
               </motion.div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </section>
 
-      <section style={styles.section}>
-        <motion.div {...fadeUp} style={styles.sectionHeader}>
-          <Tag style={styles.sectionTag}>{t.testimonialsTitle}</Tag>
-          <Title level={2} style={styles.sectionTitle}>{t.testimonialsTitle}</Title>
-        </motion.div>
-        <Row gutter={[20, 20]}>
-          {testimonials.map(([name, route, text], index) => (
-            <Col xs={24} md={8} key={name}>
-              <motion.div {...fadeUp} transition={{ delay: index * 0.08 }}>
-                <Card style={styles.testimonialCard}>
-                  <Space size={4} style={{ color: BRAND_GOLD, marginBottom: 14 }}>
-                    {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} />)}
-                  </Space>
-                  <Paragraph style={styles.quote}>{text}</Paragraph>
-                  <Text strong style={{ color: BRAND_BLUE }}>{name}</Text>
-                  <br />
-                  <Text type="secondary">{route}</Text>
-                </Card>
+      <section className="home-section" style={styles.section}>
+        <div className="home-shell" style={styles.sectionInner}>
+          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
+            <Tag style={styles.sectionTag}>{t.testimonialsTitle}</Tag>
+            <Title level={2} style={styles.sectionTitle}>{t.testimonialsTitle}</Title>
+          </motion.div>
+
+          <Row gutter={[18, 18]}>
+            {testimonials.map(([name, route, text], index) => (
+              <Col xs={24} md={8} key={name}>
+                <motion.div {...fadeUp} transition={{ delay: index * 0.08 }}>
+                  <Card className="home-testimonial-card" style={styles.testimonialCard}>
+                    <Space size={4} style={styles.testimonialStars}>
+                      {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} />)}
+                    </Space>
+                    <Paragraph style={styles.quote}>{text}</Paragraph>
+                    <Text strong style={styles.testimonialName}>{name}</Text>
+                    <Text style={styles.testimonialRoute}>{route}</Text>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </section>
+
+      <section className="home-section" style={styles.section}>
+        <div className="home-shell" style={styles.sectionInner}>
+          <Row gutter={[24, 24]} align="middle">
+            <Col xs={24} lg={10}>
+              <motion.div {...fadeUp}>
+                <Tag style={styles.sectionTag}>{t.faqTitle}</Tag>
+                <Title level={2} style={styles.sectionTitle}>{t.faqTitle}</Title>
+                <Paragraph style={styles.sectionText}>{t.destinationsText}</Paragraph>
               </motion.div>
             </Col>
-          ))}
-        </Row>
+            <Col xs={24} lg={14}>
+              <Collapse className="home-faq" size="large" style={styles.faq} items={faqItems} />
+            </Col>
+          </Row>
+        </div>
       </section>
 
-      <section style={styles.section}>
-        <Row gutter={[28, 28]} align="middle">
-          <Col xs={24} lg={10}>
-            <motion.div {...fadeUp}>
-              <Tag style={styles.sectionTag}>{t.faqTitle}</Tag>
-              <Title level={2} style={styles.sectionTitle}>{t.faqTitle}</Title>
-              <Paragraph style={styles.sectionText}>{t.destinationsText}</Paragraph>
-            </motion.div>
-          </Col>
-          <Col xs={24} lg={14}>
-            <Collapse size="large" style={styles.faq} items={faqItems} />
-          </Col>
-        </Row>
-      </section>
-
-      <footer style={styles.footer}>
-        <div style={styles.footerGrid}>
-          <div>
-            <div style={styles.footerLogo}>TravelPay Central Asia</div>
-            <Paragraph style={styles.footerText}>{t.footerText}</Paragraph>
-            <Segmented
-              value={language}
-              options={['KG', 'RU', 'EN']}
-              onChange={(value) => {
-                setLanguage(value);
-                localStorage.setItem('travelpay_language', value);
-                window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
-              }}
-            />
-          </div>
-          {[
-            ['Kyrgyzstan', 'Issyk-Kul', 'Ala-Archa', 'Karakol', 'Song-Kol'],
-            ['Kazakhstan', 'Almaty', 'Charyn Canyon', 'Kolsai Lakes', 'Medeu'],
-            ['Contact', '+996 555 123 456', 'hello@travelpay.kg', 'Instagram · WhatsApp'],
-          ].map(([heading, ...links]) => (
-            <div key={heading}>
-              <Text style={styles.footerHeading}>{heading}</Text>
-              {links.map((link) => <span key={link} style={styles.footerLink}>{link}</span>)}
+      <footer className="home-footer" style={styles.footer}>
+        <div className="home-shell">
+          <div className="home-footer-grid" style={styles.footerGrid}>
+            <div style={styles.footerBrand}>
+              <div style={styles.footerLogo}>
+                <span style={styles.footerLogoMark}>TP</span>
+                <span style={styles.footerLogoText}>TravelPay Central Asia</span>
+              </div>
+              <Paragraph style={styles.footerText}>{t.footerText}</Paragraph>
+              <Segmented
+                value={language}
+                options={['KG', 'RU', 'EN']}
+                onChange={(value) => {
+                  setLanguage(value);
+                  localStorage.setItem('travelpay_language', value);
+                  window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
+                }}
+              />
             </div>
-          ))}
+
+            {footerColumns.map((column) => (
+              <div key={column.title}>
+                <Text style={styles.footerHeading}>{column.title}</Text>
+                {column.links.map((link) => (
+                  <a key={link} href="/" onClick={(event) => event.preventDefault()} className="home-footer-link" style={styles.footerLink}>
+                    {link}
+                  </a>
+                ))}
+              </div>
+            ))}
+
+            <div>
+              <Text style={styles.footerHeading}>Social</Text>
+              <div style={styles.socialList}>
+                {socialLinks.map((item) => (
+                  <a key={item.key} href={item.href} className="home-social-link" style={styles.socialLink}>
+                    <span style={styles.socialIcon}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </a>
+                ))}
+              </div>
+              <div style={styles.footerMeta}>
+                <span style={styles.footerMetaRow}><PhoneOutlined /> +996 555 123 456</span>
+                <span style={styles.footerMetaRow}><MailOutlined /> hello@travelpay.kg</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={styles.footerBottom}>
+            <span>© 2026 TravelPay. All rights reserved.</span>
+            <span>Premium travel across Kyrgyzstan and Kazakhstan.</span>
+          </div>
         </div>
       </footer>
     </main>
@@ -392,7 +526,7 @@ const HomePage = () => {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'radial-gradient(circle at 12% 8%, rgba(22,182,196,0.10), transparent 28%), radial-gradient(circle at 88% 18%, rgba(252,163,17,0.10), transparent 26%), linear-gradient(180deg, #f8fbff 0%, #eef5fb 48%, #f9fbff 100%)',
+    background: 'radial-gradient(circle at 12% 8%, rgba(43,184,197,0.10), transparent 28%), radial-gradient(circle at 88% 18%, rgba(240,178,74,0.12), transparent 24%), linear-gradient(180deg, #f5f8fc 0%, #edf3f8 46%, #f8fbff 100%)',
     color: BRAND_BLUE,
     fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
     scrollBehavior: 'smooth',
@@ -402,11 +536,16 @@ const styles = {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '136px max(24px, calc((100vw - 1180px) / 2 + 24px)) 92px',
+    padding: '124px 24px 84px',
     overflow: 'hidden',
     marginTop: -78,
     background: '#06111f',
+  },
+  heroShell: {
+    position: 'relative',
+    zIndex: 2,
+    display: 'block',
+    width: '100%',
   },
   heroVideo: {
     position: 'absolute',
@@ -415,140 +554,143 @@ const styles = {
     height: '100%',
     objectFit: 'cover',
     opacity: 0.82,
-    filter: 'saturate(1.08) contrast(1.04) brightness(0.90)',
+    filter: 'saturate(1.08) contrast(1.04) brightness(0.9)',
   },
   heroOverlay: {
     position: 'absolute',
     inset: 0,
     zIndex: 1,
-    background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.05), transparent 28%), linear-gradient(90deg, rgba(6,17,31,0.64), rgba(6,17,31,0.46), rgba(6,17,31,0.64)), linear-gradient(180deg, rgba(4,11,21,0.22), rgba(4,11,21,0.76))',
+    background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.05), transparent 28%), linear-gradient(90deg, rgba(6,17,31,0.7), rgba(6,17,31,0.48), rgba(6,17,31,0.62)), linear-gradient(180deg, rgba(4,11,21,0.22), rgba(4,11,21,0.8))',
   },
   heroContent: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: 850,
-    textAlign: 'center',
+    width: '100%',
+    maxWidth: 760,
+    minWidth: 0,
   },
   heroTag: {
     color: '#fff',
-    background: 'rgba(255,255,255,0.13)',
-    border: '1px solid rgba(255,255,255,0.24)',
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.22)',
     borderRadius: 999,
     padding: '8px 16px',
     fontWeight: 760,
-    letterSpacing: 0.25,
+    letterSpacing: 0.22,
     backdropFilter: 'blur(18px)',
     boxShadow: '0 12px 32px rgba(0,0,0,0.16)',
   },
   heroTitle: {
     color: '#fff',
-    fontSize: 'clamp(38px, 5.2vw, 72px)',
-    lineHeight: 1.03,
-    margin: '24px auto 20px',
-    fontWeight: 760,
-    letterSpacing: 0,
+    fontSize: 'clamp(40px, 5vw, 72px)',
+    lineHeight: 1.01,
+    margin: '24px 0 18px',
+    fontWeight: 820,
+    letterSpacing: -1.1,
     textShadow: '0 22px 70px rgba(0,0,0,0.34)',
   },
   heroText: {
     color: 'rgba(255,255,255,0.84)',
-    fontSize: 19,
-    lineHeight: 1.65,
-    maxWidth: 690,
-    margin: '0 auto 32px',
+    fontSize: 18,
+    lineHeight: 1.7,
+    maxWidth: 640,
+    margin: '0 0 30px',
   },
   heroActions: {
-    justifyContent: 'center',
+    marginBottom: 0,
   },
   goldButton: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffc15a)`,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
     borderColor: BRAND_GOLD,
     color: BRAND_BLUE,
     height: 48,
     borderRadius: 999,
     paddingInline: 24,
-    fontWeight: 820,
-    boxShadow: '0 18px 42px rgba(252,163,17,0.32)',
-    outline: 'none',
+    fontWeight: 840,
+    boxShadow: '0 18px 42px rgba(240,178,74,0.28)',
     position: 'relative',
     overflow: 'hidden',
-    transform: 'translateZ(0)',
   },
   consultButton: {
-    borderColor: 'rgba(255,255,255,0.34)',
+    borderColor: 'rgba(255,255,255,0.28)',
     color: '#fff',
-    background: 'rgba(255,255,255,0.10)',
+    background: 'rgba(255,255,255,0.08)',
     height: 48,
     borderRadius: 999,
     paddingInline: 24,
     fontWeight: 780,
     backdropFilter: 'blur(18px)',
     boxShadow: '0 14px 34px rgba(0,0,0,0.18)',
-    outline: 'none',
   },
   trustSection: {
-    padding: '34px 24px',
-    background: 'rgba(255,255,255,0.82)',
-    textAlign: 'center',
-    borderBottom: '1px solid rgba(29,53,87,0.08)',
+    padding: '30px 24px',
+    background: 'rgba(255,255,255,0.74)',
+    borderBottom: '1px solid rgba(22,50,79,0.08)',
     backdropFilter: 'blur(18px)',
   },
+  trustShell: {
+    display: 'grid',
+    gap: 18,
+  },
   trustText: {
-    color: '#64748b',
-    fontWeight: 800,
+    color: '#526981',
+    fontWeight: 760,
+    textAlign: 'center',
   },
   logoStrip: {
-    margin: '22px auto 0',
-    maxWidth: 940,
     display: 'flex',
     justifyContent: 'center',
-    gap: 26,
+    gap: 18,
     flexWrap: 'wrap',
     color: BRAND_BLUE,
-    fontWeight: 820,
-    opacity: 0.76,
+    fontWeight: 760,
+    opacity: 0.78,
   },
   section: {
-    maxWidth: 1180,
-    margin: '0 auto',
-    padding: '96px 24px',
+    padding: '84px 24px',
+  },
+  sectionInner: {
+    width: '100%',
+    minWidth: 0,
   },
   sectionHeader: {
+    width: '100%',
     maxWidth: 760,
-    margin: '0 auto 42px',
+    margin: '0 auto 34px',
     textAlign: 'center',
   },
   sectionTag: {
-    background: 'rgba(255,255,255,0.78)',
-    borderColor: 'rgba(29,53,87,0.08)',
+    background: 'rgba(255,255,255,0.82)',
+    borderColor: 'rgba(22,50,79,0.08)',
     color: BRAND_BLUE,
     borderRadius: 999,
-    padding: '6px 14px',
+    padding: '7px 14px',
     fontWeight: 780,
-    boxShadow: '0 12px 32px rgba(29,53,87,0.06)',
+    boxShadow: '0 12px 32px rgba(22,50,79,0.06)',
   },
   sectionTitle: {
     color: BRAND_BLUE,
-    fontSize: 'clamp(30px, 4vw, 50px)',
-    fontWeight: 820,
+    fontSize: 'clamp(30px, 4vw, 48px)',
+    fontWeight: 840,
     marginTop: 16,
+    letterSpacing: -0.8,
   },
   sectionText: {
-    color: '#64748b',
+    color: '#62758a',
     fontSize: 16,
-    lineHeight: 1.7,
+    lineHeight: 1.72,
   },
   destinationGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: 18,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: 16,
   },
   destinationCard: {
     position: 'relative',
-    minHeight: 350,
-    borderRadius: 28,
+    minHeight: 296,
+    borderRadius: 24,
     overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.72)',
-    boxShadow: '0 24px 70px rgba(29,53,87,0.12)',
+    border: '1px solid rgba(255,255,255,0.78)',
+    boxShadow: '0 24px 70px rgba(22,50,79,0.12)',
+    minWidth: 0,
   },
   destinationImage: {
     position: 'absolute',
@@ -560,84 +702,116 @@ const styles = {
   destinationOverlay: {
     position: 'absolute',
     inset: 0,
-    padding: 22,
+    padding: 20,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-end',
-    background: 'linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.72))',
+    minWidth: 0,
+    background: 'linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.76))',
   },
   countryTag: {
     width: 'fit-content',
     color: BRAND_BLUE,
-    background: 'rgba(255,255,255,0.86)',
+    background: 'rgba(255,255,255,0.88)',
     border: 'none',
-    fontWeight: 900,
+    fontWeight: 860,
+    marginInlineEnd: 0,
   },
   destinationTitle: {
     color: '#fff',
     margin: '10px 0 4px',
-    fontWeight: 950,
+    fontWeight: 900,
+    fontSize: 'clamp(24px, 3vw, 28px)',
   },
   destinationText: {
     color: '#e8f3ff',
-    fontWeight: 700,
+    fontWeight: 650,
+    lineHeight: 1.45,
   },
   darkSection: {
-    padding: '92px 24px',
+    padding: '84px 24px',
     background: 'linear-gradient(180deg, #071523, #10233a)',
   },
   darkTag: {
-    background: 'rgba(252,163,17,0.16)',
-    color: BRAND_GOLD,
-    border: '1px solid rgba(252,163,17,0.28)',
+    background: 'rgba(240,178,74,0.16)',
+    color: '#ffd48a',
+    border: '1px solid rgba(240,178,74,0.28)',
     borderRadius: 999,
-    fontWeight: 950,
+    fontWeight: 900,
     padding: '5px 12px',
   },
   darkTitle: {
     color: '#fff',
     fontSize: 'clamp(30px, 4vw, 48px)',
-    fontWeight: 820,
+    fontWeight: 840,
     marginTop: 16,
+    letterSpacing: -0.8,
   },
   tourCard: {
     height: '100%',
-    border: '1px solid rgba(255,255,255,0.18)',
-    borderRadius: 28,
-    background: 'rgba(255,255,255,0.09)',
-    backdropFilter: 'blur(22px)',
-    boxShadow: '0 26px 70px rgba(0,0,0,0.22)',
+    border: '1px solid rgba(255,255,255,0.14)',
+    borderRadius: 24,
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.07))',
+    backdropFilter: 'blur(18px)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.22)',
+  },
+  tourCardTop: {
+    marginBottom: 12,
+  },
+  tourTag: {
+    borderRadius: 999,
+    marginInlineEnd: 0,
+    borderColor: 'rgba(43,184,197,0.28)',
+    color: '#9ce9ef',
+    background: 'rgba(43,184,197,0.12)',
+    fontWeight: 780,
   },
   tourTitle: {
     color: '#fff',
     fontWeight: 820,
+    fontSize: 25,
+    marginBottom: 12,
   },
   tourText: {
     color: '#d7e3f2',
-    lineHeight: 1.7,
+    lineHeight: 1.68,
+    minHeight: 108,
+    marginBottom: 18,
+  },
+  tourFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+    marginTop: 'auto',
+  },
+  tourMeta: {
+    color: '#8fb2cf',
+    fontSize: 13,
+    fontWeight: 700,
   },
   tourLink: {
     color: BRAND_GOLD,
-    fontWeight: 950,
+    fontWeight: 900,
     padding: 0,
   },
   whyCard: {
     height: '100%',
-    border: '1px solid rgba(29,53,87,0.06)',
-    borderRadius: 28,
-    background: 'rgba(255,255,255,0.86)',
+    border: '1px solid rgba(22,50,79,0.07)',
+    borderRadius: 24,
+    background: 'rgba(255,255,255,0.88)',
+    boxShadow: '0 20px 54px rgba(22,50,79,0.08)',
     backdropFilter: 'blur(18px)',
-    boxShadow: '0 22px 60px rgba(29,53,87,0.08)',
   },
   whyIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 20,
+    width: 52,
+    height: 52,
+    borderRadius: 18,
     display: 'grid',
     placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_BLUE}, ${TURQUOISE})`,
+    background: `linear-gradient(135deg, ${BRAND_BLUE}, ${BRAND_TURQUOISE})`,
     color: '#fff',
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: 18,
   },
   cardTitle: {
@@ -645,53 +819,119 @@ const styles = {
     fontWeight: 820,
   },
   cardText: {
-    color: '#64748b',
-    lineHeight: 1.65,
+    color: '#62758a',
+    lineHeight: 1.66,
   },
   gallerySection: {
-    padding: '92px 24px',
+    padding: '84px 24px',
     background: 'linear-gradient(180deg, #10233a, #071523)',
   },
+  galleryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gridAutoRows: 180,
+    gap: 12,
+  },
+  galleryItem: {
+    overflow: 'hidden',
+    borderRadius: 22,
+    boxShadow: '0 22px 60px rgba(0,0,0,0.22)',
+    aspectRatio: '4 / 3',
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
   partnershipSection: {
-    padding: '100px 24px',
-    background: 'radial-gradient(circle at 80% 20%, rgba(252,163,17,0.18), transparent 34%), linear-gradient(135deg, #071523, #10233a 58%, #193b5d)',
+    padding: '92px 24px',
+    background: 'radial-gradient(circle at 80% 20%, rgba(240,178,74,0.18), transparent 34%), linear-gradient(135deg, #071523, #10233a 58%, #193b5d)',
   },
   partnerShell: {
-    maxWidth: 1180,
-    margin: '0 auto',
     display: 'grid',
-    gridTemplateColumns: '0.85fr 1.15fr',
-    gap: 28,
-    alignItems: 'center',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: 22,
+    alignItems: 'stretch',
+    marginBottom: 22,
   },
   partnerIntro: {
     color: '#fff',
+    padding: '8px 0',
+    alignSelf: 'center',
   },
   partnerTitle: {
     color: '#fff',
     fontSize: 'clamp(32px, 4vw, 52px)',
     fontWeight: 820,
-    lineHeight: 1.08,
+    lineHeight: 1.06,
     marginTop: 16,
+    letterSpacing: -1,
   },
   partnerText: {
     color: '#d7e3f2',
     fontSize: 17,
-    lineHeight: 1.75,
+    lineHeight: 1.76,
     marginBottom: 28,
+    maxWidth: 560,
+  },
+  partnerFormCard: {
+    borderRadius: 28,
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,252,0.96))',
+    border: '1px solid rgba(255,255,255,0.68)',
+    boxShadow: '0 30px 84px rgba(0,0,0,0.18)',
+  },
+  partnerFormEyebrow: {
+    display: 'inline-block',
+    color: BRAND_TURQUOISE,
+    fontWeight: 860,
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  partnerFormTitle: {
+    color: BRAND_BLUE,
+    fontWeight: 840,
+    marginBottom: 10,
+  },
+  partnerFormText: {
+    color: '#62758a',
+    lineHeight: 1.65,
+    marginBottom: 20,
+  },
+  partnerForm: {
+    display: 'grid',
+    gap: 12,
+  },
+  partnerInput: {
+    minHeight: 48,
+    borderRadius: 16,
+  },
+  partnerTextarea: {
+    borderRadius: 16,
+    resize: 'vertical',
+  },
+  partnerSubmit: {
+    height: 48,
+    borderRadius: 999,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
+    borderColor: BRAND_GOLD,
+    color: BRAND_BLUE,
+    fontWeight: 860,
+    boxShadow: '0 16px 36px rgba(240,178,74,0.24)',
   },
   partnerGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-    gap: 16,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 14,
   },
   partnerCard: {
     height: '100%',
-    borderRadius: 28,
+    borderRadius: 24,
     background: 'rgba(255,255,255,0.10)',
-    border: '1px solid rgba(255,255,255,0.18)',
+    border: '1px solid rgba(255,255,255,0.16)',
     backdropFilter: 'blur(22px)',
-    boxShadow: '0 24px 70px rgba(0,0,0,0.22)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.2)',
   },
   partnerIcon: {
     width: 48,
@@ -699,7 +939,7 @@ const styles = {
     borderRadius: 16,
     display: 'grid',
     placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffc15a)`,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
     color: BRAND_BLUE,
     fontSize: 22,
     marginBottom: 14,
@@ -710,74 +950,139 @@ const styles = {
   },
   partnerCardText: {
     color: '#d7e3f2',
-    lineHeight: 1.65,
-  },
-  galleryGrid: {
-    maxWidth: 1180,
-    margin: '0 auto',
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-    gridAutoRows: 190,
-    gap: 16,
-  },
-  galleryImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    borderRadius: 28,
-    boxShadow: '0 22px 60px rgba(0,0,0,0.24)',
+    lineHeight: 1.66,
   },
   testimonialCard: {
     height: '100%',
-    border: '1px solid rgba(29,53,87,0.06)',
-    borderRadius: 28,
+    border: '1px solid rgba(22,50,79,0.06)',
+    borderRadius: 24,
     background: 'rgba(255,255,255,0.88)',
-    backdropFilter: 'blur(18px)',
-    boxShadow: '0 22px 60px rgba(29,53,87,0.08)',
+    boxShadow: '0 22px 60px rgba(22,50,79,0.08)',
+  },
+  testimonialStars: {
+    color: BRAND_GOLD,
+    marginBottom: 14,
   },
   quote: {
     color: '#334155',
     fontSize: 16,
-    lineHeight: 1.7,
+    lineHeight: 1.72,
+    marginBottom: 18,
+  },
+  testimonialName: {
+    color: BRAND_BLUE,
+    display: 'block',
+    marginBottom: 4,
+  },
+  testimonialRoute: {
+    color: '#64748b',
   },
   faq: {
-    borderRadius: 28,
+    borderRadius: 24,
     overflow: 'hidden',
-    background: 'rgba(255,255,255,0.90)',
-    boxShadow: '0 22px 60px rgba(29,53,87,0.08)',
-    border: '1px solid rgba(29,53,87,0.06)',
+    background: 'rgba(255,255,255,0.92)',
+    boxShadow: '0 22px 60px rgba(22,50,79,0.08)',
+    border: '1px solid rgba(22,50,79,0.06)',
   },
   footer: {
-    background: '#071523',
-    padding: '62px 24px',
+    background: 'linear-gradient(180deg, #08111d, #050d16)',
+    padding: '62px 24px 24px',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
   },
   footerGrid: {
-    maxWidth: 1180,
-    margin: '0 auto',
     display: 'grid',
-    gridTemplateColumns: '1.5fr repeat(3, 1fr)',
-    gap: 28,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: 24,
+    paddingBottom: 24,
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+  },
+  footerBrand: {
+    maxWidth: 360,
   },
   footerLogo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  footerLogoMark: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    display: 'grid',
+    placeItems: 'center',
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
+    color: BRAND_BLUE,
+    fontWeight: 900,
+    letterSpacing: 0.3,
+  },
+  footerLogoText: {
     color: '#fff',
-    fontSize: 26,
-    fontWeight: 850,
-    marginBottom: 12,
+    fontSize: 24,
+    fontWeight: 840,
+    letterSpacing: -0.5,
   },
   footerText: {
     color: '#b7c6d8',
-    maxWidth: 350,
+    lineHeight: 1.7,
+    marginBottom: 18,
   },
   footerHeading: {
     display: 'block',
-    color: BRAND_GOLD,
-    fontWeight: 950,
-    marginBottom: 12,
+    color: '#ffd48a',
+    fontWeight: 900,
+    marginBottom: 14,
   },
   footerLink: {
     display: 'block',
     color: '#d7e3f2',
-    marginBottom: 8,
+    marginBottom: 10,
+    transition: 'color 0.22s ease, transform 0.22s ease',
+  },
+  socialList: {
+    display: 'grid',
+    gap: 10,
+    marginBottom: 18,
+  },
+  socialLink: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 10,
+    color: '#d7e3f2',
+    padding: '10px 12px',
+    borderRadius: 16,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    transition: 'transform 0.22s ease, background 0.22s ease, border-color 0.22s ease',
+  },
+  socialIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 12,
+    display: 'grid',
+    placeItems: 'center',
+    background: 'rgba(240,178,74,0.14)',
+    color: '#ffd48a',
+  },
+  footerMeta: {
+    display: 'grid',
+    gap: 8,
+  },
+  footerMetaRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    color: '#9eb0c2',
+  },
+  footerBottom: {
+    paddingTop: 18,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    color: '#8ea2b8',
+    fontSize: 13,
+    flexWrap: 'wrap',
   },
 };
 
