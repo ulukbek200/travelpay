@@ -37,13 +37,13 @@ import {
   DollarOutlined,
   DownOutlined,
   FileTextOutlined,
+  GlobalOutlined,
   HeartOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MoonOutlined,
   NotificationOutlined,
-  SearchOutlined,
   SettingOutlined,
   SunOutlined,
   TeamOutlined,
@@ -156,11 +156,10 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
-  const [collapsed, setCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
   const [theme, setTheme] = useState(() => localStorage.getItem('dashboard_theme') || 'dark');
   const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
-  const [searchQuery, setSearchQuery] = useState('');
   const [detailsBooking, setDetailsBooking] = useState(null);
 
   const isDark = theme === 'dark';
@@ -203,20 +202,6 @@ const ProfilePage = () => {
     const filled = fields.filter((field) => Boolean(user[field])).length;
     return Math.round((filled / fields.length) * 100);
   }, [user]);
-
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
-    return [
-      ...bookings.map((item) => ({ type: 'Booking', title: item.destination, meta: item.id })),
-      ...payments.map((item) => ({ type: 'Payment', title: item.item, meta: item.id })),
-      ...instructions.map(([title, meta]) => ({ type: 'Instruction', title, meta })),
-      ...recommendedTours.map(([title, meta]) => ({ type: 'Tour', title, meta })),
-      { type: 'Destination', title: 'Issyk-Kul', meta: 'Kyrgyzstan' },
-      { type: 'Destination', title: 'Kolsai Lakes', meta: 'Kazakhstan' },
-      { type: 'Support', title: 'Contact manager', meta: '+996 555 123 456' },
-    ].filter((item) => `${item.type} ${item.title} ${item.meta}`.toLowerCase().includes(query));
-  }, [searchQuery]);
 
   const themeStyles = {
     page: {
@@ -282,6 +267,15 @@ const ProfilePage = () => {
   const handleLogout = () => {
     clearCurrentUser();
     navigate('/');
+  };
+
+  const handleSidebarSelect = (key) => {
+    setActiveSection(key);
+    setMobileSidebarOpen(false);
+  };
+
+  const handleMenuToggle = () => {
+    setMobileSidebarOpen((value) => !value);
   };
 
   const shellCard = (extra = {}) => ({
@@ -405,7 +399,7 @@ const ProfilePage = () => {
   );
 
   const renderProfile = () => (
-    <Row gutter={[18, 18]}>
+    <Row className="profile-grid" gutter={[18, 18]}>
       <Col xs={24} xl={8}>
         <Card style={shellCard()} bodyStyle={{ textAlign: 'center' }}>
           <div style={styles.avatarWrap}>
@@ -534,19 +528,21 @@ const ProfilePage = () => {
   };
 
   return (
-    <Layout style={{ ...styles.page, ...themeStyles.page }}>
+    <Layout className="dashboard dashboard-drawer-mode" style={{ ...styles.page, ...themeStyles.page }}>
+      {mobileSidebarOpen && <button type="button" className="dashboard-sidebar-backdrop" aria-label="Close menu" onClick={() => setMobileSidebarOpen(false)} />}
       <Sider
-        width={280}
-        collapsedWidth={84}
+        className={`dashboard-sidebar ${mobileSidebarOpen ? 'is-open' : ''}`}
+        width={220}
+        collapsedWidth={72}
         collapsible
-        collapsed={collapsed}
+        collapsed={false}
         trigger={null}
         style={{ ...styles.sider, ...themeStyles.panel }}
       >
         <div style={styles.sidebarHeader}>
           <div style={styles.logoMark}>TP</div>
-          {!collapsed && (
-            <div>
+          {(
+            <div className="sidebar-logo-text">
               <Text style={{ color: themeStyles.text, fontWeight: 950 }}>TravelPay</Text>
               <br />
               <Text style={{ color: BRAND_GOLD, fontSize: 12, fontWeight: 800 }}>Central Asia</Text>
@@ -558,86 +554,87 @@ const ProfilePage = () => {
           {menuItems.map(([key, label, icon]) => (
             <button
               key={key}
+              className="sidebar-link"
               type="button"
-              onClick={() => key === 'logout' ? handleLogout() : setActiveSection(key)}
+              onClick={() => key === 'logout' ? handleLogout() : handleSidebarSelect(key)}
               style={{
                 ...styles.sidebarItem,
                 color: themeStyles.text,
                 ...(activeSection === key ? styles.sidebarItemActive : {}),
-                justifyContent: collapsed ? 'center' : 'flex-start',
+                justifyContent: 'flex-start',
               }}
             >
               {icon}
-              {!collapsed && <span>{label}</span>}
+              <span className="sidebar-text">{label}</span>
             </button>
           ))}
-          <button type="button" onClick={handleLogout} style={{ ...styles.sidebarItem, color: '#ff8b8b', justifyContent: collapsed ? 'center' : 'flex-start' }}>
+          <button className="sidebar-link" type="button" onClick={handleLogout} style={{ ...styles.sidebarItem, color: '#ff8b8b', justifyContent: 'flex-start' }}>
             <LogoutOutlined />
-            {!collapsed && <span>Выйти</span>}
+            <span className="sidebar-text">Выйти</span>
           </button>
         </div>
       </Sider>
 
-      <Layout style={{ background: 'transparent' }}>
-        <div style={{ ...styles.topbar, ...themeStyles.panel }}>
+      <Layout className="dashboard-main-shell" style={{ background: 'transparent' }}>
+        <div className="dashboard-topbar" style={{ ...styles.topbar, ...themeStyles.panel }}>
           <Button
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed((value) => !value)}
+            className="dashboard-icon-btn"
+            icon={mobileSidebarOpen ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+            onClick={handleMenuToggle}
             style={styles.iconButton}
           />
-          <Input
-            prefix={<SearchOutlined />}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={t.search}
-            style={styles.searchInput}
-          />
-          <div style={styles.languagePill}>
-            {['KG', 'RU', 'EN'].map((item) => (
-              <button key={item} type="button" onClick={() => handleLanguageChange(item)} style={{ ...styles.languageButton, ...(language === item ? styles.languageButtonActive : {}) }}>
-                {item}
-              </button>
-            ))}
-          </div>
-          <Switch checked={isDark} onChange={handleThemeChange} checkedChildren={<MoonOutlined />} unCheckedChildren={<SunOutlined />} />
-          <Badge count={3}>
-            <Button shape="circle" icon={<BellOutlined />} style={styles.iconButton} />
+          <div className="dashboard-actions" style={styles.dashboardActions}>
+            <Dropdown
+              menu={{
+                selectedKeys: [language],
+                items: ['KG', 'RU', 'EN'].map((value) => ({ key: value, label: value })),
+                onClick: ({ key }) => handleLanguageChange(key),
+              }}
+              trigger={['click']}
+              placement="bottomRight"
+            >
+              <Button className="dashboard-lang-btn" style={styles.langButton}>
+                <GlobalOutlined />
+                {language}
+                <DownOutlined style={{ fontSize: 10 }} />
+              </Button>
+            </Dropdown>
+          <Switch className="hide-on-mobile" checked={isDark} onChange={handleThemeChange} checkedChildren={<MoonOutlined />} unCheckedChildren={<SunOutlined />} />
+          <Badge className="hide-on-mobile" count={3}>
+            <Button className="dashboard-icon-btn" shape="circle" icon={<BellOutlined />} style={styles.iconButton} />
           </Badge>
           <Dropdown
             menu={{
               items: [
                 { key: 'profile', label: 'Профиль', icon: <UserOutlined /> },
+                { key: 'theme', label: isDark ? 'Light theme' : 'Dark theme', icon: isDark ? <SunOutlined /> : <MoonOutlined /> },
+                { key: 'notifications', label: 'Notifications', icon: <BellOutlined /> },
                 { key: 'logout', label: 'Выйти', icon: <LogoutOutlined />, danger: true },
               ],
-              onClick: ({ key }) => key === 'logout' ? handleLogout() : setActiveSection('profile'),
+              onClick: ({ key }) => {
+                if (key === 'logout') handleLogout();
+                if (key === 'profile') setActiveSection('profile');
+                if (key === 'theme') handleThemeChange(!isDark);
+              },
             }}
+            trigger={['click']}
+            placement="bottomRight"
           >
-            <Button style={styles.avatarButton}>
-              <Avatar src={user.avatar} icon={<UserOutlined />} />
-              <DownOutlined />
+            <Button className="dashboard-avatar-btn" style={styles.avatarButton}>
+              <Avatar size={24} src={user.avatar} icon={<UserOutlined />} />
             </Button>
           </Dropdown>
+          </div>
         </div>
 
-        {searchResults.length > 0 && (
-          <div style={{ ...styles.searchResults, ...themeStyles.panel }}>
-            {searchResults.slice(0, 6).map((item) => (
-              <button key={`${item.type}-${item.title}`} type="button" style={styles.searchResultItem}>
-                <Tag color="gold">{item.type}</Tag>
-                <span style={{ color: themeStyles.text }}>{item.title}</span>
-                <small style={{ color: themeStyles.muted }}>{item.meta}</small>
-              </button>
-            ))}
-          </div>
-        )}
-
-        <Content style={styles.content}>
+        <Content className="dashboard-main" style={styles.content}>
           <div style={styles.contentHeader}>
             <div>
-              <Text style={{ color: BRAND_GOLD, fontWeight: 950, textTransform: 'uppercase' }}>{t.dashboard}</Text>
-              <Title level={1} style={{ color: themeStyles.text, margin: '6px 0 0' }}>
-                Добро пожаловать, {user.name}
+              <Text className="dashboard-kicker" style={{ color: BRAND_GOLD, fontWeight: 950, textTransform: 'uppercase' }}>{t.dashboard}</Text>
+              <Title className="dashboard-title" level={1} style={{ color: themeStyles.text, margin: '6px 0 0' }}>
+                Профиль
               </Title>
+              <Text className="dashboard-subtitle" style={{ color: themeStyles.muted }}>Управляйте аккаунтом и бронированиями</Text>
             </div>
             <Tag color="gold" style={{ fontWeight: 900 }}>Premium traveler</Tag>
           </div>
@@ -679,40 +676,41 @@ const styles = {
     minHeight: '100vh',
     position: 'sticky',
     top: 0,
-    padding: 18,
+    padding: '14px 10px',
   },
   sidebarHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 24,
+    gap: 8,
+    marginBottom: 16,
   },
   logoMark: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 12,
     display: 'grid',
     placeItems: 'center',
     background: `linear-gradient(135deg, ${BRAND_BLUE}, ${BRAND_GOLD})`,
     color: '#fff',
     fontWeight: 950,
-    boxShadow: '0 12px 28px rgba(252,163,17,0.25)',
+    boxShadow: '0 10px 22px rgba(252,163,17,0.22)',
   },
   sidebarMenu: {
     display: 'grid',
-    gap: 8,
+    gap: 6,
   },
   sidebarItem: {
     border: 'none',
-    borderRadius: 16,
+    borderRadius: 12,
     background: 'transparent',
-    minHeight: 44,
-    padding: '0 14px',
+    minHeight: 38,
+    padding: '0 10px',
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     cursor: 'pointer',
     fontWeight: 850,
+    fontSize: 14,
     transition: 'transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease',
   },
   sidebarItemActive: {
@@ -722,19 +720,43 @@ const styles = {
     transform: 'translateX(3px)',
   },
   topbar: {
-    margin: 18,
-    borderRadius: 22,
-    padding: 14,
+    margin: 14,
+    borderRadius: 18,
+    padding: 10,
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
+    gap: 10,
     position: 'sticky',
-    top: 18,
+    top: 12,
     zIndex: 20,
   },
   iconButton: {
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    minWidth: 36,
+    borderRadius: 999,
     borderColor: 'rgba(29,53,87,0.12)',
+  },
+  dashboardActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 0,
+    minWidth: 0,
+  },
+  langButton: {
+    height: 36,
+    borderRadius: 999,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: '0 12px',
+    fontWeight: 900,
+    borderColor: 'rgba(252,163,17,0.24)',
+    color: BRAND_BLUE,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffc15a)`,
   },
   searchInput: {
     flex: 1,
@@ -763,8 +785,11 @@ const styles = {
     boxShadow: '0 8px 18px rgba(252,163,17,0.28)',
   },
   avatarButton: {
-    height: 42,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    minWidth: 36,
+    borderRadius: 999,
+    padding: 0,
   },
   searchResults: {
     position: 'fixed',
@@ -788,33 +813,33 @@ const styles = {
     cursor: 'pointer',
   },
   content: {
-    padding: '0 18px 42px',
+    padding: '0 14px 32px',
   },
   contentHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    gap: 18,
+    gap: 12,
     alignItems: 'flex-start',
-    margin: '8px 0 20px',
+    margin: '4px 0 16px',
   },
   glassCard: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
   },
   widgetIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 14,
     display: 'grid',
     placeItems: 'center',
     color: '#fff',
-    fontSize: 22,
-    marginBottom: 14,
+    fontSize: 18,
+    marginBottom: 10,
   },
   nextTrip: {
-    minHeight: 280,
-    borderRadius: 24,
-    padding: 26,
+    minHeight: 220,
+    borderRadius: 20,
+    padding: 20,
     display: 'flex',
     alignItems: 'flex-end',
     background:
