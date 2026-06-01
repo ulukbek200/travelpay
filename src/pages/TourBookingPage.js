@@ -14,6 +14,7 @@ import {
   Space,
   Tag,
   Typography,
+  message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -28,6 +29,9 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import { readCurrentUser } from '../utils/currentUser';
+import { normalizeSavings } from '../utils/savings';
+import { normalizeUser, syncCurrentUser, updateUserById } from '../utils/user';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -43,9 +47,13 @@ const TourBookingPage = () => {
   const [form] = Form.useForm();
   const [people, setPeople] = useState(2);
   const [submitting, setSubmitting] = useState(false);
+  const [payingWithSavings, setPayingWithSavings] = useState(false);
+  const currentUser = normalizeUser(readCurrentUser());
 
   const pricePerPerson = Number(String(tour?.price || 0).replace(/[^0-9]/g, '')) || 0;
   const total = useMemo(() => pricePerPerson * people, [pricePerPerson, people]);
+  const savingsAmount = Number(currentUser?.savings?.currentAmount || 0);
+  const canPayWithSavings = savingsAmount >= total;
 
   if (!tour) {
     return (
@@ -74,6 +82,72 @@ const TourBookingPage = () => {
         },
       });
     }, 700);
+  };
+
+  const handlePayWithSavings = async () => {
+    if (!currentUser?.id) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await form.validateFields();
+    } catch (error) {
+      return;
+    }
+
+    if (!canPayWithSavings) {
+      message.error('Недостаточно средств');
+      return;
+    }
+
+    setPayingWithSavings(true);
+
+    try {
+      const formValues = form.getFieldsValue();
+      const nextSavings = normalizeSavings({
+        ...currentUser.savings,
+        currentAmount: Math.max(savingsAmount - total, 0),
+      });
+      const bookingRecord = {
+        id: `booking-${Date.now()}`,
+        tourId: tour.id,
+        tourTitle: tour.title,
+        location: tour.location || tour.country || 'TravelPay',
+        image: tour.image,
+        amount: total,
+        status: 'paid',
+        purchasedAt: new Date().toISOString(),
+        travelDate: formValues?.date?.toISOString?.() || '',
+        paymentMethod: 'savings',
+      };
+      const notifications = [
+        {
+          id: `notification-${Date.now()}`,
+          type: 'booking',
+          title: 'Тур оплачен из накоплений',
+          description: `${tour.title} успешно добавлен в историю поездок.`,
+          date: new Date().toISOString(),
+          read: false,
+        },
+        ...(currentUser.notifications || []),
+      ];
+
+      const nextUser = await updateUserById(currentUser.id, {
+        ...currentUser,
+        savings: nextSavings,
+        travelHistory: [bookingRecord, ...(currentUser.travelHistory || [])],
+        bookings: [bookingRecord, ...(currentUser.bookings || [])],
+        notifications,
+        isLoggedIn: true,
+      });
+
+      syncCurrentUser({ ...nextUser, isLoggedIn: true });
+      message.success('Тур успешно оплачен из накоплений.');
+      navigate('/profile');
+    } finally {
+      setPayingWithSavings(false);
+    }
   };
 
   return (
@@ -144,6 +218,15 @@ const TourBookingPage = () => {
                   type="info"
                   style={styles.alert}
                   message="Бронирование пока не оплачивается онлайн — менеджер свяжется с вами для подтверждения"
+                />
+
+                <Alert
+                  showIcon
+                  type={canPayWithSavings ? 'success' : 'warning'}
+                  style={styles.alert}
+                  message={canPayWithSavings
+                    ? `На накоплениях доступно ${formatPrice(savingsAmount)} — этого хватает для оплаты тура.`
+                    : `На накоплениях доступно ${formatPrice(savingsAmount)}. Недостаточно средств`}
                 />
 
                 <Form
@@ -236,6 +319,14 @@ const TourBookingPage = () => {
                       style={styles.submitButton}
                     >
                       Продолжить
+                    </Button>
+                    <Button
+                      size="large"
+                      loading={payingWithSavings}
+                      onClick={handlePayWithSavings}
+                      style={styles.savingsButton}
+                    >
+                      Оплатить из накоплений
                     </Button>
                   </div>
                 </Form>
@@ -449,6 +540,15 @@ const styles = {
     color: BRAND_BLUE,
     fontWeight: 900,
     boxShadow: '0 18px 42px rgba(252,163,17,0.32)',
+  },
+  savingsButton: {
+    minWidth: 220,
+    height: 50,
+    borderRadius: 999,
+    background: 'rgba(29,53,87,0.08)',
+    borderColor: 'rgba(29,53,87,0.18)',
+    color: BRAND_BLUE,
+    fontWeight: 900,
   },
   goldButton: {
     borderRadius: 999,

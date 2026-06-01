@@ -20,7 +20,8 @@ import {
   requiredRule,
 } from '../components/auth/authValidation';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { saveCurrentUser } from '../utils/currentUser';
+import { DEFAULT_SAVINGS } from '../utils/savings';
+import { syncCurrentUser } from '../utils/user';
 
 const { Text } = Typography;
 
@@ -50,9 +51,10 @@ const RegisterPage = () => {
         avatar: 'https://www.w3schools.com/howto/img_avatar.png',
         isLoggedIn: true,
         favorites: [],
+        savings: DEFAULT_SAVINGS,
       });
 
-      saveCurrentUser({ ...response.data, isLoggedIn: true });
+      syncCurrentUser({ ...response.data, isLoggedIn: true });
       message.success('Аккаунт успешно создан');
       navigate('/profile');
     } catch (err) {

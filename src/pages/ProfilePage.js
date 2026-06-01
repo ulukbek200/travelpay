@@ -1,17 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Avatar,
   Badge,
   Button,
-  Calendar,
   Card,
   Col,
-  Dropdown,
+  Divider,
   Form,
   Input,
   Layout,
   List,
-  Modal,
   Progress,
   Row,
   Select,
@@ -20,247 +19,106 @@ import {
   Switch,
   Table,
   Tag,
-  Timeline,
   Typography,
-  Upload,
   message,
 } from 'antd';
 import {
-  BankOutlined,
   BellOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
   CompassOutlined,
-  CreditCardOutlined,
-  CustomerServiceOutlined,
-  DashboardOutlined,
-  DollarOutlined,
-  DownOutlined,
-  FileTextOutlined,
-  GlobalOutlined,
+  CrownOutlined,
+  FireOutlined,
+  GiftOutlined,
   HeartOutlined,
+  HomeOutlined,
   LogoutOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  MoonOutlined,
   NotificationOutlined,
-  SettingOutlined,
-  SunOutlined,
+  SafetyCertificateOutlined,
   TeamOutlined,
-  UploadOutlined,
+  TrophyOutlined,
   UserOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { clearCurrentUser, readCurrentUser, saveCurrentUser } from '../utils/currentUser';
+import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
+import { formatSavingsStatus, getSavingsMetrics, getSavingsStatusColor } from '../utils/savings';
+import { getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
-const BRAND_BLUE = '#1d3557';
+const BRAND_BLUE = '#17325c';
 const BRAND_GOLD = '#fca311';
-const TURQUOISE = '#16b6c4';
+const TURQUOISE = '#14b8a6';
 
-const menuItems = [
-  ['profile', 'Профиль', <UserOutlined />],
-  ['bookings', 'Мои бронирования', <CompassOutlined />],
-  ['favorites', 'Избранные туры', <HeartOutlined />],
-  ['savings', 'Накопления', <BankOutlined />],
-  ['calendar', 'Календарь', <CalendarOutlined />],
-  ['payments', 'Платежи', <CreditCardOutlined />],
-  ['instructions', 'Инструкции', <FileTextOutlined />],
-  ['support', 'Поддержка', <CustomerServiceOutlined />],
-  ['settings', 'Настройки', <SettingOutlined />],
-  ['partnership', 'Партнёрство', <TeamOutlined />],
-];
+const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
 
-const languageLabels = {
-  KG: { search: 'Издөө', dashboard: 'Жеке кабинет', save: 'Сактоо' },
-  RU: { search: 'Поиск по кабинету', dashboard: 'Личный кабинет', save: 'Сохранить' },
-  EN: { search: 'Search dashboard', dashboard: 'Dashboard', save: 'Save' },
-};
-
-const bookings = [
-  {
-    id: 'TP-IK-2048',
-    destination: 'Issyk-Kul Premium Escape',
-    date: '2026-06-18',
-    travelers: 2,
-    total: 42000,
-    status: 'upcoming',
-    payment: 'paid',
-  },
-  {
-    id: 'TP-ALM-1182',
-    destination: 'Kolsai Lakes & Kaindy',
-    date: '2026-07-04',
-    travelers: 4,
-    total: 96000,
-    status: 'upcoming',
-    payment: 'unpaid',
-  },
-  {
-    id: 'TP-CH-0904',
-    destination: 'Charyn Canyon Private Tour',
-    date: '2026-04-12',
-    travelers: 2,
-    total: 58000,
-    status: 'completed',
-    payment: 'paid',
-  },
-  {
-    id: 'TP-SK-0670',
-    destination: 'Song-Kol Nomad Experience',
-    date: '2026-03-20',
-    travelers: 3,
-    total: 72000,
-    status: 'canceled',
-    payment: 'refunded',
-  },
-];
-
-const payments = [
-  { id: 'INV-2048', date: '2026-05-12', item: 'Issyk-Kul Premium Escape', amount: 42000, status: 'paid' },
-  { id: 'INV-1182', date: '2026-05-20', item: 'Kolsai Lakes & Kaindy', amount: 96000, status: 'unpaid' },
-  { id: 'INV-0904', date: '2026-04-01', item: 'Charyn Canyon Private Tour', amount: 58000, status: 'paid' },
-];
-
-const instructions = [
-  ['Travel checklist', 'Passport, warm layers, comfortable shoes, power bank, sunglasses, reusable water bottle.'],
-  ['Visa / passport reminders', 'Check passport validity and border requirements before Kazakhstan routes.'],
-  ['What to bring', 'For mountains: jacket, trekking shoes, sunscreen, cash for small local stops.'],
-  ['Safety rules', 'Follow guide instructions near canyons, lakes, horse routes, and high-altitude roads.'],
-  ['Pickup instructions', 'Driver contacts are sent 24 hours before departure with exact pickup time.'],
-  ['Guide contact', '+996 555 123 456 · WhatsApp available in KG / RU / EN.'],
-];
-
-const recommendedTours = [
-  ['Kel-Suu Expedition', 'Remote canyon lake, premium 4x4 journey', 'Kyrgyzstan'],
-  ['Big Almaty Lake', 'Luxury day route from Almaty', 'Kazakhstan'],
-  ['Karakol Adventure', 'Mountains, food, culture, and hot springs', 'Kyrgyzstan'],
-];
-
-const formatMoney = (value) => `${Number(value || 0).toLocaleString()} сом`;
-
-const statusColor = {
-  upcoming: 'gold',
-  completed: 'green',
-  canceled: 'red',
-  paid: 'green',
-  unpaid: 'orange',
-  refunded: 'blue',
+const levelColors = {
+  Bronze: '#b45309',
+  Silver: '#64748b',
+  Gold: '#f59e0b',
+  Platinum: '#0ea5e9',
 };
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('profile');
   const [theme, setTheme] = useState(() => localStorage.getItem('dashboard_theme') || 'dark');
-  const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
-  const [detailsBooking, setDetailsBooking] = useState(null);
 
-  const isDark = theme === 'dark';
-  const t = languageLabels[language] || languageLabels.RU;
+  useEffect(() => {
+    document.body.dataset.theme = theme;
+    localStorage.setItem('dashboard_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const parsedUser = readCurrentUser();
+        const currentUser = readCurrentUser();
 
-        if (!parsedUser?.isLoggedIn || !parsedUser?.id) {
+        if (!currentUser?.id) {
           navigate('/login');
           return;
         }
 
-        const response = await api.get(`/users/${parsedUser.id}`);
-        const hydratedUser = {
-          preferredLanguage: language,
-          country: 'Kyrgyzstan',
-          travelPreferences: 'Mountains, lakes, private tours',
-          phone: '',
-          ...response.data,
+        const response = await api.get(`/users/${currentUser.id}`);
+        const nextUser = syncCurrentUser({
+          ...normalizeUser(response.data),
+          country: response.data.country || 'Kyrgyzstan',
+          preferredLanguage: response.data.preferredLanguage || 'RU',
+          travelPreferences: response.data.travelPreferences || 'Luxury travel, mountains, city breaks',
           isLoggedIn: true,
-        };
+        });
 
-        saveCurrentUser(hydratedUser);
-        setUser(hydratedUser);
-        form.setFieldsValue(hydratedUser);
+        setUser(nextUser);
+        form.setFieldsValue(nextUser);
       } catch (error) {
         navigate('/login');
       }
     };
 
     loadUser();
-  }, [form, language, navigate]);
+  }, [form, navigate]);
 
-  const completion = useMemo(() => {
-    if (!user) return 0;
-    const fields = ['name', 'email', 'phone', 'country', 'preferredLanguage', 'travelPreferences', 'avatar'];
-    const filled = fields.filter((field) => Boolean(user[field])).length;
-    return Math.round((filled / fields.length) * 100);
-  }, [user]);
-
-  const themeStyles = {
-    page: {
-      background: isDark
-        ? 'radial-gradient(circle at top left, rgba(22,182,196,0.18), transparent 28%), #091827'
-        : 'linear-gradient(180deg, #f7fbfd 0%, #eef5f9 100%)',
-      color: isDark ? '#e8f2ff' : '#172033',
-    },
-    panel: {
-      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.82)',
-      border: isDark ? '1px solid rgba(255,255,255,0.13)' : '1px solid rgba(29,53,87,0.08)',
-      boxShadow: isDark ? '0 24px 70px rgba(0,0,0,0.28)' : '0 22px 55px rgba(29,53,87,0.10)',
-      backdropFilter: 'blur(20px)',
-    },
-    text: isDark ? '#e8f2ff' : BRAND_BLUE,
-    muted: isDark ? '#a9bad0' : '#64748b',
-  };
-
-  const handleLanguageChange = (value) => {
-    setLanguage(value);
-    localStorage.setItem('travelpay_language', value);
-    window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
-    setUser((prev) => ({ ...prev, preferredLanguage: value }));
-    form.setFieldValue('preferredLanguage', value);
-  };
-
-  const handleThemeChange = (checked) => {
-    const nextTheme = checked ? 'dark' : 'light';
-    setTheme(nextTheme);
-    localStorage.setItem('dashboard_theme', nextTheme);
-  };
-
-  const handleAvatarUpload = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const avatar = reader.result;
-      setUser((prev) => ({ ...prev, avatar }));
-      form.setFieldValue('avatar', avatar);
-      message.success('Аватар обновлён');
-    };
-    reader.readAsDataURL(file);
-    return false;
-  };
+  const savingsMetrics = useMemo(() => getSavingsMetrics(user?.savings), [user?.savings]);
+  const level = useMemo(() => user?.level || getUserLevel(savingsMetrics.currentAmount), [user?.level, savingsMetrics.currentAmount]);
+  const unreadNotifications = useMemo(() => (user?.notifications || []).filter((item) => !item.read).length, [user?.notifications]);
 
   const handleSaveProfile = async (values) => {
     try {
-      const updatedUser = {
+      const response = await api.put(`/users/${user.id}`, {
         ...user,
         ...values,
-        preferredLanguage: values.preferredLanguage || language,
         isLoggedIn: true,
-      };
-      const response = await api.put(`/users/${user.id}`, updatedUser);
-      const nextUser = { ...response.data, isLoggedIn: true };
-      saveCurrentUser(nextUser);
+      });
+
+      const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
       setUser(nextUser);
-      message.success('Профиль сохранён');
+      message.success('Профиль обновлен.');
     } catch (error) {
-      message.error('Не удалось сохранить профиль. Проверьте backend.');
+      message.error('Не удалось сохранить профиль.');
     }
   };
 
@@ -269,602 +127,305 @@ const ProfilePage = () => {
     navigate('/');
   };
 
-  const handleSidebarSelect = (key) => {
-    setActiveSection(key);
-    setMobileSidebarOpen(false);
-  };
-
-  const handleMenuToggle = () => {
-    setMobileSidebarOpen((value) => !value);
-  };
-
-  const shellCard = (extra = {}) => ({
-    ...styles.glassCard,
-    ...themeStyles.panel,
-    ...extra,
-  });
-
-  const bookingColumns = [
-    { title: 'Booking ID', dataIndex: 'id' },
-    { title: 'Destination', dataIndex: 'destination' },
-    { title: 'Date', dataIndex: 'date' },
-    { title: 'Travelers', dataIndex: 'travelers' },
-    { title: 'Total', dataIndex: 'total', render: formatMoney },
-    { title: 'Status', dataIndex: 'status', render: (value) => <Tag color={statusColor[value]}>{value}</Tag> },
-    { title: 'Payment', dataIndex: 'payment', render: (value) => <Tag color={statusColor[value]}>{value}</Tag> },
-    {
-      title: 'Actions',
-      render: (_, record) => (
-        <Space wrap>
-          <Button size="small" onClick={() => setDetailsBooking(record)}>View details</Button>
-          {record.payment === 'unpaid' && <Button size="small" style={styles.goldButton}>Pay now</Button>}
-          {record.status === 'upcoming' && <Button size="small" danger>Cancel</Button>}
-          <Button size="small" onClick={() => setActiveSection('support')}>Manager</Button>
-        </Space>
-      ),
-    },
+  const favoriteItems = (user?.favorites || []).slice(0, 4);
+  const historyColumns = [
+    { title: 'Тур', dataIndex: 'tourTitle' },
+    { title: 'Дата покупки', dataIndex: 'purchasedAt', render: formatDate },
+    { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
+    { title: 'Статус', dataIndex: 'status', render: (status) => <Tag color="success">{status}</Tag> },
   ];
-
-  const paymentColumns = [
-    { title: 'Invoice', dataIndex: 'id' },
-    { title: 'Date', dataIndex: 'date' },
-    { title: 'Tour', dataIndex: 'item' },
-    { title: 'Amount', dataIndex: 'amount', render: formatMoney },
-    { title: 'Status', dataIndex: 'status', render: (value) => <Tag color={statusColor[value]}>{value}</Tag> },
-    { title: 'Receipt', render: () => <Button size="small">Download</Button> },
-  ];
-
-  if (!user) return null;
-
-  const renderDashboard = () => (
-    <Space direction="vertical" size={18} style={{ width: '100%' }}>
-      <Row gutter={[18, 18]}>
-        {[
-          ['Next trip', 'Kolsai Lakes & Kaindy', <CompassOutlined />, TURQUOISE],
-          ['Bookings', bookings.length, <DashboardOutlined />, BRAND_GOLD],
-          ['Savings balance', formatMoney(user.balance || 0), <BankOutlined />, '#2dd4bf'],
-          ['Favorite tours', user?.favorites?.length || 0, <HeartOutlined />, '#fb7185'],
-        ].map(([label, value, icon, color]) => (
-          <Col xs={24} md={12} xl={6} key={label}>
-            <motion.div whileHover={{ y: -5 }}>
-              <Card style={shellCard({ minHeight: 136 })}>
-                <div style={{ ...styles.widgetIcon, background: color }}>{icon}</div>
-                <Text style={{ color: themeStyles.muted, fontWeight: 800 }}>{label}</Text>
-                <Title level={4} style={{ color: themeStyles.text, margin: '8px 0 0' }}>{value}</Title>
-              </Card>
-            </motion.div>
-          </Col>
-        ))}
-      </Row>
-
-      <Row gutter={[18, 18]}>
-        <Col xs={24} lg={15}>
-          <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Next trip</span>}>
-            <div style={styles.nextTrip}>
-              <div>
-                <Tag color="cyan">Kazakhstan · Almaty region</Tag>
-                <Title level={2} style={{ color: '#fff', margin: '12px 0 8px' }}>Kolsai Lakes & Kaindy</Title>
-                <Paragraph style={{ color: '#dbeafe', maxWidth: 560 }}>
-                  Private lake journey with mountain viewpoints, premium transport, and consultation deadline on June 28.
-                </Paragraph>
-                <Space wrap>
-                  <Button style={styles.goldButton}>View details</Button>
-                  <Button ghost>Contact manager</Button>
-                </Space>
-              </div>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} lg={9}>
-          <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Payment reminder</span>}>
-            <Timeline
-              items={[
-                { color: 'orange', children: 'Kolsai Lakes invoice due: 96,000 сом' },
-                { color: 'cyan', children: 'Consultation: June 24, 16:00' },
-                { color: 'green', children: 'Issyk-Kul booking paid' },
-              ]}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[18, 18]}>
-        <Col xs={24} lg={14}>
-          <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Recommended tours</span>}>
-            <List
-              dataSource={recommendedTours}
-              renderItem={([title, text, country]) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={<Avatar style={{ background: BRAND_GOLD, color: BRAND_BLUE }} icon={<CompassOutlined />} />}
-                    title={<span style={{ color: themeStyles.text }}>{title}</span>}
-                    description={<span style={{ color: themeStyles.muted }}>{country} · {text}</span>}
-                  />
-                  <Button onClick={() => navigate('/tours')}>Open</Button>
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={10}>
-          <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Partner invitation</span>}>
-            <Paragraph style={{ color: themeStyles.muted }}>
-              Tour companies, guides, hotels, guest houses, drivers, and agencies can cooperate with TravelPay.
-            </Paragraph>
-            <Button style={styles.goldButton} onClick={() => navigate('/#partnership')}>Become a partner</Button>
-          </Card>
-        </Col>
-      </Row>
-    </Space>
-  );
-
-  const renderProfile = () => (
-    <Row className="profile-grid" gutter={[18, 18]}>
-      <Col xs={24} xl={8}>
-        <Card style={shellCard()} bodyStyle={{ textAlign: 'center' }}>
-          <div style={styles.avatarWrap}>
-            <Avatar size={118} src={user.avatar} icon={<UserOutlined />} />
-            <Upload showUploadList={false} beforeUpload={handleAvatarUpload}>
-              <Button shape="circle" icon={<UploadOutlined />} style={styles.avatarEdit} />
-            </Upload>
-          </div>
-          <Title level={3} style={{ color: themeStyles.text, marginTop: 18 }}>{user.name}</Title>
-          <Tag color="gold" icon={<CheckCircleOutlined />}>Verified traveler</Tag>
-          <div style={{ marginTop: 24, textAlign: 'left' }}>
-            <Text style={{ color: themeStyles.muted }}>Profile completion</Text>
-            <Progress percent={completion} strokeColor={{ '0%': TURQUOISE, '100%': BRAND_GOLD }} />
-          </div>
-        </Card>
-        <Card style={shellCard({ marginTop: 18 })} title={<span style={{ color: themeStyles.text }}>Recent activity</span>}>
-          <Timeline
-            items={[
-              { children: 'Saved Kel-Suu Expedition to favorites' },
-              { children: 'Updated preferred language' },
-              { children: 'Paid Issyk-Kul booking invoice' },
-            ]}
-          />
-        </Card>
-      </Col>
-
-      <Col xs={24} xl={16}>
-        <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Profile details</span>}>
-          <Form form={form} layout="vertical" onFinish={handleSaveProfile}>
-            <Row gutter={16}>
-              <Col xs={24} md={12}><Form.Item name="name" label="Name"><Input /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="phone" label="Phone"><Input placeholder="+996 ..." /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="email" label="Email"><Input type="email" /></Form.Item></Col>
-              <Col xs={24} md={12}><Form.Item name="country" label="Country"><Input /></Form.Item></Col>
-              <Col xs={24} md={12}>
-                <Form.Item name="preferredLanguage" label="Preferred language">
-                  <Select options={['KG', 'RU', 'EN'].map((value) => ({ value, label: value }))} onChange={handleLanguageChange} />
-                </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Form.Item name="travelPreferences" label="Travel preferences">
-                  <Input.TextArea rows={4} placeholder="Mountains, lakes, private tours, nomad culture..." />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Button htmlType="submit" style={styles.goldButton}>{t.save}</Button>
-          </Form>
-        </Card>
-      </Col>
-    </Row>
-  );
-
-  const renderBookings = () => (
-    <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Bookings</span>}>
-      <Table rowKey="id" dataSource={bookings} columns={bookingColumns} scroll={{ x: 1050 }} />
-    </Card>
-  );
-
-  const renderCalendar = () => (
-    <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Tour calendar</span>}>
-      <Calendar
-        fullscreen
-        cellRender={(date) => {
-          const day = date.format('YYYY-MM-DD');
-          const booking = bookings.find((item) => item.date === day);
-          const deadline = day === '2026-06-28';
-          if (!booking && !deadline) return null;
-          return (
-            <div>
-              {booking && <Badge color={BRAND_GOLD} text={booking.destination} />}
-              {deadline && <Badge color="red" text="Payment deadline" />}
-            </div>
-          );
-        }}
-      />
-    </Card>
-  );
-
-  const renderPayments = () => (
-    <Space direction="vertical" size={18} style={{ width: '100%' }}>
-      <Row gutter={[18, 18]}>
-        <Col xs={24} md={8}><Card style={shellCard()}><Statistic title="Paid" value={100000} suffix="сом" prefix={<DollarOutlined />} /></Card></Col>
-        <Col xs={24} md={8}><Card style={shellCard()}><Statistic title="Unpaid" value={96000} suffix="сом" prefix={<NotificationOutlined />} /></Card></Col>
-        <Col xs={24} md={8}><Card style={shellCard()}><Statistic title="Saved method" value="Visa •••• 4412" /></Card></Col>
-      </Row>
-      <Card style={shellCard()} title={<span style={{ color: themeStyles.text }}>Payment history</span>}>
-        <Table rowKey="id" dataSource={payments} columns={paymentColumns} scroll={{ x: 760 }} />
-      </Card>
-    </Space>
-  );
-
-  const renderInstructions = () => (
-    <Row gutter={[18, 18]}>
-      {instructions.map(([title, text], index) => (
-        <Col xs={24} md={12} key={title}>
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
-            <Card style={shellCard({ height: '100%' })}>
-              <Title level={4} style={{ color: themeStyles.text }}>{title}</Title>
-              <Paragraph style={{ color: themeStyles.muted }}>{text}</Paragraph>
-            </Card>
-          </motion.div>
-        </Col>
-      ))}
-    </Row>
-  );
-
-  const renderSimpleSection = (title, text, action) => (
-    <Card style={shellCard()}>
-      <Title level={2} style={{ color: themeStyles.text }}>{title}</Title>
-      <Paragraph style={{ color: themeStyles.muted, maxWidth: 720 }}>{text}</Paragraph>
-      {action}
-    </Card>
-  );
-
-  const contentMap = {
-    profile: renderProfile(),
-    bookings: renderBookings(),
-    favorites: renderSimpleSection('Избранные туры', 'Откройте сохранённые туры по Кыргызстану и Казахстану / Алматы региону.', <Button style={styles.goldButton} onClick={() => navigate('/favorites')}>Open favorites</Button>),
-    savings: renderSimpleSection('Накопления', 'Планируйте бюджет на будущую поездку и отслеживайте прогресс накоплений.', <Button style={styles.goldButton} onClick={() => navigate('/savings-plan')}>Open savings</Button>),
-    calendar: renderCalendar(),
-    payments: renderPayments(),
-    instructions: renderInstructions(),
-    support: renderSimpleSection('Поддержка', 'Свяжитесь с менеджером TravelPay по бронированию, оплате, маршрутам и партнёрству.', <Space><Button style={styles.goldButton}>WhatsApp</Button><Button>Call manager</Button></Space>),
-    settings: renderSimpleSection('Настройки', 'Управляйте языком, темой, уведомлениями и безопасностью аккаунта.', <Switch checked={isDark} onChange={handleThemeChange} checkedChildren="Dark" unCheckedChildren="Light" />),
-    partnership: renderSimpleSection('Партнёрство', 'Тур компании, гиды, отели, транспортные компании и агентства могут сотрудничать с TravelPay.', <Button style={styles.goldButton} onClick={() => navigate('/#partnership')}>Become a partner</Button>),
-  };
 
   return (
-    <Layout className="dashboard dashboard-drawer-mode" style={{ ...styles.page, ...themeStyles.page }}>
-      {mobileSidebarOpen && <button type="button" className="dashboard-sidebar-backdrop" aria-label="Close menu" onClick={() => setMobileSidebarOpen(false)} />}
-      <Sider
-        className={`dashboard-sidebar ${mobileSidebarOpen ? 'is-open' : ''}`}
-        width={220}
-        collapsedWidth={72}
-        collapsible
-        collapsed={false}
-        trigger={null}
-        style={{ ...styles.sider, ...themeStyles.panel }}
-      >
-        <div style={styles.sidebarHeader}>
+    <Layout style={styles.page(theme === 'dark')}>
+      <Sider width={260} style={styles.sider(theme === 'dark')}>
+        <div style={styles.logoWrap}>
           <div style={styles.logoMark}>TP</div>
-          {(
-            <div className="sidebar-logo-text">
-              <Text style={{ color: themeStyles.text, fontWeight: 950 }}>TravelPay</Text>
-              <br />
-              <Text style={{ color: BRAND_GOLD, fontSize: 12, fontWeight: 800 }}>Central Asia</Text>
-            </div>
-          )}
+          <div>
+            <Text style={{ color: '#fff', fontWeight: 900 }}>TravelPay</Text>
+            <br />
+            <Text style={{ color: '#dbeafe', fontSize: 12 }}>Fintech Travel Dashboard</Text>
+          </div>
         </div>
 
-        <div style={styles.sidebarMenu}>
-          {menuItems.map(([key, label, icon]) => (
-            <button
-              key={key}
-              className="sidebar-link"
-              type="button"
-              onClick={() => key === 'logout' ? handleLogout() : handleSidebarSelect(key)}
-              style={{
-                ...styles.sidebarItem,
-                color: themeStyles.text,
-                ...(activeSection === key ? styles.sidebarItemActive : {}),
-                justifyContent: 'flex-start',
-              }}
-            >
-              {icon}
-              <span className="sidebar-text">{label}</span>
-            </button>
-          ))}
-          <button className="sidebar-link" type="button" onClick={handleLogout} style={{ ...styles.sidebarItem, color: '#ff8b8b', justifyContent: 'flex-start' }}>
-            <LogoutOutlined />
-            <span className="sidebar-text">Выйти</span>
-          </button>
-        </div>
+        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+          <Button block icon={<HomeOutlined />} onClick={() => navigate('/')}>Главная</Button>
+          <Button block icon={<WalletOutlined />} onClick={() => navigate('/savings')}>Накопления</Button>
+          <Button block icon={<CompassOutlined />} onClick={() => navigate('/tours')}>Туры</Button>
+          <Button block icon={<HeartOutlined />} onClick={() => navigate('/favorites')}>Избранное</Button>
+          <Button block icon={<TeamOutlined />} onClick={() => navigate('/admin/tours')}>Админка</Button>
+          <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>Выйти</Button>
+        </Space>
       </Sider>
 
-      <Layout className="dashboard-main-shell" style={{ background: 'transparent' }}>
-        <div className="dashboard-topbar" style={{ ...styles.topbar, ...themeStyles.panel }}>
-          <Button
-            className="dashboard-icon-btn"
-            icon={mobileSidebarOpen ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
-            onClick={handleMenuToggle}
-            style={styles.iconButton}
-          />
-          <div className="dashboard-actions" style={styles.dashboardActions}>
-            <Dropdown
-              menu={{
-                selectedKeys: [language],
-                items: ['KG', 'RU', 'EN'].map((value) => ({ key: value, label: value })),
-                onClick: ({ key }) => handleLanguageChange(key),
-              }}
-              trigger={['click']}
-              placement="bottomRight"
-            >
-              <Button className="dashboard-lang-btn" style={styles.langButton}>
-                <GlobalOutlined />
-                {language}
-                <DownOutlined style={{ fontSize: 10 }} />
-              </Button>
-            </Dropdown>
-          <Switch className="hide-on-mobile" checked={isDark} onChange={handleThemeChange} checkedChildren={<MoonOutlined />} unCheckedChildren={<SunOutlined />} />
-          <Badge className="hide-on-mobile" count={3}>
-            <Button className="dashboard-icon-btn" shape="circle" icon={<BellOutlined />} style={styles.iconButton} />
-          </Badge>
-          <Dropdown
-            menu={{
-              items: [
-                { key: 'profile', label: 'Профиль', icon: <UserOutlined /> },
-                { key: 'theme', label: isDark ? 'Light theme' : 'Dark theme', icon: isDark ? <SunOutlined /> : <MoonOutlined /> },
-                { key: 'notifications', label: 'Notifications', icon: <BellOutlined /> },
-                { key: 'logout', label: 'Выйти', icon: <LogoutOutlined />, danger: true },
-              ],
-              onClick: ({ key }) => {
-                if (key === 'logout') handleLogout();
-                if (key === 'profile') setActiveSection('profile');
-                if (key === 'theme') handleThemeChange(!isDark);
-              },
-            }}
-            trigger={['click']}
-            placement="bottomRight"
-          >
-            <Button className="dashboard-avatar-btn" style={styles.avatarButton}>
-              <Avatar size={24} src={user.avatar} icon={<UserOutlined />} />
-            </Button>
-          </Dropdown>
-          </div>
-        </div>
-
-        <Content className="dashboard-main" style={styles.content}>
-          <div style={styles.contentHeader}>
+      <Content style={styles.content}>
+        <Space direction="vertical" size={20} style={{ width: '100%' }}>
+          <div style={styles.topBar}>
             <div>
-              <Text className="dashboard-kicker" style={{ color: BRAND_GOLD, fontWeight: 950, textTransform: 'uppercase' }}>{t.dashboard}</Text>
-              <Title className="dashboard-title" level={1} style={{ color: themeStyles.text, margin: '6px 0 0' }}>
-                Профиль
-              </Title>
-              <Text className="dashboard-subtitle" style={{ color: themeStyles.muted }}>Управляйте аккаунтом и бронированиями</Text>
+              <Text style={styles.kicker}>Профиль пользователя</Text>
+              <Title style={styles.pageTitle}>Личный кабинет TravelPay</Title>
+              <Paragraph style={styles.pageSubtitle}>
+                Управляйте накоплениями, поездками, достижениями, уведомлениями и бонусами в одном SaaS-интерфейсе.
+              </Paragraph>
             </div>
-            <Tag color="gold" style={{ fontWeight: 900 }}>Premium traveler</Tag>
+            <Space>
+              <Badge count={unreadNotifications}>
+                <Button shape="circle" icon={<BellOutlined />} />
+              </Badge>
+              <Switch checked={theme === 'dark'} onChange={(checked) => setTheme(checked ? 'dark' : 'light')} checkedChildren="Dark" unCheckedChildren="Light" />
+            </Space>
           </div>
 
-          {activeSection === 'profile' ? renderProfile() : activeSection === 'bookings' ? renderBookings() : contentMap[activeSection] || renderDashboard()}
-
-          {activeSection === 'profile' && (
-            <div style={{ marginTop: 18 }}>
-              {renderDashboard()}
-            </div>
+          {savingsMetrics.isReadyToBuy && (
+            <Alert
+              type="success"
+              showIcon
+              message="Цель накопления достигнута"
+              description="Теперь вы можете выбрать любой доступный тур и оплатить его накопленными средствами."
+              action={<Button type="primary" onClick={() => navigate('/tours')}>Выбрать тур</Button>}
+            />
           )}
-        </Content>
-      </Layout>
 
-      <Modal open={!!detailsBooking} onCancel={() => setDetailsBooking(null)} footer={null} title={detailsBooking?.destination}>
-        {detailsBooking && (
-          <Space direction="vertical" size={12}>
-            <Text>Booking ID: <strong>{detailsBooking.id}</strong></Text>
-            <Text>Date: <strong>{detailsBooking.date}</strong></Text>
-            <Text>Travelers: <strong>{detailsBooking.travelers}</strong></Text>
-            <Text>Total: <strong>{formatMoney(detailsBooking.total)}</strong></Text>
-            <Space>
-              <Tag color={statusColor[detailsBooking.status]}>{detailsBooking.status}</Tag>
-              <Tag color={statusColor[detailsBooking.payment]}>{detailsBooking.payment}</Tag>
-            </Space>
-          </Space>
-        )}
-      </Modal>
+          <Row gutter={[20, 20]}>
+            <Col xs={24} xl={8}>
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+                <Card style={styles.glassCard}>
+                  <Space direction="vertical" size={16} style={{ width: '100%', alignItems: 'center' }}>
+                    <Avatar size={112} src={user?.avatar} icon={<UserOutlined />} />
+                    <div style={{ textAlign: 'center' }}>
+                      <Title level={3} style={{ marginBottom: 4 }}>{user?.name}</Title>
+                      <Text type="secondary">{user?.email}</Text>
+                    </div>
+                    <Tag color={getSavingsStatusColor(savingsMetrics.status)}>{formatSavingsStatus(savingsMetrics.status)}</Tag>
+                    <Tag icon={<CrownOutlined />} color="gold" style={{ fontWeight: 800 }}>{level}</Tag>
+                    <Progress percent={savingsMetrics.progressPercent} strokeColor={{ '0%': TURQUOISE, '100%': BRAND_GOLD }} />
+                    <Button type="primary" block onClick={() => navigate('/savings')} style={styles.primaryButton}>Открыть накопления</Button>
+                  </Space>
+                </Card>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                <Card title="Уровень и streak" style={styles.glassCard}>
+                  <Space direction="vertical" size={14} style={{ width: '100%' }}>
+                    <Statistic title="Уровень пользователя" value={level} valueStyle={{ color: levelColors[level] || BRAND_BLUE }} />
+                    <Alert type="info" showIcon icon={<FireOutlined />} message={`🔥 Вы пополняете баланс ${user?.travelStreakMonths || 0} месяца подряд`} />
+                    <Text type="secondary">Следующий уровень открывает больше доверия, бонусов и персональных офферов.</Text>
+                  </Space>
+                </Card>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                <Card title="Реферальная система" style={styles.glassCard}>
+                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Text strong>Моя реферальная ссылка</Text>
+                    <Input value={user?.referral?.link} readOnly />
+                    <Row gutter={[12, 12]}>
+                      <Col span={12}><Statistic title="Приглашено" value={user?.referral?.invitedCount || 0} /></Col>
+                      <Col span={12}><Statistic title="Бонусов" value={user?.referral?.bonusAmount || 0} suffix="сом" /></Col>
+                    </Row>
+                    <Alert type="success" showIcon icon={<GiftOutlined />} message="+1000 бонусных сом за каждого друга" />
+                  </Space>
+                </Card>
+              </motion.div>
+            </Col>
+
+            <Col xs={24} xl={16}>
+              <Space direction="vertical" size={20} style={{ width: '100%' }}>
+                <Row gutter={[18, 18]}>
+                  <Col xs={24} md={12} xl={6}><Card style={styles.statCard}><Statistic title="Цель" value={savingsMetrics.goalAmount} suffix="сом" /></Card></Col>
+                  <Col xs={24} md={12} xl={6}><Card style={styles.statCard}><Statistic title="Накоплено" value={savingsMetrics.currentAmount} suffix="сом" /></Card></Col>
+                  <Col xs={24} md={12} xl={6}><Card style={styles.statCard}><Statistic title="Осталось" value={savingsMetrics.remainingAmount} suffix="сом" /></Card></Col>
+                  <Col xs={24} md={12} xl={6}><Card style={styles.statCard}><Statistic title="Поездок" value={user?.travelHistory?.length || 0} /></Card></Col>
+                </Row>
+
+                <Card title="Виджет накоплений" style={styles.glassCard}>
+                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                    <div style={styles.progressHeader}>
+                      <Text strong>Прогресс цели</Text>
+                      <Text>{formatMoney(savingsMetrics.currentAmount)} / {formatMoney(savingsMetrics.goalAmount)}</Text>
+                    </div>
+                    <Progress percent={savingsMetrics.progressPercent} strokeColor={{ '0%': BRAND_BLUE, '100%': BRAND_GOLD }} size={[undefined, 18]} />
+                    <Row gutter={[16, 16]}>
+                      <Col xs={24} md={12}><Tag color={getSavingsStatusColor(savingsMetrics.status)}>Статус: {formatSavingsStatus(savingsMetrics.status)}</Tag></Col>
+                      <Col xs={24} md={12}><Tag color="processing">До цели: {savingsMetrics.daysLeft} дней</Tag></Col>
+                    </Row>
+                  </Space>
+                </Card>
+
+                <Card title="Достижения" style={styles.glassCard}>
+                  <Row gutter={[12, 12]}>
+                    {(user?.achievements || []).map((achievement) => (
+                      <Col xs={24} md={12} key={achievement}>
+                        <Card size="small" style={styles.achievementCard}>
+                          <Space>
+                            <TrophyOutlined style={{ color: BRAND_GOLD }} />
+                            <Text strong>{achievement}</Text>
+                          </Space>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </Card>
+
+                <Card title="История путешествий" style={styles.glassCard}>
+                  <Table
+                    rowKey="id"
+                    dataSource={user?.travelHistory || []}
+                    columns={historyColumns}
+                    pagination={{ pageSize: 4 }}
+                    scroll={{ x: 640 }}
+                  />
+                </Card>
+
+                <Row gutter={[20, 20]}>
+                  <Col xs={24} lg={12}>
+                    <Card title="Избранные туры" style={styles.glassCard}>
+                      <List
+                        dataSource={favoriteItems}
+                        locale={{ emptyText: 'Пока нет избранных туров' }}
+                        renderItem={(item) => (
+                          <List.Item
+                            actions={[<Button key="open" type="link" onClick={() => navigate('/favorites')}>Открыть</Button>]}
+                          >
+                            <List.Item.Meta
+                              avatar={<Avatar shape="square" src={item.image} icon={<HeartOutlined />} />}
+                              title={item.title}
+                              description={`${item.location || 'TravelPay'} · ${formatMoney(item.price)}`}
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Col>
+
+                  <Col xs={24} lg={12}>
+                    <Card title="Уведомления" style={styles.glassCard}>
+                      <List
+                        dataSource={(user?.notifications || []).slice(0, 5)}
+                        locale={{ emptyText: 'Нет уведомлений' }}
+                        renderItem={(item) => (
+                          <List.Item>
+                            <List.Item.Meta
+                              avatar={<Avatar icon={<NotificationOutlined />} style={{ background: '#dbeafe', color: BRAND_BLUE }} />}
+                              title={item.title}
+                              description={`${item.description} · ${formatDate(item.date)}`}
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </Card>
+                  </Col>
+                </Row>
+
+                <Card title="Редактирование профиля" style={styles.glassCard}>
+                  <Form form={form} layout="vertical" onFinish={handleSaveProfile}>
+                    <Row gutter={16}>
+                      <Col xs={24} md={12}><Form.Item name="name" label="Имя"><Input /></Form.Item></Col>
+                      <Col xs={24} md={12}><Form.Item name="phone" label="Телефон"><Input /></Form.Item></Col>
+                      <Col xs={24} md={12}><Form.Item name="email" label="Email"><Input type="email" /></Form.Item></Col>
+                      <Col xs={24} md={12}><Form.Item name="country" label="Страна"><Input /></Form.Item></Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item name="preferredLanguage" label="Язык">
+                          <Select options={['KG', 'RU', 'EN'].map((value) => ({ value, label: value }))} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item name="travelPreferences" label="Предпочтения">
+                          <Input.TextArea rows={4} />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Divider />
+                    <Button htmlType="submit" type="primary" icon={<SafetyCertificateOutlined />} style={styles.primaryButton}>
+                      Сохранить профиль
+                    </Button>
+                  </Form>
+                </Card>
+              </Space>
+            </Col>
+          </Row>
+        </Space>
+      </Content>
     </Layout>
   );
 };
 
 const styles = {
-  page: {
+  page: (isDark) => ({
     minHeight: '100vh',
-    fontFamily: 'Inter, Poppins, Arial, sans-serif',
+    background: isDark
+      ? 'radial-gradient(circle at top left, rgba(20,184,166,0.15), transparent 28%), #081526'
+      : 'linear-gradient(180deg, #f7fbff 0%, #edf5fb 100%)',
+  }),
+  sider: (isDark) => ({
+    background: isDark ? 'rgba(14,31,52,0.96)' : 'linear-gradient(180deg, #17325c 0%, #102544 100%)',
+    padding: 18,
+  }),
+  content: {
+    padding: 24,
   },
-  sider: {
-    minHeight: '100vh',
-    position: 'sticky',
-    top: 0,
-    padding: '14px 10px',
-  },
-  sidebarHeader: {
+  logoWrap: {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 24,
   },
   logoMark: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    display: 'grid',
-    placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_BLUE}, ${BRAND_GOLD})`,
-    color: '#fff',
-    fontWeight: 950,
-    boxShadow: '0 10px 22px rgba(252,163,17,0.22)',
-  },
-  sidebarMenu: {
-    display: 'grid',
-    gap: 6,
-  },
-  sidebarItem: {
-    border: 'none',
-    borderRadius: 12,
-    background: 'transparent',
-    minHeight: 38,
-    padding: '0 10px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    cursor: 'pointer',
-    fontWeight: 850,
-    fontSize: 14,
-    transition: 'transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease',
-  },
-  sidebarItemActive: {
-    background: `linear-gradient(135deg, rgba(252,163,17,0.95), rgba(22,182,196,0.82))`,
-    color: `${BRAND_BLUE} !important`,
-    boxShadow: '0 14px 28px rgba(252,163,17,0.22)',
-    transform: 'translateX(3px)',
-  },
-  topbar: {
-    margin: 14,
-    borderRadius: 18,
-    padding: 10,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-    position: 'sticky',
-    top: 12,
-    zIndex: 20,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    minWidth: 36,
-    borderRadius: 999,
-    borderColor: 'rgba(29,53,87,0.12)',
-  },
-  dashboardActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    flexShrink: 0,
-    minWidth: 0,
-  },
-  langButton: {
-    height: 36,
-    borderRadius: 999,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    padding: '0 12px',
-    fontWeight: 900,
-    borderColor: 'rgba(252,163,17,0.24)',
-    color: BRAND_BLUE,
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffc15a)`,
-  },
-  searchInput: {
-    flex: 1,
-    minWidth: 160,
-    borderRadius: 14,
-  },
-  languagePill: {
-    display: 'inline-flex',
-    gap: 4,
-    padding: 4,
-    borderRadius: 999,
-    background: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(252,163,17,0.20)',
-  },
-  languageButton: {
-    border: 'none',
-    borderRadius: 999,
-    background: 'transparent',
-    padding: '7px 10px',
-    color: BRAND_BLUE,
-    fontWeight: 950,
-    cursor: 'pointer',
-  },
-  languageButtonActive: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffc15a)`,
-    boxShadow: '0 8px 18px rgba(252,163,17,0.28)',
-  },
-  avatarButton: {
-    width: 36,
-    height: 36,
-    minWidth: 36,
-    borderRadius: 999,
-    padding: 0,
-  },
-  searchResults: {
-    position: 'fixed',
-    top: 86,
-    left: 330,
-    right: 40,
-    zIndex: 30,
-    borderRadius: 18,
-    padding: 10,
-    display: 'grid',
-    gap: 8,
-  },
-  searchResultItem: {
-    border: 'none',
-    background: 'transparent',
-    textAlign: 'left',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: 10,
-    cursor: 'pointer',
-  },
-  content: {
-    padding: '0 14px 32px',
-  },
-  contentHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 12,
-    alignItems: 'flex-start',
-    margin: '4px 0 16px',
-  },
-  glassCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  widgetIcon: {
     width: 38,
     height: 38,
     borderRadius: 14,
     display: 'grid',
     placeItems: 'center',
-    color: '#fff',
-    fontSize: 18,
-    marginBottom: 10,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd166)`,
+    color: BRAND_BLUE,
+    fontWeight: 900,
   },
-  nextTrip: {
-    minHeight: 220,
-    borderRadius: 20,
-    padding: 20,
+  topBar: {
     display: 'flex',
-    alignItems: 'flex-end',
-    background:
-      'linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.72)), url(https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1200&q=80)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    alignItems: 'flex-start',
+    flexWrap: 'wrap',
   },
-  avatarWrap: {
-    position: 'relative',
-    display: 'inline-block',
+  kicker: {
+    color: BRAND_GOLD,
+    fontWeight: 900,
+    textTransform: 'uppercase',
   },
-  avatarEdit: {
-    position: 'absolute',
-    right: -4,
-    bottom: 4,
-    background: BRAND_GOLD,
+  pageTitle: {
+    margin: '8px 0 6px',
     color: BRAND_BLUE,
-    borderColor: BRAND_GOLD,
   },
-  goldButton: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffc15a)`,
-    borderColor: BRAND_GOLD,
-    color: BRAND_BLUE,
-    fontWeight: 950,
-    boxShadow: '0 12px 26px rgba(252,163,17,0.22)',
+  pageSubtitle: {
+    maxWidth: 780,
+    color: '#64748b',
+    margin: 0,
+  },
+  glassCard: {
+    borderRadius: 24,
+    border: '1px solid rgba(23,50,92,0.08)',
+    boxShadow: '0 24px 55px rgba(23,50,92,0.08)',
+    background: 'rgba(255,255,255,0.88)',
+  },
+  statCard: {
+    borderRadius: 20,
+    background: 'rgba(255,255,255,0.92)',
+    border: '1px solid rgba(23,50,92,0.08)',
+    boxShadow: '0 16px 40px rgba(23,50,92,0.08)',
+  },
+  achievementCard: {
+    borderRadius: 16,
+    background: 'linear-gradient(135deg, rgba(252,163,17,0.12), rgba(20,184,166,0.08))',
+  },
+  progressHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  primaryButton: {
+    background: BRAND_BLUE,
+    borderColor: BRAND_BLUE,
+    fontWeight: 900,
   },
 };
 

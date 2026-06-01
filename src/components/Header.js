@@ -220,7 +220,6 @@ const Header = () => {
     >
       <div style={styles.inner}>
         <button type="button" onClick={() => navigate('/')} style={styles.logoButton} aria-label="TravelPay home">
-          <span style={styles.logoMark}>TP</span>
           <span style={styles.brandStack}>
             <span style={{ ...styles.logoText, color: menuTextColor }}>TravelPay</span>
             <span style={{ ...styles.logoSub, color: glassMode || theme === 'dark' ? 'rgba(246,251,255,0.68)' : 'rgba(29,53,87,0.58)' }}>
@@ -337,38 +336,23 @@ const styles = {
   },
   logoButton: {
     display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
+    alignItems: 'flex-start',
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
     padding: 0,
     minWidth: 0,
-    maxWidth: 'min(220px, 48vw)',
+    maxWidth: 'min(220px, 52vw)',
     flexShrink: 0,
     fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
   },
-  logoMark: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
-    display: 'grid',
-    placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    color: BRAND_BLUE,
-    fontWeight: 900,
-    fontSize: 10,
-    letterSpacing: 0,
-    boxShadow: '0 8px 18px rgba(252,163,17,0.18)',
-    flexShrink: 0,
-  },
   brandStack: {
     display: 'inline-flex',
-    alignItems: 'baseline',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    gap: 6,
+    gap: 2,
     minWidth: 0,
-    whiteSpace: 'nowrap',
   },
   logoText: {
     display: 'block',
@@ -379,7 +363,7 @@ const styles = {
   },
   logoSub: {
     display: 'block',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 650,
     lineHeight: 1.1,
     letterSpacing: 0,

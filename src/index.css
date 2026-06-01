@@ -3267,3 +3267,445 @@ body[data-theme="dark"] .home-page .home-partner-form textarea {
   min-width: 0 !important;
   margin-left: 0 !important;
 }
+
+/* Profile mobile-first drawer cleanup */
+.dashboard-topbar-removed {
+  display: none !important;
+}
+
+.dashboard-floating-menu {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top)) !important;
+  left: max(12px, env(safe-area-inset-left)) !important;
+  z-index: 1002 !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(252, 163, 17, 0.28) !important;
+  color: #1d3557 !important;
+  background: linear-gradient(135deg, #fca311, #ffd27a) !important;
+  box-shadow: 0 12px 28px rgba(3, 11, 24, 0.22) !important;
+  transition: left 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.dashboard-floating-menu.is-open {
+  left: calc(min(220px, 68vw) - 48px) !important;
+  transform: scale(0.94) !important;
+  box-shadow: 0 8px 20px rgba(3, 11, 24, 0.18) !important;
+}
+
+.dashboard-drawer-mode .dashboard-main {
+  padding-top: clamp(62px, 9vw, 78px) !important;
+}
+
+.dashboard-drawer-mode .dashboard-sidebar,
+.dashboard-drawer-mode.is-collapsed .dashboard-sidebar {
+  width: min(220px, 68vw) !important;
+  max-width: min(220px, 68vw) !important;
+  flex-basis: min(220px, 68vw) !important;
+}
+
+.dashboard-drawer-mode .dashboard-sidebar .ant-layout-sider-children {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dashboard-drawer-mode .sidebar-link {
+  min-height: 34px !important;
+  padding: 7px 8px !important;
+  gap: 7px !important;
+  font-size: 13px !important;
+}
+
+.dashboard-drawer-mode .sidebar-logo-text .ant-typography {
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+}
+
+@media (max-width: 520px) {
+  .dashboard-floating-menu {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 12px !important;
+  }
+
+  .dashboard-floating-menu.is-open {
+    left: calc(min(178px, 54vw) - 44px) !important;
+  }
+
+  .dashboard-drawer-mode .dashboard-sidebar,
+  .dashboard-drawer-mode.is-collapsed .dashboard-sidebar {
+    width: min(178px, 54vw) !important;
+    max-width: min(178px, 54vw) !important;
+    flex-basis: min(178px, 54vw) !important;
+    padding: 12px 8px !important;
+  }
+
+  .dashboard-drawer-mode .sidebar-link {
+    min-height: 32px !important;
+    padding: 6px 7px !important;
+    font-size: 11px !important;
+  }
+
+  .dashboard-drawer-mode .sidebar-link svg {
+    width: 13px;
+    min-width: 13px;
+  }
+
+  .dashboard-drawer-mode .sidebar-logo-text .ant-typography {
+    font-size: 10px !important;
+  }
+}
+
+/* Final profile sidebar correction */
+.dashboard-topbar,
+.dashboard-topbar-removed,
+.dashboard-drawer-mode > .dashboard-main-shell > .dashboard-actions {
+  display: none !important;
+}
+
+.dashboard-sidebar-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 2 !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(252, 163, 17, 0.28) !important;
+  color: #1d3557 !important;
+  background: linear-gradient(135deg, #fca311, #ffd27a) !important;
+  box-shadow: 0 8px 18px rgba(3, 11, 24, 0.16) !important;
+}
+
+.dashboard-floating-menu {
+  left: 12px !important;
+}
+
+.dashboard-floating-menu.is-open {
+  display: none !important;
+}
+
+.dashboard-drawer-mode .dashboard-sidebar,
+.dashboard-drawer-mode.is-collapsed .dashboard-sidebar {
+  width: min(210px, 62vw) !important;
+  max-width: min(210px, 62vw) !important;
+  flex-basis: min(210px, 62vw) !important;
+  padding: 12px 8px !important;
+}
+
+.dashboard-drawer-mode .dashboard-sidebar.is-open {
+  transform: translateX(0) !important;
+}
+
+.dashboard-drawer-mode .dashboard-main {
+  padding-top: clamp(58px, 8vw, 70px) !important;
+}
+
+@media (max-width: 520px) {
+  .dashboard-drawer-mode .dashboard-sidebar,
+  .dashboard-drawer-mode.is-collapsed .dashboard-sidebar {
+    width: min(168px, 50vw) !important;
+    max-width: min(168px, 50vw) !important;
+    flex-basis: min(168px, 50vw) !important;
+  }
+
+  .dashboard-sidebar-close {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    right: 8px !important;
+  }
+}
+
+/* TravelPay profile final responsive layout */
+body,
+html,
+#root {
+  overflow-x: hidden;
+}
+
+.profile-dashboard {
+  display: flex !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+}
+
+.profile-dashboard,
+.profile-dashboard * {
+  box-sizing: border-box;
+}
+
+.profile-dashboard .profile-dashboard-shell,
+.profile-dashboard .profile-dashboard-main,
+.profile-dashboard .dashboard-main-shell,
+.profile-dashboard .dashboard-main {
+  flex: 1 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.profile-dashboard .profile-dashboard-main {
+  padding: 0 14px 32px !important;
+  overflow-x: hidden !important;
+}
+
+.profile-dashboard .dashboard-title {
+  font-size: 28px !important;
+  line-height: 1.15 !important;
+}
+
+.profile-dashboard .dashboard-title,
+.profile-dashboard .dashboard-subtitle,
+.profile-dashboard .ant-typography,
+.profile-dashboard .ant-card,
+.profile-dashboard .ant-card-head-title,
+.profile-dashboard .ant-card-body,
+.profile-dashboard .ant-statistic,
+.profile-dashboard .ant-statistic-content,
+.profile-dashboard .sidebar-link,
+.profile-dashboard .sidebar-text {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+}
+
+.profile-dashboard .profile-dashboard-sidebar {
+  position: sticky !important;
+  top: 0 !important;
+  flex: 0 0 220px !important;
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+  overflow-x: hidden !important;
+}
+
+.profile-dashboard .profile-mobile-header {
+  display: none !important;
+}
+
+.profile-dashboard .profile-sidebar-drawer {
+  display: none;
+}
+
+.profile-dashboard .profile-sidebar-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 28px);
+  gap: 16px;
+  overflow-x: hidden;
+}
+
+.profile-dashboard .profile-sidebar-logout {
+  margin-top: auto;
+}
+
+.profile-dashboard .profile-sidebar-drawer .ant-drawer-content-wrapper {
+  max-width: min(288px, 84vw) !important;
+}
+
+.profile-dashboard .profile-sidebar-drawer .ant-drawer-content {
+  overflow: hidden !important;
+}
+
+.profile-dashboard .profile-sidebar-drawer .ant-drawer-body {
+  overflow: hidden !important;
+}
+
+.profile-dashboard .profile-sidebar-drawer-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 14px;
+  overflow-x: hidden;
+}
+
+.profile-dashboard .profile-sidebar-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.profile-dashboard .profile-sidebar-drawer-close {
+  margin-left: auto;
+}
+
+.profile-dashboard .profile-premium-tag {
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .profile-dashboard {
+    display: block !important;
+  }
+
+  .profile-dashboard .profile-dashboard-sidebar,
+  .profile-dashboard .dashboard-sidebar,
+  .profile-dashboard .dashboard-sidebar-backdrop,
+  .profile-dashboard .dashboard-floating-menu,
+  .profile-dashboard .dashboard-topbar-removed {
+    display: none !important;
+  }
+
+  .profile-dashboard .profile-sidebar-drawer {
+    display: block;
+  }
+
+  .profile-dashboard .profile-dashboard-main {
+    padding: 12px 12px 84px !important;
+  }
+
+  .profile-dashboard .profile-mobile-header {
+    display: flex !important;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin-bottom: 8px;
+    padding: 8px 0 12px !important;
+    background: inherit;
+  }
+
+  .profile-dashboard .profile-mobile-actions {
+    gap: 6px !important;
+  }
+
+  .profile-dashboard .profile-mobile-burger,
+  .profile-dashboard .dashboard-icon-btn,
+  .profile-dashboard .dashboard-avatar-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  .profile-dashboard .dashboard-icon-btn .anticon,
+  .profile-dashboard .dashboard-avatar-btn .anticon,
+  .profile-dashboard .profile-mobile-burger .anticon {
+    font-size: 16px !important;
+  }
+
+  .profile-dashboard .dashboard-title {
+    font-size: 22px !important;
+  }
+
+  .profile-dashboard .dashboard-subtitle {
+    font-size: 13px !important;
+  }
+
+  .profile-dashboard .dashboard-kicker {
+    font-size: 11px !important;
+  }
+
+  .profile-dashboard [style*="font-size: 12"],
+  .profile-dashboard .sidebar-logo-text .ant-typography {
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    white-space: normal !important;
+  }
+
+  .profile-dashboard .profile-premium-tag {
+    display: none !important;
+  }
+
+  .profile-dashboard [style*="width: 34px"][style*="height: 34px"] {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .profile-dashboard .ant-card {
+    border-radius: 16px !important;
+  }
+
+  .profile-dashboard .ant-card-head {
+    min-height: 44px !important;
+    padding: 0 14px !important;
+  }
+
+  .profile-dashboard .ant-card-head-title {
+    font-size: 15px !important;
+    padding: 12px 0 !important;
+  }
+
+  .profile-dashboard .ant-card-body {
+    padding: 14px !important;
+  }
+
+  .profile-dashboard .ant-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .profile-dashboard .profile-grid {
+    gap: 12px !important;
+  }
+
+  .profile-dashboard .contentHeader,
+  .profile-dashboard [style*="justify-content: space-between"] {
+    min-width: 0 !important;
+  }
+
+  .profile-dashboard .ant-typography h2,
+  .profile-dashboard .ant-typography h3,
+  .profile-dashboard h2.ant-typography,
+  .profile-dashboard h3.ant-typography,
+  .profile-dashboard h4.ant-typography {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+  }
+
+  .profile-dashboard .ant-statistic-content {
+    font-size: 22px !important;
+  }
+
+  .profile-dashboard .ant-btn {
+    font-size: 13px !important;
+  }
+
+  .profile-dashboard .profile-sidebar-shell {
+    min-height: 100%;
+  }
+
+  .profile-dashboard .profile-sidebar-drawer-header .ant-typography,
+  .profile-dashboard .profile-sidebar-shell .ant-typography {
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    white-space: normal !important;
+  }
+
+  .profile-dashboard .profile-sidebar-drawer .sidebar-link {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+
+  .profile-dashboard .profile-sidebar-drawer .profile-sidebar-shell {
+    gap: 12px;
+  }
+
+  .ai-concierge-button {
+    right: 12px !important;
+    left: auto !important;
+    bottom: 12px !important;
+    min-height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    gap: 8px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  .ai-concierge-button span:last-child {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap !important;
+  }
+}

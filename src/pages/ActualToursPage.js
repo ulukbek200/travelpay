@@ -24,7 +24,8 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import api from '../api';
-import { readCurrentUser, saveCurrentUser } from '../utils/currentUser';
+import { readCurrentUser } from '../utils/currentUser';
+import { syncCurrentUser } from '../utils/user';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -240,7 +241,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
     api.put(`/users/${currentUser.id}/favorites`, { favorites: updatedFavorites })
       .then((response) => {
         setFavorites(response.data?.favorites || updatedFavorites);
-        saveCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
+        syncCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
         message.success('Тур добавлен в избранное.');
       })
       .catch((err) => {

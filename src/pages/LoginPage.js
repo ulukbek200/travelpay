@@ -11,7 +11,7 @@ import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
 import { emailRules, loginPasswordRules } from '../components/auth/authValidation';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { saveCurrentUser } from '../utils/currentUser';
+import { syncCurrentUser } from '../utils/user';
 
 const { Text } = Typography;
 
@@ -27,9 +27,7 @@ const LoginPage = () => {
         email: values.email,
         password: values.password,
       });
-      const user = { ...response.data, isLoggedIn: true };
-
-      saveCurrentUser(user);
+      const user = syncCurrentUser({ ...response.data, isLoggedIn: true });
       message.success('Добро пожаловать в TravelPay');
       navigate(user.role === 'admin' ? '/admin/tours' : '/profile');
     } catch (err) {

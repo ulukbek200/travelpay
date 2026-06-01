@@ -115,7 +115,22 @@ function AppContent({ favorites, setFavorites }) {
 
         <Route path="/AgreePage" element={<AgreementsPage />} />
         <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
-        <Route path="/savings-plan" element={<SavingsPlanPage />} />
+        <Route
+          path="/savings"
+          element={(
+            <ProtectedRoute>
+              <SavingsPlanPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/savings-plan"
+          element={(
+            <ProtectedRoute>
+              <SavingsPlanPage />
+            </ProtectedRoute>
+          )}
+        />
 
         <Route
           path="/profile"

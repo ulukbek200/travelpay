@@ -4,7 +4,8 @@ import { CalendarOutlined, DeleteOutlined, EnvironmentOutlined, EyeOutlined, Sho
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { readCurrentUser, saveCurrentUser } from '../utils/currentUser';
+import { readCurrentUser } from '../utils/currentUser';
+import { syncCurrentUser } from '../utils/user';
 
 const { Title, Text, Paragraph } = Typography;
 const BRAND_BLUE = '#1d3557';
@@ -29,7 +30,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
     try {
       const response = await api.put(`/users/${currentUser.id}/favorites`, { favorites: updated });
       setFavorites(response.data?.favorites || updated);
-      saveCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
+      syncCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
       message.success('Tour removed from favorites');
       if (selectedTour?.title === tourToRemove.title) setSelectedTour(null);
     } catch (error) {
@@ -48,7 +49,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
     try {
       const response = await api.put(`/users/${currentUser.id}/favorites`, { favorites: [] });
       setFavorites(response.data?.favorites || []);
-      saveCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
+      syncCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
       message.success('Favorites cleared');
     } catch (error) {
       message.error('Could not clear favorites on the server');
