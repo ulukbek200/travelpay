@@ -9,7 +9,6 @@ import {
   Input,
   Skeleton,
   Space,
-  Tag,
   Typography,
   message,
 } from 'antd';
@@ -36,7 +35,7 @@ const CHIP_BORDER = '#78d6ff';
 const suggestedQuestions = [
   'Подбери тур на 3 дня',
   'Как работает оплата тура?',
-  'Сравни Иссык-Куль и Колсай',
+  'Сравни Иссык-Куль и Кольсай',
   'Туры возле Алматы',
   'VIP тур для семьи',
   'Как работает накопление?',
@@ -45,6 +44,8 @@ const suggestedQuestions = [
   'Проверить статус платежа',
   'Хочу стать партнёром',
 ];
+
+const FALLBACK_REPLY = 'Сейчас ассистент временно недоступен, попробуйте позже.';
 
 const TravelBotWidget = () => {
   const navigate = useNavigate();
@@ -81,27 +82,35 @@ const TravelBotWidget = () => {
     setFavoritesCount(user?.favorites?.length || 0);
   }), []);
 
+  const sendMessageToAI = async (messageText, history) => {
+    const response = await api.post('/api/ai-chat', {
+      message: messageText,
+      history,
+    });
+
+    return response.data?.reply || FALLBACK_REPLY;
+  };
+
   const sendMessage = async (value = input) => {
     const trimmedMessage = value.trim();
     if (!trimmedMessage || isSending) return;
+
+    const history = messages.map((item) => ({
+      role: item.sender === 'user' ? 'user' : 'assistant',
+      content: item.text,
+    }));
 
     setMessages((prev) => [...prev, { sender: 'user', text: trimmedMessage }]);
     setInput('');
     setIsSending(true);
 
     try {
-      const response = await api.post('/api/ai-assistant', {
-        message: trimmedMessage,
-        profile: JSON.stringify(readCurrentUser() || {}),
-        favorites: JSON.stringify(readCurrentUser()?.favorites || []),
-      });
-
+      const reply = await sendMessageToAI(trimmedMessage, history);
       setMessages((prev) => [
         ...prev,
         {
           sender: 'assistant',
-          text: response.data?.answer || response.data?.reply || 'Уточню детали и помогу вам дальше.',
-          provider: response.data?.provider,
+          text: reply || FALLBACK_REPLY,
         },
       ]);
     } catch (error) {
@@ -109,7 +118,7 @@ const TravelBotWidget = () => {
         ...prev,
         {
           sender: 'assistant',
-          text: 'Сейчас не удалось подключиться к AI-сервису. Проверьте backend и ключ OPENAI_API_KEY или GEMINI_API_KEY. Я всё равно помогу: напишите направление, даты, бюджет и количество туристов.',
+          text: FALLBACK_REPLY,
         },
       ]);
     } finally {
@@ -155,11 +164,6 @@ const TravelBotWidget = () => {
         {!isUser && <Avatar size={28} style={styles.messageAvatar} icon={<StarOutlined />} />}
         <div style={isUser ? styles.userMessage : styles.assistantMessage}>
           <ReactMarkdown>{item.text}</ReactMarkdown>
-          {item.provider === 'offline' && (
-            <Tag color="gold" style={{ marginTop: 8 }}>
-              Demo mode
-            </Tag>
-          )}
         </div>
       </div>
     );
@@ -194,7 +198,7 @@ const TravelBotWidget = () => {
           header: styles.drawerHeader,
           section: styles.drawerContent,
         }}
-        title={
+        title={(
           <Space align="center">
             <Avatar style={styles.aiAvatar} icon={<StarOutlined />} />
             <div>
@@ -203,7 +207,7 @@ const TravelBotWidget = () => {
               <Text style={styles.drawerSubtitle}>Умный помощник для туров и платежей</Text>
             </div>
           </Space>
-        }
+        )}
       >
         <div style={styles.messages}>
           {messages.map(renderMessage)}
@@ -278,159 +282,139 @@ const styles = {
     bottom: 20,
     zIndex: 1000,
     minHeight: 56,
-    maxWidth: 'calc(100vw - 24px)',
+    border: 'none',
     borderRadius: 999,
-    border: '1px solid rgba(252,163,17,0.55)',
-    background: 'linear-gradient(135deg, rgba(10,24,39,0.96), rgba(29,53,87,0.94))',
-    color: '#fff',
+    padding: '0 18px',
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '0 18px',
+    gap: 12,
+    fontWeight: 800,
+    color: '#fff',
+    background: 'linear-gradient(135deg, #16324f 0%, #1d3557 55%, #245b86 100%)',
+    boxShadow: '0 14px 32px rgba(29,53,87,0.28)',
     cursor: 'pointer',
-    fontWeight: 900,
-    boxShadow: '0 16px 38px rgba(10,24,39,0.32)',
   },
   floatingIcon: {
-    width: 30,
-    height: 30,
+    width: 34,
+    height: 34,
     borderRadius: '50%',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
+    display: 'grid',
+    placeItems: 'center',
     color: BRAND_GOLD,
-  },
-  drawerContent: {
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
-    overflow: 'hidden',
-    background: 'linear-gradient(160deg, #081526 0%, #102a43 52%, #14213d 100%)',
-    backdropFilter: 'blur(18px)',
+    background: 'rgba(255,255,255,0.12)',
+    fontSize: 16,
   },
   drawerHeader: {
-    background: 'rgba(8,21,38,0.84)',
-    borderBottom: '1px solid rgba(255,255,255,0.12)',
+    borderBottom: '1px solid rgba(29,53,87,0.08)',
+    background: 'linear-gradient(180deg, #f9fbff 0%, #f3f8ff 100%)',
+  },
+  drawerContent: {
+    background: '#f7fbff',
   },
   drawerBody: {
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    height: 'calc(100vh - 65px)',
-  },
-  aiAvatar: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd166)`,
-    color: BRAND_BLUE,
+    padding: 16,
+    display: 'grid',
+    gridTemplateRows: '1fr auto auto',
+    gap: 14,
+    background: '#f7fbff',
   },
   drawerTitle: {
-    color: '#fff',
-    fontWeight: 900,
+    color: BRAND_BLUE,
+    fontWeight: 800,
+    fontSize: 16,
   },
   drawerSubtitle: {
-    color: '#c9d8e8',
+    color: '#6b7a90',
     fontSize: 12,
   },
+  aiAvatar: {
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    color: BRAND_BLUE,
+  },
   messages: {
-    flex: 1,
-    minHeight: 260,
     overflowY: 'auto',
-    padding: '18px 18px 10px',
+    paddingRight: 4,
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 12,
   },
   assistantBubble: {
     display: 'flex',
-    gap: 8,
     alignItems: 'flex-start',
+    gap: 10,
   },
   userBubble: {
     display: 'flex',
     justifyContent: 'flex-end',
   },
   messageAvatar: {
-    background: 'rgba(252,163,17,0.18)',
-    color: BRAND_GOLD,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    color: BRAND_BLUE,
     flexShrink: 0,
+    marginTop: 4,
   },
   assistantMessage: {
-    maxWidth: '92%',
-    background: 'linear-gradient(135deg, rgba(255,255,255,0.99), rgba(240,247,255,0.96))',
-    color: BRAND_BLUE,
-    border: '1px solid rgba(252,163,17,0.22)',
+    maxWidth: '88%',
+    background: '#ffffff',
     borderRadius: 18,
-    padding: '11px 13px',
-    lineHeight: 1.55,
-    boxShadow: '0 14px 34px rgba(0,0,0,0.16)',
+    padding: '12px 14px',
+    color: BRAND_BLUE,
+    boxShadow: '0 10px 24px rgba(29,53,87,0.08)',
   },
   userMessage: {
     maxWidth: '88%',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd166)`,
-    color: BRAND_BLUE,
+    background: 'linear-gradient(135deg, #1677ff, #245b86)',
     borderRadius: 18,
-    padding: '11px 13px',
-    lineHeight: 1.55,
-    fontWeight: 700,
-    boxShadow: '0 12px 28px rgba(252,163,17,0.18)',
+    padding: '12px 14px',
+    color: '#fff',
+    boxShadow: '0 10px 24px rgba(22,119,255,0.18)',
   },
   suggestions: {
-    flexShrink: 0,
-    maxHeight: 138,
-    overflowY: 'auto',
-    marginTop: 8,
-    padding: '10px 16px 12px',
-    borderTop: '1px solid rgba(255,255,255,0.10)',
-    background: 'rgba(255,255,255,0.04)',
+    display: 'grid',
+    gap: 10,
   },
   suggestionsTitle: {
-    display: 'block',
-    marginBottom: 8,
-    color: '#d9ecff',
+    color: '#6b7a90',
     fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: 0,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   suggestionGrid: {
     display: 'flex',
-    gap: 8,
     flexWrap: 'wrap',
+    gap: 8,
   },
   suggestionChip: {
-    height: 'auto',
-    minHeight: 32,
     borderRadius: 999,
     borderColor: CHIP_BORDER,
-    color: CHIP_TEXT,
     background: CHIP_BG,
-    fontWeight: 800,
-    boxShadow: '0 8px 18px rgba(5,102,141,0.15)',
-    whiteSpace: 'normal',
-    lineHeight: 1.25,
-    padding: '6px 11px',
+    color: CHIP_TEXT,
+    fontWeight: 700,
   },
   utilityCard: {
-    margin: '0 16px 10px',
-    borderRadius: 14,
-    background: 'rgba(255,255,255,0.10)',
-    border: '1px solid rgba(255,255,255,0.13)',
+    borderRadius: 18,
+    border: '1px solid rgba(29,53,87,0.08)',
+    boxShadow: '0 10px 24px rgba(29,53,87,0.06)',
   },
   inputBar: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: '1fr auto',
     gap: 10,
-    padding: 16,
-    background: 'rgba(8,21,38,0.98)',
-    borderTop: '1px solid rgba(255,255,255,0.12)',
+    alignItems: 'center',
   },
   input: {
+    minHeight: 46,
     borderRadius: 14,
-    background: 'rgba(255,255,255,0.98)',
   },
   sendButton: {
+    width: 46,
+    height: 46,
     borderRadius: 14,
-    background: BRAND_GOLD,
-    borderColor: BRAND_GOLD,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
+    border: 'none',
     color: BRAND_BLUE,
-    fontWeight: 900,
+    boxShadow: '0 12px 24px rgba(252,163,17,0.22)',
   },
 };
 
