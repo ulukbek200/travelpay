@@ -194,6 +194,7 @@ html, body {
 .premium-site-header .premium-header-menu.ant-menu-horizontal > .ant-menu-item,
 .premium-site-header .premium-header-menu.ant-menu-horizontal > .ant-menu-item .ant-menu-title-content {
   color: inherit !important;
+  text-decoration: none !important;
 }
 
 .premium-header-menu.ant-menu-horizontal > .ant-menu-item::after,
@@ -241,12 +242,13 @@ body[data-theme="dark"] .premium-header-menu.ant-menu-horizontal > .ant-menu-ite
 .premium-site-header .ant-btn:hover,
 .premium-site-header .ant-btn:focus,
 .premium-site-header .ant-btn:focus-visible {
-  border-color: rgba(252, 163, 17, 0.72) !important;
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #24486f, #356b98) !important;
-  box-shadow: 0 0 0 3px rgba(252, 163, 17, 0.14) !important;
+  border-color: rgba(59, 130, 246, 0.36) !important;
+  color: #1d3557 !important;
+  background: linear-gradient(135deg, #f1f7ff, #dbeafe) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.10) !important;
   outline: none !important;
   transform: translateY(-1px);
+  text-decoration: none !important;
 }
 
 .premium-site-header .ant-btn-primary:hover,
@@ -1957,10 +1959,6 @@ body[data-theme="dark"] .booking-summary-list {
   max-width: 100% !important;
 }
 
-.premium-site-header .mobile-language-action {
-  display: none !important;
-}
-
 @media (max-width: 1024px) {
   .premium-site-header {
     height: 56px !important;
@@ -1969,13 +1967,6 @@ body[data-theme="dark"] .booking-summary-list {
   .premium-header-menu,
   .desktop-header-actions {
     display: none !important;
-  }
-
-  .premium-site-header .mobile-language-action {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex: 0 0 auto !important;
   }
 
   .premium-site-header .mobile-menu-button {
@@ -2012,7 +2003,6 @@ body[data-theme="dark"] .booking-summary-list {
     font-size: 16px !important;
   }
 
-  .premium-site-header .mobile-language-action,
   .premium-site-header .mobile-menu-button {
     width: auto !important;
     height: 34px !important;
@@ -2025,10 +2015,6 @@ body[data-theme="dark"] .booking-summary-list {
     font-size: 15px !important;
   }
 
-  .premium-site-header .mobile-language-action {
-    min-width: 56px !important;
-    padding-inline: 8px !important;
-  }
 }
 
 /* Tours page responsive guard */
@@ -3707,5 +3693,959 @@ html,
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap !important;
+  }
+}
+
+/* TravelPay adaptive dashboard system */
+.travelpay-admin-page,
+.travelpay-profile-page,
+.travelpay-dashboard-container,
+.travelpay-dashboard-container * {
+  box-sizing: border-box;
+}
+
+.travelpay-dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.travelpay-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.travelpay-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.travelpay-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.travelpay-adaptive-form {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 16px 0 0;
+}
+
+.travelpay-adaptive-form .ant-form-item,
+.travelpay-adaptive-form .ant-form-item-control,
+.travelpay-adaptive-form .ant-form-item-control-input,
+.travelpay-adaptive-form .ant-form-item-control-input-content,
+.travelpay-adaptive-form .ant-input,
+.travelpay-adaptive-form .ant-input-affix-wrapper,
+.travelpay-adaptive-form .ant-input-number,
+.travelpay-adaptive-form .ant-input-number-group-wrapper,
+.travelpay-adaptive-form .ant-select,
+.travelpay-adaptive-form .ant-select-selector,
+.travelpay-adaptive-form textarea {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.travelpay-table-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.travelpay-table-shell .ant-table-wrapper {
+  min-width: 100%;
+}
+
+.travelpay-admin-page .ant-card,
+.travelpay-profile-page .ant-card,
+.travelpay-dashboard-container .ant-card {
+  border-radius: 18px;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.travelpay-admin-page .ant-card:hover,
+.travelpay-profile-page .ant-card:hover,
+.travelpay-dashboard-container .ant-card:hover {
+  transform: translateY(-2px);
+}
+
+.travelpay-admin-page .ant-layout-content,
+.travelpay-profile-page .ant-layout-content,
+.travelpay-dashboard-container,
+.travelpay-dashboard-container .ant-row,
+.travelpay-dashboard-container .ant-col {
+  min-width: 0;
+}
+
+.travelpay-admin-page .ant-table,
+.travelpay-profile-page .ant-table,
+.travelpay-dashboard-container .ant-table {
+  min-width: 0;
+}
+
+.travelpay-dashboard-drawer .ant-drawer-content {
+  overflow: hidden;
+}
+
+.travelpay-dashboard-drawer .ant-drawer-body {
+  padding: 0;
+  overflow-y: auto;
+}
+
+.travelpay-admin-mobile-drawer-shell .ant-drawer-content-wrapper {
+  width: min(82vw, 340px) !important;
+  max-width: min(82vw, 340px) !important;
+}
+
+.travelpay-admin-mobile-drawer-shell .ant-drawer-mask {
+  background: rgba(4, 10, 24, 0.56) !important;
+  backdrop-filter: blur(10px);
+}
+
+.travelpay-admin-mobile-drawer-shell .ant-drawer-content {
+  background: linear-gradient(180deg, #0b1f3a 0%, #123866 100%) !important;
+  box-shadow: 0 22px 60px rgba(3, 12, 28, 0.38) !important;
+}
+
+.travelpay-admin-mobile-drawer-shell .ant-drawer-body {
+  background: linear-gradient(180deg, #0b1f3a 0%, #123866 100%) !important;
+  color: #fff !important;
+}
+
+.travelpay-dashboard-drawer .ant-menu {
+  border-inline-end: none !important;
+}
+
+.travelpay-dashboard-drawer .ant-btn,
+.travelpay-admin-page .ant-btn,
+.travelpay-profile-page .ant-btn {
+  white-space: normal;
+}
+
+.travelpay-admin-page h1,
+.travelpay-admin-page h2,
+.travelpay-admin-page h3,
+.travelpay-profile-page h1,
+.travelpay-profile-page h2,
+.travelpay-profile-page h3,
+.travelpay-dashboard-container h1,
+.travelpay-dashboard-container h2,
+.travelpay-dashboard-container h3 {
+  word-break: normal;
+  white-space: normal;
+}
+
+.ai-concierge-button {
+  position: fixed !important;
+  right: 16px !important;
+  left: auto !important;
+  bottom: 16px !important;
+  z-index: 999 !important;
+}
+
+body.travelpay-admin-drawer-open .ai-concierge-button {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.travelpay-admin-mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+  padding: 14px;
+  color: #fff;
+  background: linear-gradient(180deg, #0b1f3a 0%, #123866 100%);
+}
+
+.travelpay-admin-mobile-drawer__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.travelpay-admin-mobile-drawer__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.travelpay-admin-mobile-drawer__logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #1677ff, #4096ff);
+  box-shadow: 0 14px 28px rgba(22, 119, 255, 0.28);
+}
+
+.travelpay-admin-mobile-drawer__brand-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.travelpay-admin-mobile-drawer__brand-title,
+.travelpay-admin-mobile-drawer__brand-subtitle,
+.travelpay-admin-mobile-drawer__footer-title,
+.travelpay-admin-mobile-drawer__footer-subtitle {
+  color: #fff !important;
+}
+
+.travelpay-admin-mobile-drawer__brand-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: normal;
+}
+
+.travelpay-admin-mobile-drawer__brand-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7) !important;
+  line-height: 1.35;
+}
+
+.travelpay-admin-mobile-drawer__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.travelpay-admin-mobile-drawer__close:hover {
+  background: rgba(255,255,255,0.16);
+  transform: rotate(90deg);
+}
+
+.travelpay-admin-mobile-drawer__menu-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 8px;
+  animation: travelpayDrawerSlideIn 0.28s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 16px 34px rgba(3, 12, 28, 0.18);
+}
+
+.travelpay-admin-mobile-menu {
+  background: transparent !important;
+  border-inline-end: none !important;
+  color: rgba(255,255,255,0.82) !important;
+}
+
+.travelpay-admin-mobile-menu .ant-menu-item {
+  height: 46px !important;
+  line-height: 46px !important;
+  margin: 4px 0 !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.travelpay-admin-mobile-menu .ant-menu-item .ant-menu-title-content,
+.travelpay-admin-mobile-menu .ant-menu-item .anticon {
+  color: inherit !important;
+}
+
+.travelpay-admin-mobile-menu .ant-menu-item-selected {
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 24px rgba(64, 150, 255, 0.22);
+}
+
+.travelpay-admin-mobile-menu.ant-menu-dark,
+.travelpay-admin-mobile-menu.ant-menu-inline {
+  background: transparent !important;
+}
+
+.travelpay-admin-mobile-menu .ant-menu-item-active,
+.travelpay-admin-mobile-menu .ant-menu-item:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  color: #fff !important;
+  transform: translateX(2px);
+}
+
+.travelpay-admin-mobile-menu .ant-menu-item::after {
+  display: none !important;
+}
+
+.travelpay-admin-mobile-drawer__site-button {
+  margin-top: auto;
+  height: 44px;
+  border-radius: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.16) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08)) !important;
+  box-shadow: 0 14px 28px rgba(3,12,28,0.16) !important;
+}
+
+.travelpay-admin-mobile-drawer__site-button:hover {
+  background: rgba(255,255,255,0.16) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+}
+
+.travelpay-admin-mobile-drawer__footer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.travelpay-admin-mobile-drawer__footer-title {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.travelpay-admin-mobile-drawer__footer-subtitle {
+  font-size: 12px;
+  color: rgba(255,255,255,0.68) !important;
+}
+
+.travelpay-admin-mobile-drawer__version {
+  width: fit-content;
+  margin-top: 8px;
+  color: rgba(255,255,255,0.92) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 999px;
+  padding-inline: 10px !important;
+}
+
+@keyframes travelpayDrawerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+  .travelpay-stats-grid,
+  .travelpay-form-grid,
+  .travelpay-chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .travelpay-dashboard-container {
+    padding: 20px 16px;
+  }
+
+  .travelpay-admin-page .ant-layout-sider,
+  .travelpay-profile-page .ant-layout-sider {
+    display: none !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .travelpay-stats-grid,
+  .travelpay-form-grid,
+  .travelpay-chart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .travelpay-dashboard-container {
+    padding: 12px;
+  }
+
+  .travelpay-dashboard-container .ant-card-body {
+    padding: 14px !important;
+  }
+
+  .travelpay-dashboard-container .ant-card-head {
+    padding: 0 14px !important;
+  }
+
+  .travelpay-dashboard-container .ant-space {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .travelpay-dashboard-container .ant-btn {
+    max-width: 100%;
+  }
+
+  .travelpay-dashboard-container .ant-statistic-content {
+    font-size: 22px;
+  }
+
+  .travelpay-dashboard-container .ant-list-item {
+    padding-inline: 0;
+  }
+
+  .ai-concierge-button {
+    transform: scale(0.85);
+    transform-origin: right bottom;
+  }
+}
+
+/* Desktop */
+@media (min-width: 993px) {
+  .travelpay-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .travelpay-chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* TravelPay premium dark glass admin */
+.admin-page,
+.admin-page * {
+  box-sizing: border-box;
+}
+
+.admin-page {
+  min-height: 100vh;
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(22, 119, 255, 0.28), transparent 35%),
+    radial-gradient(circle at 80% 10%, rgba(252, 163, 17, 0.16), transparent 30%),
+    linear-gradient(135deg, #020617 0%, #08111f 45%, #101827 100%);
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  padding: 24px;
+  background: rgba(2, 12, 27, 0.72);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-main {
+  min-width: 0;
+  padding: 28px;
+}
+
+.admin-glass {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  border-radius: 24px !important;
+}
+
+.admin-content-shell {
+  max-width: 1320px;
+  padding: 0;
+}
+
+.admin-stack {
+  width: 100%;
+}
+
+.admin-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  margin-bottom: 0;
+}
+
+.admin-hero-copy {
+  min-width: 0;
+}
+
+.admin-eyebrow {
+  color: #93c5fd;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-title {
+  margin: 12px 0 0;
+  color: #fff !important;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.05;
+  word-break: normal;
+}
+
+.admin-navbar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1677ff, #4096ff);
+  box-shadow: 0 12px 30px rgba(22, 119, 255, 0.35);
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 24px;
+  margin-bottom: 0;
+}
+
+.admin-stat-card {
+  min-height: 150px;
+  padding: 28px;
+  color: #fff;
+}
+
+.admin-stat-label {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 15px;
+}
+
+.admin-stat-value {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.admin-stat-value .anticon {
+  font-size: 24px;
+  color: #93c5fd;
+}
+
+.admin-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.admin-form-card {
+  padding: 28px;
+}
+
+.admin-section-heading {
+  margin-bottom: 18px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.admin-sidebar-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.admin-sidebar-brand,
+.travelpay-admin-mobile-drawer__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-sidebar-brand__logo,
+.travelpay-admin-mobile-drawer__logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1677ff, #4096ff);
+  box-shadow: 0 12px 30px rgba(22, 119, 255, 0.35);
+}
+
+.admin-sidebar-brand__title,
+.travelpay-admin-mobile-drawer__brand-title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.admin-sidebar-brand__subtitle,
+.travelpay-admin-mobile-drawer__brand-subtitle {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.admin-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.admin-menu-btn {
+  height: 52px;
+  border-radius: 16px;
+  border: 0;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-menu-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
+}
+
+.admin-menu-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, #1677ff, #4096ff);
+  box-shadow: 0 12px 30px rgba(22, 119, 255, 0.35);
+}
+
+.admin-open-site {
+  margin-top: 22px;
+  width: 100%;
+  height: 46px;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.admin-sidebar-footer,
+.travelpay-admin-mobile-drawer__footer {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.admin-sidebar-footer__title,
+.travelpay-admin-mobile-drawer__footer-title {
+  color: #fff;
+  font-weight: 700;
+}
+
+.admin-sidebar-footer__subtitle,
+.travelpay-admin-mobile-drawer__footer-subtitle {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+}
+
+.admin-sidebar-footer__version,
+.travelpay-admin-mobile-drawer__version {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px !important;
+}
+
+.admin-panel-card {
+  overflow: hidden;
+}
+
+.admin-input-number {
+  width: 100%;
+}
+
+.admin-tour-image {
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.admin-mobile-menu-trigger {
+  margin-bottom: 16px;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+}
+
+.admin-form-card,
+.admin-form-card label,
+.admin-form-card .ant-form-item-label > label {
+  color: #fff !important;
+}
+
+.admin-form-card input,
+.admin-form-card textarea,
+.admin-form-card .ant-input,
+.admin-form-card .ant-input-number,
+.admin-form-card .ant-select-selector {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+}
+
+.admin-form-card input::placeholder,
+.admin-form-card textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.admin-page .ant-typography,
+.admin-page .ant-card,
+.admin-page .ant-form,
+.admin-page .ant-form-item,
+.admin-page .ant-statistic-title,
+.admin-page .ant-statistic-content {
+  color: #fff !important;
+}
+
+.admin-page .ant-card,
+.admin-page .ant-card-head,
+.admin-page .ant-card-body,
+.admin-page .ant-card-head-title,
+.admin-page .ant-form-item-label > label,
+.admin-page .ant-tag,
+.admin-page .ant-alert-message,
+.admin-page .ant-alert-description,
+.admin-page .ant-table,
+.admin-page .ant-table-cell,
+.admin-page .ant-empty,
+.admin-page .ant-empty-description,
+.admin-page .ant-select-selection-item,
+.admin-page .ant-select-arrow,
+.admin-page .ant-input-number-input {
+  color: #fff !important;
+}
+
+.admin-page .ant-card,
+.admin-page .ant-card-head {
+  background: transparent !important;
+}
+
+.admin-page .ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-page .ant-card-body {
+  background: transparent !important;
+}
+
+.admin-page .ant-input,
+.admin-page .ant-input-number,
+.admin-page .ant-input-number-input,
+.admin-page .ant-input-affix-wrapper,
+.admin-page .ant-select-selector,
+.admin-page .ant-input-number-group-addon,
+.admin-page textarea {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.admin-page .ant-input::placeholder,
+.admin-page textarea::placeholder,
+.admin-page .ant-input-number-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.admin-page .ant-input-number-handler-wrap,
+.admin-page .ant-input-number-group-addon {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.admin-page .ant-btn {
+  white-space: normal !important;
+}
+
+.admin-page .ant-btn-primary,
+.admin-page .ant-btn-primary:hover,
+.admin-page .ant-btn-primary:focus {
+  color: #fff !important;
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 30px rgba(22, 119, 255, 0.35) !important;
+}
+
+.admin-page .ant-btn-default {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.admin-page .ant-table-wrapper,
+.admin-page .ant-table,
+.admin-page .ant-table-container,
+.admin-page .ant-table-content,
+.admin-page .ant-table-header,
+.admin-page .ant-table-body {
+  background: transparent !important;
+}
+
+.admin-page .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.admin-page .ant-table-tbody > tr > td {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-page .ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-page .ant-pagination .ant-pagination-item,
+.admin-page .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.admin-page .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.admin-page .ant-pagination .ant-pagination-item a,
+.admin-page .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.admin-page .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  color: #fff !important;
+}
+
+.admin-page .ant-pagination .ant-pagination-item-active {
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  border-color: transparent !important;
+}
+
+.admin-page .ant-alert {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(18px);
+}
+
+.admin-page .recharts-cartesian-grid line,
+.admin-page .recharts-reference-line line {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.admin-page .recharts-layer,
+.admin-page .recharts-text {
+  fill: rgba(255, 255, 255, 0.84);
+}
+
+.admin-page .recharts-default-tooltip {
+  background: rgba(8, 20, 38, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.26) !important;
+}
+
+.admin-page .ant-select-dropdown,
+.admin-page .ant-select-item {
+  color: #fff !important;
+}
+
+.travelpay-ai-button {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 30;
+}
+
+.ant-drawer-open ~ .travelpay-ai-button {
+  display: none;
+}
+
+.travelpay-admin-drawer-open .travelpay-ai-button,
+.travelpay-admin-drawer-open .ai-concierge-button {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Header logo fix after restoring global stylesheet import */
+.premium-site-header [aria-label="TravelPay home"] {
+  max-width: min(260px, 52vw) !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.premium-site-header [aria-label="TravelPay home"] > span:first-child {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.premium-site-header [aria-label="TravelPay home"] span span:first-child {
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+
+.premium-site-header [aria-label="TravelPay home"] span span:last-child {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+}
+
+@media (max-width: 992px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-main {
+    padding: 14px;
+  }
+
+  .admin-stats-grid,
+  .admin-chart-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .admin-hero,
+  .admin-stat-card,
+  .admin-form-card {
+    border-radius: 18px !important;
+    padding: 18px;
+  }
+
+  .admin-hero {
+    flex-direction: column;
   }
 }

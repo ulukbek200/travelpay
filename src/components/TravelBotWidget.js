@@ -169,7 +169,7 @@ const TravelBotWidget = () => {
     <>
       <motion.button
         type="button"
-        className="ai-concierge-button"
+        className="ai-concierge-button travelpay-ai-button"
         style={styles.floatingButton}
         onClick={() => setOpen(true)}
         whileHover={{ y: -4, boxShadow: '0 18px 42px rgba(252,163,17,0.28)' }}
@@ -187,12 +187,12 @@ const TravelBotWidget = () => {
       <Drawer
         open={open}
         onClose={() => setOpen(false)}
-        width={430}
+        size={430}
         placement="right"
         styles={{
           body: styles.drawerBody,
           header: styles.drawerHeader,
-          content: styles.drawerContent,
+          section: styles.drawerContent,
         }}
         title={
           <Space align="center">

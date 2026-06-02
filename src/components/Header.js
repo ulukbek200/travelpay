@@ -132,12 +132,13 @@ const Header = () => {
       open={mobileMenuOpen}
       onClose={() => setMobileMenuOpen(false)}
       placement="right"
-      width="min(86vw, 360px)"
+      size="min(86vw, 360px)"
       closeIcon={<CloseOutlined />}
       className="travelpay-mobile-drawer"
       styles={{
         body: styles.drawerBody,
         header: styles.drawerHeader,
+        section: styles.drawerSectionStyle,
       }}
       title={
         <span style={styles.drawerTitle}>
@@ -188,7 +189,7 @@ const Header = () => {
       </Button>
 
       {currentUser ? (
-        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={10} style={{ width: '100%' }}>
           <Button block icon={<UserOutlined />} onClick={() => handleNavigate('/profile')} style={styles.drawerPrimaryButton}>
             Профиль
           </Button>
@@ -197,7 +198,7 @@ const Header = () => {
           </Button>
         </Space>
       ) : (
-        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={10} style={{ width: '100%' }}>
           <Button block icon={<LoginOutlined />} onClick={() => handleNavigate('/login')} style={styles.drawerActionButton}>
             Войти
           </Button>
@@ -271,16 +272,6 @@ const Header = () => {
             </>
           )}
         </Space>
-
-        <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
-          <Button
-            className="mobile-language-action"
-            style={{ ...styles.mobileLanguageButton, ...(glassMode ? styles.mobileGlassButton : {}) }}
-          >
-            <GlobalOutlined />
-            {language}
-          </Button>
-        </Dropdown>
 
         <Button
           aria-label="Open menu"
@@ -394,24 +385,9 @@ const styles = {
     flexShrink: 0,
   },
   mobileGlassButton: {
-    color: '#fff',
-    background: 'rgba(29,53,87,0.72)',
-    borderColor: 'rgba(255,255,255,0.22)',
-  },
-  mobileLanguageButton: {
-    display: 'none',
-    height: 36,
-    minWidth: 62,
-    borderRadius: 999,
-    border: '1px solid rgba(59,130,246,0.20)',
-    color: '#ffffff',
-    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-    fontWeight: 850,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    padding: '0 10px',
-    flexShrink: 0,
+    color: BRAND_BLUE,
+    background: 'rgba(240,247,255,0.92)',
+    borderColor: 'rgba(148,163,184,0.28)',
   },
   dropdownButton: {
     height: 34,
@@ -426,9 +402,9 @@ const styles = {
     boxShadow: '0 10px 22px rgba(37,99,235,0.20)',
   },
   glassButton: {
-    background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
-    borderColor: 'rgba(252,163,17,0.34)',
-    color: '#f6fbff',
+    background: 'linear-gradient(135deg, rgba(241,247,255,0.94), rgba(224,239,255,0.9))',
+    borderColor: 'rgba(148,163,184,0.28)',
+    color: BRAND_BLUE,
   },
   themeButton: {
     width: 34,
@@ -467,9 +443,9 @@ const styles = {
     boxShadow: '0 10px 22px rgba(29,53,87,0.18)',
   },
   profileGlass: {
-    background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
-    borderColor: 'rgba(252,163,17,0.34)',
-    color: '#f6fbff',
+    background: 'linear-gradient(135deg, rgba(241,247,255,0.94), rgba(224,239,255,0.9))',
+    borderColor: 'rgba(148,163,184,0.28)',
+    color: BRAND_BLUE,
   },
   profileName: {
     maxWidth: 82,
@@ -489,9 +465,9 @@ const styles = {
     boxShadow: '0 8px 18px rgba(37,99,235,0.12)',
   },
   loginGlass: {
-    background: 'linear-gradient(135deg, rgba(29,53,87,0.82), rgba(36,72,111,0.72))',
-    borderColor: 'rgba(252,163,17,0.34)',
-    color: '#f6fbff',
+    background: 'linear-gradient(135deg, rgba(241,247,255,0.94), rgba(224,239,255,0.9))',
+    borderColor: 'rgba(148,163,184,0.28)',
+    color: BRAND_BLUE,
   },
   bookButton: {
     height: 34,
@@ -545,6 +521,9 @@ const styles = {
   drawerSection: {
     display: 'grid',
     gap: 10,
+  },
+  drawerSectionStyle: {
+    background: '#fff',
   },
   drawerSegment: {
     display: 'grid',

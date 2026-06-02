@@ -297,7 +297,7 @@ const SavingsPlanPage = () => {
   if (!user && !loading) {
     return (
       <main style={styles.page}>
-        <section style={styles.container}>
+        <section style={styles.container} className="travelpay-dashboard-container">
           <Card style={styles.panel}>
             <Title level={3}>Войдите в аккаунт, чтобы управлять накоплениями</Title>
           </Card>
@@ -328,12 +328,12 @@ const SavingsPlanPage = () => {
         </Card>
       </section>
 
-      <section style={styles.container}>
+      <section style={styles.container} className="travelpay-dashboard-container">
         <Row gutter={[20, 20]}>
           <Col xs={24} xl={8}>
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
               <Card title="Создание цели" style={styles.panel} loading={loading}>
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }} className="travelpay-adaptive-form">
                   <div>
                     <Text strong>Сумма накопления</Text>
                     <Select
@@ -374,7 +374,7 @@ const SavingsPlanPage = () => {
                   </div>
 
                   <Card size="small" style={styles.previewCard}>
-                    <Space direction="vertical" size={8}>
+                    <Space orientation="vertical" size={8}>
                       <Text>Ежемесячный платёж: <strong>{formatMoney(projectedPlan.monthlyPayment)}</strong></Text>
                       <Text>Дата окончания: <strong>{formatDate(projectedPlan.endDate)}</strong></Text>
                     </Space>
@@ -389,11 +389,11 @@ const SavingsPlanPage = () => {
 
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <Card title="Travel Streak и челлендж" style={styles.panel} loading={loading}>
-                <Space direction="vertical" size={14} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={14} style={{ width: '100%' }}>
                   <Alert
                     showIcon
                     type="success"
-                    message={`🔥 Вы пополняете баланс ${user?.travelStreakMonths || 0} месяца подряд`}
+                    title={`🔥 Вы пополняете баланс ${user?.travelStreakMonths || 0} месяца подряд`}
                   />
                   <Card size="small" style={styles.challengeCard}>
                     <Text strong>{primaryChallenge?.title}</Text>
@@ -407,7 +407,7 @@ const SavingsPlanPage = () => {
 
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <Card title="Колесо бонусов" style={styles.panel} loading={loading}>
-                <Space direction="vertical" size={14} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={14} style={{ width: '100%' }}>
                   <Paragraph style={{ margin: 0 }}>
                     Раз в месяц пользователь получает случайный бонус: деньги на баланс или скидку на тур.
                   </Paragraph>
@@ -423,7 +423,7 @@ const SavingsPlanPage = () => {
           </Col>
 
           <Col xs={24} xl={16}>
-            <Space direction="vertical" size={20} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={20} style={{ width: '100%' }}>
               <Card style={styles.panel} loading={loading}>
                 <Row gutter={[18, 18]}>
                   <Col xs={24} sm={12} lg={8}><Statistic title="Цель" value={savingsMetrics.goalAmount} suffix="сом" prefix={<StarOutlined />} /></Col>
@@ -457,18 +457,18 @@ const SavingsPlanPage = () => {
               </Card>
 
               <Card style={styles.panel} title="Пополнить баланс" loading={loading}>
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                   <Alert
                     type="info"
                     showIcon
-                    message={nextPaymentDate ? `Следующий рекомендуемый платёж до ${formatDate(nextPaymentDate)}` : 'Создайте план накопления, чтобы увидеть следующий платёж.'}
+                    title={nextPaymentDate ? `Следующий рекомендуемый платёж до ${formatDate(nextPaymentDate)}` : 'Создайте план накопления, чтобы увидеть следующий платёж.'}
                   />
                   <div style={styles.topUpRow}>
                     <InputNumber
                       size="large"
                       min={100}
                       step={500}
-                      style={{ flex: 1, minWidth: 240 }}
+                      style={{ flex: 1, minWidth: 0, width: '100%' }}
                       value={topUpAmount}
                       onChange={setTopUpAmount}
                       placeholder="Введите сумму пополнения"
@@ -481,7 +481,7 @@ const SavingsPlanPage = () => {
                     <Alert
                       type="warning"
                       showIcon
-                      message="Есть риск отставания от плана"
+                      title="Есть риск отставания от плана"
                       description={`Для достижения цели желательно вносить не менее ${formatMoney(savingsMetrics.monthlyPayment)} в месяц.`}
                     />
                   )}
@@ -512,10 +512,10 @@ const SavingsPlanPage = () => {
                 </Col>
                 <Col xs={24} lg={10}>
                   <Card title="Уведомления по плану" style={styles.panel} loading={loading}>
-                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                       {(user?.notifications || []).slice(0, 5).map((item) => (
                         <Card key={item.id} size="small" style={styles.notificationCard}>
-                          <Space direction="vertical" size={4}>
+                          <Space orientation="vertical" size={4}>
                             <Text strong><NotificationOutlined /> {item.title}</Text>
                             <Text type="secondary">{item.description}</Text>
                             <Text type="secondary">{formatDate(item.date)}</Text>
@@ -528,18 +528,20 @@ const SavingsPlanPage = () => {
               </Row>
 
               <Card title="История пополнений" style={styles.panel} loading={loading}>
-                <Table
-                  rowKey="id"
-                  dataSource={user?.topUps || []}
-                  columns={topUpColumns}
-                  pagination={{ pageSize: 5 }}
-                  scroll={{ x: 520 }}
-                />
+                <div className="travelpay-table-shell">
+                  <Table
+                    rowKey="id"
+                    dataSource={user?.topUps || []}
+                    columns={topUpColumns}
+                    pagination={{ pageSize: 5 }}
+                    scroll={{ x: 520 }}
+                  />
+                </div>
               </Card>
 
               {savingsMetrics.isReadyToBuy && (
                 <Card style={styles.successCard}>
-                  <Space direction="vertical" size={12}>
+                  <Space orientation="vertical" size={12}>
                     <Tag color="success" icon={<TrophyOutlined />}>Цель достигнута</Tag>
                     <Title level={3} style={{ color: BRAND_BLUE, margin: 0 }}>
                       Поздравляем! Вы накопили нужную сумму. Теперь можете выбрать любой тур.
@@ -585,12 +587,18 @@ const styles = {
     color: '#fff',
     margin: '12px 0',
     maxWidth: 760,
+    fontSize: 'clamp(24px, 4vw, 40px)',
+    lineHeight: 1.08,
+    wordBreak: 'normal',
+    whiteSpace: 'normal',
   },
   heroText: {
     color: '#dce8f7',
     maxWidth: 760,
     margin: 0,
     fontSize: 16,
+    wordBreak: 'normal',
+    whiteSpace: 'normal',
   },
   heroMetricCard: {
     minWidth: 290,
@@ -611,9 +619,10 @@ const styles = {
     color: '#e5edf9',
   },
   container: {
-    maxWidth: 1280,
+    width: '100%',
+    maxWidth: 1400,
     margin: '0 auto',
-    padding: '28px 20px 0',
+    padding: '20px',
   },
   panel: {
     borderRadius: 24,

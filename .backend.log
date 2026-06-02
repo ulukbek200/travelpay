@@ -1,0 +1,5 @@
+
+> travelpay-backend@1.0.0 start
+> node server.js
+
+TravelPay API is running on http://localhost:10000

@@ -217,14 +217,14 @@ const TourBookingPage = () => {
                   showIcon
                   type="info"
                   style={styles.alert}
-                  message="Бронирование пока не оплачивается онлайн — менеджер свяжется с вами для подтверждения"
+                  title="Бронирование пока не оплачивается онлайн — менеджер свяжется с вами для подтверждения"
                 />
 
                 <Alert
                   showIcon
                   type={canPayWithSavings ? 'success' : 'warning'}
                   style={styles.alert}
-                  message={canPayWithSavings
+                  title={canPayWithSavings
                     ? `На накоплениях доступно ${formatPrice(savingsAmount)} — этого хватает для оплаты тура.`
                     : `На накоплениях доступно ${formatPrice(savingsAmount)}. Недостаточно средств`}
                 />
@@ -305,7 +305,7 @@ const TourBookingPage = () => {
                   </Row>
 
                   <div style={styles.summaryCard}>
-                    <Space direction="vertical" size={4}>
+                    <Space orientation="vertical" size={4}>
                       <Text style={styles.summaryLabel}>Итоговая стоимость</Text>
                       <Title level={2} style={styles.total}>{formatPrice(total)}</Title>
                       <Text style={styles.summaryNote}>{people} × {formatPrice(pricePerPerson)}</Text>

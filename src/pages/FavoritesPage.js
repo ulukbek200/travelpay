@@ -119,7 +119,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
                     </Button>,
                   ]}
                 >
-                  <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                     <Tag color="gold" style={styles.tag}>
                       {tour.location || 'Кыргызстан'}
                     </Tag>
@@ -151,7 +151,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
         ]}
       >
         {selectedTour && (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <img src={selectedTour.image} alt={selectedTour.title} style={styles.modalImage} />
             <Space wrap>
               <Tag icon={<EnvironmentOutlined />} color="blue">{selectedTour.location || 'Кыргызстан'}</Tag>

@@ -6,7 +6,6 @@ import {
   Card,
   Carousel,
   Col,
-  List,
   Rate,
   Row,
   Skeleton,
@@ -191,19 +190,19 @@ const TourDetailPage = () => {
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Card style={styles.panel}>
                 <Tag style={styles.softTag}>Отзывы туристов</Tag>
-                <List
-                  itemLayout="horizontal"
-                  dataSource={reviews}
-                  renderItem={([name, text, rating]) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<Avatar style={{ background: BRAND_BLUE }} icon={<UserOutlined />} />}
-                        title={<Space><Text strong>{name}</Text><Rate disabled allowHalf value={rating} style={{ color: BRAND_GOLD, fontSize: 13 }} /></Space>}
-                        description={<span style={styles.text}>{text}</span>}
-                      />
-                    </List.Item>
-                  )}
-                />
+                <Space orientation="vertical" size={16} style={{ width: '100%', marginTop: 20 }}>
+                  {reviews.map(([name, text, rating]) => (
+                    <Card key={name} size="small" style={styles.reviewCard}>
+                      <Space align="start">
+                        <Avatar style={{ background: BRAND_BLUE }} icon={<UserOutlined />} />
+                        <div>
+                          <Space><Text strong>{name}</Text><Rate disabled allowHalf value={rating} style={{ color: BRAND_GOLD, fontSize: 13 }} /></Space>
+                          <div><span style={styles.text}>{text}</span></div>
+                        </div>
+                      </Space>
+                    </Card>
+                  ))}
+                </Space>
               </Card>
             </motion.div>
           </Col>
@@ -212,17 +211,14 @@ const TourDetailPage = () => {
             <motion.aside style={styles.bookingCard} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}>
               <Card style={styles.panel}>
                 <Tag style={styles.softTag}><SafetyCertificateOutlined /> Включено</Tag>
-                <List
-                  dataSource={includes}
-                  renderItem={(item) => (
-                    <List.Item style={{ border: 'none', paddingLeft: 0, paddingRight: 0 }}>
-                      <Space align="start">
-                        <CheckCircleOutlined style={{ color: BRAND_GOLD, marginTop: 4 }} />
-                        <Text>{item}</Text>
-                      </Space>
-                    </List.Item>
-                  )}
-                />
+                <Space orientation="vertical" size={12} style={{ width: '100%', marginTop: 20 }}>
+                  {includes.map((item) => (
+                    <div key={item} style={styles.includeRow}>
+                      <CheckCircleOutlined style={{ color: BRAND_GOLD, marginTop: 4 }} />
+                      <Text>{item}</Text>
+                    </div>
+                  ))}
+                </Space>
               </Card>
 
               <Card style={styles.panel}>
@@ -352,6 +348,15 @@ const styles = {
   timelineTitle: {
     color: BRAND_BLUE,
     marginBottom: 6,
+  },
+  reviewCard: {
+    borderRadius: 18,
+    background: 'rgba(29,53,87,0.04)',
+  },
+  includeRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 10,
   },
   gallery: {
     marginTop: 22,
