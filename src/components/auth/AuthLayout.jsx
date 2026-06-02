@@ -153,6 +153,107 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     border-radius: 12px !important;
   }
 
+  body[data-theme="dark"] .auth-overlay {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(22,119,255,0.22), transparent 32%),
+      radial-gradient(circle at 80% 10%, rgba(252,163,17,0.12), transparent 28%),
+      linear-gradient(180deg, rgba(4, 12, 24, 0.74), rgba(4, 12, 24, 0.9));
+    backdrop-filter: blur(6px);
+  }
+
+  body[data-theme="dark"] .auth-card {
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    background: rgba(10, 18, 32, 0.82) !important;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.42);
+  }
+
+  body[data-theme="dark"] .auth-logo-tag {
+    background: linear-gradient(135deg, #1677ff, #4096ff);
+    color: #fff;
+  }
+
+  body[data-theme="dark"] .auth-eyebrow {
+    color: #93c5fd;
+  }
+
+  body[data-theme="dark"] .auth-card h2,
+  body[data-theme="dark"] .auth-card .ant-typography,
+  body[data-theme="dark"] .auth-card .ant-form-item-label > label,
+  body[data-theme="dark"] .auth-card .ant-checkbox-wrapper,
+  body[data-theme="dark"] .auth-card .ant-divider-inner-text,
+  body[data-theme="dark"] .auth-card .anticon {
+    color: #f8fafc !important;
+  }
+
+  body[data-theme="dark"] .auth-card .ant-typography-secondary,
+  body[data-theme="dark"] .auth-card .ant-form-item-explain,
+  body[data-theme="dark"] .auth-card .ant-divider {
+    color: rgba(226, 232, 240, 0.72) !important;
+  }
+
+  body[data-theme="dark"] .auth-card .ant-divider::before,
+  body[data-theme="dark"] .auth-card .ant-divider::after {
+    border-color: rgba(255,255,255,0.12) !important;
+  }
+
+  body[data-theme="dark"] .auth-form .ant-input-affix-wrapper,
+  body[data-theme="dark"] .auth-form .ant-input,
+  body[data-theme="dark"] .auth-form .ant-input-password,
+  body[data-theme="dark"] .auth-form .ant-input-outlined,
+  body[data-theme="dark"] .auth-socials .ant-btn {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.14) !important;
+    color: #f8fafc !important;
+    box-shadow: none !important;
+  }
+
+  body[data-theme="dark"] .auth-form .ant-input-affix-wrapper input,
+  body[data-theme="dark"] .auth-form .ant-input,
+  body[data-theme="dark"] .auth-form input::placeholder {
+    color: #f8fafc !important;
+  }
+
+  body[data-theme="dark"] .auth-form .ant-input::placeholder,
+  body[data-theme="dark"] .auth-form input::placeholder {
+    color: rgba(226, 232, 240, 0.48) !important;
+  }
+
+  body[data-theme="dark"] .auth-form .ant-input-affix-wrapper .ant-input-prefix,
+  body[data-theme="dark"] .auth-form .ant-input-affix-wrapper .ant-input-password-icon,
+  body[data-theme="dark"] .auth-form .ant-input-affix-wrapper .anticon {
+    color: rgba(191, 219, 254, 0.88) !important;
+  }
+
+  body[data-theme="dark"] .auth-card .ant-checkbox .ant-checkbox-inner {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.18);
+  }
+
+  body[data-theme="dark"] .auth-card .ant-checkbox-checked .ant-checkbox-inner {
+    background: #1677ff;
+    border-color: #1677ff;
+  }
+
+  body[data-theme="dark"] .auth-card .ant-btn-link,
+  body[data-theme="dark"] .auth-inline-link {
+    color: #93c5fd !important;
+  }
+
+  body[data-theme="dark"] .auth-card .ant-btn-link:hover,
+  body[data-theme="dark"] .auth-inline-link:hover {
+    color: #bfdbfe !important;
+  }
+
+  body[data-theme="dark"] .auth-footer .ant-typography-secondary {
+    color: rgba(226, 232, 240, 0.7) !important;
+  }
+
+  body[data-theme="dark"] .auth-back {
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(8, 19, 33, 0.72);
+    color: #f8fafc;
+  }
+
   @media (max-width: 520px) {
     .auth-page {
       place-items: start center;
