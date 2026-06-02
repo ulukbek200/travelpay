@@ -221,9 +221,9 @@ const Header = () => {
     >
       <div style={styles.inner}>
         <button type="button" onClick={() => navigate('/')} style={styles.logoButton} aria-label="TravelPay home">
-          <span style={styles.brandStack}>
-            <span style={{ ...styles.logoText, color: menuTextColor }}>TravelPay</span>
-            <span style={{ ...styles.logoSub, color: glassMode || theme === 'dark' ? 'rgba(246,251,255,0.68)' : 'rgba(29,53,87,0.58)' }}>
+          <span className="brand" style={styles.brandStack}>
+            <span className="brand-title" style={{ ...styles.logoText, color: menuTextColor }}>TravelPay</span>
+            <span className="brand-subtitle" style={{ ...styles.logoSub, color: glassMode || theme === 'dark' ? 'rgba(246,251,255,0.68)' : 'rgba(29,53,87,0.58)' }}>
               by Barsbek Travel
             </span>
           </span>

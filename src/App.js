@@ -79,6 +79,7 @@ function AppContent({ favorites, setFavorites }) {
         />
 
         <Route path="/booking" element={<TourBookingPage />} />
+        <Route path="/tour-booking" element={<TourBookingPage />} />
 
         <Route
           path="/admin"

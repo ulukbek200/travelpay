@@ -251,6 +251,17 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
   };
 
   const openTour = (tour) => navigate(`/tours/${tour.id}`, { state: { tour, tours } });
+  const openBooking = (tour) => {
+    const currentUser = readCurrentUser();
+
+    if (!currentUser?.id || !currentUser?.isLoggedIn) {
+      message.warning('Войдите в аккаунт, чтобы забронировать тур');
+      navigate('/login', { state: { redirectTo: '/tour-booking', tour } });
+      return;
+    }
+
+    navigate('/tour-booking', { state: { tour } });
+  };
 
   return (
     <main className="tours-page" style={styles.page}>
@@ -361,24 +372,27 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                     </div>
                     <div style={styles.cardBody}>
                       <Space size={8} wrap>
-                        <Tag style={styles.countryTag}><EnvironmentOutlined /> {tour.city}</Tag>
-                        <Tag style={styles.durationTag}><CalendarOutlined /> {tour.duration}</Tag>
+                        <Tag className="tour-card-meta" style={styles.countryTag}><EnvironmentOutlined /> {tour.city}</Tag>
+                        <Tag className="tour-card-meta" style={styles.durationTag}><CalendarOutlined /> {tour.duration}</Tag>
                       </Space>
-                      <Title level={3} style={styles.cardTitle}>{tour.title}</Title>
-                      <Paragraph ellipsis={{ rows: 2 }} style={styles.description}>{tour.description}</Paragraph>
+                      <Title level={3} className="tour-card-title" style={styles.cardTitle}>{tour.title}</Title>
+                      <Paragraph ellipsis={{ rows: 2 }} className="tour-card-text" style={styles.description}>{tour.description}</Paragraph>
                       <div style={styles.cardFooter}>
                         <div>
                           <Text style={styles.priceLabel}>от</Text>
-                          <div style={styles.price}>{formatPrice(tour.price)}</div>
+                          <div className="tour-price" style={styles.price}>{formatPrice(tour.price)}</div>
                         </div>
-                        <Space>
+                        <div className="tour-card-actions">
                           <Button shape="circle" icon={<HeartOutlined />} onClick={(event) => { event.stopPropagation(); handleAddToFavorites(tour); }} />
+                          <Button style={styles.bookButton} onClick={(event) => { event.stopPropagation(); openBooking(tour); }}>
+                            Забронировать
+                          </Button>
                           <Button type="primary" style={styles.detailsButton} onClick={(event) => { event.stopPropagation(); openTour(tour); }}>
                             Подробнее
                           </Button>
-                        </Space>
+                        </div>
                       </div>
-                      <div style={styles.ratingLine}>
+                      <div className="tour-card-meta" style={styles.ratingLine}>
                         <Rate disabled allowHalf value={tour.rating} style={{ color: BRAND_GOLD, fontSize: 14 }} />
                         <Text type="secondary">{tour.rating} · проверенный маршрут</Text>
                       </div>
@@ -651,12 +665,19 @@ const styles = {
     fontWeight: 800,
   },
   price: {
-    color: BRAND_BLUE,
+    color: BRAND_GOLD,
     fontSize: 22,
     fontWeight: 900,
   },
+  bookButton: {
+    borderRadius: 14,
+    borderColor: 'rgba(29,53,87,0.12)',
+    color: BRAND_BLUE,
+    background: 'rgba(255,255,255,0.9)',
+    fontWeight: 850,
+  },
   detailsButton: {
-    borderRadius: 999,
+    borderRadius: 14,
     background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
     borderColor: BRAND_GOLD,
     color: BRAND_BLUE,

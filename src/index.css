@@ -171,6 +171,28 @@ html, body {
   font-family: Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
 }
 
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.brand-title {
+  font-size: clamp(20px, 4vw, 30px);
+  font-weight: 800;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.brand-subtitle {
+  margin-top: 3px;
+  font-size: clamp(10px, 2.6vw, 13px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
 .premium-header-menu.ant-menu-horizontal {
   line-height: 42px;
   padding: 4px;
@@ -237,6 +259,73 @@ body[data-theme="dark"] .premium-header-menu.ant-menu-horizontal > .ant-menu-ite
 body[data-theme="dark"] .premium-header-menu.ant-menu-horizontal > .ant-menu-item-selected {
   color: #ffd27a !important;
   background: rgba(252, 163, 17, 0.18);
+}
+
+.tour-card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.tour-card-actions .ant-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.tour-card-actions .ant-btn-icon-only {
+  flex: 0 0 42px;
+  width: 42px;
+  min-width: 42px;
+  padding-inline: 0;
+}
+
+.tour-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fca311;
+}
+
+body[data-theme="dark"] .tour-price,
+.dark .tour-price {
+  color: #ffd166 !important;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.35);
+}
+
+body[data-theme="dark"] .tour-card,
+.dark .tour-card {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+body[data-theme="dark"] .tour-card-title,
+.dark .tour-card-title {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tour-card-text,
+.dark .tour-card-text {
+  color: rgba(255,255,255,0.75) !important;
+}
+
+body[data-theme="dark"] .tour-card-meta,
+body[data-theme="dark"] .tour-card-meta *,
+.dark .tour-card-meta,
+.dark .tour-card-meta * {
+  color: rgba(255,255,255,0.68) !important;
+}
+
+body[data-theme="dark"] .tour-card .ant-rate,
+body[data-theme="dark"] .tour-card .ant-typography,
+body[data-theme="dark"] .tour-card .ant-tag,
+body[data-theme="dark"] .tour-card .ant-btn {
+  color: #f8fafc;
+}
+
+body[data-theme="dark"] .tour-card .ant-btn-default {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.14) !important;
 }
 
 .premium-site-header .ant-btn:hover,
@@ -4647,5 +4736,34 @@ body.travelpay-admin-drawer-open .ai-concierge-button {
 
   .admin-hero {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand {
+    max-width: 160px;
+  }
+
+  .brand-title {
+    font-size: 20px;
+  }
+
+  .brand-subtitle {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .tour-card-actions {
+    flex-direction: column;
+  }
+
+  .tour-card-actions .ant-btn {
+    width: 100%;
+  }
+
+  .tour-card-actions .ant-btn-icon-only {
+    width: 100%;
+    min-width: 100%;
   }
 }

@@ -6,7 +6,7 @@ import {
   LockOutlined,
   MailOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
 import { emailRules, loginPasswordRules } from '../components/auth/authValidation';
@@ -17,6 +17,7 @@ const { Text } = Typography;
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (values) => {
@@ -29,6 +30,11 @@ const LoginPage = () => {
       });
       const user = syncCurrentUser({ ...response.data, isLoggedIn: true });
       message.success('Добро пожаловать в TravelPay');
+      if (location.state?.redirectTo && location.state?.tour) {
+        navigate(location.state.redirectTo, { state: { tour: location.state.tour }, replace: true });
+        return;
+      }
+
       navigate(user.role === 'admin' ? '/admin/tours' : '/profile');
     } catch (err) {
       message.error(getApiErrorMessage(
