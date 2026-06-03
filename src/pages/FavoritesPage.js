@@ -57,24 +57,24 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
   };
 
   return (
-    <main style={styles.page}>
-      <section style={styles.hero}>
+    <main className="favorites-page" style={styles.page}>
+      <section className="favorites-hero" style={styles.hero}>
         <div>
-          <Text strong style={styles.eyebrow}>TravelPay Favorites</Text>
-          <Title level={1} style={styles.title}>Избранные туры</Title>
-          <Paragraph style={styles.subtitle}>
+          <Text strong className="favorites-eyebrow" style={styles.eyebrow}>TravelPay Favorites</Text>
+          <Title level={1} className="favorites-title" style={styles.title}>Избранные туры</Title>
+          <Paragraph className="favorites-subtitle" style={styles.subtitle}>
             Сохраняйте лучшие варианты, сравнивайте детали и быстро переходите к бронированию.
           </Paragraph>
         </div>
-        <div style={styles.heroStat}>
-          <span style={styles.heroNumber}>{favorites.length}</span>
-          <span style={styles.heroLabel}>сохранено</span>
+        <div className="favorites-hero-stat" style={styles.heroStat}>
+          <span className="favorites-hero-number" style={styles.heroNumber}>{favorites.length}</span>
+          <span className="favorites-hero-label" style={styles.heroLabel}>сохранено</span>
         </div>
       </section>
 
-      <section style={styles.content}>
+      <section className="favorites-content" style={styles.content}>
         <div style={styles.toolbar}>
-          <Title level={3} style={{ margin: 0, color: BRAND_BLUE }}>Моя подборка</Title>
+          <Title level={3} className="favorites-section-title" style={{ margin: 0, color: BRAND_BLUE }}>Моя подборка</Title>
           {favorites.length > 0 && (
             <Button danger icon={<DeleteOutlined />} onClick={handleClearAll}>
               Очистить все
@@ -83,7 +83,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
         </div>
 
         {favorites.length === 0 ? (
-          <Card style={styles.emptyCard}>
+          <Card className="favorites-empty-card" style={styles.emptyCard}>
             <Empty
               description="Вы пока не добавили туры в избранное"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -104,6 +104,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
                 whileHover={{ y: -6 }}
               >
                 <Card
+                  className="favorite-tour-card"
                   hoverable
                   style={styles.card}
                   cover={<img src={tour.image} alt={tour.title} style={styles.image} />}
@@ -120,14 +121,14 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
                   ]}
                 >
                   <Space orientation="vertical" size={10} style={{ width: '100%' }}>
-                    <Tag color="gold" style={styles.tag}>
+                    <Tag className="favorite-tour-tag" color="gold" style={styles.tag}>
                       {tour.location || 'Кыргызстан'}
                     </Tag>
-                    <Title level={4} style={styles.cardTitle}>{tour.title}</Title>
-                    <Paragraph ellipsis={{ rows: 2 }} style={styles.description}>{tour.description}</Paragraph>
-                    <div style={styles.metaRow}>
+                    <Title level={4} className="favorite-tour-title" style={styles.cardTitle}>{tour.title}</Title>
+                    <Paragraph ellipsis={{ rows: 2 }} className="favorite-tour-description" style={styles.description}>{tour.description}</Paragraph>
+                    <div className="favorite-tour-meta" style={styles.metaRow}>
                       <span><CalendarOutlined /> {tour.duration || 'Срок уточняется'}</span>
-                      <strong>{formatPrice(tour.price)}</strong>
+                      <strong className="favorite-tour-price">{formatPrice(tour.price)}</strong>
                     </div>
                   </Space>
                 </Card>
@@ -138,6 +139,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
       </section>
 
       <Modal
+        className="favorite-tour-modal"
         open={!!selectedTour}
         title={selectedTour?.title}
         onCancel={() => setSelectedTour(null)}
@@ -158,7 +160,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
               <Tag icon={<CalendarOutlined />} color="gold">{selectedTour.duration || 'Срок уточняется'}</Tag>
               <Tag color="green">{formatPrice(selectedTour.price)}</Tag>
             </Space>
-            <Paragraph style={{ fontSize: 15, lineHeight: 1.7 }}>{selectedTour.description}</Paragraph>
+            <Paragraph className="favorite-tour-modal-text" style={{ fontSize: 15, lineHeight: 1.7 }}>{selectedTour.description}</Paragraph>
           </Space>
         )}
       </Modal>

@@ -328,6 +328,218 @@ body[data-theme="dark"] .tour-card .ant-btn-default {
   border-color: rgba(255,255,255,0.14) !important;
 }
 
+body[data-theme="dark"] .favorites-page {
+  background: linear-gradient(180deg, #07111f 0%, #0f172a 100%) !important;
+  color: #f8fafc !important;
+}
+
+body[data-theme="dark"] .favorites-content {
+  color: #f8fafc !important;
+}
+
+body[data-theme="dark"] .favorites-hero {
+  background: linear-gradient(135deg, #07111f 0%, #172554 62%, #4a3412 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+body[data-theme="dark"] .favorites-page .ant-typography,
+body[data-theme="dark"] .favorites-page .ant-empty-description,
+body[data-theme="dark"] .favorites-page .favorites-section-title {
+  color: #f8fafc !important;
+}
+
+body[data-theme="dark"] .favorites-page .favorites-subtitle,
+body[data-theme="dark"] .favorites-page .ant-typography-secondary {
+  color: rgba(226, 232, 240, 0.78) !important;
+}
+
+body[data-theme="dark"] .favorites-page .favorites-eyebrow,
+body[data-theme="dark"] .favorites-page .favorites-hero-number,
+body[data-theme="dark"] .favorites-page .favorite-tour-price {
+  color: #ffd166 !important;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.3);
+}
+
+body[data-theme="dark"] .favorites-page .favorites-hero-label {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .favorites-page .favorites-hero-stat {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+body[data-theme="dark"] .favorites-empty-card,
+body[data-theme="dark"] .favorite-tour-card {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35) !important;
+}
+
+body[data-theme="dark"] .favorite-tour-card .ant-card-body,
+body[data-theme="dark"] .favorites-empty-card .ant-card-body {
+  background: transparent !important;
+}
+
+body[data-theme="dark"] .favorite-tour-card .ant-card-actions {
+  background: rgba(2, 6, 23, 0.72) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body[data-theme="dark"] .favorite-tour-card .ant-card-actions > li {
+  border-inline-end-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body[data-theme="dark"] .favorite-tour-card .ant-card-actions .ant-btn-link {
+  color: #bfdbfe !important;
+  font-weight: 800;
+}
+
+body[data-theme="dark"] .favorite-tour-card .ant-card-actions .ant-btn-link:hover {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .favorite-tour-card .ant-card-actions .ant-btn-dangerous {
+  color: #fca5a5 !important;
+}
+
+body[data-theme="dark"] .favorite-tour-title {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .favorite-tour-description {
+  color: rgba(226, 232, 240, 0.78) !important;
+}
+
+body[data-theme="dark"] .favorite-tour-meta,
+body[data-theme="dark"] .favorite-tour-meta span {
+  color: rgba(226, 232, 240, 0.72) !important;
+}
+
+body[data-theme="dark"] .favorite-tour-tag {
+  color: #ffd166 !important;
+  background: rgba(255, 209, 102, 0.12) !important;
+  border-color: rgba(255, 209, 102, 0.32) !important;
+}
+
+body[data-theme="dark"] .favorites-page .ant-btn-primary {
+  background: linear-gradient(135deg, #fca311, #ffd166) !important;
+  border-color: #fca311 !important;
+  color: #0f172a !important;
+  font-weight: 900;
+}
+
+body[data-theme="dark"] .favorite-tour-modal .ant-modal-content,
+body[data-theme="dark"] .favorite-tour-modal .ant-modal-header {
+  background: rgba(15, 23, 42, 0.98) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body[data-theme="dark"] .favorite-tour-modal .ant-modal-title,
+body[data-theme="dark"] .favorite-tour-modal .ant-modal-close,
+body[data-theme="dark"] .favorite-tour-modal .ant-typography,
+body[data-theme="dark"] .favorite-tour-modal-text {
+  color: #f8fafc !important;
+}
+
+body[data-theme="dark"] .favorite-tour-modal .ant-modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .favorites-page,
+[data-theme="dark"] .favorites-page {
+  background: linear-gradient(180deg, #07111f 0%, #0f172a 100%) !important;
+  color: #f8fafc !important;
+}
+
+.dark .favorites-page .ant-typography,
+.dark .favorites-page .ant-empty-description,
+.dark .favorites-section-title,
+[data-theme="dark"] .favorites-page .ant-typography,
+[data-theme="dark"] .favorites-page .ant-empty-description,
+[data-theme="dark"] .favorites-section-title {
+  color: #f8fafc !important;
+}
+
+.dark .favorite-tour-card,
+.dark .favorites-empty-card,
+[data-theme="dark"] .favorite-tour-card,
+[data-theme="dark"] .favorites-empty-card {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35) !important;
+}
+
+.dark .favorite-tour-title,
+[data-theme="dark"] .favorite-tour-title {
+  color: #ffffff !important;
+}
+
+.dark .favorite-tour-description,
+[data-theme="dark"] .favorite-tour-description {
+  color: rgba(226, 232, 240, 0.8) !important;
+}
+
+.dark .favorite-tour-meta,
+.dark .favorite-tour-meta span,
+[data-theme="dark"] .favorite-tour-meta,
+[data-theme="dark"] .favorite-tour-meta span {
+  color: rgba(226, 232, 240, 0.74) !important;
+}
+
+.dark .favorite-tour-price,
+[data-theme="dark"] .favorite-tour-price {
+  color: #ffd166 !important;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.3);
+}
+
+.dark .favorite-tour-card .ant-card-body,
+.dark .favorites-empty-card .ant-card-body,
+[data-theme="dark"] .favorite-tour-card .ant-card-body,
+[data-theme="dark"] .favorites-empty-card .ant-card-body {
+  background: transparent !important;
+}
+
+.dark .favorite-tour-card .ant-card-actions,
+[data-theme="dark"] .favorite-tour-card .ant-card-actions {
+  background: rgba(2, 6, 23, 0.72) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.dark .favorite-tour-card .ant-card-actions .ant-btn-link,
+[data-theme="dark"] .favorite-tour-card .ant-card-actions .ant-btn-link {
+  color: #bfdbfe !important;
+  font-weight: 800;
+}
+
+.dark .favorite-tour-card .ant-card-actions .ant-btn-dangerous,
+[data-theme="dark"] .favorite-tour-card .ant-card-actions .ant-btn-dangerous {
+  color: #fca5a5 !important;
+}
+
+.dark .favorite-tour-tag,
+[data-theme="dark"] .favorite-tour-tag {
+  color: #ffd166 !important;
+  background: rgba(252, 163, 17, 0.16) !important;
+  border-color: rgba(255, 209, 102, 0.32) !important;
+}
+
+.dark .favorite-tour-modal .ant-modal-content,
+.dark .favorite-tour-modal .ant-modal-header,
+[data-theme="dark"] .favorite-tour-modal .ant-modal-content,
+[data-theme="dark"] .favorite-tour-modal .ant-modal-header {
+  background: rgba(15, 23, 42, 0.98) !important;
+}
+
+.dark .favorite-tour-modal .ant-modal-title,
+.dark .favorite-tour-modal .ant-modal-close,
+.dark .favorite-tour-modal .ant-typography,
+[data-theme="dark"] .favorite-tour-modal .ant-modal-title,
+[data-theme="dark"] .favorite-tour-modal .ant-modal-close,
+[data-theme="dark"] .favorite-tour-modal .ant-typography {
+  color: #f8fafc !important;
+}
+
 .premium-site-header .ant-btn:hover,
 .premium-site-header .ant-btn:focus,
 .premium-site-header .ant-btn:focus-visible {
