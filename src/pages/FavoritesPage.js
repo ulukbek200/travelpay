@@ -141,24 +141,24 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
       <Modal
         className="favorite-tour-modal"
         open={!!selectedTour}
-        title={selectedTour?.title}
+        title={<span className="favorite-tour-modal-title">{selectedTour?.title}</span>}
         onCancel={() => setSelectedTour(null)}
         footer={[
-          <Button key="remove" danger onClick={() => handleRemove(selectedTour)}>
+          <Button key="remove" className="favorite-tour-modal-remove" danger onClick={() => handleRemove(selectedTour)}>
             Удалить
           </Button>,
-          <Button key="book" type="primary" style={styles.primaryButton} onClick={() => navigate('/booking', { state: { tour: selectedTour } })}>
+          <Button key="book" className="favorite-tour-modal-book" type="primary" style={styles.primaryButton} onClick={() => navigate('/booking', { state: { tour: selectedTour } })}>
             Забронировать
           </Button>,
         ]}
       >
         {selectedTour && (
           <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-            <img src={selectedTour.image} alt={selectedTour.title} style={styles.modalImage} />
-            <Space wrap>
-              <Tag icon={<EnvironmentOutlined />} color="blue">{selectedTour.location || 'Кыргызстан'}</Tag>
-              <Tag icon={<CalendarOutlined />} color="gold">{selectedTour.duration || 'Срок уточняется'}</Tag>
-              <Tag color="green">{formatPrice(selectedTour.price)}</Tag>
+            <img className="favorite-tour-modal-image" src={selectedTour.image} alt={selectedTour.title} style={styles.modalImage} />
+            <Space className="favorite-tour-modal-tags" wrap>
+              <Tag className="favorite-tour-modal-tag" icon={<EnvironmentOutlined />} color="blue">{selectedTour.location || 'Кыргызстан'}</Tag>
+              <Tag className="favorite-tour-modal-tag" icon={<CalendarOutlined />} color="gold">{selectedTour.duration || 'Срок уточняется'}</Tag>
+              <Tag className="favorite-tour-modal-tag favorite-tour-modal-price" color="green">{formatPrice(selectedTour.price)}</Tag>
             </Space>
             <Paragraph className="favorite-tour-modal-text" style={{ fontSize: 15, lineHeight: 1.7 }}>{selectedTour.description}</Paragraph>
           </Space>
