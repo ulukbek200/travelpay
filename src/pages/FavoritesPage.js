@@ -140,6 +140,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
 
       <Modal
         className="favorite-tour-modal"
+        rootClassName="favorite-tour-modal-root"
         open={!!selectedTour}
         title={<span className="favorite-tour-modal-title">{selectedTour?.title}</span>}
         onCancel={() => setSelectedTour(null)}

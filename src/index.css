@@ -528,6 +528,119 @@ body[data-theme="dark"] .favorite-tour-modal-book {
   box-shadow: 0 12px 26px rgba(252, 163, 17, 0.24);
 }
 
+.favorite-tour-modal-root .ant-modal-content,
+.favorite-tour-modal .ant-modal-content {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(22, 119, 255, 0.22), transparent 34%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58) !important;
+  color: #f8fafc !important;
+  overflow: hidden;
+}
+
+.favorite-tour-modal-root .ant-modal-header,
+.favorite-tour-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 14px !important;
+}
+
+.favorite-tour-modal-root .ant-modal-title,
+.favorite-tour-modal-root .ant-modal-close,
+.favorite-tour-modal-root .ant-typography,
+.favorite-tour-modal-root .ant-space,
+.favorite-tour-modal-root .ant-space-item,
+.favorite-tour-modal .ant-modal-title,
+.favorite-tour-modal .ant-modal-close,
+.favorite-tour-modal .ant-typography,
+.favorite-tour-modal .ant-space,
+.favorite-tour-modal .ant-space-item,
+.favorite-tour-modal-title,
+.favorite-tour-modal-text {
+  color: #f8fafc !important;
+}
+
+.favorite-tour-modal-title {
+  display: inline-block;
+  color: #ffffff !important;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.favorite-tour-modal-root .ant-modal-close,
+.favorite-tour-modal .ant-modal-close {
+  color: #cbd5e1 !important;
+  border-radius: 12px;
+}
+
+.favorite-tour-modal-root .ant-modal-close:hover,
+.favorite-tour-modal .ant-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.favorite-tour-modal-image {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+}
+
+.favorite-tour-modal-tags {
+  gap: 10px !important;
+}
+
+.favorite-tour-modal-tag {
+  margin: 0 !important;
+  padding: 6px 11px !important;
+  border-radius: 999px !important;
+  color: #e0f2fe !important;
+  background: rgba(59, 130, 246, 0.16) !important;
+  border: 1px solid rgba(147, 197, 253, 0.28) !important;
+  font-weight: 800;
+}
+
+.favorite-tour-modal-price {
+  color: #ffd166 !important;
+  background: rgba(252, 163, 17, 0.15) !important;
+  border-color: rgba(255, 209, 102, 0.32) !important;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.24);
+}
+
+.favorite-tour-modal-text {
+  margin: 0 !important;
+  color: rgba(226, 232, 240, 0.84) !important;
+}
+
+.favorite-tour-modal-root .ant-modal-footer,
+.favorite-tour-modal .ant-modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  margin-top: 20px !important;
+  padding-top: 16px !important;
+}
+
+.favorite-tour-modal-root .ant-modal-footer .ant-btn,
+.favorite-tour-modal .ant-modal-footer .ant-btn {
+  height: 42px;
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+.favorite-tour-modal-remove {
+  color: #fecaca !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
+}
+
+.favorite-tour-modal-book {
+  color: #0f172a !important;
+  background: linear-gradient(135deg, #fca311, #ffd166) !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 26px rgba(252, 163, 17, 0.24);
+}
+
 .dark .favorites-page,
 [data-theme="dark"] .favorites-page {
   background: linear-gradient(180deg, #07111f 0%, #0f172a 100%) !important;
