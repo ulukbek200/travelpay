@@ -4,13 +4,15 @@ import {
   Button,
   Card,
   Col,
+  DatePicker,
+  Empty,
+  Form,
   InputNumber,
   Progress,
   Row,
-  Select,
+  Slider,
   Space,
   Statistic,
-  Steps,
   Table,
   Tag,
   Typography,
@@ -20,22 +22,19 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  GiftOutlined,
-  NotificationOutlined,
-  PlusCircleOutlined,
+  CreditCardOutlined,
+  FlagOutlined,
+  PlusOutlined,
   RocketOutlined,
-  StarOutlined,
-  TrophyOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
+import dayjs from 'dayjs';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api from '../api';
 import { readCurrentUser } from '../utils/currentUser';
 import {
   buildSavingsChartData,
   createSavingsPlan,
-  formatSavingsStatus,
   getSavingsMetrics,
   getSavingsStatusColor,
 } from '../utils/savings';
@@ -43,29 +42,44 @@ import { mergeAndPersistCurrentUser, normalizeUser, syncCurrentUser } from '../u
 
 const { Title, Paragraph, Text } = Typography;
 
-const BRAND_BLUE = '#17325c';
-const BRAND_GOLD = '#fca311';
-const TURQUOISE = '#14b8a6';
 const GOAL_OPTIONS = [50000, 100000, 150000, 200000];
-const DURATION_OPTIONS = [3, 6, 9, 12];
-const BONUS_REWARDS = [
-  { rewardType: 'bonus_som', rewardValue: 100, label: '100 сом' },
-  { rewardType: 'bonus_som', rewardValue: 500, label: '500 сом' },
-  { rewardType: 'bonus_som', rewardValue: 1000, label: '1000 сом' },
-  { rewardType: 'discount', rewardValue: 5, label: 'Скидка 5%' },
-  { rewardType: 'discount', rewardValue: 10, label: 'Скидка 10%' },
-];
+const QUICK_TOP_UPS = [1000, 5000, 10000, 20000];
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80';
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
+const formatGoalStatus = (status) => ({
+  active: 'Активно',
+  completed: 'Завершено',
+  expired: 'Просрочено',
+  cancelled: 'Цель не создана',
+}[status] || 'Цель не создана');
+
+const getOperationStatus = (status) => {
+  const meta = {
+    completed: { label: 'Успешно', color: 'success' },
+    pending: { label: 'В ожидании', color: 'processing' },
+    error: { label: 'Ошибка', color: 'error' },
+  };
+
+  return meta[status] || meta.completed;
+};
+
+const getMonthsUntil = (date) => {
+  if (!date) return 6;
+  const now = dayjs();
+  const target = dayjs(date);
+  return Math.max(target.diff(now, 'month') || 1, 1);
+};
 
 const SavingsPlanPage = () => {
+  const [form] = Form.useForm();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [goalChoice, setGoalChoice] = useState(GOAL_OPTIONS[1]);
-  const [customGoal, setCustomGoal] = useState(null);
-  const [durationMonths, setDurationMonths] = useState(DURATION_OPTIONS[1]);
+  const [goalAmount, setGoalAmount] = useState(GOAL_OPTIONS[1]);
+  const [durationMonths, setDurationMonths] = useState(6);
+  const [initialDeposit, setInitialDeposit] = useState(0);
   const [topUpAmount, setTopUpAmount] = useState(null);
   const [now, setNow] = useState(Date.now());
 
@@ -98,18 +112,19 @@ const SavingsPlanPage = () => {
   }, []);
 
   const savingsMetrics = useMemo(() => getSavingsMetrics(user?.savings, new Date(now)), [user?.savings, now]);
-  const selectedGoal = goalChoice === 'custom' ? Number(customGoal || 0) : Number(goalChoice || 0);
   const projectedPlan = useMemo(() => createSavingsPlan({
-    goalAmount: selectedGoal,
+    goalAmount,
     durationMonths,
-    currentAmount: 0,
-  }), [durationMonths, selectedGoal]);
+    currentAmount: initialDeposit,
+  }), [durationMonths, goalAmount, initialDeposit]);
   const chartData = useMemo(() => buildSavingsChartData(user?.topUps, user?.savings), [user?.topUps, user?.savings]);
-  const primaryChallenge = user?.challenges?.[0];
+  const quickProgress = savingsMetrics.hasPlan ? savingsMetrics.progressPercent : 0;
+  const deadlineValue = dayjs().add(durationMonths, 'month');
+
   const nextPaymentDate = useMemo(() => {
     if (!savingsMetrics.startDate || !savingsMetrics.durationMonths) return '';
     const startDate = new Date(savingsMetrics.startDate);
-    const monthsPaid = Math.min(Math.floor((Number(user?.topUps?.length) || 0)), savingsMetrics.durationMonths);
+    const monthsPaid = Math.min(Math.floor(Number(user?.topUps?.length) || 0), savingsMetrics.durationMonths);
     const nextDate = new Date(startDate);
     nextDate.setMonth(nextDate.getMonth() + monthsPaid + 1);
     return nextDate.toISOString();
@@ -136,35 +151,80 @@ const SavingsPlanPage = () => {
     ...notifications,
   ];
 
-  const handleCreatePlan = async () => {
-    if (!selectedGoal || selectedGoal < 1000) {
+  const handleGoalValuesChange = (_, values) => {
+    const nextGoal = Number(values.goalAmount || goalAmount || 0);
+    const nextDeposit = Number(values.initialDeposit || 0);
+    const nextDuration = Number(values.durationMonths || durationMonths || 1);
+
+    setGoalAmount(nextGoal);
+    setInitialDeposit(nextDeposit);
+    setDurationMonths(nextDuration);
+    form.setFieldsValue({
+      monthlyPayment: createSavingsPlan({
+        goalAmount: nextGoal,
+        durationMonths: nextDuration,
+        currentAmount: nextDeposit,
+      }).monthlyPayment,
+      deadline: dayjs().add(nextDuration, 'month'),
+    });
+  };
+
+  const handleDeadlineChange = (date) => {
+    const nextDuration = getMonthsUntil(date);
+    setDurationMonths(nextDuration);
+    form.setFieldsValue({ durationMonths: nextDuration });
+    handleGoalValuesChange(null, {
+      ...form.getFieldsValue(),
+      durationMonths: nextDuration,
+    });
+  };
+
+  const handleCreatePlan = async (values) => {
+    const targetAmount = Number(values.goalAmount || 0);
+    const deposit = Number(values.initialDeposit || 0);
+    const duration = Number(values.durationMonths || 0);
+
+    if (!targetAmount || targetAmount < 1000) {
       message.warning('Укажите корректную сумму цели.');
+      return;
+    }
+
+    if (!duration || duration < 1) {
+      message.warning('Укажите срок накопления.');
       return;
     }
 
     try {
       const nextSavings = createSavingsPlan({
-        goalAmount: selectedGoal,
-        durationMonths,
-        currentAmount: user?.savings?.currentAmount || 0,
+        goalAmount: targetAmount,
+        durationMonths: duration,
+        currentAmount: deposit,
       });
+      const depositTopUp = deposit > 0 ? [{
+        id: `topup-${Date.now()}`,
+        date: new Date().toISOString(),
+        amount: deposit,
+        status: 'completed',
+        source: 'initial_deposit',
+      }] : [];
 
       await persistUser({
         savings: nextSavings,
+        topUps: [...depositTopUp, ...(user?.topUps || [])],
         notifications: appendNotification(user?.notifications, {
           type: 'plan',
           title: 'План накопления создан',
           description: `Цель ${formatMoney(nextSavings.goalAmount)} на ${nextSavings.durationMonths} мес.`,
         }),
       });
-      message.success('План накопления создан.');
+      message.success('Цель накопления создана.');
     } catch (error) {
       message.error('Не удалось сохранить план.');
     }
   };
 
-  const handleTopUp = async () => {
-    const amount = Number(topUpAmount || 0);
+  const handleTopUp = async (amountValue = topUpAmount) => {
+    const amount = Number(amountValue || 0);
 
     if (!savingsMetrics.hasPlan) {
       message.warning('Сначала создайте цель накопления.');
@@ -194,7 +254,7 @@ const SavingsPlanPage = () => {
         ? {
             type: 'goal',
             title: 'Цель достигнута',
-            description: 'Теперь вы можете выбрать любой тур и оплатить его накоплениями.',
+            description: 'Теперь вы можете выбрать тур и оплатить его накоплениями.',
           }
         : {
             type: 'topup',
@@ -219,86 +279,41 @@ const SavingsPlanPage = () => {
     }
   };
 
-  const handleBonusWheel = async () => {
-    const availableAt = user?.bonusWheel?.availableAt ? new Date(user.bonusWheel.availableAt).getTime() : 0;
-
-    if (availableAt && availableAt > Date.now()) {
-      message.info('Колесо бонусов снова станет доступно в следующем месяце.');
-      return;
-    }
-
-    const reward = BONUS_REWARDS[Math.floor(Math.random() * BONUS_REWARDS.length)];
-    const nextHistory = [
-      {
-        id: `bonus-${Date.now()}`,
-        ...reward,
-        date: new Date().toISOString(),
-      },
-      ...(user?.bonusWheel?.history || []),
-    ];
-
-    const nextSavings = reward.rewardType === 'bonus_som'
-      ? {
-          ...user.savings,
-          currentAmount: user.savings.currentAmount + reward.rewardValue,
-        }
-      : user.savings;
-
-    await persistUser({
-      savings: nextSavings,
-      bonusWheel: {
-        lastSpinDate: new Date().toISOString(),
-        availableAt: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-        history: nextHistory,
-      },
-      notifications: appendNotification(user?.notifications, {
-        type: 'bonus',
-        title: 'Бонус активирован',
-        description: `Вы получили ${reward.label}.`,
-      }),
-    });
-
-    message.success(`Колесо бонусов: ${reward.label}`);
-  };
-
-  const stepItems = [
-    {
-      title: 'Создать цель',
-      description: savingsMetrics.hasPlan ? `${formatMoney(savingsMetrics.goalAmount)}` : 'Выберите сумму',
-    },
-    {
-      title: 'Пополнять баланс',
-      description: savingsMetrics.hasPlan ? `${formatMoney(savingsMetrics.monthlyPayment)} / мес.` : 'Автопланирование',
-    },
-    {
-      title: 'Купить тур',
-      description: savingsMetrics.isReadyToBuy ? 'Цель достигнута' : 'После завершения',
-    },
-  ];
-
   const topUpColumns = [
     {
       title: 'Дата',
       dataIndex: 'date',
       render: formatDate,
+      width: 150,
+    },
+    {
+      title: 'Тип операции',
+      dataIndex: 'source',
+      render: (source) => (source === 'initial_deposit' ? 'Первоначальный взнос' : 'Пополнение'),
+      width: 190,
     },
     {
       title: 'Сумма',
       dataIndex: 'amount',
-      render: formatMoney,
+      render: (amount) => <Text className="savings-fintech-amount">+ {formatMoney(amount)}</Text>,
+      width: 150,
     },
     {
       title: 'Статус',
       dataIndex: 'status',
-      render: (status) => <Tag color="success">{status}</Tag>,
+      render: (status) => {
+        const meta = getOperationStatus(status);
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+      width: 140,
     },
   ];
 
   if (!user && !loading) {
     return (
-      <main style={styles.page}>
-        <section style={styles.container} className="travelpay-dashboard-container">
-          <Card style={styles.panel}>
+      <main className="savings-fintech-page">
+        <section className="savings-fintech-container">
+          <Card className="savings-fintech-card">
             <Title level={3}>Войдите в аккаунт, чтобы управлять накоплениями</Title>
           </Card>
         </section>
@@ -307,375 +322,246 @@ const SavingsPlanPage = () => {
   }
 
   return (
-    <main style={styles.page}>
-      <section style={styles.hero}>
-        <div>
-          <Tag style={styles.heroTag}>TravelPay Savings</Tag>
-          <Title style={styles.heroTitle}>Копите на путешествие как в финтех-продукте</Title>
-          <Paragraph style={styles.heroText}>
-            Сначала формируйте цель, затем пополняйте баланс, следите за прогрессом и только после этого выбирайте тур из каталога.
+    <main className="savings-fintech-page">
+      <section className="savings-fintech-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(6,17,31,0.88), rgba(6,17,31,0.58)), url(${HERO_IMAGE})` }}>
+        <div className="savings-fintech-hero__content">
+          <Tag className="savings-fintech-eyebrow">TravelPay Savings</Tag>
+          <Title className="savings-fintech-hero__title">Накопите на путешествие</Title>
+          <Paragraph className="savings-fintech-hero__text">
+            Создайте цель, пополняйте баланс и выбирайте тур после достижения суммы.
           </Paragraph>
         </div>
-        <Card style={styles.heroMetricCard} bordered={false}>
-          <Text style={styles.heroMetricLabel}>До цели осталось</Text>
-          <Title level={2} style={styles.heroMetricValue}>{formatMoney(savingsMetrics.remainingAmount)}</Title>
-          <Text style={styles.heroMetricSubtext}>
-            {savingsMetrics.daysLeft} дней {savingsMetrics.hoursLeft} часов {savingsMetrics.minutesLeft} минут
-          </Text>
-          <Tag color={getSavingsStatusColor(savingsMetrics.status)} style={{ marginTop: 12 }}>
-            {formatSavingsStatus(savingsMetrics.status)}
+
+        <Card className="savings-fintech-goal-card" loading={loading}>
+          <div className="savings-fintech-goal-card__top">
+            <div>
+              <Text className="savings-fintech-muted">До цели осталось</Text>
+              <Title level={2}>{formatMoney(savingsMetrics.remainingAmount)}</Title>
+            </div>
+            <Progress
+              type="circle"
+              percent={quickProgress}
+              size={92}
+              strokeColor="#f59e0b"
+              trailColor="rgba(255,255,255,0.10)"
+              format={(percent) => `${percent}%`}
+            />
+          </div>
+          <div className="savings-fintech-timer">
+            <Tag icon={<ClockCircleOutlined />}>{savingsMetrics.daysLeft} дней</Tag>
+            <Tag>{savingsMetrics.hoursLeft} часов</Tag>
+            <Tag>{savingsMetrics.minutesLeft} минут</Tag>
+          </div>
+          <Tag color={getSavingsStatusColor(savingsMetrics.status)} className="savings-fintech-status">
+            {formatGoalStatus(savingsMetrics.status)}
           </Tag>
         </Card>
       </section>
 
-      <section style={styles.container} className="travelpay-dashboard-container">
-        <Row gutter={[20, 20]}>
-          <Col xs={24} xl={8}>
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-              <Card title="Создание цели" style={styles.panel} loading={loading}>
-                <Space orientation="vertical" size={16} style={{ width: '100%' }} className="travelpay-adaptive-form">
-                  <div>
-                    <Text strong>Сумма накопления</Text>
-                    <Select
-                      size="large"
-                      style={{ width: '100%', marginTop: 8 }}
-                      value={goalChoice}
-                      onChange={setGoalChoice}
-                      options={[
-                        ...GOAL_OPTIONS.map((value) => ({ value, label: formatMoney(value) })),
-                        { value: 'custom', label: 'Произвольная сумма' },
-                      ]}
-                    />
-                  </div>
-
-                  {goalChoice === 'custom' && (
-                    <div>
-                      <Text strong>Введите сумму</Text>
-                      <InputNumber
-                        size="large"
-                        min={1000}
-                        step={1000}
-                        style={{ width: '100%', marginTop: 8 }}
-                        value={customGoal}
-                        onChange={setCustomGoal}
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <Text strong>Срок</Text>
-                    <Select
-                      size="large"
-                      style={{ width: '100%', marginTop: 8 }}
-                      value={durationMonths}
-                      onChange={setDurationMonths}
-                      options={DURATION_OPTIONS.map((value) => ({ value, label: `${value} месяцев` }))}
-                    />
-                  </div>
-
-                  <Card size="small" style={styles.previewCard}>
-                    <Space orientation="vertical" size={8}>
-                      <Text>Ежемесячный платёж: <strong>{formatMoney(projectedPlan.monthlyPayment)}</strong></Text>
-                      <Text>Дата окончания: <strong>{formatDate(projectedPlan.endDate)}</strong></Text>
-                    </Space>
-                  </Card>
-
-                  <Button type="primary" size="large" icon={<RocketOutlined />} loading={saving} onClick={handleCreatePlan} style={styles.primaryButton}>
-                    Создать цель накопления
-                  </Button>
-                </Space>
-              </Card>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <Card title="Travel Streak и челлендж" style={styles.panel} loading={loading}>
-                <Space orientation="vertical" size={14} style={{ width: '100%' }}>
-                  <Alert
-                    showIcon
-                    type="success"
-                    title={`🔥 Вы пополняете баланс ${user?.travelStreakMonths || 0} месяца подряд`}
+      <section className="savings-fintech-container">
+        <Row gutter={[18, 18]}>
+          <Col xs={24} xl={9}>
+            <Card title="Создание цели" className="savings-fintech-card" loading={loading}>
+              <Form
+                form={form}
+                layout="vertical"
+                initialValues={{
+                  goalAmount,
+                  durationMonths,
+                  initialDeposit,
+                  monthlyPayment: projectedPlan.monthlyPayment,
+                  deadline: deadlineValue,
+                }}
+                onValuesChange={handleGoalValuesChange}
+                onFinish={handleCreatePlan}
+                className="savings-fintech-form"
+              >
+                <Form.Item name="goalAmount" label="Сумма накопления" rules={[{ required: true, message: 'Укажите сумму цели' }]}>
+                  <InputNumber
+                    min={1000}
+                    step={1000}
+                    size="large"
+                    style={{ width: '100%' }}
+                    placeholder="Введите сумму, которую хотите накопить"
                   />
-                  <Card size="small" style={styles.challengeCard}>
-                    <Text strong>{primaryChallenge?.title}</Text>
-                    <Progress percent={Math.min(Math.round(((primaryChallenge?.currentAmount || 0) / (primaryChallenge?.targetAmount || 1)) * 100), 100)} strokeColor={TURQUOISE} />
-                    <Text>{formatMoney(primaryChallenge?.currentAmount || 0)} из {formatMoney(primaryChallenge?.targetAmount || 0)}</Text>
-                    <Text>До дедлайна: {formatDate(primaryChallenge?.deadline)}</Text>
-                  </Card>
-                </Space>
-              </Card>
-            </motion.div>
+                </Form.Item>
 
-            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Card title="Колесо бонусов" style={styles.panel} loading={loading}>
-                <Space orientation="vertical" size={14} style={{ width: '100%' }}>
-                  <Paragraph style={{ margin: 0 }}>
-                    Раз в месяц пользователь получает случайный бонус: деньги на баланс или скидку на тур.
-                  </Paragraph>
-                  <Button icon={<GiftOutlined />} style={styles.goldButton} loading={saving} onClick={handleBonusWheel}>
-                    Крутить колесо бонусов
-                  </Button>
-                  {(user?.bonusWheel?.history || []).slice(0, 3).map((entry) => (
-                    <Tag key={entry.id} color="gold">{entry.label} · {formatDate(entry.date)}</Tag>
+                <div className="savings-fintech-preset-grid">
+                  {GOAL_OPTIONS.map((amount) => (
+                    <Button
+                      key={amount}
+                      onClick={() => {
+                        form.setFieldsValue({ goalAmount: amount });
+                        handleGoalValuesChange(null, { ...form.getFieldsValue(), goalAmount: amount });
+                      }}
+                    >
+                      {formatMoney(amount)}
+                    </Button>
                   ))}
-                </Space>
-              </Card>
-            </motion.div>
+                </div>
+
+                <Form.Item name="durationMonths" label="Срок">
+                  <Slider min={1} max={24} marks={{ 1: '1', 6: '6', 12: '12', 24: '24 мес.' }} />
+                </Form.Item>
+
+                <Form.Item name="deadline" label="Дата окончания">
+                  <DatePicker size="large" style={{ width: '100%' }} onChange={handleDeadlineChange} format="DD.MM.YYYY" />
+                </Form.Item>
+
+                <Form.Item name="initialDeposit" label="Первоначальный взнос">
+                  <InputNumber min={0} step={1000} size="large" style={{ width: '100%' }} />
+                </Form.Item>
+
+                <Form.Item name="monthlyPayment" label="Ежемесячный платёж">
+                  <InputNumber min={0} size="large" style={{ width: '100%' }} readOnly />
+                </Form.Item>
+
+                <Button type="primary" htmlType="submit" size="large" icon={<RocketOutlined />} loading={saving} block>
+                  Создать цель
+                </Button>
+              </Form>
+            </Card>
+
+            <Card title="Пополнить баланс" className="savings-fintech-card savings-fintech-topup-card" loading={loading}>
+              <Space orientation="vertical" size={14} style={{ width: '100%' }}>
+                <InputNumber
+                  size="large"
+                  min={100}
+                  step={500}
+                  value={topUpAmount}
+                  onChange={setTopUpAmount}
+                  placeholder="Введите сумму"
+                  style={{ width: '100%' }}
+                />
+                <div className="savings-fintech-quick-grid">
+                  {QUICK_TOP_UPS.map((amount) => (
+                    <Button key={amount} icon={<PlusOutlined />} onClick={() => setTopUpAmount(amount)}>
+                      +{amount.toLocaleString('ru-RU')}
+                    </Button>
+                  ))}
+                </div>
+                <Button type="primary" size="large" icon={<CreditCardOutlined />} loading={saving} onClick={() => handleTopUp()} block>
+                  Пополнить
+                </Button>
+                {nextPaymentDate && (
+                  <Text className="savings-fintech-muted">Рекомендуемый платёж до {formatDate(nextPaymentDate)}</Text>
+                )}
+              </Space>
+            </Card>
           </Col>
 
-          <Col xs={24} xl={16}>
-            <Space orientation="vertical" size={20} style={{ width: '100%' }}>
-              <Card style={styles.panel} loading={loading}>
-                <Row gutter={[18, 18]}>
-                  <Col xs={24} sm={12} lg={8}><Statistic title="Цель" value={savingsMetrics.goalAmount} suffix="сом" prefix={<StarOutlined />} /></Col>
-                  <Col xs={24} sm={12} lg={8}><Statistic title="Накоплено" value={savingsMetrics.currentAmount} suffix="сом" prefix={<WalletOutlined />} /></Col>
-                  <Col xs={24} sm={12} lg={8}><Statistic title="Осталось" value={savingsMetrics.remainingAmount} suffix="сом" prefix={<PlusCircleOutlined />} /></Col>
-                  <Col xs={24} sm={12} lg={8}><Statistic title="Ежемесячный платёж" value={savingsMetrics.monthlyPayment} suffix="сом" prefix={<CalendarOutlined />} /></Col>
-                  <Col xs={24} sm={12} lg={8}><Statistic title="Дата окончания" value={formatDate(savingsMetrics.endDate)} prefix={<ClockCircleOutlined />} /></Col>
-                  <Col xs={24} sm={12} lg={8}><Statistic title="Прогресс" value={savingsMetrics.progressPercent} suffix="%" prefix={<CheckCircleOutlined />} /></Col>
-                </Row>
+          <Col xs={24} xl={15}>
+            <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+              <Card title="Моя цель" className="savings-fintech-card" loading={loading}>
+                {savingsMetrics.hasPlan ? (
+                  <>
+                    <Row gutter={[16, 16]} className="savings-fintech-stat-grid">
+                      <Col xs={24} sm={12} lg={8}>
+                        <Statistic title="Цель" value={savingsMetrics.goalAmount} formatter={formatMoney} prefix={<FlagOutlined />} />
+                      </Col>
+                      <Col xs={24} sm={12} lg={8}>
+                        <Statistic title="Накоплено" value={savingsMetrics.currentAmount} formatter={formatMoney} prefix={<WalletOutlined />} />
+                      </Col>
+                      <Col xs={24} sm={12} lg={8}>
+                        <Statistic title="Осталось" value={savingsMetrics.remainingAmount} formatter={formatMoney} prefix={<PlusOutlined />} />
+                      </Col>
+                      <Col xs={24} sm={12} lg={8}>
+                        <Statistic title="Ежемесячный платёж" value={savingsMetrics.monthlyPayment} formatter={formatMoney} prefix={<CalendarOutlined />} />
+                      </Col>
+                      <Col xs={24} sm={12} lg={8}>
+                        <Statistic title="Дата окончания" value={formatDate(savingsMetrics.endDate)} prefix={<ClockCircleOutlined />} />
+                      </Col>
+                      <Col xs={24} sm={12} lg={8}>
+                        <Statistic title="Прогресс" value={savingsMetrics.progressPercent} suffix="%" prefix={<CheckCircleOutlined />} />
+                      </Col>
+                    </Row>
 
-                <div style={{ marginTop: 22 }}>
-                  <div style={styles.progressHeader}>
-                    <Text strong>Прогресс накопления</Text>
-                    <Text>{formatMoney(savingsMetrics.currentAmount)} / {formatMoney(savingsMetrics.goalAmount)}</Text>
-                  </div>
-                  <Progress percent={savingsMetrics.progressPercent} strokeColor={{ '0%': BRAND_BLUE, '100%': BRAND_GOLD }} size={[undefined, 18]} />
-                </div>
-
-                <div style={{ marginTop: 22 }}>
-                  <Text strong>Таймер достижения цели</Text>
-                  <div style={styles.timerRow}>
-                    <Tag icon={<ClockCircleOutlined />} color="processing">{savingsMetrics.daysLeft} дней</Tag>
-                    <Tag icon={<ClockCircleOutlined />} color="processing">{savingsMetrics.hoursLeft} часов</Tag>
-                    <Tag icon={<ClockCircleOutlined />} color="processing">{savingsMetrics.minutesLeft} минут</Tag>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 24 }}>
-                  <Steps current={savingsMetrics.isReadyToBuy ? 2 : savingsMetrics.hasPlan ? 1 : 0} items={stepItems} />
-                </div>
-              </Card>
-
-              <Card style={styles.panel} title="Пополнить баланс" loading={loading}>
-                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-                  <Alert
-                    type="info"
-                    showIcon
-                    title={nextPaymentDate ? `Следующий рекомендуемый платёж до ${formatDate(nextPaymentDate)}` : 'Создайте план накопления, чтобы увидеть следующий платёж.'}
-                  />
-                  <div style={styles.topUpRow}>
-                    <InputNumber
-                      size="large"
-                      min={100}
-                      step={500}
-                      style={{ flex: 1, minWidth: 0, width: '100%' }}
-                      value={topUpAmount}
-                      onChange={setTopUpAmount}
-                      placeholder="Введите сумму пополнения"
-                    />
-                    <Button type="primary" size="large" icon={<WalletOutlined />} loading={saving} onClick={handleTopUp} style={styles.primaryButton}>
-                      Пополнить баланс
+                    <div className="savings-fintech-progress-block">
+                      <div>
+                        <Text strong>Прогресс накопления</Text>
+                        <Text className="savings-fintech-muted">{formatMoney(savingsMetrics.currentAmount)} / {formatMoney(savingsMetrics.goalAmount)}</Text>
+                      </div>
+                      <Progress
+                        percent={savingsMetrics.progressPercent}
+                        strokeColor={{ '0%': '#2563eb', '100%': '#f59e0b' }}
+                        trailColor="rgba(255,255,255,0.10)"
+                        size={[undefined, 16]}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <Empty
+                    description={<span className="savings-fintech-muted">Цель пока не создана</span>}
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  >
+                    <Button type="primary" onClick={() => form.scrollToField('goalAmount')}>
+                      Создать первую цель
                     </Button>
-                  </div>
-                  {savingsMetrics.progressPercent < 50 && savingsMetrics.hasPlan && (
-                    <Alert
-                      type="warning"
-                      showIcon
-                      title="Есть риск отставания от плана"
-                      description={`Для достижения цели желательно вносить не менее ${formatMoney(savingsMetrics.monthlyPayment)} в месяц.`}
-                    />
-                  )}
-                </Space>
+                  </Empty>
+                )}
               </Card>
 
-              <Row gutter={[20, 20]}>
+              <Row gutter={[18, 18]}>
                 <Col xs={24} lg={14}>
-                  <Card title="График накоплений" style={styles.panel} loading={loading}>
-                    <div style={{ width: '100%', height: 280 }}>
+                  <Card title="Динамика накоплений" className="savings-fintech-card" loading={loading}>
+                    <div className="savings-fintech-chart">
                       <ResponsiveContainer>
                         <AreaChart data={chartData}>
                           <defs>
-                            <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={BRAND_GOLD} stopOpacity={0.7} />
-                              <stop offset="95%" stopColor={TURQUOISE} stopOpacity={0.05} />
+                            <linearGradient id="savingsFintechGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.55} />
+                              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.04} />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#dbe7f3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                          <XAxis dataKey="month" stroke="#94a3b8" />
+                          <YAxis stroke="#94a3b8" />
                           <Tooltip formatter={(value) => formatMoney(value)} />
-                          <Area type="monotone" dataKey="amount" stroke={BRAND_BLUE} fill="url(#savingsGradient)" strokeWidth={3} />
+                          <Area type="monotone" dataKey="amount" stroke="#f59e0b" fill="url(#savingsFintechGradient)" strokeWidth={3} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </Card>
                 </Col>
+
                 <Col xs={24} lg={10}>
-                  <Card title="Уведомления по плану" style={styles.panel} loading={loading}>
+                  <Card title="Контроль цели" className="savings-fintech-card" loading={loading}>
                     <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-                      {(user?.notifications || []).slice(0, 5).map((item) => (
-                        <Card key={item.id} size="small" style={styles.notificationCard}>
-                          <Space orientation="vertical" size={4}>
-                            <Text strong><NotificationOutlined /> {item.title}</Text>
-                            <Text type="secondary">{item.description}</Text>
-                            <Text type="secondary">{formatDate(item.date)}</Text>
-                          </Space>
-                        </Card>
-                      ))}
+                      <Alert
+                        type={savingsMetrics.hasPlan ? 'info' : 'warning'}
+                        showIcon
+                        title={savingsMetrics.hasPlan ? 'План активен' : 'Нужно создать цель'}
+                        description={savingsMetrics.hasPlan
+                          ? `Для достижения цели вносите около ${formatMoney(savingsMetrics.monthlyPayment)} в месяц.`
+                          : 'После создания цели здесь появятся рекомендации по графику платежей.'}
+                      />
+                      {savingsMetrics.isReadyToBuy && (
+                        <Button href="/tours" type="primary" size="large" block>
+                          Выбрать тур
+                        </Button>
+                      )}
                     </Space>
                   </Card>
                 </Col>
               </Row>
 
-              <Card title="История пополнений" style={styles.panel} loading={loading}>
-                <div className="travelpay-table-shell">
+              <Card title="История операций" className="savings-fintech-card" loading={loading}>
+                <div className="travelpay-table-shell savings-fintech-table">
                   <Table
                     rowKey="id"
                     dataSource={user?.topUps || []}
                     columns={topUpColumns}
-                    pagination={{ pageSize: 5 }}
-                    scroll={{ x: 520 }}
+                    pagination={{ pageSize: 6, showSizeChanger: false }}
+                    scroll={{ x: 640 }}
                   />
                 </div>
               </Card>
-
-              {savingsMetrics.isReadyToBuy && (
-                <Card style={styles.successCard}>
-                  <Space orientation="vertical" size={12}>
-                    <Tag color="success" icon={<TrophyOutlined />}>Цель достигнута</Tag>
-                    <Title level={3} style={{ color: BRAND_BLUE, margin: 0 }}>
-                      Поздравляем! Вы накопили нужную сумму. Теперь можете выбрать любой тур.
-                    </Title>
-                    <Button href="/tours" type="primary" size="large" style={styles.primaryButton}>
-                      Перейти к выбору тура
-                    </Button>
-                  </Space>
-                </Card>
-              )}
             </Space>
           </Col>
         </Row>
       </section>
     </main>
   );
-};
-
-const styles = {
-  page: {
-    minHeight: '100vh',
-    background: 'radial-gradient(circle at top left, rgba(20,184,166,0.14), transparent 26%), linear-gradient(180deg, #f7fbff 0%, #ecf4fb 100%)',
-    paddingBottom: 64,
-  },
-  hero: {
-    padding: '56px 24px',
-    background: 'linear-gradient(135deg, #0f2241 0%, #17325c 70%, #fca311 100%)',
-    color: '#fff',
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 24,
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  heroTag: {
-    borderRadius: 999,
-    border: 'none',
-    background: '#fef3c7',
-    color: BRAND_BLUE,
-    fontWeight: 900,
-  },
-  heroTitle: {
-    color: '#fff',
-    margin: '12px 0',
-    maxWidth: 760,
-    fontSize: 'clamp(24px, 4vw, 40px)',
-    lineHeight: 1.08,
-    wordBreak: 'normal',
-    whiteSpace: 'normal',
-  },
-  heroText: {
-    color: '#dce8f7',
-    maxWidth: 760,
-    margin: 0,
-    fontSize: 16,
-    wordBreak: 'normal',
-    whiteSpace: 'normal',
-  },
-  heroMetricCard: {
-    minWidth: 290,
-    borderRadius: 24,
-    background: 'rgba(255,255,255,0.12)',
-    color: '#fff',
-    boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
-  },
-  heroMetricLabel: {
-    color: '#dce8f7',
-    fontWeight: 800,
-  },
-  heroMetricValue: {
-    color: '#fff',
-    margin: '10px 0 4px',
-  },
-  heroMetricSubtext: {
-    color: '#e5edf9',
-  },
-  container: {
-    width: '100%',
-    maxWidth: 1400,
-    margin: '0 auto',
-    padding: '20px',
-  },
-  panel: {
-    borderRadius: 24,
-    border: '1px solid rgba(23,50,92,0.08)',
-    boxShadow: '0 22px 55px rgba(23,50,92,0.08)',
-  },
-  previewCard: {
-    borderRadius: 18,
-    background: 'rgba(23,50,92,0.04)',
-  },
-  challengeCard: {
-    borderRadius: 16,
-    background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(252,163,17,0.12))',
-  },
-  notificationCard: {
-    borderRadius: 16,
-    background: 'rgba(23,50,92,0.04)',
-  },
-  progressHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 8,
-    flexWrap: 'wrap',
-  },
-  topUpRow: {
-    display: 'flex',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  timerRow: {
-    display: 'flex',
-    gap: 10,
-    flexWrap: 'wrap',
-    marginTop: 12,
-  },
-  primaryButton: {
-    background: BRAND_BLUE,
-    borderColor: BRAND_BLUE,
-    fontWeight: 900,
-  },
-  goldButton: {
-    background: BRAND_GOLD,
-    borderColor: BRAND_GOLD,
-    color: BRAND_BLUE,
-    fontWeight: 900,
-  },
-  successCard: {
-    borderRadius: 24,
-    border: '1px solid rgba(34,197,94,0.18)',
-    background: 'linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%)',
-    boxShadow: '0 22px 50px rgba(34,197,94,0.10)',
-  },
 };
 
 export default SavingsPlanPage;

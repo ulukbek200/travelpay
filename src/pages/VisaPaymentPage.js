@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from 'antd';
 
 const VisaPaymentPage = () => {
   const [formData, setFormData] = useState({
@@ -7,123 +8,43 @@ const VisaPaymentPage = () => {
     expiry: '',
     cvv: '',
   });
-
   const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
+  const handleChange = (event) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.id]: e.target.value,
+      [event.target.id]: event.target.value,
     }));
   };
 
   const validate = () => {
-    const newErrors = {};
-    const cardRegex = /^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/;
-    const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
-    const cvvRegex = /^\d{3}$/;
+    const nextErrors = {};
 
-    if (!cardRegex.test(formData.cardNumber)) {
-      newErrors.cardNumber = 'Неверный номер карты';
+    if (!/^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/.test(formData.cardNumber)) {
+      nextErrors.cardNumber = 'Неверный номер карты';
     }
     if (formData.cardName.trim().length < 3) {
-      newErrors.cardName = 'Введите имя владельца';
+      nextErrors.cardName = 'Введите имя владельца';
     }
-    if (!expiryRegex.test(formData.expiry)) {
-      newErrors.expiry = 'Неверный формат (MM/YY)';
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiry)) {
+      nextErrors.expiry = 'Неверный формат (MM/YY)';
     }
-    if (!cvvRegex.test(formData.cvv)) {
-      newErrors.cvv = 'CVV должен состоять из 3 цифр';
+    if (!/^\d{3}$/.test(formData.cvv)) {
+      nextErrors.cvv = 'CVV должен состоять из 3 цифр';
     }
 
-    return newErrors;
+    return nextErrors;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
+
     if (Object.keys(validationErrors).length === 0) {
-      alert('Оплата успешно прошла!');
+      window.alert('Оплата успешно прошла!');
       setFormData({ cardNumber: '', cardName: '', expiry: '', cvv: '' });
     }
-  };
-
-  const styles = {
-    page: {
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #1a1f71, #ffffff)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      fontFamily: "'Poppins', sans-serif",
-    },
-    container: {
-      background: '#fff',
-      padding: '40px',
-      borderRadius: '16px',
-      maxWidth: '500px',
-      width: '100%',
-      boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-      color: '#1a1f71',
-    },
-    title: {
-      textAlign: 'center',
-      fontSize: '28px',
-      marginBottom: '10px',
-    },
-    logo: {
-      display: 'block',
-      height: '40px',
-      margin: '0 auto 10px',
-    },
-    formGroup: {
-      marginBottom: '18px',
-    },
-    label: {
-      display: 'block',
-      fontWeight: 600,
-      marginBottom: '6px',
-      marginLeft:'-5px'
-    },
-    input: {
-      width: '100%',
-      padding: '12px',
-      borderRadius: '10px',
-      fontSize: '16px',
-      border: '1px solid #ccc',
-      outline: 'none',
-      marginLeft:'-10px'
-    },
-    error: {
-      color: 'red',
-      fontSize: '13px',
-      marginTop: '4px',
-    },
-    button: {
-      width: '100%',
-      padding: '14px',
-      background: 'linear-gradient(to right, #1a1f71, #ffc107)',
-      color: '#fff',
-      fontSize: '16px',
-      fontWeight: 'bold',
-      border: 'none',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-    },
-    icons: {
-      display: 'flex',
-      justifyContent: 'center',
-      marginTop: '20px',
-      gap: '20px',
-    },
-    icon: {
-      height: '32px',
-      opacity: 0.8,
-      transition: '0.3s',
-    },
   };
 
   return (
@@ -192,9 +113,9 @@ const VisaPaymentPage = () => {
             {errors.cvv && <div style={styles.error}>{errors.cvv}</div>}
           </div>
 
-          <button type="submit" style={styles.button}>
+          <Button htmlType="submit" type="primary" size="large" className="travelpay-primary-button" style={styles.button}>
             Оплатить тур
-          </button>
+          </Button>
         </form>
 
         <div style={styles.icons}>
@@ -210,13 +131,81 @@ const VisaPaymentPage = () => {
           />
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/%D0%9C%D0%B8%D1%80_%D0%A2%D0%92_logo.svg/2048px-%D0%9C%D0%B8%D1%80_%D0%A2%D0%92_logo.svg.png"
-            alt="МИР"
+            alt="MIR"
             style={styles.icon}
           />
         </div>
       </div>
     </div>
   );
+};
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #1A1F71, #FFFFFF)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    fontFamily: '"Poppins", sans-serif',
+  },
+  container: {
+    background: '#FFFFFF',
+    padding: '40px',
+    borderRadius: '16px',
+    maxWidth: '500px',
+    width: '100%',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+    color: '#1A1F71',
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: '28px',
+    marginBottom: '10px',
+  },
+  logo: {
+    display: 'block',
+    height: '40px',
+    margin: '0 auto 10px',
+  },
+  formGroup: {
+    marginBottom: '18px',
+  },
+  label: {
+    display: 'block',
+    fontWeight: 600,
+    marginBottom: '6px',
+  },
+  input: {
+    width: '100%',
+    padding: '12px',
+    borderRadius: '10px',
+    fontSize: '16px',
+    border: '1px solid #CCD5DF',
+    outline: 'none',
+  },
+  error: {
+    color: '#C62828',
+    fontSize: '13px',
+    marginTop: '4px',
+  },
+  button: {
+    width: '100%',
+    height: 48,
+    borderRadius: '14px',
+    marginTop: 8,
+  },
+  icons: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: '20px',
+    gap: '20px',
+  },
+  icon: {
+    height: '32px',
+    opacity: 0.8,
+  },
 };
 
 export default VisaPaymentPage;

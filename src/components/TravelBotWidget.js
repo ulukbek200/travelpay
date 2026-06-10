@@ -2,24 +2,23 @@ import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   Avatar,
-  Badge,
   Button,
   Card,
   Drawer,
+  FloatButton,
   Input,
   Skeleton,
   Space,
+  Tooltip,
   Typography,
   message,
 } from 'antd';
 import {
-  CompassOutlined,
   CustomerServiceOutlined,
   HeartOutlined,
   SendOutlined,
   StarOutlined,
 } from '@ant-design/icons';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { readCurrentUser, subscribeToCurrentUser } from '../utils/currentUser';
@@ -171,22 +170,16 @@ const TravelBotWidget = () => {
 
   return (
     <>
-      <motion.button
-        type="button"
-        className="ai-concierge-button travelpay-ai-button"
-        style={styles.floatingButton}
-        onClick={() => setOpen(true)}
-        whileHover={{ y: -4, boxShadow: '0 18px 42px rgba(252,163,17,0.28)' }}
-        whileTap={{ scale: 0.97 }}
-      >
-        <Badge dot color={BRAND_GOLD}>
-          <span style={styles.floatingIcon}>
-            <StarOutlined />
-            <CompassOutlined />
-          </span>
-        </Badge>
-        <span>TravelPay AI</span>
-      </motion.button>
+      <Tooltip title="TravelPay Assistant" placement="left">
+        <div className="travelpay-ai-fab-wrap">
+          <FloatButton
+            className="travelpay-ai-fab"
+            icon={<CustomerServiceOutlined />}
+            onClick={() => setOpen(true)}
+          />
+          <span className="travelpay-ai-fab-status">AI</span>
+        </div>
+      </Tooltip>
 
       <Drawer
         open={open}
@@ -202,9 +195,9 @@ const TravelBotWidget = () => {
           <Space align="center">
             <Avatar style={styles.aiAvatar} icon={<StarOutlined />} />
             <div>
-              <Text style={styles.drawerTitle}>TravelPay AI Assistant</Text>
+              <Text style={styles.drawerTitle}>TravelPay Assistant</Text>
               <br />
-              <Text style={styles.drawerSubtitle}>Умный помощник для туров и платежей</Text>
+              <Text style={styles.drawerSubtitle}>Подберём тур и рассчитаем накопления</Text>
             </div>
           </Space>
         )}
@@ -276,60 +269,33 @@ const TravelBotWidget = () => {
 };
 
 const styles = {
-  floatingButton: {
-    position: 'fixed',
-    right: 'clamp(12px, 3vw, 32px)',
-    bottom: 20,
-    zIndex: 1000,
-    minHeight: 56,
-    border: 'none',
-    borderRadius: 999,
-    padding: '0 18px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 12,
-    fontWeight: 800,
-    color: '#fff',
-    background: 'linear-gradient(135deg, #16324f 0%, #1d3557 55%, #245b86 100%)',
-    boxShadow: '0 14px 32px rgba(29,53,87,0.28)',
-    cursor: 'pointer',
-  },
-  floatingIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: '50%',
-    display: 'grid',
-    placeItems: 'center',
-    color: BRAND_GOLD,
-    background: 'rgba(255,255,255,0.12)',
-    fontSize: 16,
-  },
   drawerHeader: {
-    borderBottom: '1px solid rgba(29,53,87,0.08)',
-    background: 'linear-gradient(180deg, #f9fbff 0%, #f3f8ff 100%)',
+    borderBottom: '1px solid rgba(255,255,255,0.10)',
+    background: 'rgba(8,20,40,0.96)',
   },
   drawerContent: {
-    background: '#f7fbff',
+    background: 'rgba(8,20,40,0.96)',
   },
   drawerBody: {
     padding: 16,
     display: 'grid',
     gridTemplateRows: '1fr auto auto',
     gap: 14,
-    background: '#f7fbff',
+    background: 'linear-gradient(180deg, rgba(8,20,40,0.98), rgba(6,17,31,0.98))',
   },
   drawerTitle: {
-    color: BRAND_BLUE,
+    color: '#f8fafc',
     fontWeight: 800,
     fontSize: 16,
   },
   drawerSubtitle: {
-    color: '#6b7a90',
+    color: '#94a3b8',
     fontSize: 12,
   },
   aiAvatar: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    color: BRAND_BLUE,
+    background: 'rgba(245,158,11,0.16)',
+    color: BRAND_GOLD,
+    border: '1px solid rgba(245,158,11,0.28)',
   },
   messages: {
     overflowY: 'auto',
@@ -355,26 +321,27 @@ const styles = {
   },
   assistantMessage: {
     maxWidth: '88%',
-    background: '#ffffff',
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.10)',
     borderRadius: 18,
     padding: '12px 14px',
-    color: BRAND_BLUE,
-    boxShadow: '0 10px 24px rgba(29,53,87,0.08)',
+    color: '#e5edf8',
+    boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
   },
   userMessage: {
     maxWidth: '88%',
-    background: 'linear-gradient(135deg, #1677ff, #245b86)',
+    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
     borderRadius: 18,
     padding: '12px 14px',
     color: '#fff',
-    boxShadow: '0 10px 24px rgba(22,119,255,0.18)',
+    boxShadow: '0 10px 24px rgba(37,99,235,0.22)',
   },
   suggestions: {
     display: 'grid',
     gap: 10,
   },
   suggestionsTitle: {
-    color: '#6b7a90',
+    color: '#94a3b8',
     fontSize: 12,
     fontWeight: 700,
     textTransform: 'uppercase',
@@ -394,8 +361,9 @@ const styles = {
   },
   utilityCard: {
     borderRadius: 18,
-    border: '1px solid rgba(29,53,87,0.08)',
-    boxShadow: '0 10px 24px rgba(29,53,87,0.06)',
+    border: '1px solid rgba(255,255,255,0.10)',
+    background: 'rgba(255,255,255,0.06)',
+    boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
   },
   inputBar: {
     display: 'grid',
@@ -406,6 +374,9 @@ const styles = {
   input: {
     minHeight: 46,
     borderRadius: 14,
+    color: '#f8fafc',
+    background: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   sendButton: {
     width: 46,

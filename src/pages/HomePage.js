@@ -1,268 +1,226 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Collapse, Input, Row, Col, Space, Tag, Typography, Segmented } from 'antd';
-import {
-  ArrowRightOutlined,
-  CarOutlined,
-  CompassOutlined,
-  CustomerServiceOutlined,
-  EnvironmentOutlined,
-  GlobalOutlined,
-  InstagramOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  SafetyCertificateOutlined,
-  ShopOutlined,
-  StarFilled,
-  TeamOutlined,
-  WhatsAppOutlined,
-} from '@ant-design/icons';
+import { ArrowRightOutlined, CompassOutlined, CustomerServiceOutlined, EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SafetyCertificateOutlined, StarFilled, TeamOutlined, WhatsAppOutlined } from '@ant-design/icons';
+import { Button, Card, Collapse, Col, Input, Row, Segmented, Space, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { KYRGYZSTAN_TOUR_SPOTS, withTourFallback } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
 
-const BRAND_BLUE = '#16324f';
-const BRAND_GOLD = '#f0b24a';
-const BRAND_TURQUOISE = '#2bb8c5';
+const BRAND_BLUE = '#16324F';
+const BRAND_TURQUOISE = '#2BB8C5';
+const BRAND_GOLD = '#F0B24A';
 
 const copy = {
-  EN: {
-    navBook: 'Book Tour',
-    heroTag: 'Premium Central Asia Tours',
-    heroTitle: 'Exclusive tours across Kyrgyzstan and Almaty',
-    heroText: 'Premium routes, AI Concierge, local guides, and comfortable journeys through Central Asia.',
-    primary: 'Choose Tour',
-    secondary: 'AI will plan route',
-    trusted: 'Trusted by travelers seeking premium mountain, lake, and nomadic experiences',
-    destinationsTitle: 'Popular Destinations',
-    destinationsText: 'Only Kyrgyzstan and Kazakhstan routes, curated for cinematic landscapes and authentic culture.',
-    toursTitle: 'Exclusive Tours',
-    whyTitle: 'Why Choose Us',
-    galleryTitle: 'Tour Gallery',
-    testimonialsTitle: 'Traveler Stories',
-    faqTitle: 'FAQ',
-    footerText: 'Luxury tours across Kyrgyzstan and Almaty region with local expertise and premium service.',
-    partnership: 'Partnership',
-    partnerTitle: 'Partnership for tour companies',
-    partnerText: 'Cooperate with us, publish your tours, receive clients, and grow your tourism business in Kyrgyzstan and Kazakhstan.',
-    partnerCta: 'Become a Partner',
-    partnerFormTitle: 'Tell us about your company',
-    partnerFormText: 'Leave your details and we will help connect your company to premium clients and curated routes.',
-    partnerFormName: 'Your name',
-    partnerFormCompany: 'Company',
-    partnerFormEmail: 'Email',
-    partnerFormMessage: 'What kind of partnership do you need?',
-    partnerFormCta: 'Send partnership request',
-  },
   RU: {
-    navBook: 'Бронировать',
-    heroTag: 'Премиальные туры по Центральной Азии',
-    heroTitle: 'Эксклюзивные туры по Кыргызстану и Алматы',
-    heroText: 'Премиальные маршруты, AI Concierge, локальные гиды и комфортные путешествия по Центральной Азии.',
+    heroTag: 'Премиальные туры по Кыргызстану',
+    heroTitle: 'TravelPay делает туры по Кыргызстану визуально богаче, удобнее и современнее.',
+    heroText: 'Подбирайте маршруты по Ала-Арче, Иссык-Кулю, Сон-Кулю, Караколу, Джети-Огузу и Арсланбобу в премиальном digital-формате с красивой галереей, локальной экспертизой и поддержкой AI Concierge.',
     primary: 'Выбрать тур',
-    secondary: 'AI подберёт маршрут',
-    trusted: 'Нам доверяют путешественники, выбирающие премиальные горные, озёрные и кочевые маршруты',
-    destinationsTitle: 'Популярные направления',
-    destinationsText: 'Только Кыргызстан и Казахстан: кинематографичные пейзажи и настоящая культура региона.',
-    toursTitle: 'Эксклюзивные туры',
-    whyTitle: 'Почему выбирают нас',
-    galleryTitle: 'Галерея туров',
-    testimonialsTitle: 'Истории путешественников',
+    secondary: 'Открыть AI Concierge',
+    showcaseTitle: 'Главные локации Кыргызстана',
+    showcaseText: 'Компактные карточки с реальными локациями, понятной ценой, длительностью и рейтингом.',
+    toursTitle: 'Популярные форматы отдыха',
+    toursText: 'Каждый формат построен вокруг красивой картинки, понятного предложения и удобного перехода к каталогу.',
+    whyTitle: 'Почему выбирают TravelPay',
+    galleryTitle: 'Живая галерея туров',
+    galleryText: 'Реальные локации Кыргызстана с компактной сеткой, затемнением фото и быстрой навигацией.',
+    faqTitle: 'Частые вопросы',
+    partnerTitle: 'Партнёрство для туркомпаний',
+    partnerText: 'Оставьте контакты, если хотите публиковать туры и получать заявки внутри TravelPay.',
+    partnerName: 'Ваше имя',
+    partnerCompany: 'Компания',
+    partnerEmail: 'Email',
+    partnerMessage: 'Какой формат партнёрства вам интересен?',
+    partnerSubmit: 'Отправить заявку',
+    footerText: 'Premium travel across Kyrgyzstan with a cleaner UI, stronger gallery and modern booking flow.',
+  },
+  EN: {
+    heroTag: 'Premium tours in Kyrgyzstan',
+    heroTitle: 'TravelPay makes Kyrgyzstan tours richer, cleaner, and more modern.',
+    heroText: 'Explore Ala-Archa, Issyk-Kul, Son-Kul, Karakol, Jeti-Oguz, and Arslanbob with a premium visual flow, compact galleries, and AI Concierge support.',
+    primary: 'Choose Tour',
+    secondary: 'Open AI Concierge',
+    showcaseTitle: 'Signature Kyrgyzstan spots',
+    showcaseText: 'Compact cards with real locations, visible pricing, duration, and rating.',
+    toursTitle: 'Popular travel formats',
+    toursText: 'Each format is built around strong imagery, clean structure, and direct navigation to the catalog.',
+    whyTitle: 'Why TravelPay',
+    galleryTitle: 'Live tour gallery',
+    galleryText: 'Real Kyrgyzstan locations with responsive cards, image overlays, and clear travel metadata.',
     faqTitle: 'FAQ',
-    footerText: 'Премиальные туры по Кыргызстану и региону Алматы с локальной экспертизой и высоким сервисом.',
-    partnership: 'Партнёрство',
-    partnerTitle: 'Партнёрство для тур компаний',
-    partnerText: 'Сотрудничайте с нами, размещайте свои туры, получайте клиентов и развивайте туристический бизнес в Кыргызстане и Казахстане.',
-    partnerCta: 'Стать партнёром',
-    partnerFormTitle: 'Расскажите о вашей компании',
-    partnerFormText: 'Оставьте контакты, и мы поможем подключить вашу компанию к премиальной аудитории и curated-маршрутам.',
-    partnerFormName: 'Ваше имя',
-    partnerFormCompany: 'Компания',
-    partnerFormEmail: 'Email',
-    partnerFormMessage: 'Какой формат сотрудничества вас интересует?',
-    partnerFormCta: 'Отправить заявку',
+    partnerTitle: 'Partnership for tour companies',
+    partnerText: 'Leave your contacts if you want to publish tours and receive requests inside TravelPay.',
+    partnerName: 'Your name',
+    partnerCompany: 'Company',
+    partnerEmail: 'Email',
+    partnerMessage: 'What kind of partnership are you looking for?',
+    partnerSubmit: 'Send request',
+    footerText: 'Premium travel across Kyrgyzstan with a cleaner UI, stronger gallery and modern booking flow.',
   },
   KG: {
-    navBook: 'Тур брондоо',
-    heroTag: 'Премиум Борбор Азия турлары',
-    heroTitle: 'Кыргызстан жана Алматы боюнча өзгөчө турлар',
-    heroText: 'Премиум маршруттар, AI Concierge, жергиликтүү гиддер жана Борбор Азия боюнча ыңгайлуу саякаттар.',
+    heroTag: 'Кыргызстан боюнча премиум турлар',
+    heroTitle: 'TravelPay турларды заманбап, кооз жана ыңгайлуу кылып көрсөтөт.',
+    heroText: 'Ала-Арча, Ысык-Көл, Соң-Көл, Каракол, Жети-Өгүз жана Арсланбапты премиум галерея, түшүнүктүү карточкалар жана AI Concierge менен тандаңыз.',
     primary: 'Тур тандоо',
-    secondary: 'AI маршрут тандайт',
-    trusted: 'Премиум тоо, көл жана көчмөн тажрыйбасын тандаган саякатчылар бизге ишенет',
-    destinationsTitle: 'Популярдуу багыттар',
-    destinationsText: 'Кыргызстан жана Казахстан гана: кооз табият жана чыныгы жергиликтүү маданият.',
-    toursTitle: 'Эксклюзив турлар',
-    whyTitle: 'Эмне үчүн биз',
-    galleryTitle: 'Тур галереясы',
-    testimonialsTitle: 'Саякатчылардын пикирлери',
+    secondary: 'AI Concierge ачуу',
+    showcaseTitle: 'Кыргызстандын кооз жерлери',
+    showcaseText: 'Чыныгы локациялар, баа, узактык жана рейтинг көрсөтүлгөн компакт карточкалар.',
+    toursTitle: 'Саякат форматтары',
+    toursText: 'Ар бир формат кооз визуал, түшүнүктүү структура жана каталогго тез өтүү үчүн түзүлгөн.',
+    whyTitle: 'Эмне үчүн TravelPay',
+    galleryTitle: 'Тирүү тур галереясы',
+    galleryText: 'Чыныгы локациялар, адаптивдүү карточкалар жана сүрөт үстүндөгү маалымат менен.',
     faqTitle: 'FAQ',
-    footerText: 'Кыргызстан жана Алматы аймагы боюнча локалдык тажрыйба жана премиум сервис.',
-    partnership: 'Өнөктөштүк',
-    partnerTitle: 'Тур компаниялар үчүн өнөктөштүк',
-    partnerText: 'Биз менен кызматташып, турларыңызды жайгаштырып, кардарларды алып, Кыргызстан жана Казахстандагы туризм бизнесин өнүктүрүңүз.',
-    partnerCta: 'Өнөктөш болуу',
-    partnerFormTitle: 'Компанияңыз тууралуу жазыңыз',
-    partnerFormText: 'Байланыш маалыматтарыңызды калтырыңыз, биз сизди премиум аудитория жана мыкты маршруттар менен байланыштырабыз.',
-    partnerFormName: 'Атыңыз',
-    partnerFormCompany: 'Компания',
-    partnerFormEmail: 'Email',
-    partnerFormMessage: 'Кайсы өнөктөштүк форматы керек?',
-    partnerFormCta: 'Өтүнмө жөнөтүү',
+    partnerTitle: 'Туркомпаниялар үчүн өнөктөштүк',
+    partnerText: 'TravelPay ичинде тур жайгаштырып, суроо-талап алуу үчүн байланыш калтырыңыз.',
+    partnerName: 'Атыңыз',
+    partnerCompany: 'Компания',
+    partnerEmail: 'Email',
+    partnerMessage: 'Кайсы өнөктөштүк форматы кызыктырат?',
+    partnerSubmit: 'Суроо жөнөтүү',
+    footerText: 'Premium travel across Kyrgyzstan with a cleaner UI, stronger gallery and modern booking flow.',
   },
 };
 
-const destinations = [
-  ['Issyk-Kul', 'Kyrgyzstan', 'Turquoise alpine lake', 'https://images.unsplash.com/photo-1595841696677-6489ff3f8cd1?auto=format&fit=crop&w=1200&q=80'],
-  ['Ala-Archa', 'Kyrgyzstan', 'Glacier valley near Bishkek', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80'],
-  ['Karakol', 'Kyrgyzstan', 'Adventure base for mountains', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80'],
-  ['Jeti-Oguz', 'Kyrgyzstan', 'Red rocks and alpine meadows', 'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1200&q=80'],
-  ['Song-Kol', 'Kyrgyzstan', 'Yurts, horses, high pastures', 'https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=1200&q=80'],
-  ['Kel-Suu', 'Kyrgyzstan', 'Remote canyon lake expedition', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80'],
-  ['Almaty', 'Kazakhstan', 'Elegant city and mountain lifestyle', 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1200&q=80'],
-  ['Charyn Canyon', 'Kazakhstan', 'Desert canyon landscapes', 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80'],
-  ['Kolsai Lakes', 'Kazakhstan', 'Forest lakes and quiet luxury', 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1200&q=80'],
-  ['Kaindy Lake', 'Kazakhstan', 'Sunken forest mountain lake', 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80'],
-  ['Medeu', 'Kazakhstan', 'Iconic alpine sports complex', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80'],
-  ['Big Almaty Lake', 'Kazakhstan', 'High mountain turquoise lake', 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80'],
+const travelFormats = [
+  {
+    title: 'Private Tours',
+    text: 'Персональные маршруты с приватным гидом, гибким таймингом и премиальным трансфером.',
+    icon: <TeamOutlined />,
+  },
+  {
+    title: 'Lake & Mountain Escapes',
+    text: 'Иссык-Куль, Сон-Куль, Каракол и высокогорные панорамы с выверенным темпом.',
+    icon: <EnvironmentOutlined />,
+  },
+  {
+    title: 'Photo-Ready Adventures',
+    text: 'Джети-Огуз, Ала-Арча и scenic stop-пойнты для красивых фото и коротких треков.',
+    icon: <CompassOutlined />,
+  },
 ];
 
-const tours = [
-  ['VIP Group Tours', 'Small premium groups, curated routes, boutique stays, and carefully timed scenic stops.'],
-  ['Private Tours', 'Fully personalized journeys with private guide, premium vehicle, and flexible pace.'],
-  ['Adventure Tours', 'Kel-Suu, Ala-Archa, Karakol, Charyn Canyon, Kolsai Lakes, and high mountain experiences.'],
-  ['Luxury Nomad Experiences', 'Yurt stays, horses, local cuisine, eagle culture, and sunset camp atmospheres.'],
+const extraGallerySpots = [
+  {
+    key: 'sary-chelek',
+    title: 'Сары-Челек',
+    location: 'Джалал-Абадская область',
+    duration: '3 дня',
+    price: 34000,
+    rating: 4.8,
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sary%20Chelek%20Lake.jpg',
+    description: 'Заповедное горное озеро, тихие панорамы и маршрут для спокойного premium nature-отдыха.',
+  },
+  {
+    key: 'kol-suu',
+    title: 'Кёль-Суу',
+    location: 'Нарынская область',
+    duration: '4 дня',
+    price: 46000,
+    rating: 4.9,
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kol-Suu.jpg',
+    description: 'Высокогорное озеро среди скал, удалённый маршрут и сильная adventure-атмосфера.',
+  },
 ];
 
-const why = [
-  ['Local Guides', 'Expert guides from Kyrgyzstan and Kazakhstan who know hidden viewpoints and real stories.', <CompassOutlined />],
-  ['Luxury Transport', 'Comfortable vehicles for mountain roads, airport pickup, and private transfers.', <CarOutlined />],
-  ['Authentic Experiences', 'Nomadic culture, yurts, horses, lakes, canyons, and warm local hospitality.', <SafetyCertificateOutlined />],
-  ['Multilingual Support', 'KG, RU, EN service for smooth communication before and during the tour.', <CustomerServiceOutlined />],
+const whyTravelPay = [
+  ['Local Expertise', 'Маршруты по реальным локациям Кыргызстана с локальным контекстом.', <CompassOutlined />],
+  ['Premium Support', 'KG, RU, EN коммуникация до, во время и после поездки.', <CustomerServiceOutlined />],
+  ['Safe Planning', 'Понятные CTA, прозрачная стоимость и аккуратный booking flow.', <SafetyCertificateOutlined />],
 ];
 
-const partnerCards = [
-  ['Тур компании', 'Размещайте авторские маршруты и получайте качественные заявки.', <CompassOutlined />],
-  ['Локальные гиды', 'Показывайте гостям настоящую культуру, природу и скрытые локации.', <TeamOutlined />],
-  ['Отели и гостевые дома', 'Заполняйте номера через премиальные турпакеты и сезонные маршруты.', <ShopOutlined />],
-  ['Транспортные компании', 'Получайте заказы на трансферы, внедорожники и комфортные поездки.', <CarOutlined />],
-  ['Агентства и партнёры', 'Расширяйте продажи через совместные туры и локальную экспертизу.', <GlobalOutlined />],
-];
-
-const gallery = [
-  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
-  'https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=900&q=80',
-];
-
-const testimonials = [
-  ['Elena M.', 'Private Issyk-Kul Tour', 'The route felt premium and personal. Our guide knew every viewpoint and the transport was excellent.'],
-  ['Arman S.', 'Almaty Region Escape', 'Kolsai, Kaindy and Charyn were organized beautifully. It felt like a luxury mountain retreat.'],
-  ['Sofia K.', 'Nomad Experience', 'Song-Kol with yurts and horses was unforgettable, but still comfortable and very well planned.'],
-];
+const faqItems = {
+  RU: [
+    { key: '1', label: 'Какие локации доступны сейчас?', children: 'Ала-Арча, Иссык-Куль, Сон-Куль, Каракол, Джети-Огуз и Арсланбоб уже оформлены как приоритетные направления.' },
+    { key: '2', label: 'Можно ли заказать приватный тур?', children: 'Да, TravelPay поддерживает private format с персональным гидом, транспортом и гибким маршрутом.' },
+    { key: '3', label: 'Есть ли поддержка на нескольких языках?', children: 'Да, доступна поддержка на KG, RU и EN.' },
+  ],
+  EN: [
+    { key: '1', label: 'Which locations are available?', children: 'Ala-Archa, Issyk-Kul, Son-Kul, Karakol, Jeti-Oguz, and Arslanbob are highlighted as key destinations.' },
+    { key: '2', label: 'Can I request a private tour?', children: 'Yes, private format includes flexible routing, personal guide, and premium transfer.' },
+    { key: '3', label: 'Is multilingual support available?', children: 'Yes, TravelPay supports KG, RU, and EN communication.' },
+  ],
+  KG: [
+    { key: '1', label: 'Кайсы локациялар бар?', children: 'Ала-Арча, Ысык-Көл, Соң-Көл, Каракол, Жети-Өгүз жана Арсланбап негизги багыттар катары көрсөтүлдү.' },
+    { key: '2', label: 'Жеке тур заказ кылса болобу?', children: 'Ооба, жеке гид, ыңгайлуу транспорт жана ийкемдүү маршрут менен private формат бар.' },
+    { key: '3', label: 'Бир нече тилде колдоо барбы?', children: 'Ооба, KG, RU жана EN тилдеринде колдоо бар.' },
+  ],
+};
 
 const socialLinks = [
-  { key: 'instagram', label: 'Instagram', href: 'https://instagram.com', icon: <InstagramOutlined /> },
   { key: 'whatsapp', label: 'WhatsApp', href: 'https://wa.me/996555123456', icon: <WhatsAppOutlined /> },
   { key: 'email', label: 'Email', href: 'mailto:hello@travelpay.kg', icon: <MailOutlined /> },
+  { key: 'phone', label: '+996 555 123 456', href: 'tel:+996555123456', icon: <PhoneOutlined /> },
 ];
 
-const footerColumns = [
-  {
-    title: 'Explore',
-    links: ['Popular Destinations', 'Exclusive Tours', 'Tour Gallery', 'Partnership'],
-  },
-  {
-    title: 'Destinations',
-    links: ['Issyk-Kul', 'Karakol', 'Song-Kol', 'Almaty', 'Charyn Canyon'],
-  },
-  {
-    title: 'Contact',
-    links: ['+996 555 123 456', 'hello@travelpay.kg', 'Bishkek, Kyrgyzstan', 'Daily 09:00 - 21:00'],
-  },
-];
-
-const fadeUp = {
-  initial: { opacity: 0, y: 28 },
+const motionCard = {
+  initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.2 },
-  transition: { duration: 0.62 },
+  viewport: { once: true, amount: 0.18 },
+  transition: { duration: 0.5 },
 };
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'EN');
-  const [partnerForm, setPartnerForm] = useState({
-    name: '',
-    company: '',
-    email: '',
-    message: '',
-  });
-  const t = copy[language] || copy.EN;
+  const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
+  const [partnerForm, setPartnerForm] = useState({ name: '', company: '', email: '', message: '' });
 
   useEffect(() => {
     const handleLanguageChange = (event) => {
-      setLanguage(event.detail || localStorage.getItem('travelpay_language') || 'EN');
+      setLanguage(event.detail || localStorage.getItem('travelpay_language') || 'RU');
     };
 
     window.addEventListener('travelpay-language-change', handleLanguageChange);
     return () => window.removeEventListener('travelpay-language-change', handleLanguageChange);
   }, []);
 
-  const faqItems = useMemo(() => [
-    {
-      key: '1',
-      label: language === 'RU' ? 'Какие направления доступны?' : language === 'KG' ? 'Кайсы багыттар бар?' : 'Which destinations are available?',
-      children: 'Issyk-Kul, Bishkek, Ala-Archa, Karakol, Jeti-Oguz, Song-Kol, Tash-Rabat, Kel-Suu, Sary-Chelek, Almaty, Charyn Canyon, Kolsai Lakes, Kaindy Lake, Medeu, Shymbulak, Big Almaty Lake.',
-    },
-    {
-      key: '2',
-      label: language === 'RU' ? 'Можно ли заказать приватный тур?' : language === 'KG' ? 'Жеке тур брондосо болобу?' : 'Can I book a private tour?',
-      children: language === 'RU' ? 'Да, мы делаем приватные маршруты с гидом, транспортом и гибким графиком.' : language === 'KG' ? 'Ооба, гид, транспорт жана ийкемдүү график менен жеке маршрут даярдайбыз.' : 'Yes, private tours include a guide, transport, and flexible routing.',
-    },
-    {
-      key: '3',
-      label: language === 'RU' ? 'На каких языках есть поддержка?' : language === 'KG' ? 'Кайсы тилдерде колдоо бар?' : 'Which languages are supported?',
-      children: 'KG | RU | EN',
-    },
-  ], [language]);
+  const t = copy[language] || copy.RU;
+
+  const showcaseCards = useMemo(
+    () =>
+      KYRGYZSTAN_TOUR_SPOTS.map((spot, index) => ({
+        ...spot,
+        accent: index % 2 === 0 ? 'gold' : 'blue',
+      })),
+    [],
+  );
+  const galleryCards = useMemo(
+    () =>
+      [...KYRGYZSTAN_TOUR_SPOTS, ...extraGallerySpots].map((spot, index) => ({
+        ...spot,
+        accent: index % 2 === 0 ? 'gold' : 'blue',
+      })),
+    [],
+  );
 
   const handlePartnerInput = (key) => (event) => {
-    const value = event?.target?.value || '';
-    setPartnerForm((prev) => ({ ...prev, [key]: value }));
+    setPartnerForm((prev) => ({ ...prev, [key]: event.target.value }));
   };
 
   const handlePartnerSubmit = (event) => {
     event.preventDefault();
-    navigate('/register');
+    setPartnerForm({ name: '', company: '', email: '', message: '' });
   };
 
   return (
     <main className="home-page" style={styles.page}>
       <section className="home-hero-section" style={styles.hero}>
-        <video className="central-asia-hero-video" autoPlay muted loop playsInline style={styles.heroVideo}>
+        <video autoPlay muted loop playsInline style={styles.heroVideo}>
           <source src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4" type="video/mp4" />
-          <source src="https://cdn.pixabay.com/video/2021/08/10/84776-587945089_large.mp4" type="video/mp4" />
         </video>
-        <div className="hero-gradient-layer hero-gradient-layer-one" />
-        <div className="hero-gradient-layer hero-gradient-layer-two" />
-        <div className="hero-gradient-layer hero-gradient-layer-three" />
         <div style={styles.heroOverlay} />
-
-        <div className="home-shell home-hero-shell" style={styles.heroShell}>
-          <motion.div className="home-hero-content" style={styles.heroContent} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75 }}>
+        <div className="home-shell" style={styles.heroShell}>
+          <motion.div {...motionCard} style={styles.heroContent}>
             <Tag style={styles.heroTag}>{t.heroTag}</Tag>
             <Title style={styles.heroTitle}>{t.heroTitle}</Title>
             <Paragraph style={styles.heroText}>{t.heroText}</Paragraph>
-            <Space size={14} wrap className="home-hero-actions" style={styles.heroActions}>
-              <Button size="large" type="primary" style={styles.goldButton} className="premium-cta" onClick={() => navigate('/tours')}>
-                {t.primary} <ArrowRightOutlined />
+            <Space wrap size={14}>
+              <Button type="primary" size="large" icon={<ArrowRightOutlined />} className="travelpay-primary-button" style={styles.heroPrimary} onClick={() => navigate('/tours')}>
+                {t.primary}
               </Button>
-              <Button size="large" style={styles.consultButton} className="premium-cta secondary" onClick={() => window.dispatchEvent(new Event('open-ai-concierge'))}>
+              <Button size="large" icon={<GlobalOutlined />} className="travelpay-secondary-button" style={styles.heroSecondary} onClick={() => window.dispatchEvent(new Event('open-ai-concierge'))}>
                 {t.secondary}
               </Button>
             </Space>
@@ -270,86 +228,65 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="home-trust-section" style={styles.trustSection}>
-        <div className="home-shell" style={styles.trustShell}>
-          <Text style={styles.trustText}>{t.trusted}</Text>
-          <div className="home-logo-strip" style={styles.logoStrip}>
-            {['Issyk-Kul', 'Karakol', 'Song-Kol', 'Almaty', 'Kolsai Lakes', 'Charyn Canyon'].map((brand) => (
-              <span key={brand}>{brand}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="destinations" className="home-section" style={styles.section}>
+      <section className="home-section" style={styles.section}>
         <div className="home-shell" style={styles.sectionInner}>
-          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
-            <Tag style={styles.sectionTag}><EnvironmentOutlined /> {t.destinationsTitle}</Tag>
-            <Title level={2} style={styles.sectionTitle}>{t.destinationsTitle}</Title>
-            <Paragraph style={styles.sectionText}>{t.destinationsText}</Paragraph>
+          <motion.div {...motionCard} style={styles.sectionHeader}>
+            <Tag style={styles.sectionTag}>{t.showcaseTitle}</Tag>
+            <Title level={2} style={styles.sectionTitle}>{t.showcaseTitle}</Title>
+            <Paragraph style={styles.sectionText}>{t.showcaseText}</Paragraph>
           </motion.div>
 
-          <div className="home-destination-grid" style={styles.destinationGrid}>
-            {destinations.map(([title, country, text, image], index) => (
-              <motion.article className="home-destination-card" key={title} style={styles.destinationCard} {...fadeUp} transition={{ delay: index * 0.03, duration: 0.48 }} whileHover={{ y: -6 }}>
-                <img src={image} alt={title} style={styles.destinationImage} />
-                <div style={styles.destinationOverlay}>
-                  <Tag style={styles.countryTag}>{country}</Tag>
-                  <Title level={3} style={styles.destinationTitle}>{title}</Title>
-                  <Text style={styles.destinationText}>{text}</Text>
-                </div>
+          <div className="home-tour-grid">
+            {showcaseCards.map((spot, index) => (
+              <motion.article key={spot.key} {...motionCard} transition={{ delay: index * 0.04 }} className="home-tour-card-shell">
+                <Card className="home-tour-media-card" style={styles.showcaseCard} styles={{ body: { padding: 0 } }}>
+                  <div style={styles.showcaseImageWrap}>
+                    <img src={spot.image} alt={spot.title} onError={withTourFallback} style={styles.showcaseImage} />
+                    <div style={styles.showcaseOverlay} />
+                    <div style={styles.showcaseTopMeta}>
+                      <Tag color="gold">{spot.rating}</Tag>
+                      <Tag color="blue">{spot.duration}</Tag>
+                    </div>
+                    <div style={styles.showcaseBottom}>
+                      <Title level={3} style={styles.showcaseTitle}>{spot.title}</Title>
+                      <Text style={styles.showcaseLocation}><EnvironmentOutlined /> {spot.location}</Text>
+                    </div>
+                  </div>
+                  <div style={styles.showcaseBody}>
+                    <Paragraph style={styles.showcaseText}>{spot.description}</Paragraph>
+                    <div style={styles.showcaseFooter}>
+                      <span style={styles.showcasePrice}>{Number(spot.price).toLocaleString('ru-RU')} сом</span>
+                      <Button type="default" icon={<ArrowRightOutlined />} className="travelpay-secondary-button" style={styles.inlineGhostButton} onClick={() => navigate('/tours')}>
+                        Каталог
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
               </motion.article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="home-dark-section" style={styles.darkSection}>
+      <section className="home-section dark" style={styles.darkSection}>
         <div className="home-shell" style={styles.sectionInner}>
-          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
+          <motion.div {...motionCard} style={styles.sectionHeader}>
             <Tag style={styles.darkTag}>{t.toursTitle}</Tag>
             <Title level={2} style={styles.darkTitle}>{t.toursTitle}</Title>
+            <Paragraph style={styles.darkText}>{t.toursText}</Paragraph>
           </motion.div>
 
-          <Row gutter={[18, 18]}>
-            {tours.map(([title, text], index) => (
-              <Col xs={24} md={12} key={title}>
-                <motion.div {...fadeUp} transition={{ delay: index * 0.06 }}>
-                  <Card className="home-tour-card" style={styles.tourCard}>
-                    <div style={styles.tourCardTop}>
-                      <Tag style={styles.tourTag}>Premium Format</Tag>
-                    </div>
-                    <Title level={3} style={styles.tourTitle}>{title}</Title>
-                    <Paragraph style={styles.tourText}>{text}</Paragraph>
-                    <div style={styles.tourFooter}>
-                      <span style={styles.tourMeta}>Curated itinerary</span>
-                      <Button type="link" style={styles.tourLink} onClick={() => navigate('/tours')}>
-                        {t.primary} <ArrowRightOutlined />
-                      </Button>
-                    </div>
-                  </Card>
-                </motion.div>
-              </Col>
-            ))}
-          </Row>
-        </div>
-      </section>
-
-      <section className="home-section" style={styles.section}>
-        <div className="home-shell" style={styles.sectionInner}>
-          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
-            <Tag style={styles.sectionTag}>{t.whyTitle}</Tag>
-            <Title level={2} style={styles.sectionTitle}>{t.whyTitle}</Title>
-          </motion.div>
-
-          <Row gutter={[18, 18]}>
-            {why.map(([title, text, icon], index) => (
-              <Col xs={24} sm={12} lg={6} key={title}>
-                <motion.div {...fadeUp} transition={{ delay: index * 0.06 }}>
-                  <Card className="home-why-card" style={styles.whyCard}>
-                    <div style={styles.whyIcon}>{icon}</div>
-                    <Title level={4} style={styles.cardTitle}>{title}</Title>
-                    <Paragraph style={styles.cardText}>{text}</Paragraph>
+          <Row gutter={[20, 20]}>
+            {travelFormats.map((item, index) => (
+              <Col xs={24} md={12} lg={8} key={item.title}>
+                <motion.div {...motionCard} transition={{ delay: index * 0.06 }}>
+                  <Card className="home-format-card" style={styles.formatCard}>
+                    <div style={styles.formatIcon}>{item.icon}</div>
+                    <Title level={4} style={styles.formatTitle}>{item.title}</Title>
+                    <Paragraph style={styles.formatText}>{item.text}</Paragraph>
+                    <Button type="primary" className="travelpay-primary-button" style={styles.formatButton} onClick={() => navigate('/tours')}>
+                      Перейти к турам
+                    </Button>
                   </Card>
                 </motion.div>
               </Col>
@@ -360,63 +297,39 @@ const HomePage = () => {
 
       <section className="home-gallery-section" style={styles.gallerySection}>
         <div className="home-shell" style={styles.sectionInner}>
-          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
-            <Tag style={styles.darkTag}>{t.galleryTitle}</Tag>
-            <Title level={2} style={styles.darkTitle}>{t.galleryTitle}</Title>
+          <motion.div {...motionCard} style={styles.sectionHeader}>
+            <Tag style={styles.sectionTag}>{t.galleryTitle}</Tag>
+            <Title level={2} style={styles.sectionTitle}>{t.galleryTitle}</Title>
+            <Paragraph style={styles.sectionText}>{t.galleryText}</Paragraph>
           </motion.div>
 
-          <div className="home-gallery-grid" style={styles.galleryGrid}>
-            {gallery.map((image, index) => (
-              <motion.div
-                key={image}
-                className={`home-gallery-item ${index === 0 || index === 3 ? 'is-tall' : ''}`}
-                style={styles.galleryItem}
-                whileHover={{ y: -4 }}
-              >
-                <img src={image} alt="Central Asia tour" style={styles.galleryImage} />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="partnership" className="home-partnership-section" style={styles.partnershipSection}>
-        <div className="home-shell">
-          <motion.div className="partner-shell" {...fadeUp} style={styles.partnerShell}>
-            <div style={styles.partnerIntro}>
-              <Tag style={styles.darkTag}>{t.partnership}</Tag>
-              <Title level={2} style={styles.partnerTitle}>{t.partnerTitle}</Title>
-              <Paragraph style={styles.partnerText}>{t.partnerText}</Paragraph>
-              <Button size="large" type="primary" style={styles.goldButton} className="premium-cta" onClick={() => navigate('/register')}>
-                {t.partnerCta} <ArrowRightOutlined />
-              </Button>
-            </div>
-
-            <Card className="home-partner-form-card" style={styles.partnerFormCard}>
-              <Text style={styles.partnerFormEyebrow}>TravelPay B2B</Text>
-              <Title level={3} style={styles.partnerFormTitle}>{t.partnerFormTitle}</Title>
-              <Paragraph style={styles.partnerFormText}>{t.partnerFormText}</Paragraph>
-              <form className="home-partner-form" style={styles.partnerForm} onSubmit={handlePartnerSubmit}>
-                <Input value={partnerForm.name} onChange={handlePartnerInput('name')} placeholder={t.partnerFormName} style={styles.partnerInput} />
-                <Input value={partnerForm.company} onChange={handlePartnerInput('company')} placeholder={t.partnerFormCompany} style={styles.partnerInput} />
-                <Input value={partnerForm.email} onChange={handlePartnerInput('email')} placeholder={t.partnerFormEmail} style={styles.partnerInput} />
-                <TextArea value={partnerForm.message} onChange={handlePartnerInput('message')} rows={4} placeholder={t.partnerFormMessage} style={styles.partnerTextarea} />
-                <Button htmlType="submit" type="primary" style={styles.partnerSubmit}>
-                  {t.partnerFormCta}
-                </Button>
-              </form>
-            </Card>
-          </motion.div>
-
-          <div className="home-partner-grid" style={styles.partnerGrid}>
-            {partnerCards.map(([title, text, icon]) => (
-              <motion.div key={title} whileHover={{ y: -6 }} transition={{ duration: 0.2 }}>
-                <Card className="home-partner-card" style={styles.partnerCard}>
-                  <div style={styles.partnerIcon}>{icon}</div>
-                  <Title level={4} style={styles.partnerCardTitle}>{title}</Title>
-                  <Paragraph style={styles.partnerCardText}>{text}</Paragraph>
+          <div className="home-gallery-grid">
+            {galleryCards.map((spot, index) => (
+              <motion.article key={`${spot.key}-gallery`} {...motionCard} transition={{ delay: index * 0.04 }} className="home-gallery-card">
+                <Card hoverable className="home-gallery-tour-card" style={styles.galleryCard} styles={{ body: { padding: 0 } }} onClick={() => navigate('/tours')}>
+                  <div style={styles.galleryImageWrap}>
+                    <img src={spot.image} alt={spot.title} onError={withTourFallback} style={styles.galleryImage} />
+                    <div style={styles.galleryShade} />
+                    <div style={styles.galleryMetaTop}>
+                      <Tag color="gold">{spot.rating}</Tag>
+                      <Tag color="processing">{spot.duration}</Tag>
+                    </div>
+                    <div style={styles.galleryMetaBottom}>
+                      <Title level={4} style={styles.galleryTitle}>{spot.title}</Title>
+                      <Text style={styles.gallerySubtitle}>{spot.location}</Text>
+                    </div>
+                  </div>
+                  <div style={styles.galleryBody}>
+                    <Paragraph ellipsis={{ rows: 2 }} style={styles.galleryText}>{spot.description}</Paragraph>
+                    <div style={styles.galleryFooter}>
+                      <span style={styles.galleryPrice}>от {Number(spot.price).toLocaleString('ru-RU')} сом</span>
+                      <Space size={6}>
+                        {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} style={{ color: star <= Math.round(spot.rating) ? BRAND_GOLD : 'rgba(22,50,79,0.18)' }} />)}
+                      </Space>
+                    </div>
+                  </div>
                 </Card>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
         </div>
@@ -424,22 +337,19 @@ const HomePage = () => {
 
       <section className="home-section" style={styles.section}>
         <div className="home-shell" style={styles.sectionInner}>
-          <motion.div {...fadeUp} className="home-section-header" style={styles.sectionHeader}>
-            <Tag style={styles.sectionTag}>{t.testimonialsTitle}</Tag>
-            <Title level={2} style={styles.sectionTitle}>{t.testimonialsTitle}</Title>
+          <motion.div {...motionCard} style={styles.sectionHeader}>
+            <Tag style={styles.sectionTag}>{t.whyTitle}</Tag>
+            <Title level={2} style={styles.sectionTitle}>{t.whyTitle}</Title>
           </motion.div>
 
           <Row gutter={[18, 18]}>
-            {testimonials.map(([name, route, text], index) => (
-              <Col xs={24} md={8} key={name}>
-                <motion.div {...fadeUp} transition={{ delay: index * 0.08 }}>
-                  <Card className="home-testimonial-card" style={styles.testimonialCard}>
-                    <Space size={4} style={styles.testimonialStars}>
-                      {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} />)}
-                    </Space>
-                    <Paragraph style={styles.quote}>{text}</Paragraph>
-                    <Text strong style={styles.testimonialName}>{name}</Text>
-                    <Text style={styles.testimonialRoute}>{route}</Text>
+            {whyTravelPay.map(([title, text, icon], index) => (
+              <Col xs={24} md={8} key={title}>
+                <motion.div {...motionCard} transition={{ delay: index * 0.06 }}>
+                  <Card style={styles.whyCard}>
+                    <div style={styles.whyIcon}>{icon}</div>
+                    <Title level={4} style={styles.whyTitle}>{title}</Title>
+                    <Paragraph style={styles.whyText}>{text}</Paragraph>
                   </Card>
                 </motion.div>
               </Col>
@@ -448,74 +358,69 @@ const HomePage = () => {
         </div>
       </section>
 
+      <section id="partnership" className="home-section" style={styles.partnerSection}>
+        <div className="home-shell" style={styles.partnerGrid}>
+          <motion.div {...motionCard} style={styles.partnerCopy}>
+            <Tag style={styles.darkTag}>TravelPay B2B</Tag>
+            <Title level={2} style={styles.darkTitle}>{t.partnerTitle}</Title>
+            <Paragraph style={styles.darkText}>{t.partnerText}</Paragraph>
+          </motion.div>
+
+          <motion.div {...motionCard}>
+            <Card style={styles.partnerCard}>
+              <form onSubmit={handlePartnerSubmit} style={styles.partnerForm}>
+                <Input value={partnerForm.name} onChange={handlePartnerInput('name')} placeholder={t.partnerName} size="large" />
+                <Input value={partnerForm.company} onChange={handlePartnerInput('company')} placeholder={t.partnerCompany} size="large" />
+                <Input value={partnerForm.email} onChange={handlePartnerInput('email')} placeholder={t.partnerEmail} size="large" />
+                <TextArea value={partnerForm.message} onChange={handlePartnerInput('message')} rows={4} placeholder={t.partnerMessage} />
+                <Button htmlType="submit" type="primary" size="large" className="travelpay-primary-button" style={styles.partnerButton}>
+                  {t.partnerSubmit}
+                </Button>
+              </form>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
       <section className="home-section" style={styles.section}>
         <div className="home-shell" style={styles.sectionInner}>
           <Row gutter={[24, 24]} align="middle">
             <Col xs={24} lg={10}>
-              <motion.div {...fadeUp}>
+              <motion.div {...motionCard}>
                 <Tag style={styles.sectionTag}>{t.faqTitle}</Tag>
                 <Title level={2} style={styles.sectionTitle}>{t.faqTitle}</Title>
-                <Paragraph style={styles.sectionText}>{t.destinationsText}</Paragraph>
               </motion.div>
             </Col>
             <Col xs={24} lg={14}>
-              <Collapse className="home-faq" size="large" style={styles.faq} items={faqItems} />
+              <Collapse items={faqItems[language] || faqItems.RU} size="large" className="home-faq" style={styles.faq} />
             </Col>
           </Row>
         </div>
       </section>
 
-      <footer className="home-footer" style={styles.footer}>
-        <div className="home-shell">
-          <div className="home-footer-grid" style={styles.footerGrid}>
-            <div style={styles.footerBrand}>
-              <div style={styles.footerLogo}>
-                <span style={styles.footerLogoMark}>TP</span>
-                <span style={styles.footerLogoText}>TravelPay Central Asia</span>
-              </div>
-              <Paragraph style={styles.footerText}>{t.footerText}</Paragraph>
-              <Segmented
-                value={language}
-                options={['KG', 'RU', 'EN']}
-                onChange={(value) => {
-                  setLanguage(value);
-                  localStorage.setItem('travelpay_language', value);
-                  window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
-                }}
-              />
-            </div>
-
-            {footerColumns.map((column) => (
-              <div key={column.title}>
-                <Text style={styles.footerHeading}>{column.title}</Text>
-                {column.links.map((link) => (
-                  <a key={link} href="/" onClick={(event) => event.preventDefault()} className="home-footer-link" style={styles.footerLink}>
-                    {link}
-                  </a>
-                ))}
-              </div>
-            ))}
-
-            <div>
-              <Text style={styles.footerHeading}>Social</Text>
-              <div style={styles.socialList}>
-                {socialLinks.map((item) => (
-                  <a key={item.key} href={item.href} className="home-social-link" style={styles.socialLink}>
-                    <span style={styles.socialIcon}>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </a>
-                ))}
-              </div>
-              <div style={styles.footerMeta}>
-                <span style={styles.footerMetaRow}><PhoneOutlined /> +996 555 123 456</span>
-                <span style={styles.footerMetaRow}><MailOutlined /> hello@travelpay.kg</span>
-              </div>
-            </div>
+      <footer style={styles.footer}>
+        <div className="home-shell" style={styles.footerInner}>
+          <div>
+            <Title level={3} style={styles.footerBrand}>TravelPay</Title>
+            <Paragraph style={styles.footerText}>{t.footerText}</Paragraph>
+            <Segmented
+              value={language}
+              options={['KG', 'RU', 'EN']}
+              onChange={(value) => {
+                setLanguage(value);
+                localStorage.setItem('travelpay_language', value);
+                window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
+              }}
+            />
           </div>
 
-          <div style={styles.footerBottom}>
-            <span>© 2026 TravelPay. All rights reserved.</span>
-            <span>Premium travel across Kyrgyzstan and Kazakhstan.</span>
+          <div style={styles.footerSocials}>
+            {socialLinks.map((item) => (
+              <a key={item.key} href={item.href} style={styles.footerLink}>
+                {item.icon}
+                <span>{item.label}</span>
+              </a>
+            ))}
           </div>
         </div>
       </footer>
@@ -526,26 +431,18 @@ const HomePage = () => {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'radial-gradient(circle at 12% 8%, rgba(43,184,197,0.10), transparent 28%), radial-gradient(circle at 88% 18%, rgba(240,178,74,0.12), transparent 24%), linear-gradient(180deg, #f5f8fc 0%, #edf3f8 46%, #f8fbff 100%)',
+    background: 'radial-gradient(circle at 12% 10%, rgba(43,184,197,0.10), transparent 24%), radial-gradient(circle at 88% 14%, rgba(240,178,74,0.14), transparent 22%), linear-gradient(180deg, #F5F8FC 0%, #EDF4FA 48%, #F8FBFF 100%)',
     color: BRAND_BLUE,
     fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-    scrollBehavior: 'smooth',
   },
   hero: {
-    minHeight: '100vh',
     position: 'relative',
+    minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
-    padding: '124px 24px 84px',
+    padding: '136px 24px 84px',
     overflow: 'hidden',
-    marginTop: -78,
-    background: '#06111f',
-  },
-  heroShell: {
-    position: 'relative',
-    zIndex: 2,
-    display: 'block',
-    width: '100%',
+    marginTop: -94,
   },
   heroVideo: {
     position: 'absolute',
@@ -553,536 +450,374 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    opacity: 0.82,
-    filter: 'saturate(1.08) contrast(1.04) brightness(0.9)',
+    filter: 'saturate(1.08) contrast(1.04) brightness(0.82)',
   },
   heroOverlay: {
     position: 'absolute',
     inset: 0,
-    zIndex: 1,
-    background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.05), transparent 28%), linear-gradient(90deg, rgba(6,17,31,0.7), rgba(6,17,31,0.48), rgba(6,17,31,0.62)), linear-gradient(180deg, rgba(4,11,21,0.22), rgba(4,11,21,0.8))',
+    background: 'linear-gradient(90deg, rgba(6,17,31,0.82), rgba(6,17,31,0.52), rgba(6,17,31,0.70)), radial-gradient(circle at 70% 20%, rgba(240,178,74,0.20), transparent 28%)',
+  },
+  heroShell: {
+    position: 'relative',
+    zIndex: 2,
+    width: '100%',
   },
   heroContent: {
-    width: '100%',
     maxWidth: 760,
-    minWidth: 0,
   },
   heroTag: {
-    color: '#fff',
-    background: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(255,255,255,0.22)',
+    color: '#FFFFFF',
+    background: 'rgba(255,255,255,0.10)',
+    border: '1px solid rgba(255,255,255,0.16)',
     borderRadius: 999,
-    padding: '8px 16px',
-    fontWeight: 760,
-    letterSpacing: 0.22,
+    padding: '6px 14px',
+    fontWeight: 780,
+    fontSize: 12,
     backdropFilter: 'blur(18px)',
-    boxShadow: '0 12px 32px rgba(0,0,0,0.16)',
   },
   heroTitle: {
-    color: '#fff',
-    fontSize: 'clamp(40px, 5vw, 72px)',
-    lineHeight: 1.01,
-    margin: '24px 0 18px',
-    fontWeight: 820,
-    letterSpacing: -1.1,
-    textShadow: '0 22px 70px rgba(0,0,0,0.34)',
+    color: '#FFFFFF',
+    fontSize: 'clamp(30px, 4.8vw, 52px)',
+    lineHeight: 1.06,
+    margin: '18px 0 14px',
+    fontWeight: 900,
+    textShadow: '0 24px 72px rgba(0,0,0,0.34)',
   },
   heroText: {
     color: 'rgba(255,255,255,0.84)',
-    fontSize: 18,
-    lineHeight: 1.7,
-    maxWidth: 640,
-    margin: '0 0 30px',
+    fontSize: 16,
+    lineHeight: 1.66,
+    marginBottom: 24,
+    maxWidth: 620,
   },
-  heroActions: {
-    marginBottom: 0,
+  heroPrimary: {
+    minWidth: 176,
+    height: 50,
+    borderRadius: 18,
   },
-  goldButton: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
-    borderColor: BRAND_GOLD,
-    color: BRAND_BLUE,
-    height: 48,
-    borderRadius: 999,
-    paddingInline: 24,
-    fontWeight: 840,
-    boxShadow: '0 18px 42px rgba(240,178,74,0.28)',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  consultButton: {
-    borderColor: 'rgba(255,255,255,0.28)',
-    color: '#fff',
-    background: 'rgba(255,255,255,0.08)',
-    height: 48,
-    borderRadius: 999,
-    paddingInline: 24,
-    fontWeight: 780,
-    backdropFilter: 'blur(18px)',
-    boxShadow: '0 14px 34px rgba(0,0,0,0.18)',
-  },
-  trustSection: {
-    padding: '30px 24px',
-    background: 'rgba(255,255,255,0.74)',
-    borderBottom: '1px solid rgba(22,50,79,0.08)',
-    backdropFilter: 'blur(18px)',
-  },
-  trustShell: {
-    display: 'grid',
-    gap: 18,
-  },
-  trustText: {
-    color: '#526981',
-    fontWeight: 760,
-    textAlign: 'center',
-  },
-  logoStrip: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: 18,
-    flexWrap: 'wrap',
-    color: BRAND_BLUE,
-    fontWeight: 760,
-    opacity: 0.78,
+  heroSecondary: {
+    minWidth: 208,
+    height: 50,
+    borderRadius: 18,
   },
   section: {
     padding: '84px 24px',
   },
+  darkSection: {
+    padding: '84px 24px',
+    background: 'linear-gradient(180deg, #071523, #10233A)',
+  },
+  gallerySection: {
+    padding: '84px 24px',
+    background: 'linear-gradient(180deg, rgba(16,35,58,0.04), rgba(16,35,58,0.08))',
+  },
   sectionInner: {
     width: '100%',
-    minWidth: 0,
   },
   sectionHeader: {
-    width: '100%',
     maxWidth: 760,
     margin: '0 auto 34px',
     textAlign: 'center',
   },
   sectionTag: {
-    background: 'rgba(255,255,255,0.82)',
-    borderColor: 'rgba(22,50,79,0.08)',
-    color: BRAND_BLUE,
     borderRadius: 999,
     padding: '7px 14px',
-    fontWeight: 780,
-    boxShadow: '0 12px 32px rgba(22,50,79,0.06)',
+    background: 'rgba(255,255,255,0.88)',
+    color: BRAND_BLUE,
+    border: '1px solid rgba(22,50,79,0.08)',
+    fontWeight: 800,
   },
   sectionTitle: {
     color: BRAND_BLUE,
     fontSize: 'clamp(30px, 4vw, 48px)',
-    fontWeight: 840,
+    fontWeight: 900,
     marginTop: 16,
-    letterSpacing: -0.8,
   },
   sectionText: {
-    color: '#62758a',
+    color: '#62758A',
     fontSize: 16,
-    lineHeight: 1.72,
+    lineHeight: 1.7,
   },
-  destinationGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 16,
+  darkTag: {
+    borderRadius: 999,
+    padding: '7px 14px',
+    background: 'rgba(240,178,74,0.16)',
+    color: '#FFD48A',
+    border: '1px solid rgba(240,178,74,0.26)',
+    fontWeight: 800,
   },
-  destinationCard: {
-    position: 'relative',
-    minHeight: 296,
+  darkTitle: {
+    color: '#FFFFFF',
+    fontSize: 'clamp(30px, 4vw, 48px)',
+    fontWeight: 900,
+    marginTop: 16,
+  },
+  darkText: {
+    color: 'rgba(215,227,242,0.84)',
+    lineHeight: 1.7,
+  },
+  showcaseCard: {
+    height: '100%',
     borderRadius: 24,
     overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.78)',
-    boxShadow: '0 24px 70px rgba(22,50,79,0.12)',
-    minWidth: 0,
+    border: '1px solid rgba(22,50,79,0.08)',
+    boxShadow: '0 22px 64px rgba(22,50,79,0.10)',
+    background: 'rgba(255,255,255,0.92)',
   },
-  destinationImage: {
-    position: 'absolute',
-    inset: 0,
+  showcaseImageWrap: {
+    position: 'relative',
+    height: 220,
+    overflow: 'hidden',
+  },
+  showcaseImage: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    display: 'block',
   },
-  destinationOverlay: {
+  showcaseOverlay: {
     position: 'absolute',
     inset: 0,
-    padding: 20,
+    background: 'linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.62))',
+  },
+  showcaseTopMeta: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    right: 14,
     display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-    minWidth: 0,
-    background: 'linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.76))',
+    justifyContent: 'space-between',
   },
-  countryTag: {
-    width: 'fit-content',
-    color: BRAND_BLUE,
-    background: 'rgba(255,255,255,0.88)',
-    border: 'none',
-    fontWeight: 860,
-    marginInlineEnd: 0,
+  showcaseBottom: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 18,
   },
-  destinationTitle: {
-    color: '#fff',
-    margin: '10px 0 4px',
+  showcaseTitle: {
+    color: '#FFFFFF',
+    margin: 0,
     fontWeight: 900,
-    fontSize: 'clamp(24px, 3vw, 28px)',
   },
-  destinationText: {
-    color: '#e8f3ff',
-    fontWeight: 650,
-    lineHeight: 1.45,
+  showcaseLocation: {
+    color: 'rgba(255,255,255,0.82)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
   },
-  darkSection: {
-    padding: '84px 24px',
-    background: 'linear-gradient(180deg, #071523, #10233a)',
+  showcaseBody: {
+    padding: 18,
   },
-  darkTag: {
-    background: 'rgba(240,178,74,0.16)',
-    color: '#ffd48a',
-    border: '1px solid rgba(240,178,74,0.28)',
-    borderRadius: 999,
-    fontWeight: 900,
-    padding: '5px 12px',
+  showcaseText: {
+    color: '#607186',
+    lineHeight: 1.64,
+    minHeight: 52,
+    marginBottom: 16,
   },
-  darkTitle: {
-    color: '#fff',
-    fontSize: 'clamp(30px, 4vw, 48px)',
-    fontWeight: 840,
-    marginTop: 16,
-    letterSpacing: -0.8,
-  },
-  tourCard: {
-    height: '100%',
-    border: '1px solid rgba(255,255,255,0.14)',
-    borderRadius: 24,
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.07))',
-    backdropFilter: 'blur(18px)',
-    boxShadow: '0 24px 70px rgba(0,0,0,0.22)',
-  },
-  tourCardTop: {
-    marginBottom: 12,
-  },
-  tourTag: {
-    borderRadius: 999,
-    marginInlineEnd: 0,
-    borderColor: 'rgba(43,184,197,0.28)',
-    color: '#9ce9ef',
-    background: 'rgba(43,184,197,0.12)',
-    fontWeight: 780,
-  },
-  tourTitle: {
-    color: '#fff',
-    fontWeight: 820,
-    fontSize: 25,
-    marginBottom: 12,
-  },
-  tourText: {
-    color: '#d7e3f2',
-    lineHeight: 1.68,
-    minHeight: 108,
-    marginBottom: 18,
-  },
-  tourFooter: {
+  showcaseFooter: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 14,
-    marginTop: 'auto',
+    gap: 12,
+    flexWrap: 'wrap',
   },
-  tourMeta: {
-    color: '#8fb2cf',
-    fontSize: 13,
-    fontWeight: 700,
-  },
-  tourLink: {
+  showcasePrice: {
     color: BRAND_GOLD,
     fontWeight: 900,
-    padding: 0,
+    fontSize: 20,
   },
-  whyCard: {
+  inlineGhostButton: {
+    height: 40,
+    borderRadius: 14,
+  },
+  formatCard: {
     height: '100%',
-    border: '1px solid rgba(22,50,79,0.07)',
     borderRadius: 24,
-    background: 'rgba(255,255,255,0.88)',
-    boxShadow: '0 20px 54px rgba(22,50,79,0.08)',
-    backdropFilter: 'blur(18px)',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.14)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.22)',
   },
-  whyIcon: {
+  formatIcon: {
     width: 52,
     height: 52,
     borderRadius: 18,
     display: 'grid',
     placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_BLUE}, ${BRAND_TURQUOISE})`,
-    color: '#fff',
-    fontSize: 22,
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #FFD48A)`,
+    color: BRAND_BLUE,
+    fontSize: 24,
     marginBottom: 18,
   },
-  cardTitle: {
-    color: BRAND_BLUE,
-    fontWeight: 820,
+  formatTitle: {
+    color: '#FFFFFF',
+    fontWeight: 800,
   },
-  cardText: {
-    color: '#62758a',
+  formatText: {
+    color: '#D7E3F2',
     lineHeight: 1.66,
+    minHeight: 72,
   },
-  gallerySection: {
-    padding: '84px 24px',
-    background: 'linear-gradient(180deg, #10233a, #071523)',
+  formatButton: {
+    height: 44,
+    borderRadius: 14,
   },
-  galleryGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gridAutoRows: 180,
-    gap: 12,
-  },
-  galleryItem: {
-    overflow: 'hidden',
+  galleryCard: {
+    height: '100%',
     borderRadius: 22,
-    boxShadow: '0 22px 60px rgba(0,0,0,0.22)',
-    aspectRatio: '4 / 3',
+    overflow: 'hidden',
+    border: '1px solid rgba(22,50,79,0.08)',
+    boxShadow: '0 18px 54px rgba(22,50,79,0.10)',
+    background: 'rgba(255,255,255,0.94)',
+  },
+  galleryImageWrap: {
+    position: 'relative',
+    height: 210,
+    overflow: 'hidden',
   },
   galleryImage: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    display: 'block',
   },
-  partnershipSection: {
-    padding: '92px 24px',
-    background: 'radial-gradient(circle at 80% 20%, rgba(240,178,74,0.18), transparent 34%), linear-gradient(135deg, #071523, #10233a 58%, #193b5d)',
+  galleryShade: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(180deg, rgba(6,17,31,0.12), rgba(6,17,31,0.68))',
   },
-  partnerShell: {
+  galleryMetaTop: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    right: 14,
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  galleryMetaBottom: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 18,
+  },
+  galleryTitle: {
+    color: '#FFFFFF',
+    margin: 0,
+    fontWeight: 800,
+  },
+  gallerySubtitle: {
+    color: 'rgba(255,255,255,0.78)',
+  },
+  galleryBody: {
+    padding: 16,
+  },
+  galleryText: {
+    color: '#607186',
+    lineHeight: 1.6,
+    minHeight: 42,
+  },
+  galleryFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  galleryPrice: {
+    color: BRAND_GOLD,
+    fontWeight: 900,
+  },
+  whyCard: {
+    height: '100%',
+    borderRadius: 24,
+    background: 'rgba(255,255,255,0.88)',
+    border: '1px solid rgba(22,50,79,0.07)',
+    boxShadow: '0 20px 54px rgba(22,50,79,0.08)',
+  },
+  whyIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: 22,
-    alignItems: 'stretch',
-    marginBottom: 22,
+    placeItems: 'center',
+    background: `linear-gradient(135deg, ${BRAND_BLUE}, ${BRAND_TURQUOISE})`,
+    color: '#FFFFFF',
+    fontSize: 22,
+    marginBottom: 16,
   },
-  partnerIntro: {
-    color: '#fff',
-    padding: '8px 0',
+  whyTitle: {
+    color: BRAND_BLUE,
+    fontWeight: 800,
+  },
+  whyText: {
+    color: '#607186',
+    lineHeight: 1.65,
+  },
+  partnerSection: {
+    padding: '84px 24px',
+    background: 'linear-gradient(135deg, #071523, #10233A 60%, #173B61)',
+  },
+  partnerGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: 24,
+    alignItems: 'start',
+  },
+  partnerCopy: {
     alignSelf: 'center',
   },
-  partnerTitle: {
-    color: '#fff',
-    fontSize: 'clamp(32px, 4vw, 52px)',
-    fontWeight: 820,
-    lineHeight: 1.06,
-    marginTop: 16,
-    letterSpacing: -1,
-  },
-  partnerText: {
-    color: '#d7e3f2',
-    fontSize: 17,
-    lineHeight: 1.76,
-    marginBottom: 28,
-    maxWidth: 560,
-  },
-  partnerFormCard: {
-    borderRadius: 28,
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,252,0.96))',
-    border: '1px solid rgba(255,255,255,0.68)',
-    boxShadow: '0 30px 84px rgba(0,0,0,0.18)',
-  },
-  partnerFormEyebrow: {
-    display: 'inline-block',
-    color: BRAND_TURQUOISE,
-    fontWeight: 860,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  partnerFormTitle: {
-    color: BRAND_BLUE,
-    fontWeight: 840,
-    marginBottom: 10,
-  },
-  partnerFormText: {
-    color: '#62758a',
-    lineHeight: 1.65,
-    marginBottom: 20,
+  partnerCard: {
+    borderRadius: 24,
+    background: 'rgba(255,255,255,0.96)',
+    boxShadow: '0 24px 72px rgba(0,0,0,0.24)',
   },
   partnerForm: {
     display: 'grid',
     gap: 12,
   },
-  partnerInput: {
-    minHeight: 48,
-    borderRadius: 16,
-  },
-  partnerTextarea: {
-    borderRadius: 16,
-    resize: 'vertical',
-  },
-  partnerSubmit: {
-    height: 48,
-    borderRadius: 999,
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
-    borderColor: BRAND_GOLD,
-    color: BRAND_BLUE,
-    fontWeight: 860,
-    boxShadow: '0 16px 36px rgba(240,178,74,0.24)',
-  },
-  partnerGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: 14,
-  },
-  partnerCard: {
-    height: '100%',
-    borderRadius: 24,
-    background: 'rgba(255,255,255,0.10)',
-    border: '1px solid rgba(255,255,255,0.16)',
-    backdropFilter: 'blur(22px)',
-    boxShadow: '0 24px 70px rgba(0,0,0,0.2)',
-  },
-  partnerIcon: {
-    width: 48,
+  partnerButton: {
     height: 48,
     borderRadius: 16,
-    display: 'grid',
-    placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
-    color: BRAND_BLUE,
-    fontSize: 22,
-    marginBottom: 14,
-  },
-  partnerCardTitle: {
-    color: '#fff',
-    fontWeight: 820,
-  },
-  partnerCardText: {
-    color: '#d7e3f2',
-    lineHeight: 1.66,
-  },
-  testimonialCard: {
-    height: '100%',
-    border: '1px solid rgba(22,50,79,0.06)',
-    borderRadius: 24,
-    background: 'rgba(255,255,255,0.88)',
-    boxShadow: '0 22px 60px rgba(22,50,79,0.08)',
-  },
-  testimonialStars: {
-    color: BRAND_GOLD,
-    marginBottom: 14,
-  },
-  quote: {
-    color: '#334155',
-    fontSize: 16,
-    lineHeight: 1.72,
-    marginBottom: 18,
-  },
-  testimonialName: {
-    color: BRAND_BLUE,
-    display: 'block',
-    marginBottom: 4,
-  },
-  testimonialRoute: {
-    color: '#64748b',
   },
   faq: {
     borderRadius: 24,
     overflow: 'hidden',
     background: 'rgba(255,255,255,0.92)',
     boxShadow: '0 22px 60px rgba(22,50,79,0.08)',
-    border: '1px solid rgba(22,50,79,0.06)',
   },
   footer: {
-    background: 'linear-gradient(180deg, #08111d, #050d16)',
-    padding: '62px 24px 24px',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
+    padding: '56px 24px 28px',
+    background: 'linear-gradient(180deg, #08111D, #050D16)',
   },
-  footerGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+  footerInner: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 24,
-    paddingBottom: 24,
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    flexWrap: 'wrap',
   },
   footerBrand: {
-    maxWidth: 360,
-  },
-  footerLogo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-  footerLogoMark: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    display: 'grid',
-    placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd48a)`,
-    color: BRAND_BLUE,
-    fontWeight: 900,
-    letterSpacing: 0.3,
-  },
-  footerLogoText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 840,
-    letterSpacing: -0.5,
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   footerText: {
-    color: '#b7c6d8',
-    lineHeight: 1.7,
-    marginBottom: 18,
+    maxWidth: 420,
+    color: '#B7C6D8',
+    lineHeight: 1.68,
   },
-  footerHeading: {
-    display: 'block',
-    color: '#ffd48a',
-    fontWeight: 900,
-    marginBottom: 14,
+  footerSocials: {
+    display: 'grid',
+    gap: 10,
   },
   footerLink: {
-    display: 'block',
-    color: '#d7e3f2',
-    marginBottom: 10,
-    transition: 'color 0.22s ease, transform 0.22s ease',
-  },
-  socialList: {
-    display: 'grid',
-    gap: 10,
-    marginBottom: 18,
-  },
-  socialLink: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 10,
-    color: '#d7e3f2',
-    padding: '10px 12px',
-    borderRadius: 16,
-    background: 'rgba(255,255,255,0.04)',
+    color: '#E7F1FF',
+    textDecoration: 'none',
+    padding: '10px 14px',
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.05)',
     border: '1px solid rgba(255,255,255,0.08)',
-    transition: 'transform 0.22s ease, background 0.22s ease, border-color 0.22s ease',
-  },
-  socialIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 12,
-    display: 'grid',
-    placeItems: 'center',
-    background: 'rgba(240,178,74,0.14)',
-    color: '#ffd48a',
-  },
-  footerMeta: {
-    display: 'grid',
-    gap: 8,
-  },
-  footerMetaRow: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    color: '#9eb0c2',
-  },
-  footerBottom: {
-    paddingTop: 18,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 16,
-    color: '#8ea2b8',
-    fontSize: 13,
-    flexWrap: 'wrap',
   },
 };
 

@@ -144,7 +144,7 @@ function AppContent({ favorites, setFavorites }) {
       </Routes>
 
       {/* 🔥 AI CHAT WIDGET (ГЛОБАЛЬНО НА ВСЁМ САЙТЕ) */}
-      <TravelBotWidget />
+      {location.pathname === '/' && <TravelBotWidget />}
     </>
   );
 }

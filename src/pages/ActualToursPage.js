@@ -5,11 +5,8 @@ import {
   Button,
   Card,
   Empty,
-  Input,
   Rate,
-  Select,
   Skeleton,
-  Slider,
   Space,
   Tag,
   Typography,
@@ -18,19 +15,30 @@ import {
 import {
   CalendarOutlined,
   EnvironmentOutlined,
+  FireOutlined,
   HeartOutlined,
-  SearchOutlined,
+  RocketOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import api from '../api';
 import { readCurrentUser } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
+import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 
-const BRAND_BLUE = '#1d3557';
-const BRAND_GOLD = '#fca311';
+const BRAND_BLUE = '#173B61';
+const BRAND_GOLD = '#FCA311';
+const HERO_VIDEO_URL = 'https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4';
+
+const promoBadges = [
+  { label: 'Горящий тур', note: 'Скидка до конца недели', color: '#FF6B35' },
+  { label: 'Хит продаж', note: 'Популярно у семей', color: '#2563EB' },
+  { label: 'Скидка', note: 'Осталось 3 места', color: '#FCA311' },
+  { label: 'Новинка', note: 'Лучшее время для поездки', color: '#2BB8C5' },
+  { label: 'Лучший выбор', note: 'Маршрут проверен TravelPay', color: '#7C3AED' },
+];
 
 const fallbackTours = [
   {
@@ -39,116 +47,91 @@ const fallbackTours = [
     country: 'Kyrgyzstan',
     city: 'Issyk-Kul · Karakol',
     location: 'Issyk-Kul, Kyrgyzstan',
-    description: 'Премиальный маршрут вдоль бирюзового озера, ущелий Каракола и панорамных горных дорог.',
+    description: 'Премиальный маршрут по береговой линии Иссык-Куля с красивыми остановками и мягким travel pace.',
     price: 42000,
     rating: 4.9,
     durationDays: 4,
     duration: '4 дня',
-    image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1400&q=80',
-    ],
+    image: KYRGYZSTAN_TOUR_SPOTS[1].image,
+    gallery: [KYRGYZSTAN_TOUR_SPOTS[1].image, KYRGYZSTAN_TOUR_SPOTS[3].image, KYRGYZSTAN_TOUR_SPOTS[4].image],
   },
   {
-    id: 'kolsai-kaindy-private',
-    title: 'Kolsai & Kaindy Private Tour',
-    country: 'Kazakhstan',
-    city: 'Almaty region',
-    location: 'Kolsai Lakes, Kazakhstan',
-    description: 'Private travel experience к озёрам Кольсай и Каинды с комфортным транспортом и локальным гидом.',
-    price: 58000,
-    rating: 4.8,
-    durationDays: 3,
-    duration: '3 дня',
-    image: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1400&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=80',
-    ],
-  },
-  {
-    id: 'song-kol-nomad',
-    title: 'Song-Kol Nomad Experience',
+    id: 'son-kul-nomad',
+    title: 'Son-Kul Nomad Experience',
     country: 'Kyrgyzstan',
-    city: 'Song-Kol',
-    location: 'Song-Kol, Kyrgyzstan',
-    description: 'Юрты, лошади, высокогорные пастбища и мягкая luxury-подача настоящей кочевой культуры.',
+    city: 'Son-Kul',
+    location: 'Son-Kul, Kyrgyzstan',
+    description: 'Юрты, лошади, high-altitude meadows и атмосферный nomad-luxury отдых.',
     price: 36000,
     rating: 4.9,
     durationDays: 3,
     duration: '3 дня',
-    image: 'https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=1400&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1400&q=80',
-    ],
+    image: KYRGYZSTAN_TOUR_SPOTS[2].image,
+    gallery: [KYRGYZSTAN_TOUR_SPOTS[2].image, KYRGYZSTAN_TOUR_SPOTS[5].image, KYRGYZSTAN_TOUR_SPOTS[0].image],
   },
   {
-    id: 'charyn-almaty-roadtrip',
-    title: 'Charyn Canyon Signature Roadtrip',
-    country: 'Kazakhstan',
-    city: 'Almaty · Charyn Canyon',
-    location: 'Charyn Canyon, Kazakhstan',
-    description: 'Кинематографичный road trip из Алматы к Чарынскому каньону с остановками для лучших видов.',
-    price: 30000,
-    rating: 4.7,
-    durationDays: 2,
-    duration: '2 дня',
-    image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80',
-    ],
-  },
-  {
-    id: 'ala-archa-bishkek',
+    id: 'ala-archa-day',
     title: 'Ala-Archa Alpine Day',
     country: 'Kyrgyzstan',
     city: 'Bishkek · Ala-Archa',
     location: 'Ala-Archa, Kyrgyzstan',
-    description: 'Идеальный однодневный alpine escape: ущелье, хвойный воздух, лёгкий треккинг и фотостопы.',
+    description: 'Идеальный однодневный alpine escape с комфортным трансфером и фотогеничными видами.',
     price: 16000,
-    rating: 4.6,
-    durationDays: 1,
-    duration: '1 день',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1400&q=80',
-    ],
-  },
-  {
-    id: 'big-almaty-lake',
-    title: 'Big Almaty Lake Premium View',
-    country: 'Kazakhstan',
-    city: 'Almaty region',
-    location: 'Big Almaty Lake, Kazakhstan',
-    description: 'Комфортная поездка к высокогорному озеру с премиальным трансфером и мягким темпом.',
-    price: 22000,
     rating: 4.8,
     durationDays: 1,
     duration: '1 день',
-    image: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1400&q=80',
-      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1400&q=80',
-    ],
+    image: KYRGYZSTAN_TOUR_SPOTS[0].image,
+    gallery: [KYRGYZSTAN_TOUR_SPOTS[0].image, KYRGYZSTAN_TOUR_SPOTS[3].image, KYRGYZSTAN_TOUR_SPOTS[4].image],
+  },
+  {
+    id: 'jeti-oguz-scenic',
+    title: 'Jeti-Oguz Scenic Route',
+    country: 'Kyrgyzstan',
+    city: 'Jeti-Oguz',
+    location: 'Jeti-Oguz, Kyrgyzstan',
+    description: 'Красные скалы, мягкий roadtrip и горные локации для scenic-photo маршрута.',
+    price: 24000,
+    rating: 4.8,
+    durationDays: 2,
+    duration: '2 дня',
+    image: KYRGYZSTAN_TOUR_SPOTS[4].image,
+    gallery: [KYRGYZSTAN_TOUR_SPOTS[4].image, KYRGYZSTAN_TOUR_SPOTS[1].image, KYRGYZSTAN_TOUR_SPOTS[3].image],
+  },
+  {
+    id: 'karakol-active',
+    title: 'Karakol Adventure Base',
+    country: 'Kyrgyzstan',
+    city: 'Karakol',
+    location: 'Karakol, Kyrgyzstan',
+    description: 'Горная база для trekking, lifestyle-отдыха и восточного Иссык-Куля.',
+    price: 39000,
+    rating: 4.7,
+    durationDays: 3,
+    duration: '3 дня',
+    image: KYRGYZSTAN_TOUR_SPOTS[3].image,
+    gallery: [KYRGYZSTAN_TOUR_SPOTS[3].image, KYRGYZSTAN_TOUR_SPOTS[1].image, KYRGYZSTAN_TOUR_SPOTS[0].image],
+  },
+  {
+    id: 'arslanbob-forest',
+    title: 'Arslanbob Forest Escape',
+    country: 'Kyrgyzstan',
+    city: 'Arslanbob',
+    location: 'Arslanbob, Kyrgyzstan',
+    description: 'Ореховые леса, водопады и южный Кыргызстан в спокойном boutique-формате.',
+    price: 28000,
+    rating: 4.7,
+    durationDays: 2,
+    duration: '2 дня',
+    image: KYRGYZSTAN_TOUR_SPOTS[5].image,
+    gallery: [KYRGYZSTAN_TOUR_SPOTS[5].image, KYRGYZSTAN_TOUR_SPOTS[2].image, KYRGYZSTAN_TOUR_SPOTS[0].image],
   },
 ];
 
-const popularDestinations = [
-  ['Issyk-Kul', 'Kyrgyzstan', 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80'],
-  ['Kolsai Lakes', 'Kazakhstan', 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=900&q=80'],
-  ['Song-Kol', 'Kyrgyzstan', 'https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=900&q=80'],
-  ['Charyn Canyon', 'Kazakhstan', 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=80'],
-];
+const popularDestinations = KYRGYZSTAN_TOUR_SPOTS.map((spot) => ({
+  title: spot.title,
+  location: spot.location,
+  image: spot.image,
+}));
 
 const formatPrice = (price) => `${Number(price || 0).toLocaleString('ru-RU')} сом`;
 
@@ -157,19 +140,21 @@ const slugify = (value) => String(value || '')
   .replace(/[^a-zа-я0-9]+/gi, '-')
   .replace(/^-+|-+$/g, '');
 
+const getPromoBadge = (index) => promoBadges[index % promoBadges.length];
+
 export const normalizeTour = (tour, index = 0) => {
   const fallback = fallbackTours[index % fallbackTours.length];
   const numericPrice = Number(String(tour.price || fallback.price).replace(/[^0-9]/g, '')) || fallback.price;
   const durationSource = tour.duration || fallback.duration;
   const durationDays = Number(String(tour.durationDays || durationSource).match(/\d+/)?.[0]) || fallback.durationDays;
-  const country = tour.country || (String(tour.location || '').toLowerCase().includes('almaty') || String(tour.location || '').toLowerCase().includes('kaz') ? 'Kazakhstan' : fallback.country);
+  const badge = getPromoBadge(index);
 
   return {
     ...fallback,
     ...tour,
     id: tour.id || slugify(tour.title) || fallback.id,
     title: tour.title || fallback.title,
-    country,
+    country: tour.country || 'Kyrgyzstan',
     city: tour.city || tour.location || fallback.city,
     location: tour.location || fallback.location,
     description: tour.description || fallback.description,
@@ -177,8 +162,11 @@ export const normalizeTour = (tour, index = 0) => {
     rating: Number(tour.rating || fallback.rating),
     durationDays,
     duration: tour.duration || `${durationDays} дня`,
-    image: tour.image || fallback.image,
+    image: tour.image || fallback.image || TOUR_IMAGE_FALLBACK,
     gallery: tour.gallery?.length ? tour.gallery : fallback.gallery,
+    promoBadge: badge.label,
+    promoNote: badge.note,
+    promoColor: badge.color,
   };
 };
 
@@ -186,11 +174,6 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
   const navigate = useNavigate();
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [country, setCountry] = useState('all');
-  const [priceRange, setPriceRange] = useState([0, 70000]);
-  const [durationRange, setDurationRange] = useState([1, 7]);
-  const [minRating, setMinRating] = useState(0);
 
   useEffect(() => {
     const loadTours = async () => {
@@ -209,19 +192,15 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
     loadTours();
   }, []);
 
-  const filteredTours = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+  const hotTours = useMemo(
+    () => [...tours].sort((a, b) => b.rating - a.rating || a.price - b.price).slice(0, 3),
+    [tours],
+  );
 
-    return tours.filter((tour) => {
-      const haystack = `${tour.title} ${tour.description} ${tour.location} ${tour.country} ${tour.city}`.toLowerCase();
-      const matchesSearch = haystack.includes(query);
-      const matchesCountry = country === 'all' || tour.country === country;
-      const matchesPrice = tour.price >= priceRange[0] && tour.price <= priceRange[1];
-      const matchesDuration = tour.durationDays >= durationRange[0] && tour.durationDays <= durationRange[1];
-      const matchesRating = tour.rating >= minRating;
-      return matchesSearch && matchesCountry && matchesPrice && matchesDuration && matchesRating;
-    });
-  }, [tours, searchQuery, country, priceRange, durationRange, minRating]);
+  const featuredTours = useMemo(
+    () => hotTours.length ? hotTours : fallbackTours.slice(0, 3).map(normalizeTour),
+    [hotTours],
+  );
 
   const handleAddToFavorites = (tour) => {
     if (favorites.some((favorite) => favorite.id === tour.id || favorite.title === tour.title)) {
@@ -244,13 +223,13 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
         syncCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
         message.success('Тур добавлен в избранное.');
       })
-      .catch((err) => {
-        const serverMessage = err.response?.data?.message;
-        message.error(serverMessage || 'Не удалось сохранить избранное на сервере.');
+      .catch((error) => {
+        message.error(error.response?.data?.message || 'Не удалось сохранить избранное.');
       });
   };
 
   const openTour = (tour) => navigate(`/tours/${tour.id}`, { state: { tour, tours } });
+
   const openBooking = (tour) => {
     const currentUser = readCurrentUser();
 
@@ -263,146 +242,264 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
     navigate('/tour-booking', { state: { tour } });
   };
 
+  const scrollToGrid = () => {
+    document.getElementById('travelpay-tour-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const scrollToHotDeals = () => {
+    document.getElementById('travelpay-hot-tours')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <main className="tours-page" style={styles.page}>
-      <section style={styles.hero}>
-        <video autoPlay muted loop playsInline style={styles.heroVideo}>
-          <source src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4" type="video/mp4" />
-          <source src="https://cdn.pixabay.com/video/2021/08/10/84776-587945089_large.mp4" type="video/mp4" />
+    <main className="tours-page premium-tour-page-shell" style={styles.page}>
+      <section className="premium-tours-hero" style={styles.hero}>
+        <video
+          className="premium-tours-hero__video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={styles.heroVideo}
+        >
+          <source src={HERO_VIDEO_URL} type="video/mp4" />
         </video>
-        <div style={styles.heroOverlay} />
-        <motion.div style={styles.heroContent} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65 }}>
-          <Tag style={styles.heroTag}>Luxury Travel Platform</Tag>
-          <Title style={styles.heroTitle}>Премиальные туры по Кыргызстану и региону Алматы</Title>
+        <div className="premium-tours-hero__overlay" style={styles.heroOverlay} />
+
+        <motion.div
+          style={styles.heroContent}
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.72 }}
+        >
+          <Tag style={styles.heroTag}>TravelPay Premium Tours</Tag>
+          <Title style={styles.heroTitle}>Выберите тур мечты</Title>
           <Paragraph style={styles.heroText}>
-            Выбирайте маршруты с красивыми локациями, локальными гидами, комфортным транспортом и AI Concierge поддержкой.
+            Горящие предложения, проверенные маршруты и удобное накопление через TravelPay.
+            От Иссык-Куля до Сон-Куля с красивой подачей, понятной ценой и быстрым бронированием.
           </Paragraph>
+          <Space className="premium-tour-cta-stack" size={14} wrap style={styles.heroButtons}>
+            <Button
+              type="primary"
+              size="large"
+              icon={<RocketOutlined />}
+              className="travelpay-primary-button"
+              style={styles.heroPrimaryButton}
+              onClick={scrollToGrid}
+            >
+              Смотреть туры
+            </Button>
+            <Button
+              size="large"
+              icon={<FireOutlined />}
+              className="travelpay-secondary-button"
+              style={styles.heroSecondaryButton}
+              onClick={scrollToHotDeals}
+            >
+              Горящие предложения
+            </Button>
+          </Space>
         </motion.div>
       </section>
 
-      <motion.section className="tour-filters-shell tours-container" style={styles.filters} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Input
-          size="large"
-          prefix={<SearchOutlined />}
-          placeholder="Поиск: Иссык-Куль, Кольсай, Алматы..."
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          style={styles.search}
-        />
-        <Select
-          size="large"
-          value={country}
-          onChange={setCountry}
-          style={styles.select}
-          options={[
-            { value: 'all', label: 'Все страны' },
-            { value: 'Kyrgyzstan', label: 'Кыргызстан' },
-            { value: 'Kazakhstan', label: 'Казахстан / Алматы' },
-          ]}
-        />
-        <div className="tour-filter-panel" style={styles.filterPanel}>
-          <Text strong>Цена</Text>
-          <Slider range min={0} max={70000} step={5000} value={priceRange} onChange={setPriceRange} tooltip={{ formatter: formatPrice }} />
-        </div>
-        <div className="tour-filter-panel" style={styles.filterPanel}>
-          <Text strong>Длительность</Text>
-          <Slider range min={1} max={7} value={durationRange} onChange={setDurationRange} tooltip={{ formatter: (value) => `${value} дн.` }} />
-        </div>
-        <div className="tour-filter-panel" style={styles.filterPanel}>
-          <Text strong>Рейтинг</Text>
-          <Rate allowHalf value={minRating} onChange={setMinRating} style={{ color: BRAND_GOLD, fontSize: 16 }} />
-        </div>
-      </motion.section>
+      <div className="premium-tours-overlap" style={styles.overlapShell}>
+        <section id="travelpay-hot-tours" className="tours-section tours-container" style={styles.hotSection}>
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            style={styles.hotCard}
+          >
+            <div style={styles.hotGlow} />
+            <div style={styles.hotContent}>
+              <div style={styles.hotCopy}>
+                <Tag style={styles.promoTag}><FireOutlined /> 🔥 Горящие туры недели</Tag>
+                <Title level={2} style={styles.promoTitle}>Ловите лучшее окно для поездки по Кыргызстану</Title>
+                <Paragraph style={styles.promoText}>
+                  Премиальные маршруты с быстрым бронированием, визуально красивой подачей и специальными условиями на ближайшие даты.
+                </Paragraph>
+              </div>
+              <div className="hot-tour-marquee" style={styles.hotStats}>
+                <div style={styles.hotStatCard}>
+                  <span style={styles.hotStatValue}>-20%</span>
+                  <span style={styles.hotStatLabel}>на selected routes</span>
+                </div>
+                <div style={styles.hotStatCard}>
+                  <span style={styles.hotStatValue}>3 места</span>
+                  <span style={styles.hotStatLabel}>осталось на выезд</span>
+                </div>
+                <div style={styles.hotStatCard}>
+                  <span style={styles.hotStatValue}>2 дня</span>
+                  <span style={styles.hotStatLabel}>до конца акции</span>
+                </div>
+              </div>
+              <Button
+                type="primary"
+                size="large"
+                className="travelpay-primary-button"
+                style={styles.promoButton}
+                onClick={scrollToGrid}
+              >
+                Смотреть предложения
+              </Button>
+            </div>
+          </motion.div>
+        </section>
 
-      <section className="tours-section tours-container" style={styles.popularSection}>
-        <div style={styles.sectionHead}>
-          <Tag style={styles.softTag}>Популярные направления</Tag>
-          <Title level={2} style={styles.sectionTitle}>Места, ради которых хочется ехать</Title>
-        </div>
-        <div style={styles.destinationStrip}>
-          {popularDestinations.map(([name, label, image]) => (
-            <motion.button key={name} type="button" style={styles.destinationPill} whileHover={{ y: -5 }} onClick={() => setSearchQuery(name)}>
-              <img src={image} alt={name} style={styles.destinationPillImage} />
-              <span>
-                <strong>{name}</strong>
-                <small>{label}</small>
-              </span>
-            </motion.button>
-          ))}
-        </div>
-      </section>
-
-      <section className="tours-section tours-container" style={styles.catalog}>
-        <div className="tour-catalog-head" style={styles.catalogHead}>
-          <div>
-            <Tag style={styles.softTag}><ThunderboltOutlined /> Найдено {filteredTours.length}</Tag>
-            <Title level={2} style={styles.sectionTitle}>Каталог туров</Title>
+        <section className="tours-section tours-container" style={styles.popularSection}>
+          <div style={styles.sectionHead}>
+            <Tag style={styles.softTag}>Популярные туры</Tag>
+            <Title level={2} style={styles.sectionTitle}>Локации Кыргызстана, которые хочется открыть красиво</Title>
           </div>
-          <Button onClick={() => navigate('/favorites')} icon={<HeartOutlined />} style={styles.favoritesButton}>
-            Избранное
-          </Button>
-        </div>
-
-        {loading ? (
-          <div className="tours-grid" style={styles.toursGrid}>
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <Card className="tour-card" style={styles.card} key={item}><Skeleton active paragraph={{ rows: 5 }} /></Card>
+          <div style={styles.destinationStrip}>
+            {popularDestinations.map((spot) => (
+              <motion.div key={spot.title} whileHover={{ y: -4 }}>
+                <Button className="travelpay-destination-pill" style={styles.destinationPill}>
+                  <img src={spot.image} alt={spot.title} onError={withTourFallback} style={styles.destinationPillImage} />
+                  <span style={styles.destinationCopy}>
+                    <strong>{spot.title}</strong>
+                    <small>{spot.location}</small>
+                  </span>
+                </Button>
+              </motion.div>
             ))}
           </div>
-        ) : filteredTours.length === 0 ? (
-          <Empty description="Туры не найдены. Попробуйте изменить фильтры." style={styles.empty} />
-        ) : (
-          <div className="tours-grid" style={styles.toursGrid}>
-            {filteredTours.map((tour, index) => (
-              <motion.article className="tour-card-shell" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.04 }} whileHover={{ y: -8, scale: 1.01 }} key={tour.id || tour.title}>
-                  <Card
-                    hoverable
-                    className="premium-tour-card tour-card"
-                    style={styles.card}
-                    bodyStyle={{ padding: 0 }}
-                    onClick={() => openTour(tour)}
+        </section>
+
+        <section className="tours-section tours-container" style={styles.catalog}>
+          <div className="tour-catalog-head" style={styles.catalogHead}>
+            <div>
+              <Tag style={styles.softTag}><ThunderboltOutlined /> Все туры</Tag>
+              <Title level={2} style={styles.catalogTitle}>Подберите формат путешествия под свой ритм</Title>
+              <Paragraph style={styles.catalogText}>
+                Реальные направления, удобное бронирование и премиальная подача без лишних фильтров и перегруженных блоков.
+              </Paragraph>
+            </div>
+            <Button
+              onClick={() => navigate('/favorites')}
+              icon={<HeartOutlined />}
+              className="travelpay-secondary-button"
+              style={styles.favoritesButton}
+            >
+              Избранное
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="tours-grid" style={styles.toursGrid}>
+              {[1, 2, 3, 4, 5, 6].map((item) => (
+                <Card className="tour-card" style={styles.card} key={item}>
+                  <Skeleton active paragraph={{ rows: 5 }} />
+                </Card>
+              ))}
+            </div>
+          ) : tours.length === 0 ? (
+            <Empty description="Туры пока не найдены. Попробуйте вернуться чуть позже." style={styles.empty} />
+          ) : (
+            <div id="travelpay-tour-grid" className="tours-grid" style={styles.toursGrid}>
+              {tours.map((tour, index) => {
+                const isHot = featuredTours.some((featured) => featured.id === tour.id);
+
+                return (
+                  <motion.article
+                    className="tour-card-shell"
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.04 }}
+                    whileHover={{ y: -8 }}
+                    key={tour.id || tour.title}
                   >
-                    <div style={styles.imageWrap}>
-                      <img src={tour.image} alt={tour.title} style={styles.image} />
-                      <div style={styles.imageShade} />
-                      <Badge count={`${tour.rating}`} style={styles.ratingBadge} />
-                      <div className="tour-card-reveal" style={styles.reveal}>
-                        <span>Гид · трансфер · фото-локации · поддержка</span>
-                      </div>
-                    </div>
-                    <div style={styles.cardBody}>
-                      <Space size={8} wrap>
-                        <Tag className="tour-card-meta" style={styles.countryTag}><EnvironmentOutlined /> {tour.city}</Tag>
-                        <Tag className="tour-card-meta" style={styles.durationTag}><CalendarOutlined /> {tour.duration}</Tag>
-                      </Space>
-                      <Title level={3} className="tour-card-title" style={styles.cardTitle}>{tour.title}</Title>
-                      <Paragraph ellipsis={{ rows: 2 }} className="tour-card-text" style={styles.description}>{tour.description}</Paragraph>
-                      <div style={styles.cardFooter}>
-                        <div>
-                          <Text style={styles.priceLabel}>от</Text>
-                          <div className="tour-price" style={styles.price}>{formatPrice(tour.price)}</div>
+                    <Card
+                      hoverable
+                      className="premium-tour-card tour-card"
+                      style={styles.card}
+                      styles={{ body: { padding: 0 } }}
+                      onClick={() => openTour(tour)}
+                    >
+                      <div style={styles.imageWrap}>
+                        <img src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} onError={withTourFallback} style={styles.image} />
+                        <div style={styles.imageShade} />
+                        <div style={{ ...styles.promoBadge, background: tour.promoColor }}>
+                          {tour.promoBadge}
                         </div>
-                        <div className="tour-card-actions">
-                          <Button shape="circle" icon={<HeartOutlined />} onClick={(event) => { event.stopPropagation(); handleAddToFavorites(tour); }} />
-                          <Button style={styles.bookButton} onClick={(event) => { event.stopPropagation(); openBooking(tour); }}>
-                            Забронировать
-                          </Button>
-                          <Button type="primary" style={styles.detailsButton} onClick={(event) => { event.stopPropagation(); openTour(tour); }}>
-                            Подробнее
-                          </Button>
+                        {isHot && (
+                          <div style={styles.hotCornerBadge}>
+                            <FireOutlined /> Hot
+                          </div>
+                        )}
+                        <Badge count={tour.rating.toFixed(1)} style={styles.ratingBadge} />
+                        <div className="tour-card-reveal" style={styles.reveal}>
+                          <span>Гид · комфортный трансфер · красивые фото-локации</span>
                         </div>
                       </div>
-                      <div className="tour-card-meta" style={styles.ratingLine}>
-                        <Rate disabled allowHalf value={tour.rating} style={{ color: BRAND_GOLD, fontSize: 14 }} />
-                        <Text type="secondary">{tour.rating} · проверенный маршрут</Text>
+
+                      <div style={styles.cardBody}>
+                        <Space size={8} wrap>
+                          <Tag className="tour-card-meta" style={styles.countryTag}>
+                            <EnvironmentOutlined /> {tour.city}
+                          </Tag>
+                          <Tag className="tour-card-meta" style={styles.durationTag}>
+                            <CalendarOutlined /> {tour.duration}
+                          </Tag>
+                        </Space>
+
+                        <Title level={3} className="tour-card-title" style={styles.cardTitle}>{tour.title}</Title>
+                        <Paragraph ellipsis={{ rows: 2 }} className="tour-card-text" style={styles.description}>
+                          {tour.description}
+                        </Paragraph>
+
+                        <div style={styles.cardFooter}>
+                          <div>
+                            <Text style={styles.priceLabel}>от</Text>
+                            <div className="tour-price" style={styles.price}>{formatPrice(tour.price)}</div>
+                            <div style={styles.priceNote}>{tour.promoNote}</div>
+                          </div>
+                          <div className="tour-card-actions">
+                            <Button
+                              shape="circle"
+                              icon={<HeartOutlined />}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleAddToFavorites(tour);
+                              }}
+                            />
+                            <Button
+                              className="travelpay-secondary-button"
+                              style={styles.bookButton}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openBooking(tour);
+                              }}
+                            >
+                              Забронировать
+                            </Button>
+                            <Button
+                              type="primary"
+                              className="travelpay-primary-button"
+                              style={styles.detailsButton}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openTour(tour);
+                              }}
+                            >
+                              Подробнее
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="tour-card-meta" style={styles.ratingLine}>
+                          <Rate disabled allowHalf value={tour.rating} style={{ color: BRAND_GOLD, fontSize: 14 }} />
+                          <Text type="secondary">{tour.rating} · проверенный маршрут</Text>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </motion.article>
-            ))}
-          </div>
-        )}
-      </section>
+                    </Card>
+                  </motion.article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 };
@@ -410,19 +507,19 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'radial-gradient(circle at 8% 8%, rgba(22,182,196,0.10), transparent 26%), linear-gradient(180deg, #f8fbff 0%, #eef5fb 48%, #f9fbff 100%)',
+    background: 'radial-gradient(circle at 8% 12%, rgba(43,184,197,0.12), transparent 24%), radial-gradient(circle at 88% 18%, rgba(252,163,17,0.14), transparent 22%), linear-gradient(180deg, #F4F8FD 0%, #EAF2FA 45%, #F8FBFF 100%)',
     color: BRAND_BLUE,
-    fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-    paddingBottom: 72,
+    paddingBottom: 96,
   },
   hero: {
     position: 'relative',
-    minHeight: 520,
+    minHeight: '86vh',
+    marginTop: -88,
     overflow: 'hidden',
-    display: 'grid',
-    placeItems: 'center',
-    padding: '120px 24px 96px',
-    marginTop: -72,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '140px 20px 130px',
   },
   heroVideo: {
     position: 'absolute',
@@ -430,79 +527,170 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    filter: 'saturate(1.08) contrast(1.04) brightness(0.86)',
   },
   heroOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(5,13,24,0.34), rgba(5,13,24,0.72)), radial-gradient(circle at 50% 40%, rgba(255,255,255,0.07), transparent 32%)',
+    background: 'rgba(0,0,0,0.4)',
   },
   heroContent: {
     position: 'relative',
     zIndex: 1,
-    maxWidth: 880,
+    width: 'min(100%, 880px)',
+    margin: '0 auto',
     textAlign: 'center',
-    color: '#fff',
+    color: '#FFFFFF',
+    padding: '36px clamp(18px, 5vw, 42px)',
+    borderRadius: 34,
+    background: 'linear-gradient(180deg, rgba(8,19,33,0.34), rgba(8,19,33,0.18))',
+    border: '1px solid rgba(255,255,255,0.16)',
+    boxShadow: '0 28px 90px rgba(0,0,0,0.24)',
+    backdropFilter: 'blur(18px)',
   },
   heroTag: {
     borderRadius: 999,
-    padding: '7px 14px',
+    padding: '8px 16px',
+    marginBottom: 18,
     background: 'rgba(255,255,255,0.14)',
-    color: '#fff',
-    border: '1px solid rgba(255,255,255,0.24)',
-    backdropFilter: 'blur(18px)',
+    color: '#FFFFFF',
+    border: '1px solid rgba(255,255,255,0.16)',
     fontWeight: 800,
+    letterSpacing: 0.2,
   },
   heroTitle: {
-    color: '#fff',
-    fontSize: 'clamp(36px, 5vw, 68px)',
-    lineHeight: 1.04,
-    fontWeight: 820,
-    margin: '22px auto 18px',
-    textShadow: '0 20px 70px rgba(0,0,0,0.36)',
+    color: '#FFFFFF',
+    fontSize: 'clamp(38px, 6vw, 72px)',
+    lineHeight: 1.02,
+    fontWeight: 900,
+    margin: '0 0 16px',
+    textShadow: '0 20px 50px rgba(0,0,0,0.24)',
   },
   heroText: {
-    color: 'rgba(255,255,255,0.84)',
-    fontSize: 18,
-    lineHeight: 1.7,
-    maxWidth: 720,
+    color: 'rgba(255,255,255,0.88)',
+    fontSize: 'clamp(16px, 2vw, 19px)',
+    lineHeight: 1.72,
+    maxWidth: 700,
     margin: '0 auto',
   },
-  filters: {
-    width: 'min(100% - 32px, 1200px)',
-    maxWidth: '100%',
-    margin: '-48px auto 42px',
+  heroButtons: {
+    justifyContent: 'center',
+    marginTop: 28,
+  },
+  heroPrimaryButton: {
+    minWidth: 186,
+    height: 50,
+    borderRadius: 16,
+    fontWeight: 800,
+  },
+  heroSecondaryButton: {
+    minWidth: 186,
+    height: 50,
+    borderRadius: 16,
+    fontWeight: 800,
+    background: 'rgba(255,255,255,0.16)',
+    color: '#FFFFFF',
+    border: '1px solid rgba(255,255,255,0.18)',
+    boxShadow: '0 18px 40px rgba(0,0,0,0.18)',
+    backdropFilter: 'blur(14px)',
+  },
+  overlapShell: {
     position: 'relative',
-    zIndex: 4,
+    zIndex: 2,
+    marginTop: -88,
+  },
+  hotSection: {
+    width: 'min(100% - 32px, 1200px)',
+    margin: '0 auto 34px',
+  },
+  hotCard: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 30,
+    background: 'linear-gradient(135deg, rgba(10,25,47,0.92), rgba(19,59,97,0.9) 48%, rgba(43,123,185,0.82))',
+    border: '1px solid rgba(255,255,255,0.18)',
+    boxShadow: '0 30px 90px rgba(11,31,52,0.22)',
+    backdropFilter: 'blur(20px)',
+  },
+  hotGlow: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: '50%',
+    background: 'rgba(252,163,17,0.28)',
+    filter: 'blur(42px)',
+    top: -80,
+    right: -40,
+  },
+  hotContent: {
+    position: 'relative',
+    zIndex: 1,
+    padding: '30px clamp(20px, 4vw, 38px)',
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
-    gap: 'clamp(12px, 2vw, 20px)',
-    padding: 'clamp(16px, 4vw, 28px)',
-    borderRadius: 28,
-    background: 'rgba(255,255,255,0.84)',
-    border: '1px solid rgba(255,255,255,0.72)',
-    boxShadow: '0 28px 78px rgba(29,53,87,0.14)',
-    backdropFilter: 'blur(22px)',
+    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(280px, 0.9fr)',
+    gap: 24,
+    alignItems: 'center',
   },
-  search: {
-    borderRadius: 18,
-    width: '100%',
+  hotCopy: {
     minWidth: 0,
   },
-  select: {
-    width: '100%',
-    minWidth: 0,
+  promoTag: {
+    width: 'fit-content',
+    borderRadius: 999,
+    padding: '7px 13px',
+    color: '#FFFFFF',
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.16)',
+    fontWeight: 800,
+    marginBottom: 14,
   },
-  filterPanel: {
-    minWidth: 0,
-    width: '100%',
-    padding: '2px 4px',
+  promoTitle: {
+    color: '#FFFFFF',
+    marginBottom: 10,
+    fontWeight: 900,
+  },
+  promoText: {
+    maxWidth: 620,
+    color: 'rgba(255,255,255,0.84)',
+    lineHeight: 1.72,
+    marginBottom: 0,
+  },
+  hotStats: {
+    display: 'grid',
+    gap: 12,
+  },
+  hotStatCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    padding: '16px 18px',
+    borderRadius: 22,
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.14)',
+    boxShadow: '0 16px 34px rgba(0,0,0,0.14)',
+    backdropFilter: 'blur(16px)',
+  },
+  hotStatValue: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 900,
+    lineHeight: 1.1,
+  },
+  hotStatLabel: {
+    color: 'rgba(255,255,255,0.74)',
+    fontSize: 13,
+    fontWeight: 600,
+  },
+  promoButton: {
+    width: 'fit-content',
+    height: 48,
+    marginTop: 8,
+    borderRadius: 16,
+    fontWeight: 800,
   },
   popularSection: {
     width: 'min(100% - 32px, 1200px)',
-    maxWidth: '100%',
     margin: '0 auto',
-    padding: '18px 0 58px',
+    padding: '8px 0 48px',
   },
   sectionHead: {
     textAlign: 'center',
@@ -512,15 +700,15 @@ const styles = {
     borderRadius: 999,
     padding: '6px 12px',
     color: BRAND_BLUE,
-    background: 'rgba(255,255,255,0.78)',
-    border: '1px solid rgba(29,53,87,0.08)',
+    background: 'rgba(255,255,255,0.8)',
+    border: '1px solid rgba(23,59,97,0.08)',
     fontWeight: 800,
   },
   sectionTitle: {
     color: BRAND_BLUE,
-    fontSize: 'clamp(28px, 6vw, 48px)',
+    fontSize: 'clamp(28px, 5vw, 48px)',
     lineHeight: 1.1,
-    fontWeight: 840,
+    fontWeight: 900,
     marginTop: 14,
   },
   destinationStrip: {
@@ -529,77 +717,131 @@ const styles = {
     gap: 16,
   },
   destinationPill: {
-    border: '1px solid rgba(29,53,87,0.08)',
-    borderRadius: 24,
+    width: '100%',
+    height: 'auto',
     padding: 10,
+    borderRadius: 24,
+    border: '1px solid rgba(255,255,255,0.55)',
+    background: 'rgba(255,255,255,0.72)',
+    boxShadow: '0 18px 44px rgba(23,59,97,0.08)',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     gap: 12,
-    background: 'rgba(255,255,255,0.86)',
-    boxShadow: '0 18px 44px rgba(29,53,87,0.08)',
-    cursor: 'pointer',
     textAlign: 'left',
+    backdropFilter: 'blur(18px)',
   },
   destinationPillImage: {
     width: 62,
     height: 62,
     borderRadius: 18,
     objectFit: 'cover',
+    flexShrink: 0,
+  },
+  destinationCopy: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
+    whiteSpace: 'normal',
   },
   catalog: {
     width: 'min(100% - 32px, 1200px)',
-    maxWidth: '100%',
     margin: '0 auto',
-    padding: 0,
   },
   catalogHead: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: 20,
-    marginBottom: 24,
+    flexWrap: 'wrap',
+    marginBottom: 26,
+  },
+  catalogTitle: {
+    color: BRAND_BLUE,
+    margin: '14px 0 8px',
+    fontSize: 'clamp(28px, 5vw, 46px)',
+    lineHeight: 1.08,
+    fontWeight: 900,
+  },
+  catalogText: {
+    maxWidth: 680,
+    marginBottom: 0,
+    color: '#5C718A',
+    fontSize: 16,
+    lineHeight: 1.7,
   },
   favoritesButton: {
-    borderRadius: 999,
-    height: 42,
+    height: 46,
+    borderRadius: 16,
     fontWeight: 800,
   },
   empty: {
     padding: 'clamp(36px, 8vw, 80px)',
-    background: 'rgba(255,255,255,0.72)',
+    background: 'rgba(255,255,255,0.74)',
     borderRadius: 28,
   },
   toursGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
-    gap: 'clamp(16px, 3vw, 28px)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 'clamp(18px, 3vw, 28px)',
   },
   card: {
     width: '100%',
     minWidth: 0,
     overflow: 'hidden',
-    borderRadius: 30,
-    border: '1px solid rgba(29,53,87,0.08)',
-    background: 'rgba(255,255,255,0.90)',
-    boxShadow: '0 24px 70px rgba(29,53,87,0.10)',
+    borderRadius: 24,
+    border: '1px solid rgba(255,255,255,0.58)',
+    background: 'rgba(255,255,255,0.72)',
+    boxShadow: '0 24px 70px rgba(23,59,97,0.12)',
+    backdropFilter: 'blur(20px)',
   },
   imageWrap: {
     position: 'relative',
     width: '100%',
-    aspectRatio: '16 / 10',
+    height: 236,
     overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: '100%',
-    aspectRatio: '16 / 10',
     objectFit: 'cover',
     display: 'block',
+    transition: 'transform 0.35s ease',
   },
   imageShade: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.48))',
+    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.58))',
+  },
+  promoBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 2,
+    padding: '8px 12px',
+    borderRadius: 999,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 800,
+    boxShadow: '0 12px 26px rgba(0,0,0,0.18)',
+  },
+  hotCornerBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 62,
+    zIndex: 2,
+    padding: '8px 11px',
+    borderRadius: 999,
+    background: 'rgba(255,255,255,0.16)',
+    color: '#FFFFFF',
+    border: '1px solid rgba(255,255,255,0.16)',
+    fontSize: 11,
+    fontWeight: 800,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    backdropFilter: 'blur(12px)',
   },
   ratingBadge: {
     position: 'absolute',
@@ -614,22 +856,23 @@ const styles = {
     left: 16,
     right: 16,
     bottom: 16,
-    padding: '10px 12px',
-    borderRadius: 18,
-    background: 'rgba(255,255,255,0.16)',
-    color: '#fff',
+    padding: '8px 12px',
+    borderRadius: 16,
+    background: 'rgba(255,255,255,0.14)',
+    color: '#FFFFFF',
     backdropFilter: 'blur(16px)',
-    fontWeight: 750,
+    fontWeight: 700,
+    fontSize: 12,
+    lineHeight: 1.35,
   },
   cardBody: {
-    padding: 22,
-    minWidth: 0,
+    padding: 20,
   },
   countryTag: {
     borderRadius: 999,
     color: BRAND_BLUE,
-    background: 'rgba(22,182,196,0.10)',
-    border: '1px solid rgba(22,182,196,0.18)',
+    background: 'rgba(43,184,197,0.10)',
+    border: '1px solid rgba(43,184,197,0.18)',
     fontWeight: 750,
   },
   durationTag: {
@@ -642,12 +885,12 @@ const styles = {
   cardTitle: {
     color: BRAND_BLUE,
     margin: '16px 0 8px',
-    fontWeight: 840,
+    fontWeight: 900,
     lineHeight: 1.15,
   },
   description: {
-    color: '#64748b',
-    lineHeight: 1.65,
+    color: '#64748B',
+    lineHeight: 1.66,
     minHeight: 52,
   },
   cardFooter: {
@@ -659,7 +902,7 @@ const styles = {
     marginTop: 18,
   },
   priceLabel: {
-    color: '#94a3b8',
+    color: '#94A3B8',
     fontSize: 12,
     textTransform: 'uppercase',
     fontWeight: 800,
@@ -669,18 +912,20 @@ const styles = {
     fontSize: 22,
     fontWeight: 900,
   },
+  priceNote: {
+    marginTop: 6,
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: 700,
+  },
   bookButton: {
     borderRadius: 14,
-    borderColor: 'rgba(29,53,87,0.12)',
-    color: BRAND_BLUE,
-    background: 'rgba(255,255,255,0.9)',
+    height: 42,
     fontWeight: 850,
   },
   detailsButton: {
     borderRadius: 14,
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    borderColor: BRAND_GOLD,
-    color: BRAND_BLUE,
+    height: 42,
     fontWeight: 850,
   },
   ratingLine: {

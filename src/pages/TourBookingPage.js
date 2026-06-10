@@ -31,6 +31,7 @@ import {
 import { motion } from 'framer-motion';
 import { readCurrentUser } from '../utils/currentUser';
 import { normalizeSavings } from '../utils/savings';
+import { TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
 import { normalizeUser, syncCurrentUser, updateUserById } from '../utils/user';
 
 const { Title, Paragraph, Text } = Typography;
@@ -158,10 +159,10 @@ const TourBookingPage = () => {
       </video>
       <div style={styles.overlay} />
 
-      <button type="button" style={styles.logo} onClick={() => navigate('/')}>
+      <Button type="text" style={styles.logo} onClick={() => navigate('/')}>
         <span>TravelPay</span>
         <small>by Barsbek Travel</small>
-      </button>
+      </Button>
 
       <section style={styles.shell}>
         <motion.div
@@ -180,11 +181,12 @@ const TourBookingPage = () => {
         <Row gutter={[26, 26]} align="stretch">
           <Col xs={24} lg={10}>
             <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
-              <Card style={styles.tourCard} bodyStyle={{ padding: 0 }}>
+              <Card style={styles.tourCard} styles={{ body: { padding: 0 } }}>
                 <div style={styles.imageWrap}>
                   <img
-                    src={tour.image || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80'}
+                    src={tour.image || TOUR_IMAGE_FALLBACK}
                     alt={tour.title}
+                    onError={withTourFallback}
                     style={styles.tourImage}
                   />
                   <div style={styles.imageGradient} />
@@ -507,7 +509,7 @@ const styles = {
     marginBottom: 22,
     borderRadius: 18,
     background: 'rgba(22,182,196,0.09)',
-    borderColor: 'rgba(22,182,196,0.22)',
+    border: '1px solid rgba(22,182,196,0.22)',
   },
   summaryCard: {
     marginTop: 10,
@@ -536,7 +538,7 @@ const styles = {
     height: 50,
     borderRadius: 999,
     background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    borderColor: BRAND_GOLD,
+    border: `1px solid ${BRAND_GOLD}`,
     color: BRAND_BLUE,
     fontWeight: 900,
     boxShadow: '0 18px 42px rgba(252,163,17,0.32)',
@@ -546,14 +548,14 @@ const styles = {
     height: 50,
     borderRadius: 999,
     background: 'rgba(29,53,87,0.08)',
-    borderColor: 'rgba(29,53,87,0.18)',
+    border: '1px solid rgba(29,53,87,0.18)',
     color: BRAND_BLUE,
     fontWeight: 900,
   },
   goldButton: {
     borderRadius: 999,
     background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    borderColor: BRAND_GOLD,
+    border: `1px solid ${BRAND_GOLD}`,
     color: BRAND_BLUE,
     fontWeight: 850,
   },

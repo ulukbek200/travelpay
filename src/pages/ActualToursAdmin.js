@@ -3,50 +3,73 @@ import {
   Alert,
   Button,
   Card,
+  Col,
   Drawer,
   Form,
   Grid,
   Image,
   Input,
   InputNumber,
+  Layout,
+  Menu,
   Popconfirm,
+  Rate,
+  Row,
+  Segmented,
+  Select,
   Space,
+  Statistic,
   Table,
   Tag,
+  Typography,
 } from 'antd';
 import {
-  AreaChartOutlined,
-  BarChartOutlined,
-  CloseOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  LogoutOutlined,
   MenuOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  TableOutlined,
   TeamOutlined,
-  UnorderedListOutlined,
+  TrophyOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import api from '../api';
+import { clearCurrentUser } from '../utils/currentUser';
 import { normalizeUser } from '../utils/user';
 
+const { Header, Sider, Content } = Layout;
+const { Text, Title } = Typography;
 const { useBreakpoint } = Grid;
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
+
+const STATUS_META = {
+  active: { label: 'Активный', color: 'blue' },
+  hot: { label: 'Горящий тур', color: 'volcano' },
+  draft: { label: 'Черновик', color: 'default' },
+  discount: { label: 'Скидка', color: 'gold' },
+};
+
+const statusOptions = Object.entries(STATUS_META).map(([value, meta]) => ({
+  value,
+  label: meta.label,
+}));
+
+const normalizeTourRecord = (tour, index = 0) => {
+  const fallbackStatuses = ['active', 'hot', 'discount', 'draft'];
+  return {
+    ...tour,
+    key: tour.id,
+    status: tour.status || fallbackStatuses[index % fallbackStatuses.length],
+    rating: Number(tour.rating || 4.8),
+    price: Number(tour.price || 0),
+  };
+};
 
 const ActualToursAdmin = () => {
   const navigate = useNavigate();
@@ -58,8 +81,11 @@ const ActualToursAdmin = () => {
   const [users, setUsers] = useState([]);
   const [editingTourId, setEditingTourId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [messageState, setMessageState] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [tourSearch, setTourSearch] = useState('');
+  const [tourStatusFilter, setTourStatusFilter] = useState('all');
 
   const currentTab = useMemo(() => {
     if (location.pathname === '/admin/users') return 'users';
@@ -67,30 +93,24 @@ const ActualToursAdmin = () => {
     return 'tours';
   }, [location.pathname]);
 
-  const adminMenuItems = useMemo(() => ([
-    { key: 'tours', icon: <UnorderedListOutlined />, label: 'Туры' },
-    { key: 'users', icon: <TeamOutlined />, label: 'Пользователи' },
-    { key: 'stats', icon: <BarChartOutlined />, label: 'Статистика' },
-  ]), []);
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      const [toursResponse, usersResponse] = await Promise.all([
+        api.get('/tours'),
+        api.get('/users'),
+      ]);
+      setTours((toursResponse.data || []).map(normalizeTourRecord));
+      setUsers((usersResponse.data || []).map(normalizeUser));
+    } catch (error) {
+      setMessageState({ type: 'error', text: 'Не удалось загрузить данные админ-панели.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [toursResponse, usersResponse] = await Promise.all([
-          api.get('/tours'),
-          api.get('/users'),
-        ]);
-        setTours(toursResponse.data || []);
-        setUsers((usersResponse.data || []).map(normalizeUser));
-      } catch (error) {
-        setMessage({ type: 'error', text: 'Не удалось загрузить данные панели.' });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+    loadDashboardData();
   }, []);
 
   useEffect(() => {
@@ -108,32 +128,88 @@ const ActualToursAdmin = () => {
   const totalSavings = users.reduce((sum, user) => sum + (user?.savings?.currentAmount || 0), 0);
   const totalRevenue = users.reduce((sum, user) => sum + (user?.travelHistory || []).reduce((inner, item) => inner + (item.amount || 0), 0), 0);
   const totalPayments = users.reduce((sum, user) => sum + (user?.topUps || []).reduce((inner, item) => inner + (item.amount || 0), 0), 0);
+  const activeToursCount = tours.filter((tour) => tour.status === 'active' || tour.status === 'hot').length;
+  const statusCounts = useMemo(() => tours.reduce((accumulator, tour) => {
+    accumulator[tour.status] = (accumulator[tour.status] || 0) + 1;
+    return accumulator;
+  }, {}), [tours]);
 
-  const revenueChartData = Object.entries(
-    users.flatMap((user) => user.travelHistory || []).reduce((accumulator, item) => {
-      const month = new Date(item.purchasedAt).toLocaleDateString('ru-RU', { month: 'short', year: '2-digit' });
-      accumulator[month] = (accumulator[month] || 0) + (item.amount || 0);
-      return accumulator;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
+  const filteredTours = useMemo(() => {
+    const query = tourSearch.trim().toLowerCase();
 
-  const savingsChartData = Object.entries(
-    users.flatMap((user) => user.topUps || []).reduce((accumulator, item) => {
-      const month = new Date(item.date).toLocaleDateString('ru-RU', { month: 'short', year: '2-digit' });
-      accumulator[month] = (accumulator[month] || 0) + (item.amount || 0);
-      return accumulator;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
+    return tours.filter((tour) => {
+      const meta = STATUS_META[tour.status] || STATUS_META.active;
+      const matchesStatus = tourStatusFilter === 'all' || tour.status === tourStatusFilter;
+      const searchableText = [
+        tour.title,
+        tour.location,
+        tour.city,
+        tour.duration,
+        meta.label,
+      ].filter(Boolean).join(' ').toLowerCase();
 
-  const popularToursData = Object.entries(
-    users.flatMap((user) => user.travelHistory || []).reduce((accumulator, item) => {
-      accumulator[item.tourTitle] = (accumulator[item.tourTitle] || 0) + 1;
-      return accumulator;
-    }, {}),
-  ).map(([name, value]) => ({ name, value }));
+      return matchesStatus && (!query || searchableText.includes(query));
+    });
+  }, [tourSearch, tourStatusFilter, tours]);
+
+  const tourStatusSegments = useMemo(() => [
+    { label: `Все ${tours.length}`, value: 'all' },
+    ...Object.entries(STATUS_META).map(([value, meta]) => ({
+      label: `${meta.label} ${statusCounts[value] || 0}`,
+      value,
+    })),
+  ], [statusCounts, tours.length]);
+
+  const paymentRows = users.flatMap((user) => (user?.topUps || []).map((topUp, index) => ({
+    key: `${user.id}-topup-${index}`,
+    ...topUp,
+    userName: user.name,
+    userEmail: user.email,
+  })));
+
+  const bookingRows = users.flatMap((user) => (user?.travelHistory || []).map((item, index) => ({
+    key: `${user.id}-travel-${index}`,
+    ...item,
+    userName: user.name,
+    userEmail: user.email,
+  })));
+
+  const handleOpenSite = () => navigate('/');
+
+  const handleLogout = () => {
+    clearCurrentUser();
+    navigate('/login');
+  };
+
+  const openCreateDrawer = () => {
+    setEditingTourId(null);
+    form.resetFields();
+    form.setFieldsValue({ status: 'active', rating: 4.8 });
+    setDrawerOpen(true);
+  };
+
+  const startEditTour = (tour) => {
+    setEditingTourId(tour.id);
+    form.setFieldsValue({
+      ...tour,
+      rating: Number(tour.rating || 4.8),
+      price: Number(tour.price || 0),
+    });
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setEditingTourId(null);
+    form.resetFields();
+  };
 
   const handleSaveTour = async (values) => {
-    const payload = { ...values, price: Number(values.price || 0) };
+    const payload = {
+      ...values,
+      price: Number(values.price || 0),
+      rating: Number(values.rating || 0),
+    };
 
     try {
       if (editingTourId) {
@@ -142,213 +218,324 @@ const ActualToursAdmin = () => {
         await api.post('/tours', payload);
       }
 
-      const [toursResponse, usersResponse] = await Promise.all([
-        api.get('/tours'),
-        api.get('/users'),
-      ]);
-      setTours(toursResponse.data || []);
-      setUsers((usersResponse.data || []).map(normalizeUser));
-      form.resetFields();
-      setEditingTourId(null);
-      setMessage({ type: 'success', text: 'Тур сохранён.' });
+      await loadDashboardData();
+      setMessageState({ type: 'success', text: 'Тур сохранён.' });
+      closeDrawer();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Не удалось сохранить тур.' });
+      setMessageState({ type: 'error', text: 'Не удалось сохранить тур.' });
     }
-  };
-
-  const startEditTour = (tour) => {
-    setEditingTourId(tour.id);
-    form.setFieldsValue(tour);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteTour = async (id) => {
     try {
       await api.delete(`/tours/${id}`);
-      const response = await api.get('/tours');
-      setTours(response.data || []);
-      setMessage({ type: 'success', text: 'Тур удалён.' });
+      await loadDashboardData();
+      setMessageState({ type: 'success', text: 'Тур удалён.' });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Не удалось удалить тур.' });
+      setMessageState({ type: 'error', text: 'Не удалось удалить тур.' });
     }
   };
 
   const toggleAdmin = async (user) => {
     try {
       await api.put(`/users/${user.id}`, { ...user, role: user.role === 'admin' ? 'user' : 'admin' });
-      const response = await api.get('/users');
-      setUsers((response.data || []).map(normalizeUser));
+      await loadDashboardData();
+      setMessageState({ type: 'success', text: 'Роль пользователя обновлена.' });
     } catch (error) {
-      setMessage({ type: 'error', text: 'Не удалось изменить роль пользователя.' });
+      setMessageState({ type: 'error', text: 'Не удалось изменить роль пользователя.' });
     }
   };
 
+  const handleMenuClick = ({ key }) => {
+    setMenuOpen(false);
+
+    if (key === 'open-site') {
+      handleOpenSite();
+      return;
+    }
+
+    if (key === 'logout') {
+      handleLogout();
+      return;
+    }
+
+    navigate(`/admin/${key}`);
+  };
+
+  const menuItems = [
+    { key: 'tours', icon: <TableOutlined />, label: 'Каталог туров' },
+    { key: 'users', icon: <TeamOutlined />, label: 'Пользователи' },
+    { key: 'stats', icon: <WalletOutlined />, label: 'Статистика' },
+    { type: 'divider' },
+    { key: 'open-site', icon: <EyeOutlined />, label: 'Открыть сайт' },
+    { key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', danger: true },
+  ];
+
+  const statCards = [
+    { title: 'Пользователи', value: users.length, icon: <TeamOutlined />, suffix: 'активных' },
+    { title: 'Накопления', value: totalSavings, icon: <WalletOutlined />, formatter: formatMoney },
+    { title: 'Пополнения', value: totalPayments, icon: <WalletOutlined />, formatter: formatMoney },
+    { title: 'Доход', value: totalRevenue, icon: <TrophyOutlined />, formatter: formatMoney },
+  ];
+
   const userColumns = [
-    { title: 'Имя', dataIndex: 'name' },
-    { title: 'Email', dataIndex: 'email' },
-    { title: 'Уровень', dataIndex: 'level', render: (value) => <Tag color="gold">{value}</Tag> },
-    { title: 'Накоплено', render: (_, record) => formatMoney(record?.savings?.currentAmount) },
-    { title: 'Цель', render: (_, record) => formatMoney(record?.savings?.goalAmount) },
-    { title: 'Пополнений', render: (_, record) => record?.topUps?.length || 0 },
-    { title: 'Поездок', render: (_, record) => record?.travelHistory?.length || 0 },
+    { title: 'Имя', dataIndex: 'name', width: 170 },
+    { title: 'Email', dataIndex: 'email', width: 240 },
+    { title: 'Уровень', dataIndex: 'level', render: (value) => <Tag color="gold">{value}</Tag>, width: 110 },
+    { title: 'Накоплено', render: (_, record) => formatMoney(record?.savings?.currentAmount), width: 150 },
+    { title: 'Цель', render: (_, record) => formatMoney(record?.savings?.goalAmount), width: 150 },
+    { title: 'Пополнений', render: (_, record) => record?.topUps?.length || 0, width: 120 },
+    { title: 'Поездок', render: (_, record) => record?.travelHistory?.length || 0, width: 110 },
     {
       title: 'Действия',
+      width: 220,
       render: (_, record) => (
         <Space wrap>
-          <Button onClick={() => navigate('/profile')}>Открыть профиль</Button>
-          <Button onClick={() => toggleAdmin(record)}>{record.role === 'admin' ? 'Снять админа' : 'Сделать админом'}</Button>
+          <Button size="small" onClick={() => navigate('/profile')}>Профиль</Button>
+          <Button size="small" onClick={() => toggleAdmin(record)}>
+            {record.role === 'admin' ? 'Снять админа' : 'Сделать админом'}
+          </Button>
         </Space>
       ),
     },
   ];
 
-  const paymentRows = users.flatMap((user) => (user?.topUps || []).map((topUp) => ({
-    ...topUp,
-    userName: user.name,
-    userEmail: user.email,
-  })));
-
-  const bookingRows = users.flatMap((user) => (user?.travelHistory || []).map((item) => ({
-    ...item,
-    userName: user.name,
-    userEmail: user.email,
-  })));
-
   const paymentsTableColumns = [
-    { title: 'Пользователь', dataIndex: 'userName' },
-    { title: 'Email', dataIndex: 'userEmail' },
-    { title: 'Дата', dataIndex: 'date', render: formatDate },
-    { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
-    { title: 'Статус', dataIndex: 'status', render: (status) => <Tag color="success">{status}</Tag> },
+    { title: 'Пользователь', dataIndex: 'userName', width: 180 },
+    { title: 'Email', dataIndex: 'userEmail', width: 230 },
+    { title: 'Дата', dataIndex: 'date', render: formatDate, width: 120 },
+    { title: 'Сумма', dataIndex: 'amount', render: formatMoney, width: 130 },
+    { title: 'Статус', dataIndex: 'status', width: 130, render: (status) => <Tag color="success">{status || 'Успешно'}</Tag> },
   ];
 
   const travelTableColumns = [
-    { title: 'Пользователь', dataIndex: 'userName' },
-    { title: 'Тур', dataIndex: 'tourTitle' },
-    { title: 'Дата', dataIndex: 'purchasedAt', render: formatDate },
-    { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
-    { title: 'Статус', dataIndex: 'status', render: (status) => <Tag color="processing">{status}</Tag> },
+    { title: 'Пользователь', dataIndex: 'userName', width: 180 },
+    { title: 'Тур', dataIndex: 'tourTitle', width: 220 },
+    { title: 'Дата', dataIndex: 'purchasedAt', render: formatDate, width: 120 },
+    { title: 'Сумма', dataIndex: 'amount', render: formatMoney, width: 130 },
+    { title: 'Статус', dataIndex: 'status', width: 140, render: (status) => <Tag color="processing">{status || 'Завершено'}</Tag> },
   ];
 
   const tourColumns = [
     {
       title: 'Фото',
       dataIndex: 'image',
-      width: 90,
+      width: 92,
       render: (image, record) => (
-        <Image width={64} height={48} src={image} alt={record.title} className="admin-tour-image" />
+        <Image
+          width={64}
+          height={48}
+          src={image}
+          alt={record.title}
+          className="admin-tour-image"
+          preview={false}
+        />
       ),
     },
-    { title: 'Тур', dataIndex: 'title' },
-    { title: 'Локация', dataIndex: 'location' },
-    { title: 'Длительность', dataIndex: 'duration' },
-    { title: 'Цена', dataIndex: 'price', render: formatMoney },
+    { title: 'Название', dataIndex: 'title', width: 220 },
+    { title: 'Локация', dataIndex: 'location', width: 200 },
+    { title: 'Цена', dataIndex: 'price', width: 130, render: formatMoney },
+    { title: 'Длительность', dataIndex: 'duration', width: 120 },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      width: 150,
+      render: (status) => {
+        const meta = STATUS_META[status] || STATUS_META.active;
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+    },
     {
       title: 'Действия',
+      width: 210,
+      fixed: 'right',
       render: (_, tour) => (
-        <Space wrap>
-          <Button icon={<EditOutlined />} onClick={() => startEditTour(tour)}>Изменить</Button>
+        <Space wrap size={8}>
+          <Button size="small" icon={<EditOutlined />} onClick={() => startEditTour(tour)}>
+            Редактировать
+          </Button>
           <Popconfirm title="Удалить тур?" okText="Да" cancelText="Нет" onConfirm={() => deleteTour(tour.id)}>
-            <Button danger icon={<DeleteOutlined />}>Удалить</Button>
+            <Button size="small" danger icon={<DeleteOutlined />}>
+              Удалить
+            </Button>
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
-  const handleMenuSelect = (key) => {
-    setMenuOpen(false);
-    navigate(`/admin/${key}`);
-  };
-
-  const renderSidebarMenu = () => (
-    <div className="admin-menu">
-      {adminMenuItems.map((item) => (
-        <button
-          key={item.key}
-          type="button"
-          className={`admin-menu-btn${currentTab === item.key ? ' active' : ''}`}
-          onClick={() => handleMenuSelect(item.key)}
-        >
-          {item.icon}
-          <span>{item.label}</span>
-        </button>
-      ))}
-    </div>
-  );
-
-  const desktopSidebar = (
-    <div className="admin-sidebar-shell">
-      <div className="admin-sidebar-brand">
-        <div className="admin-sidebar-brand__logo">TP</div>
-        <div className="admin-sidebar-brand__copy">
-          <div className="admin-sidebar-brand__title">TravelPay Admin</div>
-          <div className="admin-sidebar-brand__subtitle">Fintech + Travel Operations</div>
+  const sidebar = (
+    <div className="crm-admin-sidebar-shell">
+      <div className="crm-admin-sidebar-brand">
+        <div className="crm-admin-sidebar-brand__mark">TP</div>
+        <div>
+          <div className="crm-admin-sidebar-brand__title">TravelPay Admin</div>
+          <div className="crm-admin-sidebar-brand__subtitle">Fintech + Travel CRM</div>
         </div>
       </div>
 
-      {renderSidebarMenu()}
-
-      <Button icon={<EyeOutlined />} block className="admin-open-site" onClick={() => navigate('/tours')}>
-        Открыть сайт
-      </Button>
-
-      <div className="admin-sidebar-footer">
-        <div className="admin-sidebar-footer__title">TravelPay CRM</div>
-        <div className="admin-sidebar-footer__subtitle">Admin workspace</div>
-        <Tag className="admin-sidebar-footer__version">v1.0</Tag>
-      </div>
+      <Menu
+        mode="inline"
+        selectedKeys={[currentTab]}
+        items={menuItems}
+        onClick={handleMenuClick}
+        className="crm-admin-menu"
+      />
     </div>
   );
 
-  const mobileDrawerContent = (
-    <div className="travelpay-admin-mobile-drawer">
-      <div className="travelpay-admin-mobile-drawer__top">
-        <div className="travelpay-admin-mobile-drawer__brand">
-          <div className="travelpay-admin-mobile-drawer__logo">TP</div>
-          <div className="travelpay-admin-mobile-drawer__brand-copy">
-            <div className="travelpay-admin-mobile-drawer__brand-title">TravelPay Admin</div>
-            <div className="travelpay-admin-mobile-drawer__brand-subtitle">Fintech + Travel Operations</div>
+  const renderTourCatalog = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card className="crm-admin-card crm-admin-card--catalog" styles={{ body: { padding: 0 } }}>
+        <div className="crm-admin-card__toolbar">
+          <div>
+            <Text className="crm-admin-kicker">Каталог туров</Text>
+            <Title level={3} className="crm-admin-card__title">Список маршрутов и статусов</Title>
+            <Text className="crm-admin-card__subtitle">Админ сразу видит все туры, их состояние и быстрые действия.</Text>
           </div>
+          <Button type="primary" icon={<PlusOutlined />} size="large" onClick={openCreateDrawer}>
+            Добавить тур
+          </Button>
         </div>
-        <button
-          type="button"
-          aria-label="Close admin menu"
-          className="travelpay-admin-mobile-drawer__close"
-          onClick={() => setMenuOpen(false)}
-        >
-          <CloseOutlined />
-        </button>
-      </div>
 
-      <div className="travelpay-admin-mobile-drawer__menu-card">
-        {renderSidebarMenu()}
-      </div>
+        <div className="crm-admin-opsbar">
+          <Input.Search
+            allowClear
+            size="large"
+            value={tourSearch}
+            placeholder="Поиск по названию, локации или статусу"
+            onChange={(event) => setTourSearch(event.target.value)}
+            className="crm-admin-tour-search"
+          />
 
-      <Button
-        icon={<EyeOutlined />}
-        block
-        className="admin-open-site travelpay-admin-mobile-drawer__site-button"
-        onClick={() => { setMenuOpen(false); navigate('/tours'); }}
-      >
-        Открыть сайт
-      </Button>
+          <Segmented
+            size="large"
+            value={tourStatusFilter}
+            options={tourStatusSegments}
+            onChange={setTourStatusFilter}
+            className="crm-admin-status-segmented"
+          />
 
-      <div className="travelpay-admin-mobile-drawer__footer">
-        <div className="travelpay-admin-mobile-drawer__footer-title">TravelPay CRM</div>
-        <div className="travelpay-admin-mobile-drawer__footer-subtitle">Admin workspace</div>
-        <Tag className="travelpay-admin-mobile-drawer__version">v1.0</Tag>
+          <Space size={8} wrap className="crm-admin-opsbar__actions">
+            <Tag className="crm-admin-result-tag">
+              {filteredTours.length} / {tours.length}
+            </Tag>
+            <Button icon={<ReloadOutlined />} onClick={loadDashboardData} loading={loading}>
+              Обновить
+            </Button>
+            <Button
+              disabled={tourStatusFilter === 'all' && !tourSearch}
+              onClick={() => {
+                setTourSearch('');
+                setTourStatusFilter('all');
+              }}
+            >
+              Сбросить
+            </Button>
+          </Space>
+        </div>
+
+        <div className="travelpay-table-shell admin-table-shell">
+          <Table
+            rowKey="id"
+            dataSource={filteredTours}
+            columns={tourColumns}
+            loading={loading}
+            pagination={{ pageSize: 7, showSizeChanger: false }}
+            scroll={{ x: 1120 }}
+          />
+        </div>
+      </Card>
+
+      <div className="crm-admin-stats-shell">
+        <Row gutter={[16, 16]}>
+          {statCards.map((item) => (
+            <Col xs={24} sm={12} xl={6} key={item.title}>
+              <Card className="crm-admin-card crm-admin-card--stat" styles={{ body: { padding: 18 } }}>
+                <div className="crm-admin-stat-head">
+                  <span className="crm-admin-stat-icon">{item.icon}</span>
+                  <Text className="crm-admin-stat-label">{item.title}</Text>
+                </div>
+                <Statistic
+                  value={item.value}
+                  formatter={(value) => (item.formatter ? item.formatter(value) : value)}
+                  styles={{ content: { color: '#f8fafc', fontWeight: 700, fontSize: 26 } }}
+                />
+                {item.suffix && <Text className="crm-admin-muted">{item.suffix}</Text>}
+              </Card>
+            </Col>
+          ))}
+        </Row>
       </div>
-    </div>
+    </Space>
+  );
+
+  const renderUsersView = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card className="crm-admin-card" title="Пользователи" styles={{ body: { padding: 0 } }}>
+        <div className="travelpay-table-shell admin-table-shell">
+          <Table rowKey="id" dataSource={users} columns={userColumns} loading={loading} scroll={{ x: 1180 }} />
+        </div>
+      </Card>
+
+      <Card className="crm-admin-card" title="Пополнения" styles={{ body: { padding: 0 } }}>
+        <div className="travelpay-table-shell admin-table-shell">
+          <Table rowKey="key" dataSource={paymentRows} columns={paymentsTableColumns} pagination={{ pageSize: 6 }} scroll={{ x: 860 }} />
+        </div>
+      </Card>
+
+      <Card className="crm-admin-card" title="История поездок" styles={{ body: { padding: 0 } }}>
+        <div className="travelpay-table-shell admin-table-shell">
+          <Table rowKey="key" dataSource={bookingRows} columns={travelTableColumns} pagination={{ pageSize: 6 }} scroll={{ x: 860 }} />
+        </div>
+      </Card>
+    </Space>
+  );
+
+  const renderStatsView = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={12}>
+          <Card className="crm-admin-card" styles={{ body: { padding: 20 } }}>
+            <Statistic title="Активные туры" value={activeToursCount} styles={{ content: { color: '#f8fafc' } }} />
+            <Text className="crm-admin-muted">Активные и горящие предложения в каталоге.</Text>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card className="crm-admin-card" styles={{ body: { padding: 20 } }}>
+            <Statistic title="Средний чек пополнения" value={paymentRows.length ? Math.round(totalPayments / paymentRows.length) : 0} formatter={formatMoney} styles={{ content: { color: '#f8fafc' } }} />
+            <Text className="crm-admin-muted">Помогает отслеживать поведение пользователей в накоплениях.</Text>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card className="crm-admin-card" styles={{ body: { padding: 20 } }}>
+            <Statistic title="Средний чек поездки" value={bookingRows.length ? Math.round(totalRevenue / bookingRows.length) : 0} formatter={formatMoney} styles={{ content: { color: '#f8fafc' } }} />
+            <Text className="crm-admin-muted">Средний доход с одной покупки тура.</Text>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card className="crm-admin-card" styles={{ body: { padding: 20 } }}>
+            <Statistic title="Конверсия в поездки" value={users.length ? Math.round((bookingRows.length / users.length) * 100) : 0} suffix="%" styles={{ content: { color: '#f8fafc' } }} />
+            <Text className="crm-admin-muted">Сколько бронирований приходится на базу пользователей.</Text>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="crm-admin-card" title="Последние пополнения" styles={{ body: { padding: 0 } }}>
+        <div className="travelpay-table-shell admin-table-shell">
+          <Table rowKey="key" dataSource={paymentRows.slice(0, 8)} columns={paymentsTableColumns} pagination={false} scroll={{ x: 860 }} />
+        </div>
+      </Card>
+    </Space>
   );
 
   return (
-    <div className="travelpay-admin-page admin-page">
-      <div className="admin-layout">
+    <div className="crm-admin-page admin-page">
+      <Layout className="crm-admin-layout">
         {isDesktop && (
-          <aside className="admin-sidebar">
-            {desktopSidebar}
-          </aside>
+          <Sider width={272} className="crm-admin-sider">
+            {sidebar}
+          </Sider>
         )}
 
         {!isDesktop && (
@@ -356,221 +543,168 @@ const ActualToursAdmin = () => {
             open={menuOpen}
             onClose={() => setMenuOpen(false)}
             placement="left"
-            size="min(82vw, 340px)"
-            className="travelpay-dashboard-drawer travelpay-admin-mobile-drawer-shell"
-            rootClassName="travelpay-admin-mobile-drawer-shell"
+            size="100%"
+            className="crm-admin-mobile-shell"
+            rootClassName="crm-admin-mobile-shell"
             closable={false}
-            maskClosable
             styles={{
-              body: styles.drawerBody,
-              section: styles.drawerContent,
-              wrapper: styles.drawerWrapper,
+              body: styles.sidebarDrawerBody,
+              section: styles.sidebarDrawerSection,
               mask: styles.drawerMask,
             }}
           >
-            {mobileDrawerContent}
+            <div className="crm-admin-mobile-topbar">
+              <div>
+                <div className="crm-admin-sidebar-brand__title">TravelPay Admin</div>
+                <div className="crm-admin-sidebar-brand__subtitle">Fintech + Travel CRM</div>
+              </div>
+              <Button type="text" className="crm-admin-mobile-close" onClick={() => setMenuOpen(false)}>
+                <MenuOutlined />
+              </Button>
+            </div>
+            {sidebar}
           </Drawer>
         )}
 
-        <main className="admin-main">
-          <div className="travelpay-dashboard-container admin-content-shell">
-            <Space orientation="vertical" size={24} className="admin-stack">
-              <section className="admin-hero admin-glass">
-                <div className="admin-hero-copy">
-                  {!isDesktop && (
-                    <Button
-                      icon={<MenuOutlined />}
-                      onClick={() => setMenuOpen(true)}
-                      className="admin-mobile-menu-trigger"
-                    >
-                      Меню
-                    </Button>
-                  )}
-                  <div className="admin-eyebrow">Fintech + Travel Operations</div>
-                  <h1 className="admin-title">Админ-панель TravelPay</h1>
-                </div>
-                <div className="admin-navbar-badge">Dark Glass CRM</div>
-              </section>
-
-              {message && <Alert type={message.type} title={message.text} showIcon closable onClose={() => setMessage(null)} />}
-
-              <div className="admin-stats-grid">
-                <div className="admin-stat-card admin-glass">
-                  <div className="admin-stat-label">Пользователи</div>
-                  <div className="admin-stat-value">
-                    <TeamOutlined />
-                    <span>{users.length}</span>
-                  </div>
-                </div>
-                <div className="admin-stat-card admin-glass">
-                  <div className="admin-stat-label">Накоплено</div>
-                  <div className="admin-stat-value">
-                    <WalletOutlined />
-                    <span>{formatMoney(totalSavings)}</span>
-                  </div>
-                </div>
-                <div className="admin-stat-card admin-glass">
-                  <div className="admin-stat-label">Пополнения</div>
-                  <div className="admin-stat-value">
-                    <AreaChartOutlined />
-                    <span>{formatMoney(totalPayments)}</span>
-                  </div>
-                </div>
-                <div className="admin-stat-card admin-glass">
-                  <div className="admin-stat-label">Доход с туров</div>
-                  <div className="admin-stat-value">
-                    <BarChartOutlined />
-                    <span>{formatMoney(totalRevenue)}</span>
-                  </div>
-                </div>
+        <Layout className="crm-admin-main-layout">
+          <Header className="crm-admin-header">
+            <div className="crm-admin-header__left">
+              {!isDesktop && (
+                <Button icon={<MenuOutlined />} onClick={() => setMenuOpen(true)} className="crm-admin-header__menu-btn" />
+              )}
+              <div>
+                <Title level={4} className="crm-admin-header__title">TravelPay Admin</Title>
+                <Tag className="crm-admin-header__tag">Fintech + Travel CRM</Tag>
               </div>
+            </div>
 
-              {currentTab === 'tours' && (
-                <>
-                  <section className="admin-form-card admin-glass">
-                    <div className="admin-section-heading">
-                      {editingTourId ? 'Редактировать тур' : 'Добавить тур'}
-                    </div>
-                    <Form form={form} layout="vertical" onFinish={handleSaveTour} className="travelpay-adaptive-form admin-form">
-                      <div className="travelpay-form-grid">
-                        <Form.Item name="title" label="Название" rules={[{ required: true, message: 'Введите название' }]}>
-                          <Input />
-                        </Form.Item>
-                        <Form.Item name="location" label="Локация">
-                          <Input />
-                        </Form.Item>
-                        <Form.Item name="duration" label="Длительность">
-                          <Input />
-                        </Form.Item>
-                        <Form.Item name="price" label="Цена" rules={[{ required: true, message: 'Введите цену' }]}>
-                          <InputNumber min={0} className="admin-input-number" />
-                        </Form.Item>
-                      </div>
-                      <Form.Item name="image" label="Изображение" rules={[{ required: true, message: 'Укажите изображение' }]}>
-                        <Input />
-                      </Form.Item>
-                      <Form.Item name="description" label="Описание" rules={[{ required: true, message: 'Укажите описание' }]}>
-                        <Input.TextArea rows={4} />
-                      </Form.Item>
-                      <Space wrap>
-                        <Button type="primary" htmlType="submit">
-                          {editingTourId ? 'Сохранить' : 'Добавить'}
-                        </Button>
-                        {editingTourId && (
-                          <Button onClick={() => { form.resetFields(); setEditingTourId(null); }}>
-                            Отмена
-                          </Button>
-                        )}
-                      </Space>
-                    </Form>
-                  </section>
-
-                  <Card title="Каталог туров" className="admin-glass admin-panel-card">
-                    <div className="travelpay-table-shell admin-table-shell">
-                      <Table rowKey="id" dataSource={tours} columns={tourColumns} loading={loading} scroll={{ x: 900 }} />
-                    </div>
-                  </Card>
-                </>
-              )}
-
-              {currentTab === 'users' && (
-                <>
-                  <Card title="Список пользователей" className="admin-glass admin-panel-card">
-                    <div className="travelpay-table-shell admin-table-shell">
-                      <Table rowKey="id" dataSource={users} columns={userColumns} loading={loading} scroll={{ x: 980 }} />
-                    </div>
-                  </Card>
-                  <Card title="Платежи / пополнения" className="admin-glass admin-panel-card">
-                    <div className="travelpay-table-shell admin-table-shell">
-                      <Table rowKey="id" dataSource={paymentRows} columns={paymentsTableColumns} pagination={{ pageSize: 6 }} scroll={{ x: 840 }} />
-                    </div>
-                  </Card>
-                  <Card title="История поездок" className="admin-glass admin-panel-card">
-                    <div className="travelpay-table-shell admin-table-shell">
-                      <Table rowKey="id" dataSource={bookingRows} columns={travelTableColumns} pagination={{ pageSize: 6 }} scroll={{ x: 840 }} />
-                    </div>
-                  </Card>
-                </>
-              )}
-
-              {currentTab === 'stats' && (
-                <>
-                  <div className="admin-chart-grid">
-                    <Card title="Доход по месяцам" className="admin-glass admin-panel-card">
-                      <div style={styles.chartBox}>
-                        <ResponsiveContainer>
-                          <BarChart data={revenueChartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip formatter={(value) => formatMoney(value)} />
-                            <Bar dataKey="value" fill="#2d7dff" radius={[10, 10, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </Card>
-
-                    <Card title="Накопления по месяцам" className="admin-glass admin-panel-card">
-                      <div style={styles.chartBox}>
-                        <ResponsiveContainer>
-                          <AreaChart data={savingsChartData}>
-                            <defs>
-                              <linearGradient id="adminSavings" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#4096ff" stopOpacity={0.65} />
-                                <stop offset="95%" stopColor="#8cc8ff" stopOpacity={0.05} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip formatter={(value) => formatMoney(value)} />
-                            <Area type="monotone" dataKey="value" stroke="#7cc8ff" fill="url(#adminSavings)" strokeWidth={3} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </Card>
-                  </div>
-
-                  <Card title="Популярные туры" className="admin-glass admin-panel-card">
-                    <div style={styles.chartBox}>
-                      <ResponsiveContainer>
-                        <PieChart>
-                          <Pie data={popularToursData} dataKey="value" nameKey="name" outerRadius={110} fill="#4096ff" label />
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </Card>
-                </>
-              )}
+            <Space wrap size={10} className="crm-admin-header__actions">
+              <Button icon={<EyeOutlined />} onClick={handleOpenSite}>
+                Открыть сайт
+              </Button>
+              <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
+                Выйти из админ-панели
+              </Button>
             </Space>
+          </Header>
+
+          <Content className="crm-admin-content">
+            {messageState && (
+              <Alert
+                type={messageState.type}
+                title={messageState.text}
+                showIcon
+                closable
+                onClose={() => setMessageState(null)}
+                className="crm-admin-alert"
+              />
+            )}
+
+            {currentTab === 'tours' && renderTourCatalog()}
+            {currentTab === 'users' && renderUsersView()}
+            {currentTab === 'stats' && renderStatsView()}
+          </Content>
+        </Layout>
+      </Layout>
+
+      <Drawer
+        title={editingTourId ? 'Редактировать тур' : 'Добавить тур'}
+        open={drawerOpen}
+        onClose={closeDrawer}
+        size={isDesktop ? 480 : '100%'}
+        className="crm-admin-form-drawer"
+        rootClassName="crm-admin-form-drawer"
+        styles={{
+          body: styles.formDrawerBody,
+          header: styles.formDrawerHeader,
+          section: styles.formDrawerSection,
+          footer: styles.formDrawerFooter,
+          mask: styles.drawerMask,
+        }}
+        footer={(
+          <div className="crm-admin-drawer-footer">
+            <Button onClick={closeDrawer}>Отмена</Button>
+            <Button type="primary" onClick={() => form.submit()}>
+              Сохранить тур
+            </Button>
           </div>
-        </main>
-      </div>
+        )}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSaveTour} className="crm-admin-form">
+          <Form.Item name="title" label="Название" rules={[{ required: true, message: 'Введите название тура' }]}>
+            <Input placeholder="Например: Issyk-Kul Premium Escape" />
+          </Form.Item>
+
+          <Form.Item name="location" label="Локация" rules={[{ required: true, message: 'Введите локацию' }]}>
+            <Input placeholder="Issyk-Kul, Kyrgyzstan" />
+          </Form.Item>
+
+          <Form.Item name="description" label="Описание" rules={[{ required: true, message: 'Добавьте описание' }]}>
+            <Input.TextArea rows={5} placeholder="Краткое описание тура" />
+          </Form.Item>
+
+          <Row gutter={12}>
+            <Col span={12}>
+              <Form.Item name="price" label="Цена" rules={[{ required: true, message: 'Введите цену' }]}>
+                <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="duration" label="Длительность" rules={[{ required: true, message: 'Введите длительность' }]}>
+                <Input placeholder="3 дня" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item name="image" label="Ссылка на фото" rules={[{ required: true, message: 'Укажите ссылку на фото' }]}>
+            <Input placeholder="https://..." />
+          </Form.Item>
+
+          <Row gutter={12}>
+            <Col xs={24} md={12}>
+              <Form.Item name="status" label="Статус" rules={[{ required: true, message: 'Выберите статус' }]}>
+                <Select options={statusOptions} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="rating" label="Рейтинг" rules={[{ required: true, message: 'Укажите рейтинг' }]}>
+                <Rate allowHalf />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Drawer>
     </div>
   );
 };
 
 const styles = {
-  chartBox: {
-    width: '100%',
-    height: 320,
+  sidebarDrawerBody: {
+    padding: 20,
+    background: 'linear-gradient(180deg, #07111f 0%, #0b1728 100%)',
   },
-  drawerBody: {
-    padding: 0,
-    background: 'linear-gradient(180deg, #09192f 0%, #102c50 100%)',
+  sidebarDrawerSection: {
+    background: 'linear-gradient(180deg, #07111f 0%, #0b1728 100%)',
   },
-  drawerContent: {
-    background: 'linear-gradient(180deg, #09192f 0%, #102c50 100%)',
+  formDrawerBody: {
+    padding: 20,
+    background: 'linear-gradient(180deg, rgba(7,17,31,0.98) 0%, rgba(11,23,40,0.98) 100%)',
   },
-  drawerWrapper: {
-    maxWidth: 'min(82vw, 340px)',
+  formDrawerHeader: {
+    background: 'linear-gradient(180deg, rgba(7,17,31,0.98) 0%, rgba(11,23,40,0.98) 100%)',
+    borderBottom: '1px solid rgba(255,255,255,0.12)',
+  },
+  formDrawerSection: {
+    background: 'linear-gradient(180deg, rgba(7,17,31,0.98) 0%, rgba(11,23,40,0.98) 100%)',
+  },
+  formDrawerFooter: {
+    background: 'linear-gradient(180deg, rgba(7,17,31,0.98) 0%, rgba(11,23,40,0.98) 100%)',
+    borderTop: '1px solid rgba(255,255,255,0.12)',
   },
   drawerMask: {
-    background: 'rgba(4, 10, 24, 0.56)',
-    backdropFilter: 'blur(10px)',
+    background: 'rgba(2, 6, 23, 0.62)',
+    backdropFilter: 'blur(8px)',
   },
 };
 
 export default ActualToursAdmin;
-  

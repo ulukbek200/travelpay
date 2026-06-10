@@ -5157,6 +5157,95 @@ body.travelpay-admin-drawer-open .ai-concierge-button {
   pointer-events: none !important;
 }
 
+.travelpay-ai-fab-wrap {
+  position: fixed;
+  right: clamp(18px, 3vw, 32px);
+  bottom: 24px;
+  z-index: 1000;
+  width: 64px;
+  height: 64px;
+}
+
+.travelpay-ai-fab.ant-float-btn {
+  width: 64px !important;
+  height: 64px !important;
+  inset-inline-end: auto !important;
+  inset-block-end: auto !important;
+  position: relative !important;
+  border-radius: 50% !important;
+  background: rgba(8, 20, 40, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.30) !important;
+  backdrop-filter: blur(20px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.travelpay-ai-fab.ant-float-btn:hover {
+  transform: scale(1.05);
+  border-color: rgba(245, 158, 11, 0.42) !important;
+  box-shadow: 0 12px 38px rgba(245, 158, 11, 0.24), 0 8px 32px rgba(0, 0, 0, 0.30) !important;
+}
+
+.travelpay-ai-fab .ant-float-btn-body {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.travelpay-ai-fab .ant-float-btn-content {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.travelpay-ai-fab .ant-float-btn-icon {
+  width: auto !important;
+  color: #f59e0b !important;
+  font-size: 25px !important;
+}
+
+.travelpay-ai-fab-status {
+  position: absolute;
+  top: -3px;
+  right: -2px;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #06111f;
+  background: #f59e0b;
+  border: 2px solid rgba(8, 20, 40, 0.95);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.26);
+}
+
+.ant-drawer-open ~ .travelpay-ai-fab-wrap,
+.travelpay-admin-drawer-open .travelpay-ai-fab-wrap {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.travelpay-suggestion-chip.ant-btn {
+  color: #dbeafe !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.travelpay-suggestion-chip.ant-btn:hover,
+.travelpay-suggestion-chip.ant-btn:focus {
+  color: #f8fafc !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+}
+
 /* Header logo fix after restoring global stylesheet import */
 .premium-site-header [aria-label="TravelPay home"] {
   max-width: min(260px, 52vw) !important;
@@ -5239,5 +5328,1250 @@ body.travelpay-admin-drawer-open .ai-concierge-button {
   .tour-card-actions .ant-btn-icon-only {
     width: 100%;
     min-width: 100%;
+  }
+}
+
+/* TravelPay premium refresh */
+.travelpay-primary-button.ant-btn,
+.travelpay-primary-button.ant-btn-primary {
+  border: none !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2b7bb9, #173b61) !important;
+  box-shadow: 0 16px 34px rgba(43, 123, 185, 0.24) !important;
+}
+
+.travelpay-primary-button.ant-btn:hover,
+.travelpay-primary-button.ant-btn:focus {
+  transform: translateY(-1px);
+  filter: saturate(1.06) brightness(1.02);
+}
+
+.travelpay-secondary-button.ant-btn {
+  border: 1px solid rgba(23, 59, 97, 0.12) !important;
+  color: #173b61 !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 12px 30px rgba(23, 59, 97, 0.08) !important;
+}
+
+.travelpay-secondary-button.ant-btn:hover,
+.travelpay-secondary-button.ant-btn:focus,
+.travelpay-header-button.ant-btn:hover,
+.travelpay-header-button.ant-btn:focus {
+  transform: translateY(-1px);
+}
+
+.travelpay-logo-button.ant-btn {
+  box-shadow: none !important;
+}
+
+.premium-site-header,
+.premium-site-header * {
+  font-family: Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+}
+
+.premium-header-menu.ant-menu-horizontal {
+  line-height: 48px;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.premium-header-menu.ant-menu-horizontal > .ant-menu-item {
+  height: 48px;
+  padding-inline: 18px;
+  margin-inline: 3px;
+  border-radius: 14px;
+  color: inherit !important;
+  font-weight: 800;
+  transition: color 0.22s ease, background 0.22s ease, transform 0.22s ease;
+}
+
+.premium-header-menu.ant-menu-horizontal > .ant-menu-item::after,
+.premium-header-menu.ant-menu-horizontal > .ant-menu-item:hover::after,
+.premium-header-menu.ant-menu-horizontal > .ant-menu-item-selected::after {
+  display: none !important;
+}
+
+.premium-header-menu.ant-menu-horizontal > .ant-menu-item:hover {
+  color: #fca311 !important;
+  background: rgba(252, 163, 17, 0.12) !important;
+}
+
+.premium-header-menu.ant-menu-horizontal > .ant-menu-item-selected {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, rgba(43, 123, 185, 0.8), rgba(23, 59, 97, 0.88)) !important;
+  box-shadow: 0 12px 24px rgba(43, 123, 185, 0.22);
+}
+
+.travelpay-mobile-drawer .ant-drawer-content {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.travelpay-mobile-drawer .ant-segmented {
+  background: rgba(23, 59, 97, 0.08);
+  border-radius: 14px;
+}
+
+.travelpay-mobile-drawer .ant-segmented-item-selected {
+  background: linear-gradient(135deg, #2b7bb9, #173b61) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.home-shell {
+  width: min(100%, 1200px);
+  margin: 0 auto;
+}
+
+.home-tour-grid,
+.home-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.home-tour-card-shell,
+.home-gallery-card {
+  min-width: 0;
+}
+
+.home-tour-media-card,
+.home-gallery-tour-card {
+  overflow: hidden;
+}
+
+.home-tour-media-card img,
+.home-gallery-tour-card img {
+  transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+.home-tour-media-card:hover img,
+.home-gallery-tour-card:hover img {
+  transform: scale(1.05);
+  filter: saturate(1.06);
+}
+
+.home-gallery-tour-card:hover {
+  box-shadow: 0 26px 70px rgba(23, 59, 97, 0.18) !important;
+}
+
+.tour-card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.tour-card-actions .ant-btn {
+  flex: 1 1 0;
+  min-width: 120px;
+  height: 42px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.tour-card-actions .ant-btn-icon-only {
+  flex: 0 0 42px;
+  width: 42px;
+  min-width: 42px;
+  padding-inline: 0;
+}
+
+.tour-price {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fca311;
+}
+
+.premium-tour-card .tour-card-reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.premium-tour-card .tour-card-reveal span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.premium-tour-card:hover .tour-card-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.premium-tour-card:hover img {
+  transform: scale(1.04);
+}
+
+.premium-tour-card:hover {
+  box-shadow: 0 30px 78px rgba(23, 59, 97, 0.16) !important;
+}
+
+.premium-tour-page-shell {
+  position: relative;
+}
+
+.premium-tours-hero__video,
+.premium-tours-hero__overlay {
+  pointer-events: none;
+}
+
+.premium-tours-overlap {
+  position: relative;
+}
+
+.hot-tour-marquee {
+  align-self: stretch;
+}
+
+.travelpay-destination-pill.ant-btn {
+  white-space: normal !important;
+}
+
+.travelpay-destination-pill.ant-btn span {
+  text-align: left;
+}
+
+.tour-filters-shell .ant-select-selector,
+.tour-filters-shell .ant-slider,
+.tour-filters-shell .ant-rate {
+  width: 100%;
+}
+
+.admin-menu-btn.ant-btn {
+  height: 52px;
+  border-radius: 16px;
+  border: 0;
+  color: rgba(255, 255, 255, 0.78) !important;
+  background: transparent !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 0 18px;
+  box-shadow: none !important;
+}
+
+.admin-menu-btn.ant-btn:hover,
+.admin-menu-btn.ant-btn:focus {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-menu-btn.ant-btn.active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  box-shadow: 0 12px 30px rgba(22, 119, 255, 0.35) !important;
+}
+
+.travelpay-admin-mobile-drawer__close.ant-btn {
+  width: 36px;
+  height: 36px;
+  border: none !important;
+  border-radius: 50% !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: none !important;
+}
+
+.travelpay-admin-mobile-drawer__close.ant-btn:hover,
+.travelpay-admin-mobile-drawer__close.ant-btn:focus {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+body[data-theme="dark"] .premium-site-header .travelpay-secondary-button.ant-btn,
+body[data-theme="dark"] .travelpay-header-button.ant-btn {
+  color: #f8fbff !important;
+}
+
+body[data-theme="dark"] .premium-site-header .travelpay-header-button.ant-btn[aria-label="Toggle theme"] {
+  background: linear-gradient(135deg, #ffd27a, #fca311) !important;
+  border: 1px solid rgba(255, 209, 102, 0.72) !important;
+  color: #102a43 !important;
+  box-shadow: 0 16px 32px rgba(252, 163, 17, 0.34) !important;
+}
+
+body[data-theme="dark"] .travelpay-secondary-button.ant-btn {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-theme="dark"] .tour-card,
+body[data-theme="dark"] .home-tour-media-card,
+body[data-theme="dark"] .home-gallery-tour-card {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body[data-theme="dark"] .tour-card-title,
+body[data-theme="dark"] .home-gallery-tour-card .ant-typography,
+body[data-theme="dark"] .home-tour-media-card .ant-typography {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tour-card-text,
+body[data-theme="dark"] .home-gallery-tour-card p,
+body[data-theme="dark"] .home-tour-media-card p {
+  color: rgba(255, 255, 255, 0.76) !important;
+}
+
+body[data-theme="dark"] .tour-card-meta,
+body[data-theme="dark"] .tour-card-meta * {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+body[data-theme="dark"] .tour-price {
+  color: #ffd166 !important;
+  text-shadow: 0 0 12px rgba(255, 209, 102, 0.35);
+}
+
+body[data-theme="dark"] .premium-tour-page-shell {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(22, 182, 196, 0.12), transparent 28%),
+    radial-gradient(circle at 82% 12%, rgba(252, 163, 17, 0.10), transparent 26%),
+    linear-gradient(180deg, #071523 0%, #0b1d31 48%, #081827 100%) !important;
+}
+
+body[data-theme="dark"] .premium-tour-page-shell .ant-card.tour-card,
+body[data-theme="dark"] .premium-tour-page-shell .travelpay-destination-pill.ant-btn {
+  background: rgba(11, 29, 49, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(20px);
+}
+
+body[data-theme="dark"] .premium-tour-page-shell .ant-typography,
+body[data-theme="dark"] .premium-tour-page-shell .tour-card-title,
+body[data-theme="dark"] .premium-tour-page-shell .tour-card-meta,
+body[data-theme="dark"] .premium-tour-page-shell .tour-card-meta *,
+body[data-theme="dark"] .premium-tour-page-shell .travelpay-destination-pill.ant-btn,
+body[data-theme="dark"] .premium-tour-page-shell .travelpay-destination-pill.ant-btn span {
+  color: #eef5ff !important;
+}
+
+body[data-theme="dark"] .premium-tour-page-shell .tour-card-text,
+body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
+  color: rgba(238, 245, 255, 0.74) !important;
+}
+
+@media (max-width: 1100px) {
+  .home-tour-grid,
+  .home-gallery-grid,
+  .tours-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .tour-filters-shell {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .premium-header-menu,
+  .desktop-header-actions {
+    display: none !important;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .premium-site-header {
+    width: min(100% - 16px, 1240px) !important;
+    top: 8px !important;
+    height: 70px !important;
+    border-radius: 22px !important;
+  }
+
+  .home-tour-grid,
+  .home-gallery-grid,
+  .tours-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .tour-filters-shell {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .tour-catalog-head {
+    align-items: stretch !important;
+  }
+
+  .tour-catalog-head .ant-btn {
+    width: 100%;
+  }
+
+  .premium-tours-hero {
+    min-height: 60vh !important;
+  }
+
+  .premium-tours-overlap {
+    margin-top: -48px !important;
+  }
+
+  .premium-tour-cta-stack {
+    width: 100%;
+  }
+
+  .premium-tour-cta-stack .ant-space-item,
+  .premium-tour-cta-stack .ant-btn {
+    width: 100%;
+  }
+
+  .hot-tour-marquee {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .tour-card-actions {
+    flex-direction: column;
+  }
+
+  .tour-card-actions .ant-btn,
+  .tour-card-actions .ant-btn-icon-only {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .brand {
+    max-width: 148px;
+  }
+
+  .premium-tours-hero {
+    min-height: 60vh !important;
+  }
+}
+
+/* TravelPay CRM admin refresh */
+.crm-admin-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(37, 99, 235, 0.18), transparent 28%),
+    radial-gradient(circle at 86% 12%, rgba(245, 158, 11, 0.10), transparent 24%),
+    radial-gradient(circle at 80% 82%, rgba(37, 99, 235, 0.12), transparent 24%),
+    linear-gradient(180deg, #07111f 0%, #0b1728 100%) !important;
+  color: #f8fafc;
+}
+
+.crm-admin-layout,
+.crm-admin-main-layout {
+  min-height: 100vh !important;
+  background: transparent !important;
+}
+
+.crm-admin-sider.ant-layout-sider {
+  background: rgba(7, 17, 31, 0.84) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+.crm-admin-sidebar-shell {
+  height: 100%;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.crm-admin-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 2px;
+}
+
+.crm-admin-sidebar-brand__mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #f8fafc;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.28);
+}
+
+.crm-admin-sidebar-brand__title {
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.crm-admin-sidebar-brand__subtitle {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.crm-admin-menu.ant-menu {
+  background: transparent !important;
+  border-inline-end: none !important;
+  color: #cbd5e1 !important;
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item,
+.crm-admin-menu.ant-menu .ant-menu-submenu-title {
+  height: 46px !important;
+  line-height: 46px !important;
+  margin: 6px 0 !important;
+  border-radius: 14px !important;
+  color: #cbd5e1 !important;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item .ant-menu-title-content,
+.crm-admin-menu.ant-menu .ant-menu-item .anticon {
+  color: inherit !important;
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  transform: translateX(1px);
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item-selected {
+  color: #f8fafc !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.24), rgba(29, 78, 216, 0.18)) !important;
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.14);
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item-danger {
+  color: #fca5a5 !important;
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item-danger:hover {
+  color: #fecaca !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.crm-admin-menu.ant-menu .ant-menu-item::after {
+  display: none !important;
+}
+
+.crm-admin-header.ant-layout-header {
+  height: auto;
+  min-height: 78px;
+  margin: 18px 20px 0;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.crm-admin-header__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.crm-admin-header__title.ant-typography {
+  margin: 0 !important;
+  color: #f8fafc !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+.crm-admin-header__tag.ant-tag {
+  margin-top: 6px;
+  margin-inline-end: 0;
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.crm-admin-header__actions {
+  justify-content: flex-end;
+}
+
+.crm-admin-header__actions .ant-btn,
+.crm-admin-header__menu-btn.ant-btn {
+  height: 42px;
+  border-radius: 12px !important;
+  font-weight: 600;
+}
+
+.crm-admin-header__actions .ant-btn-default,
+.crm-admin-header__menu-btn.ant-btn {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.crm-admin-header__actions .ant-btn-dangerous {
+  background: rgba(239, 68, 68, 0.10) !important;
+  border-color: rgba(248, 113, 113, 0.24) !important;
+  color: #fecaca !important;
+}
+
+.crm-admin-content {
+  padding: 18px 20px 26px;
+  background: transparent !important;
+}
+
+.crm-admin-alert.ant-alert {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.crm-admin-card.ant-card {
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.28) !important;
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.crm-admin-card.ant-card .ant-card-head {
+  min-height: 58px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.crm-admin-card.ant-card .ant-card-head-title,
+.crm-admin-card.ant-card .ant-card-body,
+.crm-admin-card.ant-card .ant-typography,
+.crm-admin-card.ant-card .ant-statistic-title,
+.crm-admin-card.ant-card .ant-statistic-content {
+  color: #f8fafc !important;
+}
+
+.crm-admin-card__toolbar {
+  padding: 20px 20px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.crm-admin-kicker {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: #60a5fa !important;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.crm-admin-card__title.ant-typography {
+  margin: 0 0 6px !important;
+  color: #f8fafc !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+}
+
+.crm-admin-card__subtitle {
+  color: #94a3b8 !important;
+}
+
+.crm-admin-opsbar {
+  margin: 0 20px 16px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.crm-admin-tour-search.ant-input-search .ant-input,
+.crm-admin-tour-search.ant-input-search .ant-input-group-addon .ant-btn {
+  height: 40px;
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.crm-admin-tour-search.ant-input-search .ant-input::placeholder {
+  color: #64748b !important;
+}
+
+.crm-admin-status-segmented.ant-segmented {
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.crm-admin-status-segmented .ant-segmented-group {
+  gap: 2px;
+}
+
+.crm-admin-status-segmented .ant-segmented-item {
+  min-height: 32px;
+  border-radius: 9px !important;
+  color: #94a3b8 !important;
+  font-weight: 600;
+}
+
+.crm-admin-status-segmented .ant-segmented-item-selected {
+  color: #f8fafc !important;
+  background: rgba(37, 99, 235, 0.42) !important;
+  box-shadow: none !important;
+}
+
+.crm-admin-status-segmented .ant-segmented-thumb {
+  background: rgba(37, 99, 235, 0.42) !important;
+}
+
+.crm-admin-opsbar__actions {
+  justify-content: flex-end;
+}
+
+.crm-admin-opsbar__actions .ant-btn {
+  height: 40px;
+  border-radius: 10px !important;
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  font-weight: 600;
+}
+
+.crm-admin-result-tag.ant-tag {
+  height: 40px;
+  margin-inline-end: 0;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  color: #dbeafe !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+  border: 1px solid rgba(96, 165, 250, 0.18) !important;
+  font-weight: 700;
+}
+
+.crm-admin-card--stat .ant-statistic {
+  margin-top: 12px;
+}
+
+.crm-admin-stat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crm-admin-stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.14);
+  border: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+.crm-admin-stat-label,
+.crm-admin-muted {
+  color: #94a3b8 !important;
+}
+
+.crm-admin-stats-shell {
+  width: 100%;
+}
+
+.crm-admin-page .ant-table-wrapper,
+.crm-admin-page .ant-table,
+.crm-admin-page .ant-table-container,
+.crm-admin-page .ant-table-content,
+.crm-admin-page .ant-table-header,
+.crm-admin-page .ant-table-body {
+  background: transparent !important;
+}
+
+.crm-admin-page .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  font-weight: 600;
+}
+
+.crm-admin-page .ant-table-tbody > tr > td {
+  background: rgba(255, 255, 255, 0.02) !important;
+  color: #f8fafc !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.crm-admin-page .ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.crm-admin-page .ant-table-cell .ant-btn {
+  border-radius: 10px !important;
+}
+
+.crm-admin-page .ant-pagination .ant-pagination-item,
+.crm-admin-page .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.crm-admin-page .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #f8fafc !important;
+}
+
+.crm-admin-page .ant-pagination .ant-pagination-item-active {
+  background: #2563eb !important;
+  border-color: transparent !important;
+}
+
+.crm-admin-form-drawer .ant-drawer-content,
+.crm-admin-mobile-shell .ant-drawer-content {
+  background: linear-gradient(180deg, #07111f 0%, #0b1728 100%) !important;
+}
+
+.crm-admin-form-drawer .ant-drawer-header,
+.crm-admin-form-drawer .ant-drawer-body,
+.crm-admin-form-drawer .ant-drawer-footer,
+.crm-admin-mobile-shell .ant-drawer-body {
+  color: #f8fafc !important;
+}
+
+.crm-admin-form-drawer .ant-drawer-title,
+.crm-admin-form-drawer .ant-form-item-label > label,
+.crm-admin-form-drawer .ant-typography,
+.crm-admin-mobile-shell .ant-menu-item,
+.crm-admin-mobile-shell .ant-menu-item .ant-menu-title-content {
+  color: #f8fafc !important;
+}
+
+.crm-admin-form .ant-input,
+.crm-admin-form .ant-input-number,
+.crm-admin-form .ant-input-number-input,
+.crm-admin-form .ant-input-affix-wrapper,
+.crm-admin-form .ant-select-selector,
+.crm-admin-form textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+}
+
+.crm-admin-form .ant-input::placeholder,
+.crm-admin-form textarea::placeholder,
+.crm-admin-form .ant-input-number-input::placeholder {
+  color: #64748b !important;
+}
+
+.crm-admin-form .ant-rate {
+  color: #f59e0b !important;
+}
+
+.crm-admin-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.crm-admin-mobile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.crm-admin-mobile-close.ant-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px !important;
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+@media (max-width: 991px) {
+  .crm-admin-header.ant-layout-header {
+    margin: 12px 12px 0;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .crm-admin-content {
+    padding: 14px 12px 22px;
+  }
+
+  .crm-admin-card__toolbar {
+    padding: 16px 16px 14px;
+  }
+
+  .crm-admin-opsbar {
+    margin: 0 16px 14px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .crm-admin-opsbar__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .crm-admin-header.ant-layout-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .crm-admin-header__actions {
+    width: 100%;
+  }
+
+  .crm-admin-header__actions .ant-space-item,
+  .crm-admin-header__actions .ant-btn {
+    width: 100%;
+  }
+
+  .crm-admin-card__toolbar .ant-btn {
+    width: 100%;
+  }
+
+  .crm-admin-opsbar__actions,
+  .crm-admin-opsbar__actions .ant-space-item,
+  .crm-admin-opsbar__actions .ant-btn {
+    width: 100%;
+  }
+
+  .crm-admin-result-tag.ant-tag {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .crm-admin-drawer-footer {
+    flex-direction: column;
+  }
+
+  .crm-admin-drawer-footer .ant-btn {
+    width: 100%;
+  }
+}
+
+/* TravelPay savings fintech refresh */
+.savings-fintech-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(37, 99, 235, 0.16), transparent 26%),
+    radial-gradient(circle at 88% 8%, rgba(245, 158, 11, 0.10), transparent 24%),
+    linear-gradient(180deg, #06111f 0%, #0b1728 100%);
+  color: #f8fafc;
+  padding-bottom: 36px;
+}
+
+.savings-fintech-hero {
+  min-height: 430px;
+  padding: 110px 24px 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 24px;
+  align-items: end;
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.savings-fintech-hero__content {
+  max-width: 760px;
+}
+
+.savings-fintech-eyebrow.ant-tag {
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #dbeafe !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  border: 1px solid rgba(96, 165, 250, 0.22) !important;
+  font-weight: 700;
+}
+
+.savings-fintech-hero__title.ant-typography {
+  margin: 0 0 12px !important;
+  color: #f8fafc !important;
+  font-size: 48px !important;
+  line-height: 1.08 !important;
+  font-weight: 800 !important;
+}
+
+.savings-fintech-hero__text.ant-typography {
+  max-width: 620px;
+  margin: 0 !important;
+  color: #cbd5e1 !important;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.savings-fintech-container {
+  width: min(100% - 32px, 1360px);
+  margin: 0 auto;
+  padding-top: 22px;
+}
+
+.savings-fintech-card.ant-card,
+.savings-fintech-goal-card.ant-card {
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.26) !important;
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.savings-fintech-goal-card.ant-card {
+  align-self: stretch;
+}
+
+.savings-fintech-card .ant-card-head {
+  min-height: 58px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.savings-fintech-card .ant-card-head-title,
+.savings-fintech-card .ant-card-body,
+.savings-fintech-goal-card .ant-card-body,
+.savings-fintech-card .ant-typography,
+.savings-fintech-goal-card .ant-typography,
+.savings-fintech-card .ant-statistic-title,
+.savings-fintech-card .ant-statistic-content,
+.savings-fintech-card .ant-empty-description {
+  color: #f8fafc !important;
+}
+
+.savings-fintech-muted {
+  color: #94a3b8 !important;
+}
+
+.savings-fintech-goal-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.savings-fintech-goal-card__top h2.ant-typography {
+  margin: 8px 0 0 !important;
+  color: #f8fafc !important;
+  font-size: 30px !important;
+}
+
+.savings-fintech-timer {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.savings-fintech-timer .ant-tag,
+.savings-fintech-status.ant-tag {
+  border-radius: 999px;
+}
+
+.savings-fintech-status.ant-tag {
+  margin-top: 14px;
+}
+
+.savings-fintech-form .ant-form-item-label > label {
+  color: #cbd5e1 !important;
+  font-weight: 600;
+}
+
+.savings-fintech-form .ant-input-number,
+.savings-fintech-form .ant-select-selector,
+.savings-fintech-form .ant-picker,
+.savings-fintech-topup-card .ant-input-number {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+}
+
+.savings-fintech-form .ant-input-number-input,
+.savings-fintech-topup-card .ant-input-number-input,
+.savings-fintech-form .ant-select-selection-item,
+.savings-fintech-form .ant-picker-input > input {
+  color: #f8fafc !important;
+}
+
+.savings-fintech-form .ant-input-number-input::placeholder,
+.savings-fintech-topup-card .ant-input-number-input::placeholder,
+.savings-fintech-form .ant-picker-input > input::placeholder {
+  color: #64748b !important;
+}
+
+.savings-fintech-form .ant-slider-track {
+  background: linear-gradient(90deg, #2563eb, #f59e0b) !important;
+}
+
+.savings-fintech-form .ant-slider-rail {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+
+.savings-fintech-form .ant-slider-handle::after {
+  box-shadow: 0 0 0 2px #f59e0b !important;
+}
+
+.savings-fintech-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: -8px 0 18px;
+}
+
+.savings-fintech-preset-grid .ant-btn {
+  min-width: 0;
+  border-radius: 12px !important;
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  font-weight: 700;
+}
+
+.savings-fintech-preset-grid .ant-btn:hover,
+.savings-fintech-preset-grid .ant-btn:focus {
+  color: #f8fafc !important;
+  background: rgba(37, 99, 235, 0.20) !important;
+  border-color: rgba(96, 165, 250, 0.32) !important;
+}
+
+.savings-fintech-page .ant-btn-primary {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25) !important;
+  font-weight: 700;
+}
+
+.savings-fintech-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.savings-fintech-quick-grid .ant-btn {
+  min-width: 0;
+  border-radius: 12px !important;
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  font-weight: 700;
+}
+
+.savings-fintech-stat-grid .ant-statistic {
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.savings-fintech-progress-block {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.savings-fintech-progress-block > div:first-child {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.savings-fintech-chart {
+  width: 100%;
+  height: 280px;
+}
+
+.savings-fintech-amount {
+  color: #f59e0b !important;
+  font-weight: 800;
+}
+
+.savings-fintech-table .ant-table-wrapper,
+.savings-fintech-table .ant-table,
+.savings-fintech-table .ant-table-container,
+.savings-fintech-table .ant-table-content,
+.savings-fintech-table .ant-table-body {
+  background: transparent !important;
+}
+
+.savings-fintech-table .ant-table-thead > tr > th {
+  color: #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.savings-fintech-table .ant-table-tbody > tr > td {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.savings-fintech-table .ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+@media (max-width: 1100px) {
+  .savings-fintech-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .savings-fintech-goal-card.ant-card {
+    max-width: 520px;
+  }
+}
+
+@media (max-width: 768px) {
+  .savings-fintech-hero {
+    padding: 94px 16px 34px;
+  }
+
+  .savings-fintech-hero__title.ant-typography {
+    font-size: 34px !important;
+  }
+
+  .savings-fintech-container {
+    width: min(100% - 20px, 1360px);
+    padding-top: 14px;
+  }
+
+  .savings-fintech-goal-card__top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .savings-fintech-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .savings-fintech-quick-grid {
+    grid-template-columns: 1fr;
   }
 }

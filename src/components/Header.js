@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Drawer, Dropdown, Layout, Menu, Space, Typography } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Avatar, Button, Drawer, Dropdown, Layout, Menu, Segmented, Space, Typography } from 'antd';
 import {
-  CloseOutlined,
   DownOutlined,
   GlobalOutlined,
   LoginOutlined,
@@ -17,26 +16,28 @@ import { clearCurrentUser, readCurrentUser, subscribeToCurrentUser } from '../ut
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
-const BRAND_BLUE = '#1d3557';
-const BRAND_NAVY = '#24486f';
-const BRAND_GOLD = '#fca311';
+const BRAND_BLUE = '#173B61';
+const BRAND_BLUE_LIGHT = '#2B7BB9';
+const BRAND_GOLD = '#FCA311';
 
 const navItems = [
   { key: '/', label: 'Главная' },
   { key: '/tours', label: 'Туры' },
   { key: '/favorites', label: 'Избранное' },
-  { key: 'partnership', label: 'Партнерство' },
+  { key: 'partnership', label: 'Партнёрство' },
 ];
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(null);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
   const [theme, setTheme] = useState(() => localStorage.getItem('travelpay_theme') || 'light');
+  const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
   const isHome = location.pathname === '/';
+  const glassMode = isHome && !isScrolled;
 
   useEffect(() => {
     const parsedUser = readCurrentUser();
@@ -48,7 +49,7 @@ const Header = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 28);
+    const handleScroll = () => setIsScrolled(window.scrollY > 24);
     handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -59,16 +60,18 @@ const Header = () => {
     localStorage.setItem('travelpay_theme', theme);
   }, [theme]);
 
-  const selectedKey = location.pathname === '/'
-    ? '/'
-    : location.pathname.startsWith('/tours')
-      ? '/tours'
-      : location.pathname.startsWith('/favorites')
-        ? '/favorites'
-        : '';
+  const selectedKey = useMemo(() => {
+    if (location.pathname === '/') return '/';
+    if (location.pathname.startsWith('/tours')) return '/tours';
+    if (location.pathname.startsWith('/favorites')) return '/favorites';
+    return '';
+  }, [location.pathname]);
 
-  const glassMode = isHome && !isScrolled;
-  const menuTextColor = glassMode || theme === 'dark' ? '#f6fbff' : BRAND_NAVY;
+  const surfaceStyle = {
+    ...(theme === 'dark' ? styles.headerDark : styles.headerLight),
+    ...(glassMode ? styles.headerGlass : {}),
+  };
+  const textColor = theme === 'dark' || glassMode ? '#F8FBFF' : BRAND_BLUE;
 
   const handleLanguageChange = (value) => {
     setLanguage(value);
@@ -80,10 +83,13 @@ const Header = () => {
     setMobileMenuOpen(false);
     if (location.pathname !== '/') {
       navigate('/');
-      setTimeout(() => document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' }), 120);
+      window.setTimeout(() => {
+        document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
       return;
     }
-    document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth' });
+
+    document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleNavigate = (key) => {
@@ -103,15 +109,11 @@ const Header = () => {
   };
 
   const languageMenu = {
-    selectedKeys: [language],
-    items: ['KG', 'RU', 'EN'].map((key) => ({
-      key,
-      label: (
-        <span style={key === language ? styles.languageActiveLabel : styles.languageLabel}>
-          {key}
-        </span>
-      ),
+    items: ['KG', 'RU', 'EN'].map((item) => ({
+      key: item,
+      label: <span style={item === language ? styles.languageActive : styles.languageLabel}>{item}</span>,
     })),
+    selectedKeys: [language],
     onClick: ({ key }) => handleLanguageChange(key),
   };
 
@@ -127,107 +129,118 @@ const Header = () => {
     },
   };
 
-  const drawer = (
-    <Drawer
-      open={mobileMenuOpen}
-      onClose={() => setMobileMenuOpen(false)}
-      placement="right"
-      size="min(86vw, 360px)"
-      closeIcon={<CloseOutlined />}
-      className="travelpay-mobile-drawer"
-      styles={{
-        body: styles.drawerBody,
-        header: styles.drawerHeader,
-        section: styles.drawerSectionStyle,
-      }}
-      title={
-        <span style={styles.drawerTitle}>
-          TravelPay
-          <small style={styles.drawerSubtitle}>by Barsbek Travel</small>
-        </span>
-      }
-    >
-      <div style={styles.drawerNav}>
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => handleNavigate(item.key)}
-            style={{
-              ...styles.drawerNavButton,
-              ...(selectedKey === item.key ? styles.drawerNavButtonActive : {}),
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
+  const drawerContent = (
+    <div style={styles.drawerBody}>
+      <div style={styles.drawerTop}>
+        <Button type="text" onClick={() => navigate('/')} style={styles.drawerBrandButton}>
+          <span style={styles.brandCopy}>
+            <span style={styles.brandTitle}>TravelPay</span>
+            <span style={styles.brandSubtitle}>Premium travel platform</span>
+          </span>
+        </Button>
       </div>
 
+      <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+        {navItems.map((item) => (
+          <Button
+            key={item.key}
+            block
+            type={selectedKey === item.key ? 'primary' : 'default'}
+            onClick={() => handleNavigate(item.key)}
+            className="travelpay-header-button travelpay-drawer-nav-button"
+            style={selectedKey === item.key ? styles.drawerPrimaryNav : styles.drawerNavButton}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </Space>
+
       <div style={styles.drawerSection}>
-        <Text strong>Язык</Text>
-        <div style={styles.drawerSegment}>
-          {['KG', 'RU', 'EN'].map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => handleLanguageChange(item)}
-              style={{ ...styles.drawerSegmentButton, ...(language === item ? styles.drawerSegmentButtonActive : {}) }}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
+        <Text strong style={styles.drawerSectionLabel}>Язык</Text>
+        <Segmented
+          block
+          value={language}
+          options={['KG', 'RU', 'EN']}
+          onChange={handleLanguageChange}
+        />
       </div>
 
       <Button
         block
         icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
         onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
-        style={styles.drawerActionButton}
+        className="travelpay-header-button"
+        style={styles.drawerUtilityButton}
       >
-        {theme === 'dark' ? 'Светлая тема' : 'Темная тема'}
+        {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
       </Button>
 
-      {currentUser ? (
-        <Space orientation="vertical" size={10} style={{ width: '100%' }}>
-          <Button block icon={<UserOutlined />} onClick={() => handleNavigate('/profile')} style={styles.drawerPrimaryButton}>
-            Профиль
-          </Button>
-          <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>
-            Выйти
-          </Button>
-        </Space>
-      ) : (
-        <Space orientation="vertical" size={10} style={{ width: '100%' }}>
-          <Button block icon={<LoginOutlined />} onClick={() => handleNavigate('/login')} style={styles.drawerActionButton}>
-            Войти
-          </Button>
-          <Button block type="primary" onClick={() => handleNavigate('/tours')} style={styles.drawerPrimaryButton}>
-            Book Tour
-          </Button>
-        </Space>
-      )}
-    </Drawer>
+      <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+        {currentUser ? (
+          <>
+            <Button
+              block
+              type="primary"
+              icon={<UserOutlined />}
+              onClick={() => handleNavigate('/profile')}
+              className="travelpay-header-button"
+              style={styles.drawerPrimaryButton}
+            >
+              Профиль
+            </Button>
+            <Button
+              block
+              danger
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+              className="travelpay-header-button"
+            >
+              Выйти
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              block
+              icon={<LoginOutlined />}
+              onClick={() => handleNavigate('/login')}
+              className="travelpay-header-button"
+              style={styles.drawerUtilityButton}
+            >
+              Войти
+            </Button>
+            <Button
+              block
+              type="primary"
+              onClick={() => handleNavigate('/tours')}
+              className="travelpay-header-button"
+              style={styles.drawerPrimaryButton}
+            >
+              Выбрать тур
+            </Button>
+          </>
+        )}
+      </Space>
+    </div>
   );
 
   return (
-    <AntHeader
-      className="premium-site-header"
-      style={{
-        ...styles.header,
-        ...(theme === 'dark' && !glassMode ? styles.darkHeader : {}),
-        ...(glassMode ? styles.transparentHeader : {}),
-      }}
-    >
+    <AntHeader className="premium-site-header" style={{ ...styles.headerShell, ...surfaceStyle }}>
       <div style={styles.inner}>
-        <button type="button" onClick={() => navigate('/')} style={styles.logoButton} aria-label="TravelPay home">
-          <span className="brand" style={styles.brandStack}>
-            <span className="brand-title" style={{ ...styles.logoText, color: menuTextColor }}>TravelPay</span>
-            <span className="brand-subtitle" style={{ ...styles.logoSub, color: glassMode || theme === 'dark' ? 'rgba(246,251,255,0.68)' : 'rgba(29,53,87,0.58)' }}>
+        <Button
+          type="text"
+          onClick={() => navigate('/')}
+          aria-label="TravelPay home"
+          className="travelpay-logo-button"
+          style={styles.logoButton}
+        >
+          <span className="brand" style={styles.brandCopy}>
+            <span className="brand-title" style={{ ...styles.logoText, color: textColor }}>TravelPay</span>
+            <span className="brand-subtitle" style={{ ...styles.logoSub, color: theme === 'dark' || glassMode ? 'rgba(248,251,255,0.72)' : 'rgba(23,59,97,0.62)' }}>
               by Barsbek Travel
             </span>
           </span>
-        </button>
+        </Button>
 
         <Menu
           mode="horizontal"
@@ -235,39 +248,56 @@ const Header = () => {
           items={navItems}
           onClick={({ key }) => handleNavigate(key)}
           className="premium-header-menu"
-          style={{ ...styles.menu, color: menuTextColor }}
+          style={{ ...styles.menu, color: textColor }}
         />
 
         <Space size={10} className="desktop-header-actions" style={styles.actions}>
           <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
-            <Button style={{ ...styles.dropdownButton, ...(glassMode ? styles.glassButton : {}) }}>
-              <GlobalOutlined />
+            <Button
+              icon={<GlobalOutlined />}
+              className="travelpay-header-button"
+              style={glassMode || theme === 'dark' ? styles.utilityButtonGlass : styles.utilityButton}
+            >
               {language}
               <DownOutlined style={{ fontSize: 10 }} />
             </Button>
           </Dropdown>
 
           <Button
-            aria-label="Toggle light and dark theme"
+            aria-label="Toggle theme"
             icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
             onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
-            style={{ ...styles.themeButton, ...(glassMode ? styles.themeGlass : {}) }}
+            className="travelpay-header-button"
+            style={styles.themeButton}
           />
 
           {currentUser ? (
             <Dropdown menu={userMenu} trigger={['click']} placement="bottomRight">
-              <Button style={{ ...styles.profileButton, ...(glassMode ? styles.profileGlass : {}) }}>
+              <Button
+                className="travelpay-header-button"
+                style={glassMode || theme === 'dark' ? styles.profileButtonGlass : styles.profileButton}
+              >
                 <Avatar size={24} src={currentUser.avatar} icon={<UserOutlined />} />
-                <Text style={{ ...styles.profileName, color: menuTextColor }}>{currentUser.name}</Text>
+                <Text style={{ ...styles.profileName, color: textColor }}>{currentUser.name}</Text>
               </Button>
             </Dropdown>
           ) : (
             <>
-              <Button icon={<LoginOutlined />} onClick={() => navigate('/login')} style={{ ...styles.loginButton, ...(glassMode ? styles.loginGlass : {}) }}>
+              <Button
+                icon={<LoginOutlined />}
+                onClick={() => navigate('/login')}
+                className="travelpay-header-button"
+                style={glassMode || theme === 'dark' ? styles.utilityButtonGlass : styles.utilityButton}
+              >
                 Войти
               </Button>
-              <Button type="primary" onClick={() => navigate('/tours')} style={styles.bookButton}>
-                Book Tour
+              <Button
+                type="primary"
+                onClick={() => navigate('/tours')}
+                className="travelpay-header-button"
+                style={styles.primaryButton}
+              >
+                Выбрать тур
               </Button>
             </>
           )}
@@ -275,90 +305,98 @@ const Header = () => {
 
         <Button
           aria-label="Open menu"
-          className="mobile-menu-button"
           icon={<MenuOutlined />}
           onClick={() => setMobileMenuOpen(true)}
-          style={{ ...styles.mobileMenuButton, ...(glassMode ? styles.mobileGlassButton : {}) }}
+          className="mobile-menu-button travelpay-header-button"
+          style={glassMode || theme === 'dark' ? styles.mobileButtonGlass : styles.mobileButton}
         />
       </div>
-      {drawer}
+
+      <Drawer
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        placement="right"
+        size="min(86vw, 360px)"
+        closeIcon={null}
+        className="travelpay-mobile-drawer"
+        title={null}
+        styles={{
+          body: styles.drawerWrapper,
+          section: styles.drawerSurface,
+          header: { display: 'none' },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
     </AntHeader>
   );
 };
 
 const styles = {
-  header: {
+  headerShell: {
     position: 'sticky',
-    top: 0,
+    top: 14,
     zIndex: 900,
-    width: '100%',
-    maxWidth: '100%',
-    height: 60,
+    width: 'min(100% - 24px, 1240px)',
+    margin: '0 auto 10px',
+    height: 76,
     padding: 0,
+    borderRadius: 28,
     overflow: 'hidden',
-    background: 'rgba(255,255,255,0.84)',
-    borderBottom: '1px solid rgba(29,53,87,0.08)',
-    boxShadow: '0 14px 40px rgba(29,53,87,0.08)',
-    backdropFilter: 'blur(22px)',
-    transition: 'background 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+    backdropFilter: 'blur(24px)',
+    transition: 'transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease',
   },
-  transparentHeader: {
-    background: 'rgba(6,17,31,0.20)',
-    borderBottom: '1px solid rgba(255,255,255,0.12)',
-    boxShadow: '0 18px 46px rgba(0,0,0,0.08)',
-    backdropFilter: 'blur(22px)',
+  headerLight: {
+    background: 'rgba(255,255,255,0.78)',
+    border: '1px solid rgba(255,255,255,0.88)',
+    boxShadow: '0 24px 68px rgba(23,59,97,0.12)',
   },
-  darkHeader: {
-    background: 'rgba(8,19,33,0.92)',
-    borderBottom: '1px solid rgba(255,255,255,0.10)',
-    boxShadow: '0 12px 30px rgba(0,0,0,0.24)',
+  headerDark: {
+    background: 'rgba(6,20,35,0.82)',
+    border: '1px solid rgba(255,255,255,0.10)',
+    boxShadow: '0 24px 68px rgba(0,0,0,0.30)',
+  },
+  headerGlass: {
+    background: 'rgba(7, 23, 40, 0.42)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    boxShadow: '0 26px 72px rgba(5,13,24,0.22)',
   },
   inner: {
     width: '100%',
     maxWidth: 1200,
     height: '100%',
     margin: '0 auto',
-    padding: '0 clamp(12px, 4vw, 24px)',
+    padding: '0 20px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    overflow: 'hidden',
+    gap: 14,
   },
   logoButton: {
-    display: 'inline-flex',
-    alignItems: 'flex-start',
+    height: 52,
     border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    padding: 0,
-    minWidth: 0,
-    maxWidth: 'min(220px, 52vw)',
-    flexShrink: 0,
-    fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-  },
-  brandStack: {
+    paddingInline: 0,
     display: 'inline-flex',
+    alignItems: 'center',
+    gap: 12,
+    flexShrink: 0,
+  },
+  brandCopy: {
+    display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    justifyContent: 'center',
-    gap: 2,
     minWidth: 0,
+    gap: 2,
   },
   logoText: {
-    display: 'block',
-    fontSize: 17,
-    fontWeight: 850,
+    fontSize: 19,
+    fontWeight: 900,
     lineHeight: 1,
-    letterSpacing: 0,
+    letterSpacing: -0.02,
   },
   logoSub: {
-    display: 'block',
-    fontSize: 10,
-    fontWeight: 650,
+    fontSize: 11,
+    fontWeight: 700,
     lineHeight: 1.1,
-    letterSpacing: 0,
-    borderBottom: 'none',
   },
   menu: {
     flex: 1,
@@ -366,193 +404,156 @@ const styles = {
     justifyContent: 'center',
     borderBottom: 'none',
     background: 'transparent',
-    fontSize: 13,
-    fontWeight: 760,
-    fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
+    fontWeight: 800,
   },
   actions: {
     flexShrink: 0,
-    minWidth: 0,
   },
-  mobileMenuButton: {
-    display: 'none',
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    border: '1px solid rgba(29,53,87,0.12)',
+  utilityButton: {
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(23,59,97,0.10)',
+    background: 'rgba(255,255,255,0.86)',
     color: BRAND_BLUE,
-    background: 'rgba(255,255,255,0.92)',
-    flexShrink: 0,
-  },
-  mobileGlassButton: {
-    color: BRAND_BLUE,
-    background: 'rgba(240,247,255,0.92)',
-    borderColor: 'rgba(148,163,184,0.28)',
-  },
-  dropdownButton: {
-    height: 34,
-    borderRadius: 999,
-    border: '1px solid rgba(59,130,246,0.24)',
-    color: '#ffffff',
-    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
     fontWeight: 800,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 6,
-    boxShadow: '0 10px 22px rgba(37,99,235,0.20)',
+    boxShadow: '0 12px 30px rgba(23,59,97,0.08)',
   },
-  glassButton: {
-    background: 'linear-gradient(135deg, rgba(241,247,255,0.94), rgba(224,239,255,0.9))',
-    borderColor: 'rgba(148,163,184,0.28)',
-    color: BRAND_BLUE,
+  utilityButtonGlass: {
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#F8FBFF',
+    fontWeight: 800,
+    boxShadow: '0 12px 30px rgba(0,0,0,0.14)',
   },
   themeButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 999,
-    borderColor: 'rgba(252,163,17,0.46)',
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(252,163,17,0.38)',
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #FFD27A)`,
     color: BRAND_BLUE,
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    boxShadow: '0 10px 24px rgba(252,163,17,0.24)',
-  },
-  themeGlass: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    borderColor: 'rgba(252,163,17,0.52)',
-    color: BRAND_BLUE,
-  },
-  languageLabel: {
-    fontWeight: 750,
-  },
-  languageActiveLabel: {
-    color: BRAND_BLUE,
-    fontWeight: 850,
-    background: 'rgba(252,163,17,0.18)',
-    borderRadius: 8,
-    padding: '3px 8px',
+    boxShadow: '0 14px 30px rgba(252,163,17,0.24)',
   },
   profileButton: {
-    height: 34,
-    borderRadius: 999,
-    borderColor: 'rgba(29,53,87,0.18)',
-    color: '#ffffff',
-    background: `linear-gradient(135deg, ${BRAND_BLUE}, #2e5d86)`,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '0 10px',
-    boxShadow: '0 10px 22px rgba(29,53,87,0.18)',
-  },
-  profileGlass: {
-    background: 'linear-gradient(135deg, rgba(241,247,255,0.94), rgba(224,239,255,0.9))',
-    borderColor: 'rgba(148,163,184,0.28)',
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(23,59,97,0.10)',
+    background: 'rgba(255,255,255,0.90)',
     color: BRAND_BLUE,
+    fontWeight: 800,
+    boxShadow: '0 12px 30px rgba(23,59,97,0.08)',
+  },
+  profileButtonGlass: {
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#F8FBFF',
+    fontWeight: 800,
+    boxShadow: '0 12px 30px rgba(0,0,0,0.14)',
   },
   profileName: {
-    maxWidth: 82,
+    maxWidth: 86,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    fontWeight: 760,
-    fontSize: 13,
-  },
-  loginButton: {
-    height: 34,
-    borderRadius: 999,
-    border: '1px solid rgba(59,130,246,0.24)',
-    background: 'rgba(255,255,255,0.9)',
-    color: '#2563eb',
     fontWeight: 800,
-    boxShadow: '0 8px 18px rgba(37,99,235,0.12)',
   },
-  loginGlass: {
-    background: 'linear-gradient(135deg, rgba(241,247,255,0.94), rgba(224,239,255,0.9))',
-    borderColor: 'rgba(148,163,184,0.28)',
+  primaryButton: {
+    height: 42,
+    borderRadius: 16,
+    border: 'none',
+    background: `linear-gradient(135deg, ${BRAND_BLUE_LIGHT}, ${BRAND_BLUE})`,
+    color: '#FFFFFF',
+    fontWeight: 800,
+    boxShadow: '0 16px 34px rgba(43,123,185,0.26)',
+  },
+  mobileButton: {
+    display: 'none',
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(23,59,97,0.10)',
+    background: 'rgba(255,255,255,0.90)',
     color: BRAND_BLUE,
   },
-  bookButton: {
-    height: 34,
-    borderRadius: 999,
-    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-    border: 'none',
-    color: '#ffffff',
-    fontWeight: 850,
-    boxShadow: '0 10px 22px rgba(37,99,235,0.28)',
+  mobileButtonGlass: {
+    display: 'none',
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#F8FBFF',
   },
-  drawerHeader: {
-    borderBottom: '1px solid rgba(29,53,87,0.08)',
+  languageLabel: {
+    fontWeight: 800,
+  },
+  languageActive: {
+    fontWeight: 900,
+    color: BRAND_BLUE,
+  },
+  drawerWrapper: {
+    padding: 12,
+    background: 'transparent',
+  },
+  drawerSurface: {
+    borderRadius: 28,
+    overflow: 'hidden',
+    background: 'linear-gradient(180deg, rgba(247,250,255,0.96), rgba(237,244,255,0.96))',
   },
   drawerBody: {
     display: 'flex',
     flexDirection: 'column',
     gap: 18,
-    padding: 18,
   },
-  drawerTitle: {
-    display: 'grid',
-    gap: 2,
+  drawerTop: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  drawerBrandButton: {
+    height: 'auto',
+    padding: 0,
     color: BRAND_BLUE,
-    fontWeight: 900,
-    lineHeight: 1.1,
-  },
-  drawerSubtitle: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: 700,
-  },
-  drawerNav: {
-    display: 'grid',
-    gap: 8,
-  },
-  drawerNavButton: {
-    minHeight: 46,
-    border: '1px solid rgba(29,53,87,0.08)',
-    borderRadius: 12,
-    background: '#fff',
-    color: BRAND_BLUE,
-    cursor: 'pointer',
-    fontWeight: 850,
-    textAlign: 'left',
-    padding: '0 14px',
-  },
-  drawerNavButtonActive: {
-    background: 'rgba(252,163,17,0.14)',
-    borderColor: 'rgba(252,163,17,0.36)',
   },
   drawerSection: {
     display: 'grid',
     gap: 10,
   },
-  drawerSectionStyle: {
-    background: '#fff',
-  },
-  drawerSegment: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 8,
-  },
-  drawerSegmentButton: {
-    height: 40,
-    border: '1px solid rgba(29,53,87,0.08)',
-    borderRadius: 12,
-    background: '#fff',
+  drawerSectionLabel: {
     color: BRAND_BLUE,
-    cursor: 'pointer',
-    fontWeight: 900,
   },
-  drawerSegmentButtonActive: {
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    borderColor: BRAND_GOLD,
+  drawerNavButton: {
+    height: 48,
+    borderRadius: 16,
+    border: '1px solid rgba(23,59,97,0.08)',
+    background: '#FFFFFF',
+    color: BRAND_BLUE,
+    fontWeight: 800,
+    justifyContent: 'flex-start',
   },
-  drawerActionButton: {
-    height: 44,
-    borderRadius: 12,
-    fontWeight: 850,
+  drawerPrimaryNav: {
+    height: 48,
+    borderRadius: 16,
+    border: 'none',
+    background: `linear-gradient(135deg, ${BRAND_BLUE_LIGHT}, ${BRAND_BLUE})`,
+    color: '#FFFFFF',
+    fontWeight: 800,
+    justifyContent: 'flex-start',
+  },
+  drawerUtilityButton: {
+    height: 46,
+    borderRadius: 16,
+    fontWeight: 800,
   },
   drawerPrimaryButton: {
-    height: 44,
-    borderRadius: 12,
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd27a)`,
-    borderColor: BRAND_GOLD,
+    height: 46,
+    borderRadius: 16,
+    border: 'none',
+    background: `linear-gradient(135deg, ${BRAND_GOLD}, #FFD27A)`,
     color: BRAND_BLUE,
     fontWeight: 900,
   },
