@@ -149,7 +149,7 @@ const ProfilePage = () => {
   ];
 
   const sidebarContent = (
-    <div style={styles.sidebarInner}>
+    <div style={styles.sidebarInner} className="travelpay-profile-sidebar">
       <div style={styles.logoWrap}>
         <div style={styles.logoMark}>TP</div>
         <div>
@@ -164,14 +164,21 @@ const ProfilePage = () => {
         <Button block icon={<WalletOutlined />} onClick={() => handleNavigate('/savings')}>Накопления</Button>
         <Button block icon={<CompassOutlined />} onClick={() => handleNavigate('/tours')}>Туры</Button>
         <Button block icon={<HeartOutlined />} onClick={() => handleNavigate('/favorites')}>Избранное</Button>
-        <Button block icon={<TeamOutlined />} onClick={() => handleNavigate('/admin/tours')}>Админка</Button>
+        {user?.role === 'admin' && (
+          <Button block icon={<TeamOutlined />} onClick={() => handleNavigate('/admin/tours')}>
+            Админка
+          </Button>
+        )}
         <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>Выйти</Button>
       </Space>
     </div>
   );
 
   return (
-    <Layout style={styles.page(theme === 'dark')} className="travelpay-profile-page">
+    <Layout
+      style={styles.page(theme === 'dark')}
+      className={`travelpay-profile-page ${theme === 'dark' ? 'travelpay-profile-page--dark' : 'travelpay-profile-page--light'}`}
+    >
       {isDesktop && (
         <Sider width={260} style={styles.sider(theme === 'dark')}>
           {sidebarContent}

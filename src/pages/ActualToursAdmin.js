@@ -12,6 +12,7 @@ import {
   InputNumber,
   Layout,
   Menu,
+  Modal,
   Popconfirm,
   Rate,
   Row,
@@ -24,9 +25,12 @@ import {
   Typography,
 } from 'antd';
 import {
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  FilePdfOutlined,
   LogoutOutlined,
   MenuOutlined,
   PlusOutlined,
@@ -38,7 +42,7 @@ import {
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
-import { clearCurrentUser } from '../utils/currentUser';
+import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
 import { normalizeUser } from '../utils/user';
 
 const { Header, Sider, Content } = Layout;
@@ -53,6 +57,12 @@ const STATUS_META = {
   hot: { label: 'Горящий тур', color: 'volcano' },
   draft: { label: 'Черновик', color: 'default' },
   discount: { label: 'Скидка', color: 'gold' },
+};
+
+const TOPUP_STATUS_META = {
+  pending: { label: 'На проверке', color: 'orange' },
+  approved: { label: 'Подтверждено', color: 'green' },
+  rejected: { label: 'Отклонено', color: 'red' },
 };
 
 const statusOptions = Object.entries(STATUS_META).map(([value, meta]) => ({
@@ -77,8 +87,10 @@ const ActualToursAdmin = () => {
   const screens = useBreakpoint();
   const isDesktop = !!screens.lg;
   const [form] = Form.useForm();
+  const [reviewForm] = Form.useForm();
   const [tours, setTours] = useState([]);
   const [users, setUsers] = useState([]);
+  const [topupRequests, setTopupRequests] = useState([]);
   const [editingTourId, setEditingTourId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -86,22 +98,29 @@ const ActualToursAdmin = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [tourSearch, setTourSearch] = useState('');
   const [tourStatusFilter, setTourStatusFilter] = useState('all');
+  const [reviewRequest, setReviewRequest] = useState(null);
+  const [reviewAction, setReviewAction] = useState('approve');
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   const currentTab = useMemo(() => {
     if (location.pathname === '/admin/users') return 'users';
     if (location.pathname === '/admin/stats') return 'stats';
+    if (location.pathname === '/admin/topups') return 'topups';
     return 'tours';
   }, [location.pathname]);
 
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [toursResponse, usersResponse] = await Promise.all([
+      const currentUser = readCurrentUser();
+      const [toursResponse, usersResponse, topupsResponse] = await Promise.all([
         api.get('/tours'),
         api.get('/users'),
+        api.get('/api/admin/topups', { headers: { 'x-user-id': currentUser?.id } }).catch(() => ({ data: [] })),
       ]);
       setTours((toursResponse.data || []).map(normalizeTourRecord));
       setUsers((usersResponse.data || []).map(normalizeUser));
+      setTopupRequests(topupsResponse.data || []);
     } catch (error) {
       setMessageState({ type: 'error', text: 'Не удалось загрузить данные админ-панели.' });
     } finally {
@@ -128,6 +147,10 @@ const ActualToursAdmin = () => {
   const totalSavings = users.reduce((sum, user) => sum + (user?.savings?.currentAmount || 0), 0);
   const totalRevenue = users.reduce((sum, user) => sum + (user?.travelHistory || []).reduce((inner, item) => inner + (item.amount || 0), 0), 0);
   const totalPayments = users.reduce((sum, user) => sum + (user?.topUps || []).reduce((inner, item) => inner + (item.amount || 0), 0), 0);
+  const pendingTopups = topupRequests.filter((request) => request.status === 'pending');
+  const approvedTopups = topupRequests.filter((request) => request.status === 'approved');
+  const approvedTopupAmount = approvedTopups.reduce((sum, request) => sum + Number(request.amount || 0), 0);
+  const approvedBonusAmount = approvedTopups.reduce((sum, request) => sum + Number(request.bonus || 0), 0);
   const activeToursCount = tours.filter((tour) => tour.status === 'active' || tour.status === 'hot').length;
   const statusCounts = useMemo(() => tours.reduce((accumulator, tour) => {
     accumulator[tour.status] = (accumulator[tour.status] || 0) + 1;
@@ -265,6 +288,7 @@ const ActualToursAdmin = () => {
   const menuItems = [
     { key: 'tours', icon: <TableOutlined />, label: 'Каталог туров' },
     { key: 'users', icon: <TeamOutlined />, label: 'Пользователи' },
+    { key: 'topups', icon: <WalletOutlined />, label: `Заявки на пополнение${pendingTopups.length ? ` (${pendingTopups.length})` : ''}` },
     { key: 'stats', icon: <WalletOutlined />, label: 'Статистика' },
     { type: 'divider' },
     { key: 'open-site', icon: <EyeOutlined />, label: 'Открыть сайт' },
@@ -314,6 +338,94 @@ const ActualToursAdmin = () => {
     { title: 'Дата', dataIndex: 'purchasedAt', render: formatDate, width: 120 },
     { title: 'Сумма', dataIndex: 'amount', render: formatMoney, width: 130 },
     { title: 'Статус', dataIndex: 'status', width: 140, render: (status) => <Tag color="processing">{status || 'Завершено'}</Tag> },
+  ];
+
+  const openReviewModal = (request, action) => {
+    setReviewRequest(request);
+    setReviewAction(action);
+    reviewForm.resetFields();
+    reviewForm.setFieldsValue(action === 'approve'
+      ? {
+          amount: Number(request.amount || 0),
+          bonusType: 'fixed',
+          bonus: 0,
+          adminComment: '',
+        }
+      : { adminComment: '' });
+  };
+
+  const closeReviewModal = () => {
+    if (reviewLoading) return;
+    setReviewRequest(null);
+    reviewForm.resetFields();
+  };
+
+  const handleReviewSubmit = async (values) => {
+    if (!reviewRequest) return;
+
+    const currentUser = readCurrentUser();
+    const endpoint = reviewAction === 'approve'
+      ? `/api/admin/topups/${reviewRequest.id}/approve`
+      : `/api/admin/topups/${reviewRequest.id}/reject`;
+
+    setReviewLoading(true);
+    try {
+      await api.put(endpoint, values, { headers: { 'x-user-id': currentUser?.id } });
+      await loadDashboardData();
+      setMessageState({
+        type: 'success',
+        text: reviewAction === 'approve' ? 'Пополнение подтверждено и начислено.' : 'Заявка отклонена.',
+      });
+      closeReviewModal();
+    } catch (error) {
+      setMessageState({ type: 'error', text: error.response?.data?.message || 'Не удалось обработать заявку.' });
+    } finally {
+      setReviewLoading(false);
+      setReviewRequest(null);
+    }
+  };
+
+  const topupRequestColumns = [
+    { title: 'ID', dataIndex: 'id', width: 80 },
+    { title: 'Пользователь', dataIndex: 'userName', width: 170 },
+    { title: 'Email', dataIndex: 'userEmail', width: 220 },
+    { title: 'Сумма', dataIndex: 'amount', render: formatMoney, width: 140 },
+    { title: 'Бонус', dataIndex: 'bonus', render: formatMoney, width: 120 },
+    { title: 'Дата', dataIndex: 'createdAt', render: formatDate, width: 120 },
+    {
+      title: 'Чек',
+      dataIndex: 'receiptImage',
+      width: 100,
+      render: (receipt, record) => receipt?.startsWith('data:image/')
+        ? <Image width={54} height={54} src={receipt} alt={record.receiptName || 'Чек'} style={{ objectFit: 'cover', borderRadius: 8 }} />
+        : <Button type="link" href={receipt} target="_blank" icon={<FilePdfOutlined />}>PDF</Button>,
+    },
+    { title: 'Комментарий', dataIndex: 'comment', render: (value) => value || '—', width: 220 },
+    { title: 'Ответ администратора', dataIndex: 'adminComment', render: (value) => value || '—', width: 220 },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      width: 140,
+      render: (status) => {
+        const meta = TOPUP_STATUS_META[status] || TOPUP_STATUS_META.pending;
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+    },
+    {
+      title: 'Действия',
+      width: 230,
+      fixed: 'right',
+      render: (_, request) => request.status === 'pending' ? (
+        <Space wrap>
+          <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => openReviewModal(request, 'approve')}>
+            Подтвердить
+          </Button>
+          <Button size="small" danger icon={<CloseOutlined />} onClick={() => openReviewModal(request, 'reject')}>
+            Отклонить
+          </Button>
+        </Space>
+      ) : <Text className="crm-admin-muted">Обработано</Text>,
+    },
   ];
 
   const tourColumns = [
@@ -529,6 +641,50 @@ const ActualToursAdmin = () => {
     </Space>
   );
 
+  const renderTopupsView = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Card className="crm-admin-card crm-admin-card--stat">
+            <Statistic title="На проверке" value={pendingTopups.length} styles={{ content: { color: '#f59e0b' } }} />
+            <Text className="crm-admin-muted">Заявки, ожидающие решения администратора.</Text>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card className="crm-admin-card crm-admin-card--stat">
+            <Statistic title="Подтверждённые пополнения" value={approvedTopupAmount} formatter={formatMoney} styles={{ content: { color: '#22c55e' } }} />
+            <Text className="crm-admin-muted">Общая сумма подтверждённых QR-платежей.</Text>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card className="crm-admin-card crm-admin-card--stat">
+            <Statistic title="Начисленные бонусы" value={approvedBonusAmount} formatter={formatMoney} styles={{ content: { color: '#60a5fa' } }} />
+            <Text className="crm-admin-muted">Сумма бонусов по одобренным заявкам.</Text>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card
+        className="crm-admin-card"
+        title="Заявки на пополнение"
+        extra={<Button icon={<ReloadOutlined />} onClick={loadDashboardData} loading={loading}>Обновить</Button>}
+        styles={{ body: { padding: 0 } }}
+      >
+        <div className="travelpay-table-shell admin-table-shell">
+          <Table
+            rowKey="id"
+            dataSource={topupRequests}
+            columns={topupRequestColumns}
+            loading={loading}
+            pagination={{ pageSize: 8, showSizeChanger: false }}
+            scroll={{ x: 1780 }}
+            locale={{ emptyText: 'Заявок на пополнение пока нет' }}
+          />
+        </div>
+      </Card>
+    </Space>
+  );
+
   return (
     <div className="crm-admin-page admin-page">
       <Layout className="crm-admin-layout">
@@ -603,6 +759,7 @@ const ActualToursAdmin = () => {
             {currentTab === 'tours' && renderTourCatalog()}
             {currentTab === 'users' && renderUsersView()}
             {currentTab === 'stats' && renderStatsView()}
+            {currentTab === 'topups' && renderTopupsView()}
           </Content>
         </Layout>
       </Layout>
@@ -674,6 +831,56 @@ const ActualToursAdmin = () => {
           </Row>
         </Form>
       </Drawer>
+
+      <Modal
+        open={Boolean(reviewRequest)}
+        title={reviewAction === 'approve' ? 'Подтвердить пополнение' : 'Отклонить пополнение'}
+        okText={reviewAction === 'approve' ? 'Подтвердить и начислить' : 'Отклонить заявку'}
+        cancelText="Отмена"
+        okButtonProps={{ danger: reviewAction === 'reject' }}
+        confirmLoading={reviewLoading}
+        onOk={() => reviewForm.submit()}
+        onCancel={closeReviewModal}
+        className="crm-admin-review-modal"
+      >
+        <Form form={reviewForm} layout="vertical" onFinish={handleReviewSubmit} className="crm-admin-form">
+          {reviewAction === 'approve' ? (
+            <>
+              <Form.Item name="amount" label="Сумма пополнения" rules={[{ required: true, message: 'Укажите сумму' }]}>
+                <InputNumber min={1} style={{ width: '100%' }} suffix="сом" />
+              </Form.Item>
+
+              <Row gutter={12}>
+                <Col span={12}>
+                  <Form.Item name="bonusType" label="Тип бонуса">
+                    <Select options={[
+                      { value: 'fixed', label: 'Фиксированный' },
+                      { value: 'percent', label: 'Процент' },
+                    ]} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="bonus" label="Бонус">
+                    <InputNumber min={0} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item name="adminComment" label="Комментарий администратора">
+                <Input.TextArea rows={4} maxLength={500} showCount placeholder="Необязательный комментарий пользователю" />
+              </Form.Item>
+            </>
+          ) : (
+            <Form.Item
+              name="adminComment"
+              label="Причина отклонения"
+              rules={[{ required: true, message: 'Укажите причину отклонения' }]}
+            >
+              <Input.TextArea rows={5} maxLength={500} showCount placeholder="Например: сумма или реквизиты на чеке не совпадают" />
+            </Form.Item>
+          )}
+        </Form>
+      </Modal>
     </div>
   );
 };

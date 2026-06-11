@@ -7,7 +7,10 @@ import {
   DatePicker,
   Empty,
   Form,
+  Input,
   InputNumber,
+  Image,
+  Modal,
   Progress,
   Row,
   Slider,
@@ -16,6 +19,7 @@ import {
   Table,
   Tag,
   Typography,
+  Upload,
   message,
 } from 'antd';
 import {
@@ -23,15 +27,19 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CreditCardOutlined,
+  FilePdfOutlined,
   FlagOutlined,
+  InboxOutlined,
+  LogoutOutlined,
   PlusOutlined,
   RocketOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { readCurrentUser } from '../utils/currentUser';
+import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
 import {
   buildSavingsChartData,
   createSavingsPlan,
@@ -43,8 +51,9 @@ import { mergeAndPersistCurrentUser, normalizeUser, syncCurrentUser } from '../u
 const { Title, Paragraph, Text } = Typography;
 
 const GOAL_OPTIONS = [50000, 100000, 150000, 200000];
-const QUICK_TOP_UPS = [1000, 5000, 10000, 20000];
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80';
+const PAYMENT_QR_URL = process.env.REACT_APP_PAYMENT_QR_URL
+  || '/images/payment-qr.png';
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
@@ -65,6 +74,19 @@ const getOperationStatus = (status) => {
   return meta[status] || meta.completed;
 };
 
+const TOPUP_REQUEST_META = {
+  pending: { label: 'На проверке', color: 'orange' },
+  approved: { label: 'Подтверждено', color: 'green' },
+  rejected: { label: 'Отклонено', color: 'red' },
+};
+
+const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
 const getMonthsUntil = (date) => {
   if (!date) return 6;
   const now = dayjs();
@@ -73,6 +95,7 @@ const getMonthsUntil = (date) => {
 };
 
 const SavingsPlanPage = () => {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +104,11 @@ const SavingsPlanPage = () => {
   const [durationMonths, setDurationMonths] = useState(6);
   const [initialDeposit, setInitialDeposit] = useState(0);
   const [topUpAmount, setTopUpAmount] = useState(null);
+  const [topupRequests, setTopupRequests] = useState([]);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [receiptFiles, setReceiptFiles] = useState([]);
+  const [paymentComment, setPaymentComment] = useState('');
+  const [submittingReceipt, setSubmittingReceipt] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -98,9 +126,13 @@ const SavingsPlanPage = () => {
           return;
         }
 
-        const response = await api.get(`/users/${currentUser.id}`);
+        const [response, requestsResponse] = await Promise.all([
+          api.get(`/users/${currentUser.id}`),
+          api.get('/api/topup/my-requests', { headers: { 'x-user-id': currentUser.id } }),
+        ]);
         const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
         setUser(nextUser);
+        setTopupRequests(requestsResponse.data || []);
       } catch (error) {
         message.error('Не удалось загрузить накопления. Проверьте backend.');
       } finally {
@@ -223,60 +255,68 @@ const SavingsPlanPage = () => {
     }
   };
 
-  const handleTopUp = async (amountValue = topUpAmount) => {
-    const amount = Number(amountValue || 0);
-
-    if (!savingsMetrics.hasPlan) {
-      message.warning('Сначала создайте цель накопления.');
+  const openPaymentConfirmation = () => {
+    if (!Number(topUpAmount) || Number(topUpAmount) < 100) {
+      message.warning('Введите сумму от 100 сом.');
       return;
     }
 
-    if (!amount || amount <= 0) {
-      message.warning('Введите сумму пополнения.');
+    setPaymentModalOpen(true);
+  };
+
+  const handleReceiptChange = ({ fileList }) => {
+    const nextFiles = fileList.slice(-1);
+    const file = nextFiles[0]?.originFileObj || nextFiles[0];
+
+    if (file && !['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
+      message.error('Поддерживаются только JPG, PNG и PDF.');
       return;
     }
 
+    if (file && file.size > 6 * 1024 * 1024) {
+      message.error('Максимальный размер файла — 6 МБ.');
+      return;
+    }
+
+    setReceiptFiles(nextFiles);
+  };
+
+  const submitTopupRequest = async () => {
+    const uploadFile = receiptFiles[0]?.originFileObj || receiptFiles[0];
+    if (!uploadFile) {
+      message.warning('Загрузите чек об оплате.');
+      return;
+    }
+
+    setSubmittingReceipt(true);
     try {
-      const nextCurrentAmount = savingsMetrics.currentAmount + amount;
-      const nextStatus = nextCurrentAmount >= savingsMetrics.goalAmount ? 'completed' : 'active';
-      const nextTopUps = [
-        {
-          id: `topup-${Date.now()}`,
-          date: new Date().toISOString(),
-          amount,
-          status: 'completed',
-          source: 'manual',
-        },
-        ...(user?.topUps || []),
-      ];
-
-      const notifications = appendNotification(user?.notifications, nextCurrentAmount >= savingsMetrics.goalAmount
-        ? {
-            type: 'goal',
-            title: 'Цель достигнута',
-            description: 'Теперь вы можете выбрать тур и оплатить его накоплениями.',
-          }
-        : {
-            type: 'topup',
-            title: 'Баланс пополнен',
-            description: `Добавлено ${formatMoney(amount)} к плану накопления.`,
-          });
-
-      await persistUser({
-        savings: {
-          ...user.savings,
-          currentAmount: nextCurrentAmount,
-          status: nextStatus,
-        },
-        topUps: nextTopUps,
-        notifications,
+      const receiptImage = await fileToDataUrl(uploadFile);
+      const response = await api.post('/api/topup/create', {
+        amount: Number(topUpAmount),
+        receiptImage,
+        receiptName: uploadFile.name,
+        receiptType: uploadFile.type,
+        comment: paymentComment,
+      }, {
+        headers: { 'x-user-id': user.id },
       });
 
+      setTopupRequests((requests) => [response.data, ...requests]);
+      setPaymentModalOpen(false);
+      setReceiptFiles([]);
+      setPaymentComment('');
       setTopUpAmount(null);
-      message.success(`Добавлено ${formatMoney(amount)}.`);
+      message.success('Заявка отправлена и ожидает проверки администратора.');
     } catch (error) {
-      message.error('Не удалось пополнить баланс.');
+      message.error(error.response?.data?.message || 'Не удалось отправить заявку.');
+    } finally {
+      setSubmittingReceipt(false);
     }
+  };
+
+  const handleLogout = () => {
+    clearCurrentUser();
+    navigate('/');
   };
 
   const topUpColumns = [
@@ -309,6 +349,36 @@ const SavingsPlanPage = () => {
     },
   ];
 
+  const requestColumns = [
+    { title: 'ID', dataIndex: 'id', width: 80 },
+    { title: 'Дата', dataIndex: 'createdAt', render: formatDate, width: 130 },
+    { title: 'Сумма', dataIndex: 'amount', render: formatMoney, width: 150 },
+    { title: 'Бонус', dataIndex: 'bonus', render: (value) => value ? formatMoney(value) : '—', width: 130 },
+    {
+      title: 'Чек',
+      dataIndex: 'receiptImage',
+      width: 100,
+      render: (receipt, record) => receipt?.startsWith('data:image/')
+        ? <Image width={46} height={46} src={receipt} alt={record.receiptName || 'Чек'} style={{ objectFit: 'cover', borderRadius: 8 }} />
+        : (
+          <Button type="link" icon={<FilePdfOutlined />} href={receipt} target="_blank">
+            PDF
+          </Button>
+        ),
+    },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      width: 150,
+      render: (status) => {
+        const meta = TOPUP_REQUEST_META[status] || TOPUP_REQUEST_META.pending;
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+    },
+    { title: 'Комментарий', dataIndex: 'comment', render: (value) => value || '—', width: 220 },
+    { title: 'Ответ администратора', dataIndex: 'adminComment', render: (value) => value || '—', width: 240 },
+  ];
+
   if (!user && !loading) {
     return (
       <main className="savings-fintech-page">
@@ -323,6 +393,15 @@ const SavingsPlanPage = () => {
 
   return (
     <main className="savings-fintech-page">
+      <Button
+        danger
+        icon={<LogoutOutlined />}
+        className="savings-fintech-logout"
+        onClick={handleLogout}
+      >
+        Выйти
+      </Button>
+
       <section className="savings-fintech-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(6,17,31,0.88), rgba(6,17,31,0.58)), url(${HERO_IMAGE})` }}>
         <div className="savings-fintech-hero__content">
           <Tag className="savings-fintech-eyebrow">TravelPay Savings</Tag>
@@ -423,29 +502,47 @@ const SavingsPlanPage = () => {
             </Card>
 
             <Card title="Пополнить баланс" className="savings-fintech-card savings-fintech-topup-card" loading={loading}>
-              <Space orientation="vertical" size={14} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+                <Statistic
+                  title="Текущий накопительный баланс"
+                  value={savingsMetrics.currentAmount}
+                  formatter={formatMoney}
+                  prefix={<WalletOutlined />}
+                />
                 <InputNumber
                   size="large"
                   min={100}
-                  step={500}
+                  step={100}
                   value={topUpAmount}
                   onChange={setTopUpAmount}
-                  placeholder="Введите сумму"
+                  placeholder="Сумма пополнения"
                   style={{ width: '100%' }}
                 />
-                <div className="savings-fintech-quick-grid">
-                  {QUICK_TOP_UPS.map((amount) => (
-                    <Button key={amount} icon={<PlusOutlined />} onClick={() => setTopUpAmount(amount)}>
-                      +{amount.toLocaleString('ru-RU')}
-                    </Button>
-                  ))}
+
+                <div className="savings-fintech-qr-shell">
+                  <img src={PAYMENT_QR_URL} alt="QR-код для оплаты TravelPay" className="savings-fintech-qr" />
+                  <div>
+                    <Text strong>Оплатите через мобильный банк</Text>
+                    <Paragraph className="savings-fintech-muted">
+                      Отсканируйте QR-код в MBank, Элсом, О!Деньги или другом приложении. Укажите выбранную сумму и сохраните чек.
+                    </Paragraph>
+                  </div>
                 </div>
-                <Button type="primary" size="large" icon={<CreditCardOutlined />} loading={saving} onClick={() => handleTopUp()} block>
-                  Пополнить
-                </Button>
+
+                <Alert
+                  type="warning"
+                  showIcon
+                  title="Баланс начисляется после ручной проверки"
+                  description="Загрузка чека не пополняет баланс автоматически. Администратор проверит платёж и подтвердит заявку."
+                />
+
                 {nextPaymentDate && (
                   <Text className="savings-fintech-muted">Рекомендуемый платёж до {formatDate(nextPaymentDate)}</Text>
                 )}
+
+                <Button type="primary" size="large" icon={<CreditCardOutlined />} onClick={openPaymentConfirmation} block>
+                  Я оплатил
+                </Button>
               </Space>
             </Card>
           </Col>
@@ -556,10 +653,69 @@ const SavingsPlanPage = () => {
                   />
                 </div>
               </Card>
+
+              <Card title="Мои заявки на пополнение" className="savings-fintech-card" loading={loading}>
+                <div className="travelpay-table-shell savings-fintech-table">
+                  <Table
+                    rowKey="id"
+                    dataSource={topupRequests}
+                    columns={requestColumns}
+                    pagination={{ pageSize: 6, showSizeChanger: false }}
+                    scroll={{ x: 1080 }}
+                    locale={{ emptyText: 'Вы ещё не отправляли заявки на пополнение' }}
+                  />
+                </div>
+              </Card>
             </Space>
           </Col>
         </Row>
       </section>
+
+      <Modal
+        open={paymentModalOpen}
+        title="Подтверждение QR-оплаты"
+        okText="Отправить на проверку"
+        cancelText="Отмена"
+        confirmLoading={submittingReceipt}
+        onOk={submitTopupRequest}
+        onCancel={() => {
+          if (!submittingReceipt) setPaymentModalOpen(false);
+        }}
+        className="savings-fintech-payment-modal"
+      >
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+          <Alert
+            type="info"
+            showIcon
+            title={`Сумма заявки: ${formatMoney(topUpAmount)}`}
+            description="Приложите чек. После отправки заявка получит статус «На проверке»."
+          />
+
+          <Upload.Dragger
+            accept=".jpg,.jpeg,.png,.pdf"
+            maxCount={1}
+            fileList={receiptFiles}
+            beforeUpload={() => false}
+            onChange={handleReceiptChange}
+          >
+            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+            <p className="ant-upload-text">Перетащите чек сюда или нажмите для выбора</p>
+            <p className="ant-upload-hint">JPG, PNG или PDF, до 6 МБ</p>
+          </Upload.Dragger>
+
+          <div>
+            <Text strong>Комментарий</Text>
+            <Input.TextArea
+              rows={4}
+              value={paymentComment}
+              onChange={(event) => setPaymentComment(event.target.value)}
+              placeholder="Например: оплата с номера +996..."
+              maxLength={500}
+              showCount
+            />
+          </div>
+        </Space>
+      </Modal>
     </main>
   );
 };

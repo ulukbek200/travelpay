@@ -20,13 +20,13 @@ const LoginPage = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (values) => {
+  const login = async ({ email, password }) => {
     setLoading(true);
 
     try {
       const response = await api.post('/auth/login', {
-        email: values.email,
-        password: values.password,
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
       });
       const user = syncCurrentUser({ ...response.data, isLoggedIn: true });
       message.success('Добро пожаловать в TravelPay');
@@ -46,6 +46,8 @@ const LoginPage = () => {
     }
   };
 
+  const handleSubmit = (values) => login(values);
+
   return (
     <AuthLayout
       eyebrow="С возвращением"
@@ -54,11 +56,22 @@ const LoginPage = () => {
     >
       <Form layout="vertical" onFinish={handleSubmit} className="auth-form">
         <Form.Item name="email" label="Email" rules={emailRules}>
-          <Input size="large" prefix={<MailOutlined />} type="email" placeholder="you@example.com" />
+          <Input
+            size="large"
+            prefix={<MailOutlined />}
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+          />
         </Form.Item>
 
         <Form.Item name="password" label="Пароль" rules={loginPasswordRules}>
-          <Input.Password size="large" prefix={<LockOutlined />} placeholder="Введите пароль" />
+          <Input.Password
+            size="large"
+            prefix={<LockOutlined />}
+            autoComplete="current-password"
+            placeholder="Введите пароль"
+          />
         </Form.Item>
 
         <div className="auth-form-row">

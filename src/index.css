@@ -4328,6 +4328,170 @@ html,
   min-width: 100%;
 }
 
+/* Profile dark theme */
+.travelpay-profile-page--dark {
+  color: #eef5ff;
+}
+
+.travelpay-profile-page--dark .ant-layout-content {
+  background: transparent !important;
+}
+
+.travelpay-profile-page--dark .ant-card {
+  background: rgba(11, 29, 49, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.24) !important;
+  backdrop-filter: blur(18px);
+}
+
+.travelpay-profile-page--dark .ant-card-head {
+  border-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+.travelpay-profile-page--dark .ant-card-head-title,
+.travelpay-profile-page--dark .ant-card-body,
+.travelpay-profile-page--dark .ant-typography,
+.travelpay-profile-page--dark .ant-statistic-title,
+.travelpay-profile-page--dark .ant-statistic-content,
+.travelpay-profile-page--dark .ant-form-item-label > label,
+.travelpay-profile-page--dark .ant-empty-description,
+.travelpay-profile-page--dark .ant-table,
+.travelpay-profile-page--dark .ant-table-cell {
+  color: #eef5ff !important;
+}
+
+.travelpay-profile-page--dark .ant-typography-secondary,
+.travelpay-profile-page--dark .ant-statistic-title {
+  color: rgba(226, 232, 240, 0.68) !important;
+}
+
+.travelpay-profile-page--dark .ant-input,
+.travelpay-profile-page--dark .ant-input-affix-wrapper,
+.travelpay-profile-page--dark .ant-select-selector,
+.travelpay-profile-page--dark textarea {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.travelpay-profile-page--dark .ant-input:hover,
+.travelpay-profile-page--dark .ant-input:focus,
+.travelpay-profile-page--dark .ant-input-affix-wrapper:hover,
+.travelpay-profile-page--dark .ant-input-affix-wrapper-focused,
+.travelpay-profile-page--dark .ant-select-selector:hover {
+  border-color: rgba(56, 189, 248, 0.72) !important;
+}
+
+.travelpay-profile-page--dark .ant-select-selection-item,
+.travelpay-profile-page--dark .ant-select-arrow,
+.travelpay-profile-page--dark input::placeholder,
+.travelpay-profile-page--dark textarea::placeholder {
+  color: rgba(226, 232, 240, 0.68) !important;
+}
+
+.travelpay-profile-page--dark .ant-divider {
+  border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+.travelpay-profile-page--dark .ant-progress-inner {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+
+.travelpay-profile-page--dark .ant-progress-text {
+  color: #eef5ff !important;
+}
+
+.travelpay-profile-page--dark .ant-table-container,
+.travelpay-profile-page--dark .ant-table-content,
+.travelpay-profile-page--dark .ant-table-body {
+  background: transparent !important;
+}
+
+.travelpay-profile-page--dark .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+.travelpay-profile-page--dark .ant-table-tbody > tr > td {
+  background: rgba(255, 255, 255, 0.025) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148, 163, 184, 0.10) !important;
+}
+
+.travelpay-profile-page--dark .ant-table-tbody > tr:hover > td {
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+.travelpay-profile-page--dark .ant-pagination-item,
+.travelpay-profile-page--dark .ant-pagination-prev .ant-pagination-item-link,
+.travelpay-profile-page--dark .ant-pagination-next .ant-pagination-item-link {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+.travelpay-profile-page--dark .ant-pagination-item a,
+.travelpay-profile-page--dark .ant-pagination-item-link {
+  color: #e2e8f0 !important;
+}
+
+.travelpay-profile-page--dark .ant-pagination-item-active {
+  background: #2563eb !important;
+  border-color: #60a5fa !important;
+}
+
+.travelpay-profile-page--dark .ant-btn-default,
+body[data-theme="dark"] .travelpay-profile-sidebar .ant-btn-default {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  color: #eef5ff !important;
+}
+
+.travelpay-profile-page--dark .ant-btn-default:hover,
+body[data-theme="dark"] .travelpay-profile-sidebar .ant-btn-default:hover {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.55) !important;
+  color: #fff !important;
+}
+
+.travelpay-profile-page--dark .ant-btn-dangerous,
+body[data-theme="dark"] .travelpay-profile-sidebar .ant-btn-dangerous {
+  background: rgba(239, 68, 68, 0.10) !important;
+  border-color: rgba(248, 113, 113, 0.34) !important;
+  color: #fca5a5 !important;
+}
+
+.travelpay-profile-page--dark .ant-btn-dangerous:hover,
+body[data-theme="dark"] .travelpay-profile-sidebar .ant-btn-dangerous:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.62) !important;
+  color: #fecaca !important;
+}
+
+.travelpay-profile-page--dark .ant-btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  border-color: #3b82f6 !important;
+  color: #fff !important;
+}
+
+.travelpay-profile-page--dark .ant-alert {
+  border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+.travelpay-profile-page--dark .ant-alert-info {
+  background: rgba(37, 99, 235, 0.13) !important;
+}
+
+.travelpay-profile-page--dark .ant-alert-success {
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.travelpay-profile-page--dark .ant-alert-message,
+.travelpay-profile-page--dark .ant-alert-description {
+  color: #eef5ff !important;
+}
+
 .travelpay-admin-page .ant-card,
 .travelpay-profile-page .ant-card,
 .travelpay-dashboard-container .ant-card {
@@ -6143,7 +6307,9 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 }
 
 .crm-admin-form-drawer .ant-drawer-content,
-.crm-admin-mobile-shell .ant-drawer-content {
+.crm-admin-mobile-shell .ant-drawer-content,
+.crm-admin-review-modal .ant-modal-content,
+.crm-admin-review-modal .ant-modal-header {
   background: linear-gradient(180deg, #07111f 0%, #0b1728 100%) !important;
 }
 
@@ -6155,8 +6321,12 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 }
 
 .crm-admin-form-drawer .ant-drawer-title,
+.crm-admin-review-modal .ant-modal-title,
+.crm-admin-review-modal .ant-modal-close,
 .crm-admin-form-drawer .ant-form-item-label > label,
 .crm-admin-form-drawer .ant-typography,
+.crm-admin-review-modal .ant-form-item-label > label,
+.crm-admin-review-modal .ant-typography,
 .crm-admin-mobile-shell .ant-menu-item,
 .crm-admin-mobile-shell .ant-menu-item .ant-menu-title-content {
   color: #f8fafc !important;
@@ -6182,6 +6352,10 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 
 .crm-admin-form .ant-rate {
   color: #f59e0b !important;
+}
+
+.crm-admin-review-modal .ant-modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .crm-admin-drawer-footer {
@@ -6273,6 +6447,7 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 
 /* TravelPay savings fintech refresh */
 .savings-fintech-page {
+  position: relative;
   min-height: 100vh;
   background:
     radial-gradient(circle at 12% 10%, rgba(37, 99, 235, 0.16), transparent 26%),
@@ -6280,6 +6455,29 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
     linear-gradient(180deg, #06111f 0%, #0b1728 100%);
   color: #f8fafc;
   padding-bottom: 36px;
+}
+
+.savings-fintech-logout.ant-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  height: 44px;
+  padding-inline: 18px;
+  border-radius: 12px;
+  color: #fecaca !important;
+  background: rgba(127, 29, 29, 0.34) !important;
+  border-color: rgba(248, 113, 113, 0.48) !important;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.24);
+  backdrop-filter: blur(14px);
+  font-weight: 700;
+}
+
+.savings-fintech-logout.ant-btn:hover,
+.savings-fintech-logout.ant-btn:focus {
+  color: #fff !important;
+  background: rgba(185, 28, 28, 0.62) !important;
+  border-color: #fca5a5 !important;
 }
 
 .savings-fintech-hero {
@@ -6535,6 +6733,61 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
+.savings-fintech-qr-shell {
+  display: grid;
+  grid-template-columns: minmax(190px, 260px) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(15, 23, 42, 0.38));
+}
+
+.savings-fintech-qr {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.savings-fintech-qr-shell .ant-typography {
+  color: #f8fafc !important;
+}
+
+.savings-fintech-payment-modal .ant-modal-content,
+.savings-fintech-payment-modal .ant-modal-header {
+  background: linear-gradient(180deg, #0b1728 0%, #07111f 100%) !important;
+}
+
+.savings-fintech-payment-modal .ant-modal-title,
+.savings-fintech-payment-modal .ant-modal-close,
+.savings-fintech-payment-modal .ant-typography,
+.savings-fintech-payment-modal .ant-upload-text,
+.savings-fintech-payment-modal .ant-upload-hint {
+  color: #f8fafc !important;
+}
+
+.savings-fintech-payment-modal .ant-upload-wrapper .ant-upload-drag {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(96, 165, 250, 0.34) !important;
+}
+
+.savings-fintech-payment-modal .ant-upload-drag-icon .anticon {
+  color: #60a5fa !important;
+}
+
+.savings-fintech-payment-modal textarea {
+  margin-top: 8px;
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
 @media (max-width: 1100px) {
   .savings-fintech-hero {
     grid-template-columns: 1fr;
@@ -6547,6 +6800,13 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 }
 
 @media (max-width: 768px) {
+  .savings-fintech-logout.ant-btn {
+    top: 14px;
+    right: 14px;
+    height: 40px;
+    padding-inline: 14px;
+  }
+
   .savings-fintech-hero {
     padding: 94px 16px 34px;
   }
@@ -6571,6 +6831,16 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 }
 
 @media (max-width: 480px) {
+  .savings-fintech-qr-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .savings-fintech-qr {
+    width: min(100%, 220px);
+    height: auto;
+    margin: 0 auto;
+  }
+
   .savings-fintech-quick-grid {
     grid-template-columns: 1fr;
   }

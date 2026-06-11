@@ -36,10 +36,13 @@ function AppContent({ favorites, setFavorites }) {
     '/register',
     '/booking',
     '/profile',
+    '/savings',
+    '/savings-plan',
     '/admin',
     '/admin/tours',
     '/admin/users',
     '/admin/stats',
+    '/admin/topups',
     '/VisaPaymentPage',
   ];
 
@@ -107,6 +110,14 @@ function AppContent({ favorites, setFavorites }) {
         />
         <Route
           path="/admin/stats"
+          element={
+            <ProtectedRoute requireAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/topups"
           element={
             <ProtectedRoute requireAdmin>
               <ActualToursAdmin />
