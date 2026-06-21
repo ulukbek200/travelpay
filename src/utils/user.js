@@ -3,8 +3,17 @@ import { normalizeSavings } from './savings';
 import { readCurrentUser, saveCurrentUser } from './currentUser';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const ADMIN_ROLES = new Set(['super_admin', 'company_admin', 'company_manager']);
+const BUSINESS_ROLES = new Set(['company_admin', 'company_manager']);
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
+const normalizeRole = (value) => {
+  const role = String(value || 'user').trim().toLowerCase();
+  if (role === 'admin') return 'super_admin';
+  if (role === 'manager') return 'company_manager';
+  if (ADMIN_ROLES.has(role) || role === 'user') return role;
+  return 'user';
+};
 const normalizeDate = (value) => {
   if (!value) return '';
   const date = new Date(value);
@@ -33,14 +42,29 @@ export const normalizeUser = (user) => {
   const travelHistory = ensureArray(user.travelHistory || user.bookings).map((entry, index) => ({
     id: entry?.id || `booking-${index}-${Date.now()}`,
     tourId: entry?.tourId || entry?.id || '',
+    companyId: Number(entry?.companyId || user.companyId || 1),
+    companyName: entry?.companyName || '',
+    clientName: entry?.clientName || user.name || '',
+    clientPhone: entry?.clientPhone || user.phone || '',
+    clientEmail: entry?.clientEmail || user.email || '',
     tourTitle: entry?.tourTitle || entry?.title || '',
     location: entry?.location || '',
     image: entry?.image || '',
     amount: Number(entry?.amount ?? entry?.price) || 0,
     status: entry?.status || 'paid',
+    paymentStatus: entry?.paymentStatus || (entry?.status === 'paid' ? 'paid' : 'pending'),
     purchasedAt: normalizeDate(entry?.purchasedAt || entry?.date) || new Date().toISOString(),
-    travelDate: normalizeDate(entry?.travelDate),
+    travelDate: normalizeDate(entry?.travelDate || entry?.date),
+    date: normalizeDate(entry?.date || entry?.travelDate || entry?.purchasedAt) || new Date().toISOString(),
+    endDate: normalizeDate(entry?.endDate),
+    durationMinutes: Number(entry?.durationMinutes) || 60,
+    assignedTo: entry?.assignedTo || entry?.manager || '',
     paymentMethod: entry?.paymentMethod || 'savings',
+    accommodation: entry?.accommodation || null,
+    accommodationTotal: Number(entry?.accommodationTotal) || 0,
+    extraBedSelected: Boolean(entry?.extraBedSelected),
+    extraBedTotal: Number(entry?.extraBedTotal) || 0,
+    baseTourAmount: Number(entry?.baseTourAmount) || 0,
   })).sort((a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt));
 
   const notifications = ensureArray(user.notifications).map((entry, index) => ({
@@ -113,6 +137,8 @@ export const normalizeUser = (user) => {
 
   return {
     ...user,
+    role: normalizeRole(user.role),
+    companyId: Number(user.companyId) || 1,
     favorites: ensureArray(user.favorites),
     savings,
     topUps,
@@ -132,6 +158,10 @@ export const normalizeUser = (user) => {
     travelStreakMonths: streakMonths,
   };
 };
+
+export const canAccessAdminPanel = (user) => ADMIN_ROLES.has(normalizeRole(user?.role));
+export const canAccessBusinessPanel = (user) => BUSINESS_ROLES.has(normalizeRole(user?.role));
+export const canAccessTravelPayAdmin = (user) => normalizeRole(user?.role) === 'super_admin';
 
 export const syncCurrentUser = (user) => {
   const normalizedUser = normalizeUser(user);

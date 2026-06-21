@@ -21,6 +21,9 @@ import ProfilePage from './pages/ProfilePage';
 import ActualToursPage from './pages/ActualToursPage';
 import TourDetailPage from './pages/TourDetailPage';
 import ActualToursAdmin from './pages/ActualToursAdmin';
+import BusinessLandingPage from './pages/BusinessLandingPage';
+import BusinessLoginPage from './pages/BusinessLoginPage';
+import BusinessRegisterPage from './pages/BusinessRegisterPage';
 import TourBookingPage from './pages/TourBookingPage';
 import AgreementsPage from './pages/AgreementsPage';
 import VisaPaymentPage from './pages/VisaPaymentPage';
@@ -39,10 +42,28 @@ function AppContent({ favorites, setFavorites }) {
     '/savings',
     '/savings-plan',
     '/admin',
+    '/admin/home',
     '/admin/tours',
+    '/admin/accommodations',
+    '/admin/bookings',
     '/admin/users',
+    '/admin/clients',
     '/admin/stats',
+    '/admin/reports',
     '/admin/topups',
+    '/admin/savings',
+    '/admin/companies',
+    '/admin/settings',
+    '/business',
+    '/travelpay-business',
+    '/business/login',
+    '/business/register',
+    '/business/dashboard',
+    '/business/tours',
+    '/business/accommodations',
+    '/business/bookings',
+    '/business/clients',
+    '/business/reports',
     '/VisaPaymentPage',
   ];
 
@@ -58,6 +79,10 @@ function AppContent({ favorites, setFavorites }) {
         <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/business" element={<BusinessLandingPage />} />
+        <Route path="/travelpay-business" element={<BusinessLandingPage />} />
+        <Route path="/business/register" element={<BusinessRegisterPage />} />
+        <Route path="/business/login" element={<BusinessLoginPage />} />
 
         <Route
           path="/tours"
@@ -87,7 +112,15 @@ function AppContent({ favorites, setFavorites }) {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute requireAdmin>
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/home"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
               <ActualToursAdmin />
             </ProtectedRoute>
           }
@@ -95,7 +128,23 @@ function AppContent({ favorites, setFavorites }) {
         <Route
           path="/admin/tours"
           element={
-            <ProtectedRoute requireAdmin>
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/accommodations"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/bookings"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
               <ActualToursAdmin />
             </ProtectedRoute>
           }
@@ -103,7 +152,15 @@ function AppContent({ favorites, setFavorites }) {
         <Route
           path="/admin/users"
           element={
-            <ProtectedRoute requireAdmin>
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/clients"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
               <ActualToursAdmin />
             </ProtectedRoute>
           }
@@ -111,7 +168,15 @@ function AppContent({ favorites, setFavorites }) {
         <Route
           path="/admin/stats"
           element={
-            <ProtectedRoute requireAdmin>
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
               <ActualToursAdmin />
             </ProtectedRoute>
           }
@@ -119,11 +184,54 @@ function AppContent({ favorites, setFavorites }) {
         <Route
           path="/admin/topups"
           element={
-            <ProtectedRoute requireAdmin>
+            <ProtectedRoute requireTravelPayAdmin>
               <ActualToursAdmin />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/savings"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/companies"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute requireTravelPayAdmin>
+              <ActualToursAdmin />
+            </ProtectedRoute>
+          }
+        />
+
+        {[
+          '/business/dashboard',
+          '/business/tours',
+          '/business/accommodations',
+          '/business/bookings',
+          '/business/clients',
+          '/business/reports',
+        ].map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={(
+              <ProtectedRoute requireBusiness>
+                <ActualToursAdmin businessMode />
+              </ProtectedRoute>
+            )}
+          />
+        ))}
 
         <Route path="/AgreePage" element={<AgreementsPage />} />
         <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />

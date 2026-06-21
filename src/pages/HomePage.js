@@ -34,6 +34,8 @@ const copy = {
     partnerEmail: 'Email',
     partnerMessage: 'Какой формат партнёрства вам интересен?',
     partnerSubmit: 'Отправить заявку',
+    partnerBusiness: 'Перейти в TravelPay Business',
+    partnerRegisterCompany: 'Зарегистрировать компанию',
     footerText: 'Premium travel across Kyrgyzstan with a cleaner UI, stronger gallery and modern booking flow.',
   },
   EN: {
@@ -57,6 +59,8 @@ const copy = {
     partnerEmail: 'Email',
     partnerMessage: 'What kind of partnership are you looking for?',
     partnerSubmit: 'Send request',
+    partnerBusiness: 'Open TravelPay Business',
+    partnerRegisterCompany: 'Register company',
     footerText: 'Premium travel across Kyrgyzstan with a cleaner UI, stronger gallery and modern booking flow.',
   },
   KG: {
@@ -80,6 +84,8 @@ const copy = {
     partnerEmail: 'Email',
     partnerMessage: 'Кайсы өнөктөштүк форматы кызыктырат?',
     partnerSubmit: 'Суроо жөнөтүү',
+    partnerBusiness: 'TravelPay Business ачуу',
+    partnerRegisterCompany: 'Компанияны каттоо',
     footerText: 'Premium travel across Kyrgyzstan with a cleaner UI, stronger gallery and modern booking flow.',
   },
 };
@@ -364,6 +370,26 @@ const HomePage = () => {
             <Tag style={styles.darkTag}>TravelPay B2B</Tag>
             <Title level={2} style={styles.darkTitle}>{t.partnerTitle}</Title>
             <Paragraph style={styles.darkText}>{t.partnerText}</Paragraph>
+            <Space wrap size={12} style={styles.partnerActions}>
+              <Button
+                type="primary"
+                size="large"
+                icon={<ArrowRightOutlined />}
+                className="travelpay-primary-button"
+                style={styles.partnerBusinessButton}
+                onClick={() => navigate('/business')}
+              >
+                {t.partnerBusiness}
+              </Button>
+              <Button
+                size="large"
+                className="travelpay-secondary-button"
+                style={styles.partnerBusinessGhost}
+                onClick={() => navigate('/business/register')}
+              >
+                {t.partnerRegisterCompany}
+              </Button>
+            </Space>
           </motion.div>
 
           <motion.div {...motionCard}>
@@ -764,6 +790,20 @@ const styles = {
   },
   partnerCopy: {
     alignSelf: 'center',
+  },
+  partnerActions: {
+    marginTop: 24,
+  },
+  partnerBusinessButton: {
+    minHeight: 48,
+    borderRadius: 16,
+  },
+  partnerBusinessGhost: {
+    minHeight: 48,
+    borderRadius: 16,
+    background: 'rgba(255,255,255,0.08)',
+    color: '#ffffff',
+    borderColor: 'rgba(255,255,255,0.32)',
   },
   partnerCard: {
     borderRadius: 24,
