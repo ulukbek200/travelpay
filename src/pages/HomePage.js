@@ -213,9 +213,7 @@ const HomePage = () => {
   return (
     <main className="home-page" style={styles.page}>
       <section className="home-hero-section" style={styles.hero}>
-        <video autoPlay muted loop playsInline style={styles.heroVideo}>
-          <source src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4" type="video/mp4" />
-        </video>
+        <div style={styles.heroVideo} aria-hidden="true" />
         <div style={styles.heroOverlay} />
         <div className="home-shell" style={styles.heroShell}>
           <motion.div {...motionCard} style={styles.heroContent}>
@@ -475,7 +473,9 @@ const styles = {
     inset: 0,
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    backgroundImage: 'url("/images/kyrgyzstan-mountains.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
     filter: 'saturate(1.08) contrast(1.04) brightness(0.82)',
   },
   heroOverlay: {

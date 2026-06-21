@@ -27,7 +27,9 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    background-image: url("/images/kyrgyzstan-mountains.jpg");
+    background-size: cover;
+    background-position: center;
   }
 
   .auth-overlay {
@@ -302,16 +304,7 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   }
 `}</style>
       <main className="auth-page">
-        <video autoPlay muted loop playsInline className="auth-bg-image">
-          <source
-            src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4"
-            type="video/mp4"
-          />
-          <source
-            src="https://cdn.pixabay.com/video/2021/08/10/84776-587945089_large.mp4"
-            type="video/mp4"
-          />
-        </video>
+        <div className="auth-bg-image" aria-hidden="true" />
 
         <div className="auth-overlay" />
 

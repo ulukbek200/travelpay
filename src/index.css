@@ -1250,7 +1250,7 @@ main.booking-page > * {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  background: linear-gradient(135deg, #06111f, #173b61 58%, #fca311);
   filter: saturate(1.02) contrast(1.04) brightness(0.78);
   animation: bookingVideoDrift 34s ease-in-out infinite alternate;
   z-index: -3;

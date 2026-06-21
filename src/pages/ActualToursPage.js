@@ -30,7 +30,6 @@ const { Title, Paragraph, Text } = Typography;
 
 const BRAND_BLUE = '#173B61';
 const BRAND_GOLD = '#FCA311';
-const HERO_VIDEO_URL = 'https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4';
 
 const promoBadges = [
   { label: 'Горящий тур', note: 'Скидка до конца недели', color: '#FF6B35' },
@@ -255,16 +254,11 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
   return (
     <main className="tours-page premium-tour-page-shell" style={styles.page}>
       <section className="premium-tours-hero" style={styles.hero}>
-        <video
+        <div
           className="premium-tours-hero__video"
-          autoPlay
-          muted
-          loop
-          playsInline
           style={styles.heroVideo}
-        >
-          <source src={HERO_VIDEO_URL} type="video/mp4" />
-        </video>
+          aria-hidden="true"
+        />
         <div className="premium-tours-hero__overlay" style={styles.heroOverlay} />
 
         <motion.div
@@ -528,7 +522,9 @@ const styles = {
     inset: 0,
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    backgroundImage: 'url("/images/kyrgyzstan-mountains.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
   },
   heroOverlay: {
     position: 'absolute',
