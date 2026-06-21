@@ -116,7 +116,7 @@ const extraGallerySpots = [
     duration: '3 дня',
     price: 34000,
     rating: 4.8,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sary%20Chelek%20Lake.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Заповедное горное озеро, тихие панорамы и маршрут для спокойного premium nature-отдыха.',
   },
   {
@@ -126,7 +126,7 @@ const extraGallerySpots = [
     duration: '4 дня',
     price: 46000,
     rating: 4.9,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Kol-Suu.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Высокогорное озеро среди скал, удалённый маршрут и сильная adventure-атмосфера.',
   },
 ];

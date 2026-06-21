@@ -50,11 +50,7 @@ const VisaPaymentPage = () => {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-          alt="Visa"
-          style={styles.logo}
-        />
+        <div style={styles.logo}>VISA</div>
         <h2 style={styles.title}>Оплата тура через Visa</h2>
 
         <form onSubmit={handleSubmit} noValidate>
@@ -119,21 +115,9 @@ const VisaPaymentPage = () => {
         </form>
 
         <div style={styles.icons}>
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
-            alt="Visa"
-            style={styles.icon}
-          />
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg"
-            alt="Mastercard"
-            style={styles.icon}
-          />
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/%D0%9C%D0%B8%D1%80_%D0%A2%D0%92_logo.svg/2048px-%D0%9C%D0%B8%D1%80_%D0%A2%D0%92_logo.svg.png"
-            alt="MIR"
-            style={styles.icon}
-          />
+          <span style={styles.icon}>VISA</span>
+          <span style={styles.icon}>Mastercard</span>
+          <span style={styles.icon}>MIR</span>
         </div>
       </div>
     </div>
@@ -165,9 +149,15 @@ const styles = {
     marginBottom: '10px',
   },
   logo: {
-    display: 'block',
-    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '42px',
     margin: '0 auto 10px',
+    color: '#1A1F71',
+    fontSize: '28px',
+    fontWeight: 800,
+    letterSpacing: 0,
   },
   formGroup: {
     marginBottom: '18px',
@@ -203,8 +193,14 @@ const styles = {
     gap: '20px',
   },
   icon: {
-    height: '32px',
-    opacity: 0.8,
+    minWidth: '74px',
+    padding: '8px 10px',
+    borderRadius: '10px',
+    background: '#F2F5FA',
+    color: '#1A1F71',
+    fontSize: '13px',
+    fontWeight: 700,
+    textAlign: 'center',
   },
 };
 

@@ -1,4 +1,4 @@
-export const TOUR_IMAGE_FALLBACK = '/images/tours/fallback-tour.svg';
+export const TOUR_IMAGE_FALLBACK = '/images/kyrgyzstan-mountains.jpg';
 
 export const KYRGYZSTAN_TOUR_SPOTS = [
   {
@@ -8,7 +8,7 @@ export const KYRGYZSTAN_TOUR_SPOTS = [
     duration: '1 день',
     price: 16000,
     rating: 4.8,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Landscape%20view%2C%20Ala%20Archa%20National%20Park%2C%20Chuy%20region%2C%20Kyrgyzstan%2001.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Альпийские ущелья, хвойный воздух и лёгкие треккинги рядом с Бишкеком.',
   },
   {
@@ -18,7 +18,7 @@ export const KYRGYZSTAN_TOUR_SPOTS = [
     duration: '4 дня',
     price: 42000,
     rating: 4.9,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Issyk%20Kul%20Lake%2C%20Issyk%20Kul%20region%2C%20Kyrgyzstan.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Бирюзовое озеро, панорамные берега и мягкий курортный ритм.',
   },
   {
@@ -28,7 +28,7 @@ export const KYRGYZSTAN_TOUR_SPOTS = [
     duration: '3 дня',
     price: 36000,
     rating: 4.9,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Yurt%20Camp%20in%20Song%20kol%20region.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Юрты, лошади, высокогорные пастбища и настоящий nomad-luxury формат.',
   },
   {
@@ -38,7 +38,7 @@ export const KYRGYZSTAN_TOUR_SPOTS = [
     duration: '3 дня',
     price: 39000,
     rating: 4.7,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Tian%20Shan%20in%20Kyrgyzstan%2001.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Горные панорамы, треккинг и база для активных маршрутов по Тянь-Шаню.',
   },
   {
@@ -48,7 +48,7 @@ export const KYRGYZSTAN_TOUR_SPOTS = [
     duration: '2 дня',
     price: 24000,
     rating: 4.8,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Jeti-Oguz%20rocks%2C%20Issyk%20Kul%20region%2C%20Kyrgyzstan%2002.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Красные скалы, альпийские поляны и фотогеничные маршруты на рассвете.',
   },
   {
@@ -58,7 +58,7 @@ export const KYRGYZSTAN_TOUR_SPOTS = [
     duration: '2 дня',
     price: 28000,
     rating: 4.7,
-    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Arslanbob%20Small%20Waterfall.jpg',
+    image: TOUR_IMAGE_FALLBACK,
     description: 'Ореховые леса, водопады и южный колорит с тёплой локальной атмосферой.',
   },
 ];
