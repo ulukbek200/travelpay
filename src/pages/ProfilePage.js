@@ -22,6 +22,7 @@ import {
   Table,
   Tag,
   Typography,
+  Upload,
   message,
 } from 'antd';
 import {
@@ -35,6 +36,7 @@ import {
   LogoutOutlined,
   MenuOutlined,
   NotificationOutlined,
+  PictureOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
   TrophyOutlined,
@@ -46,7 +48,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
 import { formatSavingsStatus, getSavingsMetrics, getSavingsStatusColor } from '../utils/savings';
-import { getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
+import { canAccessAdminPanel, getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -55,9 +57,17 @@ const { useBreakpoint } = Grid;
 const BRAND_BLUE = '#17325c';
 const BRAND_GOLD = '#fca311';
 const TURQUOISE = '#14b8a6';
+const DEFAULT_AVATAR = 'https://www.w3schools.com/howto/img_avatar.png';
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
+
+const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
 
 const levelColors = {
   Bronze: '#b45309',
@@ -72,6 +82,7 @@ const ProfilePage = () => {
   const isDesktop = !!screens.lg;
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
   const [theme, setTheme] = useState(() => localStorage.getItem('dashboard_theme') || 'dark');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -90,7 +101,9 @@ const ProfilePage = () => {
           return;
         }
 
-        const response = await api.get(`/users/${currentUser.id}`);
+        const response = await api.get(`/users/${currentUser.id}`, {
+          headers: { 'x-user-id': currentUser.id },
+        });
         const nextUser = syncCurrentUser({
           ...normalizeUser(response.data),
           country: response.data.country || 'Kyrgyzstan',
@@ -100,6 +113,7 @@ const ProfilePage = () => {
         });
 
         setUser(nextUser);
+        setAvatarPreview(nextUser?.avatar || DEFAULT_AVATAR);
         form.setFieldsValue(nextUser);
       } catch (error) {
         navigate('/login');
@@ -112,17 +126,51 @@ const ProfilePage = () => {
   const savingsMetrics = useMemo(() => getSavingsMetrics(user?.savings), [user?.savings]);
   const level = useMemo(() => user?.level || getUserLevel(savingsMetrics.currentAmount), [user?.level, savingsMetrics.currentAmount]);
   const unreadNotifications = useMemo(() => (user?.notifications || []).filter((item) => !item.read).length, [user?.notifications]);
+  const displayAvatar = avatarPreview || user?.avatar || DEFAULT_AVATAR;
+
+  const handleAvatarUpload = async (file) => {
+    if (!file.type?.startsWith('image/')) {
+      message.error('Загрузите изображение JPG, PNG или WebP.');
+      return Upload.LIST_IGNORE;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      message.error('Размер аватара должен быть до 2 МБ.');
+      return Upload.LIST_IGNORE;
+    }
+
+    const nextAvatar = await fileToDataUrl(file);
+    setAvatarPreview(nextAvatar);
+    form.setFieldsValue({ avatar: nextAvatar });
+    return false;
+  };
+
+  const handleAvatarUrlChange = (event) => {
+    const nextAvatar = event.target.value.trim();
+    setAvatarPreview(nextAvatar || DEFAULT_AVATAR);
+  };
+
+  const resetAvatar = () => {
+    setAvatarPreview(DEFAULT_AVATAR);
+    form.setFieldsValue({ avatar: '' });
+  };
 
   const handleSaveProfile = async (values) => {
     try {
+      const avatar = String(values.avatar || '').trim();
       const response = await api.put(`/users/${user.id}`, {
         ...user,
         ...values,
+        avatar,
         isLoggedIn: true,
+      }, {
+        headers: { 'x-user-id': user.id },
       });
 
       const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
       setUser(nextUser);
+      setAvatarPreview(nextUser?.avatar || DEFAULT_AVATAR);
+      form.setFieldsValue({ avatar: nextUser?.avatar || '' });
       message.success('Профиль обновлён.');
     } catch (error) {
       message.error('Не удалось сохранить профиль.');
@@ -149,22 +197,21 @@ const ProfilePage = () => {
   ];
 
   const sidebarContent = (
-    <div style={styles.sidebarInner} className="travelpay-profile-sidebar">
-      <div style={styles.logoWrap}>
-        <div style={styles.logoMark}>TP</div>
-        <div>
-          <Text style={{ color: '#fff', fontWeight: 900 }}>TravelPay</Text>
-          <br />
-          <Text style={{ color: '#dbeafe', fontSize: 12 }}>Fintech Travel Dashboard</Text>
-        </div>
-      </div>
-
+    <div style={styles.sidebarInner} className="travelpay-profile-sidebar travelpay-profile-sidebar-card">
       <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+        <div style={styles.sidebarUser}>
+          <Avatar size={52} src={displayAvatar} icon={<UserOutlined />} />
+          <div style={{ minWidth: 0 }}>
+            <Text style={{ color: '#fff', fontWeight: 800 }}>{user?.name || 'TravelPay user'}</Text>
+            <br />
+            <Text style={{ color: '#bfdbfe', fontSize: 12 }}>{user?.email || 'profile'}</Text>
+          </div>
+        </div>
         <Button block icon={<HomeOutlined />} onClick={() => handleNavigate('/')}>Главная</Button>
         <Button block icon={<WalletOutlined />} onClick={() => handleNavigate('/savings')}>Накопления</Button>
         <Button block icon={<CompassOutlined />} onClick={() => handleNavigate('/tours')}>Туры</Button>
         <Button block icon={<HeartOutlined />} onClick={() => handleNavigate('/favorites')}>Избранное</Button>
-        {user?.role === 'admin' && (
+        {canAccessAdminPanel(user) && (
           <Button block icon={<TeamOutlined />} onClick={() => handleNavigate('/admin/tours')}>
             Админка
           </Button>
@@ -180,7 +227,7 @@ const ProfilePage = () => {
       className={`travelpay-profile-page ${theme === 'dark' ? 'travelpay-profile-page--dark' : 'travelpay-profile-page--light'}`}
     >
       {isDesktop && (
-        <Sider width={260} style={styles.sider(theme === 'dark')}>
+        <Sider width={260} style={styles.sider(theme === 'dark')} className="travelpay-profile-sider">
           {sidebarContent}
         </Sider>
       )}
@@ -237,7 +284,7 @@ const ProfilePage = () => {
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                   <Card style={styles.glassCard}>
                     <Space orientation="vertical" size={16} style={{ width: '100%', alignItems: 'center' }}>
-                      <Avatar size={112} src={user?.avatar} icon={<UserOutlined />} />
+                      <Avatar size={112} src={displayAvatar} icon={<UserOutlined />} />
                       <div style={{ textAlign: 'center' }}>
                         <Title level={3} style={{ marginBottom: 4 }}>{user?.name}</Title>
                         <Text type="secondary">{user?.email}</Text>
@@ -371,6 +418,35 @@ const ProfilePage = () => {
                   <Card title="Редактирование профиля" style={styles.glassCard}>
                     <Form form={form} layout="vertical" onFinish={handleSaveProfile} className="travelpay-adaptive-form">
                       <Row gutter={16}>
+                        <Col xs={24}>
+                          <div className="profile-avatar-editor">
+                            <Avatar size={88} src={displayAvatar} icon={<UserOutlined />} className="profile-avatar-editor__preview" />
+                            <div className="profile-avatar-editor__body">
+                              <Text strong>Аватар профиля</Text>
+                              <Text type="secondary">Загрузите изображение или вставьте ссылку. После сохранения аватар обновится в профиле и хедере.</Text>
+                              <Space wrap>
+                                <Upload
+                                  accept="image/*"
+                                  maxCount={1}
+                                  showUploadList={false}
+                                  beforeUpload={handleAvatarUpload}
+                                >
+                                  <Button icon={<PictureOutlined />}>Загрузить аватар</Button>
+                                </Upload>
+                                <Button onClick={resetAvatar}>Вернуть дефолт</Button>
+                              </Space>
+                            </div>
+                          </div>
+                        </Col>
+                        <Col xs={24}>
+                          <Form.Item name="avatar" label="Ссылка на аватар">
+                            <Input
+                              placeholder="https://example.com/avatar.jpg"
+                              onChange={handleAvatarUrlChange}
+                              allowClear
+                            />
+                          </Form.Item>
+                        </Col>
                         <Col xs={24} md={12}><Form.Item name="name" label="Имя"><Input /></Form.Item></Col>
                         <Col xs={24} md={12}><Form.Item name="phone" label="Телефон"><Input /></Form.Item></Col>
                         <Col xs={24} md={12}><Form.Item name="email" label="Email"><Input type="email" /></Form.Item></Col>
@@ -405,38 +481,40 @@ const ProfilePage = () => {
 const styles = {
   page: (isDark) => ({
     minHeight: '100vh',
+    overflow: 'visible',
     background: isDark
       ? 'radial-gradient(circle at top left, rgba(20,184,166,0.15), transparent 28%), #081526'
       : 'linear-gradient(180deg, #f7fbff 0%, #edf5fb 100%)',
   }),
   sider: (isDark) => ({
-    background: isDark ? 'rgba(14,31,52,0.96)' : 'linear-gradient(180deg, #17325c 0%, #102544 100%)',
+    position: 'sticky',
+    top: 24,
+    alignSelf: 'flex-start',
+    height: 'calc(100vh - 48px)',
+    maxHeight: 'calc(100vh - 48px)',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    background: 'transparent',
+    padding: '24px 0 24px 24px',
   }),
   sidebarInner: {
     padding: 18,
-    height: '100%',
+  },
+  sidebarUser: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '12px 10px',
+    marginBottom: 14,
+    borderRadius: 18,
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
   },
   drawerBody: {
     padding: 0,
   },
   content: {
     padding: 0,
-  },
-  logoWrap: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 24,
-  },
-  logoMark: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    display: 'grid',
-    placeItems: 'center',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #ffd166)`,
-    color: BRAND_BLUE,
-    fontWeight: 900,
   },
   topBar: {
     display: 'flex',

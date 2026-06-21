@@ -52,11 +52,11 @@ const { Title, Paragraph, Text } = Typography;
 
 const GOAL_OPTIONS = [50000, 100000, 150000, 200000];
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80';
-const PAYMENT_QR_URL = process.env.REACT_APP_PAYMENT_QR_URL
-  || '/images/payment-qr.png';
+const PAYMENT_QR_URL = process.env.REACT_APP_PAYMENT_QR_URL || '/images/payment-qr.png';
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
+
 const formatGoalStatus = (status) => ({
   active: 'Активно',
   completed: 'Завершено',
@@ -130,6 +130,7 @@ const SavingsPlanPage = () => {
           api.get(`/users/${currentUser.id}`),
           api.get('/api/topup/my-requests', { headers: { 'x-user-id': currentUser.id } }),
         ]);
+
         const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
         setUser(nextUser);
         setTopupRequests(requestsResponse.data || []);
@@ -232,6 +233,7 @@ const SavingsPlanPage = () => {
         durationMonths: duration,
         currentAmount: deposit,
       });
+
       const depositTopUp = deposit > 0 ? [{
         id: `topup-${Date.now()}`,
         date: new Date().toISOString(),
@@ -249,6 +251,7 @@ const SavingsPlanPage = () => {
           description: `Цель ${formatMoney(nextSavings.goalAmount)} на ${nextSavings.durationMonths} мес.`,
         }),
       });
+
       message.success('Цель накопления создана.');
     } catch (error) {
       message.error('Не удалось сохранить план.');
@@ -283,6 +286,7 @@ const SavingsPlanPage = () => {
 
   const submitTopupRequest = async () => {
     const uploadFile = receiptFiles[0]?.originFileObj || receiptFiles[0];
+
     if (!uploadFile) {
       message.warning('Загрузите чек об оплате.');
       return;
@@ -353,7 +357,7 @@ const SavingsPlanPage = () => {
     { title: 'ID', dataIndex: 'id', width: 80 },
     { title: 'Дата', dataIndex: 'createdAt', render: formatDate, width: 130 },
     { title: 'Сумма', dataIndex: 'amount', render: formatMoney, width: 150 },
-    { title: 'Бонус', dataIndex: 'bonus', render: (value) => value ? formatMoney(value) : '—', width: 130 },
+    { title: 'Бонус', dataIndex: 'bonus', render: (value) => (value ? formatMoney(value) : '—'), width: 130 },
     {
       title: 'Чек',
       dataIndex: 'receiptImage',
@@ -402,12 +406,15 @@ const SavingsPlanPage = () => {
         Выйти
       </Button>
 
-      <section className="savings-fintech-hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(6,17,31,0.88), rgba(6,17,31,0.58)), url(${HERO_IMAGE})` }}>
+      <section
+        className="savings-fintech-hero"
+        style={{ backgroundImage: `linear-gradient(90deg, rgba(6,17,31,0.88), rgba(6,17,31,0.58)), url(${HERO_IMAGE})` }}
+      >
         <div className="savings-fintech-hero__content">
           <Tag className="savings-fintech-eyebrow">TravelPay Savings</Tag>
           <Title className="savings-fintech-hero__title">Накопите на путешествие</Title>
           <Paragraph className="savings-fintech-hero__text">
-            Создайте цель, пополняйте баланс и выбирайте тур после достижения суммы.
+            Создайте цель, пополняйте баланс и выбирайте тур после достижения нужной суммы.
           </Paragraph>
         </div>
 
@@ -502,13 +509,14 @@ const SavingsPlanPage = () => {
             </Card>
 
             <Card title="Пополнить баланс" className="savings-fintech-card savings-fintech-topup-card" loading={loading}>
-              <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+              <Space direction="vertical" size={16} style={{ width: '100%' }}>
                 <Statistic
                   title="Текущий накопительный баланс"
                   value={savingsMetrics.currentAmount}
                   formatter={formatMoney}
                   prefix={<WalletOutlined />}
                 />
+
                 <InputNumber
                   size="large"
                   min={100}
@@ -548,7 +556,7 @@ const SavingsPlanPage = () => {
           </Col>
 
           <Col xs={24} xl={15}>
-            <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+            <Space direction="vertical" size={18} style={{ width: '100%' }}>
               <Card title="Моя цель" className="savings-fintech-card" loading={loading}>
                 {savingsMetrics.hasPlan ? (
                   <>
@@ -623,7 +631,7 @@ const SavingsPlanPage = () => {
 
                 <Col xs={24} lg={10}>
                   <Card title="Контроль цели" className="savings-fintech-card" loading={loading}>
-                    <Space orientation="vertical" size={12} style={{ width: '100%' }}>
+                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
                       <Alert
                         type={savingsMetrics.hasPlan ? 'info' : 'warning'}
                         showIcon
@@ -683,7 +691,7 @@ const SavingsPlanPage = () => {
         }}
         className="savings-fintech-payment-modal"
       >
-        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
           <Alert
             type="info"
             showIcon

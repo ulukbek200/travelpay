@@ -167,6 +167,8 @@ export const normalizeTour = (tour, index = 0) => {
     promoBadge: badge.label,
     promoNote: badge.note,
     promoColor: badge.color,
+    hasAccommodation: Boolean(tour.hasAccommodation),
+    accommodations: Array.isArray(tour.accommodations) ? tour.accommodations : [],
   };
 };
 

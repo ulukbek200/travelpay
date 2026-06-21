@@ -11,7 +11,7 @@ import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
 import { emailRules, loginPasswordRules } from '../components/auth/authValidation';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { syncCurrentUser } from '../utils/user';
+import { canAccessAdminPanel, syncCurrentUser } from '../utils/user';
 
 const { Text } = Typography;
 
@@ -35,7 +35,7 @@ const LoginPage = () => {
         return;
       }
 
-      navigate(user.role === 'admin' ? '/admin/tours' : '/profile');
+      navigate(canAccessAdminPanel(user) ? '/admin/tours' : '/profile');
     } catch (err) {
       message.error(getApiErrorMessage(
         err,

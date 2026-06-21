@@ -4,8 +4,10 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
   Col,
   DatePicker,
+  Divider,
   Form,
   Input,
   InputNumber,
@@ -13,6 +15,7 @@ import {
   Select,
   Space,
   Tag,
+  TimePicker,
   Typography,
   message,
 } from 'antd';
@@ -25,6 +28,7 @@ import {
   CompassOutlined,
   CreditCardOutlined,
   EnvironmentOutlined,
+  HomeOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -41,18 +45,42 @@ const BRAND_GOLD = '#fca311';
 
 const formatPrice = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 
+const ACCOMMODATION_TYPE_LABELS = {
+  standard: 'Стандарт',
+  comfort: 'Комфорт',
+  vip: 'VIP',
+  family: 'Семейный',
+};
+
 const TourBookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { tour } = location.state || {};
   const [form] = Form.useForm();
   const [people, setPeople] = useState(2);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedAccommodationId, setSelectedAccommodationId] = useState(null);
+  const [extraBedSelected, setExtraBedSelected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [payingWithSavings, setPayingWithSavings] = useState(false);
   const currentUser = normalizeUser(readCurrentUser());
 
   const pricePerPerson = Number(String(tour?.price || 0).replace(/[^0-9]/g, '')) || 0;
-  const total = useMemo(() => pricePerPerson * people, [pricePerPerson, people]);
+  const baseTotal = useMemo(() => pricePerPerson * people, [pricePerPerson, people]);
+  const accommodations = useMemo(
+    () => (tour?.hasAccommodation && Array.isArray(tour?.accommodations) ? tour.accommodations : [])
+      .filter((item) => item?.status !== 'sold_out' && Number(item?.availableCount || 0) > 0),
+    [tour],
+  );
+  const selectedAccommodation = useMemo(
+    () => accommodations.find((item) => item.id === selectedAccommodationId) || null,
+    [accommodations, selectedAccommodationId],
+  );
+  const accommodationTotal = Number(selectedAccommodation?.pricePerNight || 0);
+  const extraBedTotal = selectedAccommodation?.extraBedAvailable && extraBedSelected
+    ? Number(selectedAccommodation.extraBedPrice || 0)
+    : 0;
+  const total = baseTotal + accommodationTotal + extraBedTotal;
   const savingsAmount = Number(currentUser?.savings?.currentAmount || 0);
   const canPayWithSavings = savingsAmount >= total;
 
@@ -61,8 +89,15 @@ const TourBookingPage = () => {
       <main style={styles.emptyPage}>
         <Card style={styles.emptyCard}>
           <Title level={2}>Данные тура не найдены</Title>
-          <Paragraph>Пожалуйста, вернитесь на страницу туров и выберите тур для бронирования.</Paragraph>
-          <Button type="primary" icon={<ArrowLeftOutlined />} style={styles.goldButton} onClick={() => navigate('/tours')}>
+          <Paragraph>
+            Пожалуйста, вернитесь на страницу туров и выберите тур для бронирования.
+          </Paragraph>
+          <Button
+            type="primary"
+            icon={<ArrowLeftOutlined />}
+            style={styles.goldButton}
+            onClick={() => navigate('/tours')}
+          >
             Назад к турам
           </Button>
         </Card>
@@ -70,7 +105,17 @@ const TourBookingPage = () => {
     );
   }
 
+  const ensureAccommodationSelected = () => {
+    if (tour.hasAccommodation && accommodations.length && !selectedAccommodation) {
+      message.warning('Выберите проживание для этого тура.');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (values) => {
+    if (!ensureAccommodationSelected()) return;
+
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);
@@ -79,7 +124,13 @@ const TourBookingPage = () => {
           tour,
           total,
           people,
-          booking: values,
+          booking: {
+            ...values,
+            accommodation: selectedAccommodation,
+            accommodationTotal,
+            extraBedSelected,
+            extraBedTotal,
+          },
         },
       });
     }, 700);
@@ -97,6 +148,8 @@ const TourBookingPage = () => {
       return;
     }
 
+    if (!ensureAccommodationSelected()) return;
+
     if (!canPayWithSavings) {
       message.error('Недостаточно средств');
       return;
@@ -110,18 +163,40 @@ const TourBookingPage = () => {
         ...currentUser.savings,
         currentAmount: Math.max(savingsAmount - total, 0),
       });
+      const travelDate = formValues?.date?.toISOString?.() || new Date().toISOString();
+      const durationDays = Math.max(Number(String(tour?.duration || '').match(/\d+/)?.[0] || 1), 1);
+      const endDate = formValues?.date?.add?.(durationDays - 1, 'day')?.toISOString?.() || travelDate;
+      const companyId = Number(tour.companyId || currentUser?.companyId || 1);
+      const companyName = tour.companyName || tour.company || 'TravelPay';
+
       const bookingRecord = {
         id: `booking-${Date.now()}`,
         tourId: tour.id,
+        companyId,
+        companyName,
+        clientName: currentUser?.name || '',
+        clientPhone: currentUser?.phone || '',
+        clientEmail: currentUser?.email || '',
         tourTitle: tour.title,
         location: tour.location || tour.country || 'TravelPay',
         image: tour.image,
         amount: total,
         status: 'paid',
+        paymentStatus: 'paid',
         purchasedAt: new Date().toISOString(),
-        travelDate: formValues?.date?.toISOString?.() || '',
+        travelDate,
+        date: travelDate,
+        endDate,
+        durationMinutes: durationDays * 24 * 60,
+        assignedTo: tour.manager || companyName,
         paymentMethod: 'savings',
+        accommodation: selectedAccommodation,
+        accommodationTotal,
+        extraBedSelected,
+        extraBedTotal,
+        baseTourAmount: baseTotal,
       };
+
       const notifications = [
         {
           id: `notification-${Date.now()}`,
@@ -153,12 +228,6 @@ const TourBookingPage = () => {
 
   return (
     <main className="booking-page" style={styles.page}>
-      <video autoPlay muted loop playsInline style={styles.backgroundVideo}>
-        <source src="https://videos.pexels.com/video-files/854976/854976-hd_1920_1080_30fps.mp4" type="video/mp4" />
-        <source src="https://cdn.pixabay.com/video/2021/08/10/84776-587945089_large.mp4" type="video/mp4" />
-      </video>
-      <div style={styles.overlay} />
-
       <Button type="text" style={styles.logo} onClick={() => navigate('/')}>
         <span>TravelPay</span>
         <small>by Barsbek Travel</small>
@@ -174,13 +243,18 @@ const TourBookingPage = () => {
           <Tag style={styles.heroTag}>Premium booking</Tag>
           <Title style={styles.title}>Забронировать тур</Title>
           <Paragraph style={styles.subtitle}>
-            Подтвердите детали поездки. Онлайн-оплата пока не списывается: менеджер свяжется с вами для финального подтверждения.
+            Подтвердите детали поездки. Онлайн-оплата пока не списывается автоматически:
+            менеджер свяжется с вами для финального подтверждения.
           </Paragraph>
         </motion.div>
 
         <Row gutter={[26, 26]} align="stretch">
           <Col xs={24} lg={10}>
-            <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 }}
+            >
               <Card style={styles.tourCard} styles={{ body: { padding: 0 } }}>
                 <div style={styles.imageWrap}>
                   <img
@@ -190,11 +264,16 @@ const TourBookingPage = () => {
                     style={styles.tourImage}
                   />
                   <div style={styles.imageGradient} />
-                  <Tag style={styles.locationTag}><EnvironmentOutlined /> {tour.location || tour.country || 'Кыргызстан'}</Tag>
+                  <Tag style={styles.locationTag}>
+                    <EnvironmentOutlined /> {tour.location || tour.country || 'Кыргызстан'}
+                  </Tag>
                 </div>
+
                 <div style={styles.tourBody}>
                   <Title level={2} style={styles.tourTitle}>{tour.title}</Title>
-                  <Paragraph style={styles.tourText}>{tour.description || 'Премиальный маршрут с локальным гидом, комфортным транспортом и красивыми локациями.'}</Paragraph>
+                  <Paragraph style={styles.tourText}>
+                    {tour.description || 'Премиальный маршрут с локальным гидом, комфортным транспортом и красивыми локациями.'}
+                  </Paragraph>
 
                   <div style={styles.featureGrid}>
                     <div style={styles.feature}><CalendarOutlined /><span>{tour.duration || 'Срок уточняется'}</span></div>
@@ -213,7 +292,11 @@ const TourBookingPage = () => {
           </Col>
 
           <Col xs={24} lg={14}>
-            <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.22 }}>
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.22 }}
+            >
               <Card style={styles.formCard}>
                 <Alert
                   showIcon
@@ -226,6 +309,7 @@ const TourBookingPage = () => {
                   showIcon
                   type={canPayWithSavings ? 'success' : 'warning'}
                   style={styles.alert}
+                  className="booking-savings-alert"
                   title={canPayWithSavings
                     ? `На накоплениях доступно ${formatPrice(savingsAmount)} — этого хватает для оплаты тура.`
                     : `На накоплениях доступно ${formatPrice(savingsAmount)}. Недостаточно средств`}
@@ -247,21 +331,40 @@ const TourBookingPage = () => {
                         <Input size="large" prefix={<UserOutlined />} placeholder="Ваше имя" />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24} md={12}>
                       <Form.Item name="phone" label="Телефон" rules={[{ required: true, message: 'Введите телефон' }]}>
                         <Input size="large" placeholder="+996 555 123 456" />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24} md={12}>
                       <Form.Item name="date" label="Дата начала тура" rules={[{ required: true, message: 'Выберите дату' }]}>
-                        <DatePicker size="large" style={{ width: '100%' }} suffixIcon={<CalendarOutlined />} />
+                        <DatePicker
+                          size="large"
+                          style={{ width: '100%' }}
+                          suffixIcon={<CalendarOutlined />}
+                          onChange={(value) => {
+                            setSelectedDate(value);
+                            setSelectedAccommodationId(null);
+                            setExtraBedSelected(false);
+                          }}
+                        />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24} md={12}>
                       <Form.Item name="time" label="Желаемое время выезда">
-                        <Input size="large" prefix={<ClockCircleOutlined />} placeholder="09:00" />
+                        <TimePicker
+                          size="large"
+                          format="HH:mm"
+                          placeholder="09:00"
+                          suffixIcon={<ClockCircleOutlined />}
+                          style={{ width: '100%' }}
+                        />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24} md={8}>
                       <Form.Item name="people" label="Количество участников">
                         <InputNumber
@@ -273,6 +376,7 @@ const TourBookingPage = () => {
                         />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24} md={8}>
                       <Form.Item name="transport" label="Тип транспорта">
                         <Select
@@ -285,6 +389,7 @@ const TourBookingPage = () => {
                         />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24} md={8}>
                       <Form.Item name="guide" label="Гид">
                         <Select
@@ -296,6 +401,7 @@ const TourBookingPage = () => {
                         />
                       </Form.Item>
                     </Col>
+
                     <Col xs={24}>
                       <Form.Item name="comment" label="Пожелания">
                         <Input.TextArea
@@ -306,12 +412,104 @@ const TourBookingPage = () => {
                     </Col>
                   </Row>
 
+                  {tour.hasAccommodation && selectedDate && (
+                    <div className="booking-accommodation-section">
+                      <div className="booking-accommodation-head">
+                        <div>
+                          <Text className="booking-accommodation-kicker">🏡 Выберите проживание</Text>
+                          <Title level={3}>Домики TravelPay Stay</Title>
+                        </div>
+                        <Tag color="cyan">{accommodations.length} вариантов</Tag>
+                      </div>
+
+                      {accommodations.length ? (
+                        <div className="booking-accommodation-grid">
+                          {accommodations.map((item, index) => {
+                            const isSelected = selectedAccommodationId === item.id;
+                            const image = item.images?.[0] || tour.image || TOUR_IMAGE_FALLBACK;
+                            const typeLabel = ACCOMMODATION_TYPE_LABELS[item.type] || item.type || 'Стандарт';
+                            const isVip = item.type === 'vip';
+                            const isLimited = Number(item.availableCount || 0) <= 2;
+
+                            return (
+                              <Card
+                                key={item.id}
+                                hoverable
+                                className={`booking-accommodation-card ${isSelected ? 'booking-accommodation-card--selected' : ''}`}
+                                cover={<img src={image} alt={item.name} onError={withTourFallback} />}
+                              >
+                                <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                                  <Space wrap>
+                                    {index === 0 && <Tag color="gold">Популярный</Tag>}
+                                    {isVip && <Tag color="purple">VIP</Tag>}
+                                    {isLimited && <Tag color="orange">Осталось {item.availableCount} места</Tag>}
+                                  </Space>
+
+                                  <div>
+                                    <Title level={4}>{item.name}</Title>
+                                    <Text type="secondary">{typeLabel} · до {item.capacity || 1} человек</Text>
+                                  </div>
+
+                                  <div className="booking-accommodation-amenities">
+                                    {(item.amenities || []).slice(0, 6).map((amenity) => (
+                                      <Tag key={amenity}>{amenity}</Tag>
+                                    ))}
+                                  </div>
+
+                                  <Paragraph>{item.description || 'Комфортное проживание рядом с маршрутом тура.'}</Paragraph>
+
+                                  <div className="booking-accommodation-price-row">
+                                    <strong>{formatPrice(item.pricePerNight)}</strong>
+                                    <span>за ночь</span>
+                                  </div>
+
+                                  <Text type="secondary">Осталось мест: {item.availableCount} домиков</Text>
+
+                                  <Button
+                                    type={isSelected ? 'primary' : 'default'}
+                                    block
+                                    icon={<HomeOutlined />}
+                                    onClick={() => {
+                                      setSelectedAccommodationId(item.id);
+                                      setExtraBedSelected(false);
+                                    }}
+                                  >
+                                    {isSelected ? 'Выбрано' : 'Выбрать'}
+                                  </Button>
+                                </Space>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <Alert type="warning" showIcon title="Для выбранного тура сейчас нет доступных домиков" />
+                      )}
+
+                      {selectedAccommodation?.extraBedAvailable && (
+                        <Checkbox
+                          className="booking-extra-bed-checkbox"
+                          checked={extraBedSelected}
+                          onChange={(event) => setExtraBedSelected(event.target.checked)}
+                        >
+                          Добавить дополнительное место за {formatPrice(selectedAccommodation.extraBedPrice)}
+                        </Checkbox>
+                      )}
+                    </div>
+                  )}
+
                   <div style={styles.summaryCard}>
-                    <Space orientation="vertical" size={4}>
+                    <Space direction="vertical" size={4}>
                       <Text style={styles.summaryLabel}>Итоговая стоимость</Text>
                       <Title level={2} style={styles.total}>{formatPrice(total)}</Title>
-                      <Text style={styles.summaryNote}>{people} × {formatPrice(pricePerPerson)}</Text>
+                      <div className="booking-price-breakdown">
+                        <span>Стоимость тура: {formatPrice(baseTotal)}</span>
+                        {selectedAccommodation && <span>Проживание: +{formatPrice(accommodationTotal)}</span>}
+                        {extraBedTotal > 0 && <span>Доп. место: +{formatPrice(extraBedTotal)}</span>}
+                        <Divider style={{ margin: '6px 0' }} />
+                        <strong>Итого: {formatPrice(total)}</strong>
+                      </div>
                     </Space>
+
                     <Button
                       type="primary"
                       htmlType="submit"
@@ -322,6 +520,7 @@ const TourBookingPage = () => {
                     >
                       Продолжить
                     </Button>
+
                     <Button
                       size="large"
                       loading={payingWithSavings}
@@ -356,24 +555,15 @@ const styles = {
   page: {
     minHeight: '100vh',
     position: 'relative',
-    overflow: 'hidden',
+    overflowX: 'hidden',
     padding: '30px 20px 70px',
     color: '#fff',
     fontFamily: 'Inter, Manrope, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
-  },
-  backgroundVideo: {
-    position: 'fixed',
-    inset: 0,
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    filter: 'saturate(1.08) contrast(1.04) brightness(0.86)',
-    transform: 'scale(1.03)',
-  },
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'linear-gradient(135deg, rgba(5,13,24,0.86), rgba(12,31,54,0.62), rgba(5,13,24,0.82)), radial-gradient(circle at 72% 18%, rgba(252,163,17,0.22), transparent 34%)',
+    '--booking-bg-image': 'url("/images/kyrgyzstan-mountains.jpg")',
+    background: 'linear-gradient(rgba(2, 6, 23, 0.75), rgba(2, 6, 23, 0.85)), url("/images/kyrgyzstan-mountains.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
   },
   logo: {
     position: 'relative',
@@ -529,9 +719,6 @@ const styles = {
     color: BRAND_BLUE,
     margin: 0,
     fontWeight: 900,
-  },
-  summaryNote: {
-    color: '#64748b',
   },
   submitButton: {
     minWidth: 190,
