@@ -175,6 +175,13 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
   const navigate = useNavigate();
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window === 'undefined' ? 1200 : window.innerWidth,
+  );
+
+  const isTablet = viewportWidth <= 900;
+  const isMobile = viewportWidth <= 640;
+  const isNarrow = viewportWidth <= 420;
 
   useEffect(() => {
     const loadTours = async () => {
@@ -191,6 +198,13 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
     };
 
     loadTours();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const hotTours = useMemo(
@@ -253,7 +267,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
 
   return (
     <main className="tours-page premium-tour-page-shell" style={styles.page}>
-      <section className="premium-tours-hero" style={styles.hero}>
+      <section className="premium-tours-hero" style={{ ...styles.hero, ...(isMobile ? styles.heroMobile : {}) }}>
         <div
           className="premium-tours-hero__video"
           style={styles.heroVideo}
@@ -262,18 +276,18 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
         <div className="premium-tours-hero__overlay" style={styles.heroOverlay} />
 
         <motion.div
-          style={styles.heroContent}
+          style={{ ...styles.heroContent, ...(isMobile ? styles.heroContentMobile : {}) }}
           initial={{ opacity: 0, y: 26 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.72 }}
         >
-          <Tag style={styles.heroTag}>TravelPay Premium Tours</Tag>
-          <Title style={styles.heroTitle}>Выберите тур мечты</Title>
-          <Paragraph style={styles.heroText}>
+          <Tag style={{ ...styles.heroTag, ...(isNarrow ? styles.heroTagMobile : {}) }}>TravelPay Premium Tours</Tag>
+          <Title style={{ ...styles.heroTitle, ...(isMobile ? styles.heroTitleMobile : {}) }}>Выберите тур мечты</Title>
+          <Paragraph style={{ ...styles.heroText, ...(isMobile ? styles.heroTextMobile : {}) }}>
             Горящие предложения, проверенные маршруты и удобное накопление через TravelPay.
             От Иссык-Куля до Сон-Куля с красивой подачей, понятной ценой и быстрым бронированием.
           </Paragraph>
-          <Space className="premium-tour-cta-stack" size={14} wrap style={styles.heroButtons}>
+          <Space className="premium-tour-cta-stack" size={14} wrap style={{ ...styles.heroButtons, ...(isMobile ? styles.heroButtonsMobile : {}) }}>
             <Button
               type="primary"
               size="large"
@@ -297,33 +311,33 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
         </motion.div>
       </section>
 
-      <div className="premium-tours-overlap" style={styles.overlapShell}>
+      <div className="premium-tours-overlap" style={{ ...styles.overlapShell, ...(isMobile ? styles.overlapShellMobile : {}) }}>
         <section id="travelpay-hot-tours" className="tours-section tours-container" style={styles.hotSection}>
           <motion.div
             initial={{ opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            style={styles.hotCard}
+            style={{ ...styles.hotCard, ...(isMobile ? styles.hotCardMobile : {}) }}
           >
             <div style={styles.hotGlow} />
-            <div style={styles.hotContent}>
+            <div style={{ ...styles.hotContent, ...(isTablet ? styles.hotContentTablet : {}), ...(isMobile ? styles.hotContentMobile : {}) }}>
               <div style={styles.hotCopy}>
-                <Tag style={styles.promoTag}><FireOutlined /> 🔥 Горящие туры недели</Tag>
-                <Title level={2} style={styles.promoTitle}>Ловите лучшее окно для поездки по Кыргызстану</Title>
-                <Paragraph style={styles.promoText}>
+                <Tag style={{ ...styles.promoTag, ...(isMobile ? styles.promoTagMobile : {}) }}><FireOutlined /> Горящие туры недели</Tag>
+                <Title level={2} style={{ ...styles.promoTitle, ...(isMobile ? styles.promoTitleMobile : {}) }}>Ловите лучшее окно для поездки по Кыргызстану</Title>
+                <Paragraph style={{ ...styles.promoText, ...(isMobile ? styles.promoTextMobile : {}) }}>
                   Премиальные маршруты с быстрым бронированием, визуально красивой подачей и специальными условиями на ближайшие даты.
                 </Paragraph>
               </div>
-              <div className="hot-tour-marquee" style={styles.hotStats}>
-                <div style={styles.hotStatCard}>
+              <div className="hot-tour-marquee" style={{ ...styles.hotStats, ...(isTablet ? styles.hotStatsTablet : {}), ...(isMobile ? styles.hotStatsMobile : {}) }}>
+                <div style={{ ...styles.hotStatCard, ...(isMobile ? styles.hotStatCardMobile : {}) }}>
                   <span style={styles.hotStatValue}>-20%</span>
                   <span style={styles.hotStatLabel}>на selected routes</span>
                 </div>
-                <div style={styles.hotStatCard}>
+                <div style={{ ...styles.hotStatCard, ...(isMobile ? styles.hotStatCardMobile : {}) }}>
                   <span style={styles.hotStatValue}>3 места</span>
                   <span style={styles.hotStatLabel}>осталось на выезд</span>
                 </div>
-                <div style={styles.hotStatCard}>
+                <div style={{ ...styles.hotStatCard, ...(isMobile ? styles.hotStatCardMobile : {}) }}>
                   <span style={styles.hotStatValue}>2 дня</span>
                   <span style={styles.hotStatLabel}>до конца акции</span>
                 </div>
@@ -346,11 +360,11 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
             <Tag style={styles.softTag}>Популярные туры</Tag>
             <Title level={2} style={styles.sectionTitle}>Локации Кыргызстана, которые хочется открыть красиво</Title>
           </div>
-          <div style={styles.destinationStrip}>
+          <div style={{ ...styles.destinationStrip, ...(isMobile ? styles.destinationStripMobile : {}) }}>
             {popularDestinations.map((spot) => (
               <motion.div key={spot.title} whileHover={{ y: -4 }}>
-                <Button className="travelpay-destination-pill" style={styles.destinationPill}>
-                  <img src={spot.image} alt={spot.title} onError={withTourFallback} style={styles.destinationPillImage} />
+                <Button className="travelpay-destination-pill" style={{ ...styles.destinationPill, ...(isMobile ? styles.destinationPillMobile : {}) }}>
+                  <img src={spot.image} alt={spot.title} onError={withTourFallback} style={{ ...styles.destinationPillImage, ...(isMobile ? styles.destinationPillImageMobile : {}) }} />
                   <span style={styles.destinationCopy}>
                     <strong>{spot.title}</strong>
                     <small>{spot.location}</small>
@@ -381,7 +395,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
           </div>
 
           {loading ? (
-            <div className="tours-grid" style={styles.toursGrid}>
+            <div className="tours-grid" style={{ ...styles.toursGrid, ...(isTablet ? styles.toursGridTablet : {}), ...(isMobile ? styles.toursGridMobile : {}) }}>
               {[1, 2, 3, 4, 5, 6].map((item) => (
                 <Card className="tour-card" style={styles.card} key={item}>
                   <Skeleton active paragraph={{ rows: 5 }} />
@@ -391,7 +405,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
           ) : tours.length === 0 ? (
             <Empty description="Туры пока не найдены. Попробуйте вернуться чуть позже." style={styles.empty} />
           ) : (
-            <div id="travelpay-tour-grid" className="tours-grid" style={styles.toursGrid}>
+            <div id="travelpay-tour-grid" className="tours-grid" style={{ ...styles.toursGrid, ...(isTablet ? styles.toursGridTablet : {}), ...(isMobile ? styles.toursGridMobile : {}) }}>
               {tours.map((tour, index) => {
                 const isHot = featuredTours.some((featured) => featured.id === tour.id);
 
@@ -412,7 +426,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                       styles={{ body: { padding: 0 } }}
                       onClick={() => openTour(tour)}
                     >
-                      <div style={styles.imageWrap}>
+                      <div style={{ ...styles.imageWrap, ...(isMobile ? styles.imageWrapMobile : {}) }}>
                         <img src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} onError={withTourFallback} style={styles.image} />
                         <div style={styles.imageShade} />
                         <div style={{ ...styles.promoBadge, background: tour.promoColor }}>
@@ -429,7 +443,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                         </div>
                       </div>
 
-                      <div style={styles.cardBody}>
+                      <div style={{ ...styles.cardBody, ...(isMobile ? styles.cardBodyMobile : {}) }}>
                         <Space size={8} wrap>
                           <Tag className="tour-card-meta" style={styles.countryTag}>
                             <EnvironmentOutlined /> {tour.city}
@@ -517,6 +531,10 @@ const styles = {
     justifyContent: 'center',
     padding: '140px 20px 130px',
   },
+  heroMobile: {
+    minHeight: 'auto',
+    padding: '116px 14px 96px',
+  },
   heroVideo: {
     position: 'absolute',
     inset: 0,
@@ -545,6 +563,10 @@ const styles = {
     boxShadow: '0 28px 90px rgba(0,0,0,0.24)',
     backdropFilter: 'blur(18px)',
   },
+  heroContentMobile: {
+    padding: '24px 16px',
+    borderRadius: 24,
+  },
   heroTag: {
     borderRadius: 999,
     padding: '8px 16px',
@@ -555,6 +577,12 @@ const styles = {
     fontWeight: 800,
     letterSpacing: 0.2,
   },
+  heroTagMobile: {
+    maxWidth: '100%',
+    whiteSpace: 'normal',
+    textAlign: 'center',
+    lineHeight: 1.25,
+  },
   heroTitle: {
     color: '#FFFFFF',
     fontSize: 'clamp(38px, 6vw, 72px)',
@@ -563,6 +591,10 @@ const styles = {
     margin: '0 0 16px',
     textShadow: '0 20px 50px rgba(0,0,0,0.24)',
   },
+  heroTitleMobile: {
+    fontSize: 34,
+    lineHeight: 1.08,
+  },
   heroText: {
     color: 'rgba(255,255,255,0.88)',
     fontSize: 'clamp(16px, 2vw, 19px)',
@@ -570,9 +602,16 @@ const styles = {
     maxWidth: 700,
     margin: '0 auto',
   },
+  heroTextMobile: {
+    fontSize: 15,
+    lineHeight: 1.55,
+  },
   heroButtons: {
     justifyContent: 'center',
     marginTop: 28,
+  },
+  heroButtonsMobile: {
+    width: '100%',
   },
   heroPrimaryButton: {
     minWidth: 186,
@@ -596,6 +635,9 @@ const styles = {
     zIndex: 2,
     marginTop: -88,
   },
+  overlapShellMobile: {
+    marginTop: -42,
+  },
   hotSection: {
     width: 'min(100% - 32px, 1200px)',
     margin: '0 auto 34px',
@@ -608,6 +650,9 @@ const styles = {
     border: '1px solid rgba(255,255,255,0.18)',
     boxShadow: '0 30px 90px rgba(11,31,52,0.22)',
     backdropFilter: 'blur(20px)',
+  },
+  hotCardMobile: {
+    borderRadius: 22,
   },
   hotGlow: {
     position: 'absolute',
@@ -628,6 +673,13 @@ const styles = {
     gap: 24,
     alignItems: 'center',
   },
+  hotContentTablet: {
+    gridTemplateColumns: '1fr',
+  },
+  hotContentMobile: {
+    padding: '22px 16px',
+    gap: 18,
+  },
   hotCopy: {
     minWidth: 0,
   },
@@ -641,10 +693,19 @@ const styles = {
     fontWeight: 800,
     marginBottom: 14,
   },
+  promoTagMobile: {
+    maxWidth: '100%',
+    whiteSpace: 'normal',
+    lineHeight: 1.25,
+  },
   promoTitle: {
     color: '#FFFFFF',
     marginBottom: 10,
     fontWeight: 900,
+  },
+  promoTitleMobile: {
+    fontSize: 26,
+    lineHeight: 1.14,
   },
   promoText: {
     maxWidth: 620,
@@ -652,9 +713,22 @@ const styles = {
     lineHeight: 1.72,
     marginBottom: 0,
   },
+  promoTextMobile: {
+    fontSize: 14,
+    lineHeight: 1.55,
+  },
   hotStats: {
     display: 'grid',
     gap: 12,
+  },
+  hotStatsTablet: {
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  },
+  hotStatsMobile: {
+    gridTemplateColumns: '1fr',
+  },
+  hotStatsNarrow: {
+    gridTemplateColumns: '1fr',
   },
   hotStatCard: {
     display: 'flex',
@@ -666,6 +740,10 @@ const styles = {
     border: '1px solid rgba(255,255,255,0.14)',
     boxShadow: '0 16px 34px rgba(0,0,0,0.14)',
     backdropFilter: 'blur(16px)',
+  },
+  hotStatCardMobile: {
+    minWidth: 0,
+    padding: '14px 15px',
   },
   hotStatValue: {
     color: '#FFFFFF',
@@ -714,6 +792,10 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
     gap: 16,
   },
+  destinationStripMobile: {
+    gridTemplateColumns: '1fr',
+    gap: 12,
+  },
   destinationPill: {
     width: '100%',
     height: 'auto',
@@ -729,12 +811,22 @@ const styles = {
     textAlign: 'left',
     backdropFilter: 'blur(18px)',
   },
+  destinationPillMobile: {
+    borderRadius: 18,
+    padding: 8,
+    minHeight: 74,
+  },
   destinationPillImage: {
     width: 62,
     height: 62,
     borderRadius: 18,
     objectFit: 'cover',
     flexShrink: 0,
+  },
+  destinationPillImageMobile: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
   },
   destinationCopy: {
     display: 'flex',
@@ -784,6 +876,13 @@ const styles = {
     gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: 'clamp(18px, 3vw, 28px)',
   },
+  toursGridTablet: {
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  },
+  toursGridMobile: {
+    gridTemplateColumns: 'minmax(0, 1fr)',
+    gap: 18,
+  },
   card: {
     width: '100%',
     minWidth: 0,
@@ -799,6 +898,9 @@ const styles = {
     width: '100%',
     height: 236,
     overflow: 'hidden',
+  },
+  imageWrapMobile: {
+    height: 210,
   },
   image: {
     width: '100%',
@@ -865,6 +967,9 @@ const styles = {
   },
   cardBody: {
     padding: 20,
+  },
+  cardBodyMobile: {
+    padding: 16,
   },
   countryTag: {
     borderRadius: 999,
