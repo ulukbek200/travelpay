@@ -38,6 +38,7 @@ const Header = () => {
 
   const isHome = location.pathname === '/';
   const glassMode = isHome && !isScrolled;
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const parsedUser = readCurrentUser();
@@ -68,10 +69,15 @@ const Header = () => {
   }, [location.pathname]);
 
   const surfaceStyle = {
-    ...(theme === 'dark' ? styles.headerDark : styles.headerLight),
+    ...(isDark ? styles.headerDark : styles.headerLight),
     ...(glassMode ? styles.headerGlass : {}),
   };
-  const textColor = theme === 'dark' || glassMode ? '#F8FBFF' : BRAND_BLUE;
+  const textColor = isDark || glassMode ? '#F8FBFF' : BRAND_BLUE;
+  const drawerSurfaceStyle = isDark ? styles.drawerSurfaceDark : styles.drawerSurface;
+  const drawerBrandStyle = isDark ? styles.drawerBrandButtonDark : styles.drawerBrandButton;
+  const drawerSectionLabelStyle = isDark ? styles.drawerSectionLabelDark : styles.drawerSectionLabel;
+  const drawerNavStyle = isDark ? styles.drawerNavButtonDark : styles.drawerNavButton;
+  const drawerUtilityStyle = isDark ? styles.drawerUtilityButtonDark : styles.drawerUtilityButton;
 
   const handleLanguageChange = (value) => {
     setLanguage(value);
@@ -132,10 +138,10 @@ const Header = () => {
   const drawerContent = (
     <div style={styles.drawerBody}>
       <div style={styles.drawerTop}>
-        <Button type="text" onClick={() => navigate('/')} style={styles.drawerBrandButton}>
+        <Button type="text" onClick={() => navigate('/')} style={drawerBrandStyle}>
           <span style={styles.brandCopy}>
-            <span style={styles.brandTitle}>TravelPay</span>
-            <span style={styles.brandSubtitle}>Premium travel platform</span>
+            <span style={{ ...styles.brandTitle, color: isDark ? '#F8FBFF' : BRAND_BLUE }}>TravelPay</span>
+            <span style={{ ...styles.brandSubtitle, color: isDark ? 'rgba(226,238,255,0.76)' : 'rgba(23,59,97,0.62)' }}>Premium travel platform</span>
           </span>
         </Button>
       </div>
@@ -148,7 +154,7 @@ const Header = () => {
             type={selectedKey === item.key ? 'primary' : 'default'}
             onClick={() => handleNavigate(item.key)}
             className="travelpay-header-button travelpay-drawer-nav-button"
-            style={selectedKey === item.key ? styles.drawerPrimaryNav : styles.drawerNavButton}
+            style={selectedKey === item.key ? styles.drawerPrimaryNav : drawerNavStyle}
           >
             {item.label}
           </Button>
@@ -156,7 +162,7 @@ const Header = () => {
       </Space>
 
       <div style={styles.drawerSection}>
-        <Text strong style={styles.drawerSectionLabel}>Язык</Text>
+        <Text strong style={drawerSectionLabelStyle}>Язык</Text>
         <Segmented
           block
           value={language}
@@ -170,7 +176,7 @@ const Header = () => {
         icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
         onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
         className="travelpay-header-button"
-        style={styles.drawerUtilityButton}
+        style={drawerUtilityStyle}
       >
         {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
       </Button>
@@ -205,7 +211,7 @@ const Header = () => {
               icon={<LoginOutlined />}
               onClick={() => handleNavigate('/login')}
               className="travelpay-header-button"
-              style={styles.drawerUtilityButton}
+              style={drawerUtilityStyle}
             >
               Войти
             </Button>
@@ -322,7 +328,7 @@ const Header = () => {
         title={null}
         styles={{
           body: styles.drawerWrapper,
-          section: styles.drawerSurface,
+          section: drawerSurfaceStyle,
           header: { display: 'none' },
         }}
       >
@@ -504,6 +510,13 @@ const styles = {
     overflow: 'hidden',
     background: 'linear-gradient(180deg, rgba(247,250,255,0.96), rgba(237,244,255,0.96))',
   },
+  drawerSurfaceDark: {
+    borderRadius: 28,
+    overflow: 'hidden',
+    background: 'linear-gradient(180deg, rgba(8,20,34,0.98), rgba(10,28,48,0.98))',
+    border: '1px solid rgba(255,255,255,0.10)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.42)',
+  },
   drawerBody: {
     display: 'flex',
     flexDirection: 'column',
@@ -519,6 +532,11 @@ const styles = {
     padding: 0,
     color: BRAND_BLUE,
   },
+  drawerBrandButtonDark: {
+    height: 'auto',
+    padding: 0,
+    color: '#F8FBFF',
+  },
   drawerSection: {
     display: 'grid',
     gap: 10,
@@ -526,12 +544,24 @@ const styles = {
   drawerSectionLabel: {
     color: BRAND_BLUE,
   },
+  drawerSectionLabelDark: {
+    color: '#EAF3FF',
+  },
   drawerNavButton: {
     height: 48,
     borderRadius: 16,
     border: '1px solid rgba(23,59,97,0.08)',
     background: '#FFFFFF',
     color: BRAND_BLUE,
+    fontWeight: 800,
+    justifyContent: 'flex-start',
+  },
+  drawerNavButtonDark: {
+    height: 48,
+    borderRadius: 16,
+    border: '1px solid rgba(255,255,255,0.12)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#F8FBFF',
     fontWeight: 800,
     justifyContent: 'flex-start',
   },
@@ -548,6 +578,14 @@ const styles = {
     height: 46,
     borderRadius: 16,
     fontWeight: 800,
+  },
+  drawerUtilityButtonDark: {
+    height: 46,
+    borderRadius: 16,
+    fontWeight: 800,
+    color: '#F8FBFF',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.16)',
   },
   drawerPrimaryButton: {
     height: 46,

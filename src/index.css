@@ -2415,6 +2415,33 @@ body[data-theme="dark"] .ant-select-dropdown .ant-select-item-option-active {
   }
 }
 
+body[data-theme="dark"] .travelpay-mobile-drawer .ant-drawer-content,
+body[data-theme="dark"] .travelpay-mobile-drawer .ant-drawer-body {
+  background: transparent !important;
+}
+
+body[data-theme="dark"] .travelpay-mobile-drawer .ant-segmented {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+body[data-theme="dark"] .travelpay-mobile-drawer .ant-segmented-item {
+  color: rgba(226, 238, 255, 0.78) !important;
+}
+
+body[data-theme="dark"] .travelpay-mobile-drawer .ant-segmented-item-selected {
+  background: linear-gradient(135deg, #2b7bb9, #173b61) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+body[data-theme="dark"] .travelpay-mobile-drawer .travelpay-header-button.ant-btn:not(.ant-btn-primary):hover,
+body[data-theme="dark"] .travelpay-mobile-drawer .travelpay-header-button.ant-btn:not(.ant-btn-primary):focus {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.13) !important;
+}
+
 .travelpay-assistant-card {
   width: min(100%, 520px);
   margin: 0 auto;
