@@ -3,7 +3,7 @@ import { ArrowRightOutlined, CompassOutlined, CustomerServiceOutlined, Environme
 import { Button, Card, Collapse, Col, Input, Row, Segmented, Space, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { KYRGYZSTAN_TOUR_SPOTS, withTourFallback } from '../utils/tourMedia';
+import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
