@@ -2487,7 +2487,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             )}
 
             {currentTab === 'home' && renderDashboard()}
-            {currentTab === 'tours' && renderCatalog()}
+            {(currentTab === 'tours' || currentTab === 'accommodations') && renderCatalog()}
             {currentTab === 'bookings' && renderBookingsModern()}
             {currentTab === 'clients' && renderClients()}
             {currentTab === 'savings' && renderSavings()}
