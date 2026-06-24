@@ -2530,7 +2530,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         open={tourDrawerOpen}
         onClose={closeTourDrawer}
         size={isDesktop ? 760 : '100%'}
-        className="tp-admin-form-drawer"
+        className="tp-admin-form-drawer tp-admin-form-drawer--tour"
         footer={(
           <div className="tp-admin-drawer-footer">
             <Button onClick={closeTourDrawer}>Отмена</Button>
@@ -2540,6 +2540,17 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           </div>
         )}
       >
+        <div className="tp-admin-tour-form-hero">
+          <div>
+            <span>TravelPay Business</span>
+            <strong>{editingTourId ? 'Обновите карточку тура' : 'Создайте продающий тур'}</strong>
+            <p>Заполните маршрут, даты, места и фото. Компания автоматически привяжется к вашему Business-аккаунту.</p>
+          </div>
+          <Tag color={currentCompany?.status === 'active' ? 'green' : 'gold'}>
+            {currentCompany?.status === 'active' ? 'Компания активна' : 'Ожидает проверки'}
+          </Tag>
+        </div>
+
         <Form form={tourForm} layout="vertical" onFinish={handleSaveTour} className="tp-admin-form">
           <Form.Item name="title" label="Название" rules={[{ required: true, message: 'Введите название тура' }]}>
             <Input placeholder="Например: Issyk-Kul Premium Escape" />
