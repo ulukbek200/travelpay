@@ -7021,6 +7021,138 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
   font-weight: 950;
 }
 
+.stay-availability {
+  display: grid;
+  gap: 16px;
+}
+
+.stay-availability__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.stay-availability__head strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 950;
+}
+
+.stay-availability__head .ant-btn {
+  color: #0f172a;
+  border: none;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.stay-availability__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(74px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.stay-date-pill,
+.stay-time-pill {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, color 0.22s ease;
+}
+
+.stay-date-pill {
+  min-height: 98px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  padding: 12px 10px;
+  border-radius: 24px;
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.stay-date-pill span {
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.stay-date-pill strong {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.stay-date-pill small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stay-date-pill:not(:disabled):hover,
+.stay-time-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(23, 59, 97, 0.14);
+}
+
+.stay-date-pill--selected {
+  color: #ffffff;
+  background: linear-gradient(135deg, #080d14, #151515);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.22);
+}
+
+.stay-date-pill--selected small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.stay-date-pill--disabled {
+  cursor: not-allowed;
+  color: rgba(15, 23, 42, 0.18);
+  background: rgba(241, 245, 249, 0.44);
+}
+
+.stay-date-pill--disabled small {
+  color: rgba(15, 23, 42, 0.2);
+}
+
+.stay-availability__times {
+  display: grid;
+  gap: 10px;
+}
+
+.stay-availability__times .ant-typography {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 850;
+}
+
+.stay-availability__times > div {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stay-time-pill {
+  min-width: 86px;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  color: #0f172a;
+  background: #f1f5f9;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.stay-time-pill--selected {
+  color: #ffffff;
+  background: linear-gradient(135deg, #173b61, #2b7bb9);
+  box-shadow: 0 14px 28px rgba(43, 123, 185, 0.24);
+}
+
 .stay-booking-total {
   display: flex;
   justify-content: space-between;
@@ -7127,6 +7259,40 @@ body[data-theme="dark"] .stay-card__company {
   border-color: rgba(252, 163, 17, 0.28);
 }
 
+body[data-theme="dark"] .stay-availability__head strong {
+  color: #f7fbff;
+}
+
+body[data-theme="dark"] .stay-availability__head .ant-btn,
+body[data-theme="dark"] .stay-date-pill,
+body[data-theme="dark"] .stay-time-pill {
+  color: #f7fbff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body[data-theme="dark"] .stay-date-pill small {
+  color: rgba(238, 245, 255, 0.58);
+}
+
+body[data-theme="dark"] .stay-date-pill--selected {
+  color: #071523;
+  background: linear-gradient(135deg, #ffd27a, #fca311);
+}
+
+body[data-theme="dark"] .stay-date-pill--selected small {
+  color: rgba(7, 21, 35, 0.66);
+}
+
+body[data-theme="dark"] .stay-time-pill--selected {
+  color: #071523;
+  background: linear-gradient(135deg, #ffd27a, #fca311);
+}
+
+body[data-theme="dark"] .stay-date-pill--disabled {
+  color: rgba(238, 245, 255, 0.22);
+  background: rgba(255, 255, 255, 0.035);
+}
+
 body[data-theme="dark"] .stays-search-card .ant-input,
 body[data-theme="dark"] .stays-search-card .ant-input-number,
 body[data-theme="dark"] .stays-search-card .ant-select-selector,
@@ -7199,6 +7365,28 @@ body[data-theme="dark"] .stays-search-card .ant-picker {
   .stay-gallery__thumbs img {
     height: 82px;
     border-radius: 16px;
+  }
+
+  .stay-availability__head {
+    align-items: flex-start;
+  }
+
+  .stay-availability__head strong {
+    font-size: 21px;
+  }
+
+  .stay-availability__days {
+    grid-template-columns: repeat(7, 82px);
+  }
+
+  .stay-date-pill {
+    min-height: 92px;
+    border-radius: 22px;
+  }
+
+  .stay-booking-total {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

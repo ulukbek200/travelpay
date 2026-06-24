@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
   Divider,
   Empty,
   Grid,
@@ -22,8 +21,11 @@ import {
   BankOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
+  ClockCircleOutlined,
   EnvironmentOutlined,
   HomeOutlined,
+  LeftOutlined,
+  RightOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
@@ -38,18 +40,86 @@ import {
 } from '../utils/stays';
 
 const { Title, Paragraph, Text } = Typography;
-const { RangePicker } = DatePicker;
 const { useBreakpoint } = Grid;
+
+const MONTH_NAMES = [
+  'Январь',
+  'Февраль',
+  'Март',
+  'Апрель',
+  'Май',
+  'Июнь',
+  'Июль',
+  'Август',
+  'Сентябрь',
+  'Октябрь',
+  'Ноябрь',
+  'Декабрь',
+];
+
+const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const CHECK_IN_TIMES = ['14:00', '16:00', '18:00'];
+
+const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const addDays = (date, amount) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+};
+const addMonths = (date, amount) => new Date(date.getFullYear(), date.getMonth() + amount, 1);
+const isSameDay = (left, right) => (
+  left.getFullYear() === right.getFullYear()
+  && left.getMonth() === right.getMonth()
+  && left.getDate() === right.getDate()
+);
+const formatDateKey = (date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+
+const buildAvailabilityDays = (monthDate, stay, today) => {
+  const seed = String(stay?.id || stay?.title || 'stay')
+    .split('')
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+  const visibleStart = today.getMonth() === monthStart.getMonth() && today.getFullYear() === monthStart.getFullYear()
+    ? today.getDate()
+    : 1;
+  const visibleCount = Math.min(7, daysInMonth - visibleStart + 1);
+
+  return Array.from({ length: visibleCount }, (_, index) => {
+    const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), visibleStart + index);
+    const baseLeft = Math.max(Number(stay?.availableCount || 0), 0);
+    const reservedPattern = (date.getDate() + seed) % 6 === 0;
+    const left = reservedPattern ? 0 : Math.max(baseLeft - ((date.getDate() + seed) % 3), 0);
+    const isPast = startOfDay(date) < today;
+    return {
+      date,
+      key: formatDateKey(date),
+      label: isSameDay(date, today) ? 'Сегодня' : index === 1 && isSameDay(addDays(today, 1), date) ? 'Завтра' : WEEKDAY_SHORT[date.getDay()],
+      day: date.getDate(),
+      left,
+      available: !isPast && left > 0,
+    };
+  });
+};
 
 const StayDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const today = useMemo(() => startOfDay(new Date()), []);
   const [loading, setLoading] = useState(true);
   const [stays, setStays] = useState([]);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [guests, setGuests] = useState(2);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(startOfDay(new Date())));
+  const [selectedTime, setSelectedTime] = useState(CHECK_IN_TIMES[0]);
 
   useEffect(() => {
     const loadStays = async () => {
@@ -69,6 +139,20 @@ const StayDetailPage = () => {
 
   const stay = useMemo(() => stays.find((item) => String(item.id) === String(id)), [id, stays]);
   const gallery = stay?.images?.length ? stay.images : fallbackStays[0].images;
+  const availabilityDays = useMemo(() => buildAvailabilityDays(calendarMonth, stay, today), [calendarMonth, stay, today]);
+  const selectedAvailability = useMemo(
+    () => availabilityDays.find((day) => day.key === selectedDateKey),
+    [availabilityDays, selectedDateKey],
+  );
+  const firstAvailableDay = useMemo(() => availabilityDays.find((day) => day.available), [availabilityDays]);
+
+  useEffect(() => {
+    if (!availabilityDays.length) return;
+    if (selectedAvailability?.available) return;
+    if (firstAvailableDay) {
+      setSelectedDateKey(firstAvailableDay.key);
+    }
+  }, [availabilityDays, firstAvailableDay, selectedAvailability?.available]);
 
   if (loading) {
     return (
@@ -90,6 +174,9 @@ const StayDetailPage = () => {
 
   const nightsPreview = 2;
   const totalPreview = stay.pricePerNight * nightsPreview;
+  const selectedDateLabel = selectedAvailability
+    ? selectedAvailability.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    : 'выберите дату';
 
   return (
     <main className="stay-detail-page">
@@ -124,19 +211,68 @@ const StayDetailPage = () => {
           <Paragraph>за ночь, без скрытых платежей</Paragraph>
           <Divider />
           <Space direction="vertical" size={14} style={{ width: '100%' }}>
-            <div>
-              <Text>Даты проживания</Text>
-              <RangePicker style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
+            <div className="stay-availability">
+              <div className="stay-availability__head">
+                <div>
+                  <Text>Свободные даты</Text>
+                  <strong>{MONTH_NAMES[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}</strong>
+                </div>
+                <Space size={8}>
+                  <Button
+                    shape="circle"
+                    icon={<LeftOutlined />}
+                    onClick={() => setCalendarMonth((current) => addMonths(current, -1))}
+                  />
+                  <Button
+                    shape="circle"
+                    icon={<RightOutlined />}
+                    onClick={() => setCalendarMonth((current) => addMonths(current, 1))}
+                  />
+                </Space>
+              </div>
+              <div className="stay-availability__days">
+                {availabilityDays.map((day) => {
+                  const isSelected = day.key === selectedDateKey && day.available;
+                  return (
+                    <button
+                      type="button"
+                      key={day.key}
+                      className={`stay-date-pill ${isSelected ? 'stay-date-pill--selected' : ''} ${!day.available ? 'stay-date-pill--disabled' : ''}`}
+                      disabled={!day.available}
+                      onClick={() => setSelectedDateKey(day.key)}
+                    >
+                      <span>{day.label}</span>
+                      <strong>{day.day}</strong>
+                      <small>{day.available ? `${day.left} свободно` : 'занято'}</small>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="stay-availability__times">
+                <Text><ClockCircleOutlined /> Время заезда</Text>
+                <div>
+                  {CHECK_IN_TIMES.map((time) => (
+                    <button
+                      type="button"
+                      key={time}
+                      className={`stay-time-pill ${selectedTime === time ? 'stay-time-pill--selected' : ''}`}
+                      onClick={() => setSelectedTime(time)}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <div>
               <Text>Гости</Text>
               <InputNumber min={1} max={stay.capacity} value={guests} onChange={setGuests} style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
             </div>
             <div className="stay-booking-total">
-              <span>{nightsPreview} ночи</span>
+              <span>{selectedDateLabel} · {selectedTime}</span>
               <strong>{formatStayPrice(totalPreview)}</strong>
             </div>
-            <Button type="primary" size="large" block onClick={() => setBookingOpen(true)}>
+            <Button type="primary" size="large" block disabled={!selectedAvailability?.available} onClick={() => setBookingOpen(true)}>
               Забронировать
             </Button>
           </Space>
@@ -193,7 +329,7 @@ const StayDetailPage = () => {
         </Paragraph>
         <Card size="small">
           <strong>{stay.title}</strong>
-          <p>{guests} гостей · ориентир {formatStayPrice(totalPreview)}</p>
+          <p>{selectedDateLabel}, {selectedTime} · {guests} гостей · ориентир {formatStayPrice(totalPreview)}</p>
         </Card>
       </Modal>
     </main>
