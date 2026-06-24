@@ -53,9 +53,11 @@ import {
   LogoutOutlined,
   MenuOutlined,
   MoreOutlined,
+  MoonOutlined,
   PlusOutlined,
   ReloadOutlined,
   SettingOutlined,
+  SunOutlined,
   TeamOutlined,
   UserOutlined,
   WalletOutlined,
@@ -319,6 +321,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [messageState, setMessageState] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [theme, setTheme] = useState(() => (
+    localStorage.getItem('travelpay_admin_theme')
+    || localStorage.getItem('travelpay_theme')
+    || 'dark'
+  ));
 
   const [tourSearch, setTourSearch] = useState('');
   const [tourStatusFilter, setTourStatusFilter] = useState('all');
@@ -342,6 +349,17 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   useEffect(() => {
     setCatalogMode(getCatalogMode(location.pathname));
   }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    document.body.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('travelpay_admin_theme', theme);
+    localStorage.setItem('travelpay_theme', theme);
+
+    return () => {
+      document.body.classList.remove('dark');
+    };
+  }, [theme]);
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
@@ -2407,6 +2425,15 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </div>
 
             <div className="tp-admin-header__right">
+              <div className="tp-admin-theme-toggle">
+                <Switch
+                  checked={theme === 'dark'}
+                  onChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                  checkedChildren={<MoonOutlined />}
+                  unCheckedChildren={<SunOutlined />}
+                />
+                <span>{theme === 'dark' ? 'Темная' : 'Светлая'}</span>
+              </div>
               <Tooltip title="Открыть сайт">
                 <Button icon={<EyeOutlined />} onClick={() => navigate('/')} />
               </Tooltip>

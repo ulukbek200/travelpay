@@ -7560,6 +7560,35 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
   border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
+.tp-admin-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tp-admin-theme-toggle .ant-switch {
+  background: rgba(100, 116, 139, 0.34);
+}
+
+.tp-admin-theme-toggle .ant-switch.ant-switch-checked {
+  background: linear-gradient(135deg, #2563eb, #1447e6);
+}
+
+body[data-theme="dark"] .tp-admin-theme-toggle,
+body.dark .tp-admin-theme-toggle {
+  color: #f8fbff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
 .tp-admin-content.ant-layout-content {
   padding: 18px;
   position: relative;
@@ -8011,7 +8040,8 @@ body.dark .tp-admin-form-drawer--tour .ant-select-selection-placeholder {
 
   .tp-admin-header__center,
   .tp-admin-header__right,
-  .tp-admin-profile-chip {
+  .tp-admin-profile-chip,
+  .tp-admin-theme-toggle {
     width: 100%;
   }
 
@@ -8173,6 +8203,7 @@ body.dark .tp-admin-page .ant-statistic-content,
 body.dark .tp-admin-page .ant-statistic-content-value,
 body.dark .tp-admin-menu.ant-menu .ant-menu-item,
 body.dark .tp-admin-profile-chip,
+body.dark .tp-admin-theme-toggle,
 body.dark .tp-admin-booking-card,
 body.dark .tp-admin-week-day,
 body.dark .tp-admin-linked-box {
