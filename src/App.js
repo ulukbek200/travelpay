@@ -20,6 +20,8 @@ import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ActualToursPage from './pages/ActualToursPage';
 import TourDetailPage from './pages/TourDetailPage';
+import StaysPage from './pages/StaysPage';
+import StayDetailPage from './pages/StayDetailPage';
 import ActualToursAdmin from './pages/ActualToursAdmin';
 import BusinessLandingPage from './pages/BusinessLandingPage';
 import BusinessLoginPage from './pages/BusinessLoginPage';
@@ -95,6 +97,8 @@ function AppContent({ favorites, setFavorites }) {
         />
 
         <Route path="/tours/:id" element={<TourDetailPage />} />
+        <Route path="/stays" element={<StaysPage />} />
+        <Route path="/stays/:id" element={<StayDetailPage />} />
 
         <Route
           path="/favorites"

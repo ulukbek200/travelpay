@@ -23,6 +23,7 @@ const BRAND_GOLD = '#FCA311';
 const navItems = [
   { key: '/', label: 'Главная' },
   { key: '/tours', label: 'Туры' },
+  { key: '/stays', label: 'Домики' },
   { key: '/favorites', label: 'Избранное' },
   { key: 'partnership', label: 'Партнёрство' },
 ];
@@ -64,6 +65,7 @@ const Header = () => {
   const selectedKey = useMemo(() => {
     if (location.pathname === '/') return '/';
     if (location.pathname.startsWith('/tours')) return '/tours';
+    if (location.pathname.startsWith('/stays')) return '/stays';
     if (location.pathname.startsWith('/favorites')) return '/favorites';
     return '';
   }, [location.pathname]);

@@ -6567,6 +6567,616 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
   }
 }
 
+/* TravelPay Stays */
+.stays-page,
+.stay-detail-page {
+  min-height: 100vh;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(43, 184, 197, 0.16), transparent 28%),
+    radial-gradient(circle at 86% 8%, rgba(252, 163, 17, 0.15), transparent 25%),
+    linear-gradient(180deg, #f7fbff 0%, #edf6ff 42%, #f8fbff 100%);
+  color: #173b61;
+}
+
+.stays-hero {
+  position: relative;
+  min-height: 78vh;
+  display: flex;
+  align-items: center;
+  padding: 150px clamp(18px, 5vw, 72px) 120px;
+  overflow: hidden;
+}
+
+.stays-hero__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(3, 12, 25, 0.84), rgba(6, 23, 40, 0.5), rgba(6, 23, 40, 0.24)),
+    url("../public/images/kyrgyzstan-mountains.jpg") center/cover;
+  transform: scale(1.02);
+}
+
+.stays-hero__bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 24%, rgba(252, 163, 17, 0.24), transparent 24%),
+    linear-gradient(180deg, transparent 0%, rgba(247, 251, 255, 0.94) 100%);
+}
+
+.stays-hero__content {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
+}
+
+.stays-hero h1.ant-typography,
+.stay-detail-hero h1.ant-typography {
+  margin: 18px 0 18px;
+  color: #f8fbff;
+  font-size: clamp(42px, 7vw, 88px);
+  line-height: 0.98;
+  font-weight: 950;
+}
+
+.stays-hero p.ant-typography {
+  max-width: 660px;
+  color: rgba(248, 251, 255, 0.86);
+  font-size: clamp(17px, 2vw, 22px);
+  line-height: 1.65;
+}
+
+.stays-kicker.ant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(252, 163, 17, 0.16);
+  border: 1px solid rgba(252, 163, 17, 0.34);
+  color: #ffd27a;
+  font-weight: 900;
+}
+
+.stays-search-shell,
+.stays-featured,
+.stays-catalog,
+.stay-detail-layout,
+.stay-detail-content {
+  width: min(100% - 32px, 1220px);
+  margin: 0 auto;
+}
+
+.stays-search-shell {
+  position: relative;
+  z-index: 2;
+  margin-top: -72px;
+}
+
+.stays-search-card.ant-card,
+.stays-featured-card.ant-card,
+.stay-card.ant-card,
+.stay-booking-card.ant-card,
+.stay-info-card.ant-card,
+.stay-detail-shell.ant-card {
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 26px 78px rgba(23, 59, 97, 0.13);
+  backdrop-filter: blur(22px);
+}
+
+.stays-search-card .ant-card-body {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.stays-search-card .ant-select,
+.stays-search-card .ant-input-number {
+  width: 100%;
+}
+
+.stays-search-card .ant-input,
+.stays-search-card .ant-input-number,
+.stays-search-card .ant-select-selector,
+.stays-search-card .ant-picker {
+  border-radius: 16px !important;
+}
+
+.stays-amenities-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.stays-amenities-row .ant-btn {
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.stays-featured {
+  padding: 42px 0 28px;
+}
+
+.stays-featured-card.ant-card {
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(8, 24, 42, 0.94), rgba(23, 59, 97, 0.88) 56%, rgba(11, 36, 60, 0.94));
+  border-color: rgba(255, 210, 122, 0.18);
+  color: #f8fbff;
+}
+
+.stays-featured-card .ant-typography {
+  color: #f8fbff;
+}
+
+.stays-featured-card p.ant-typography {
+  color: rgba(248, 251, 255, 0.74);
+}
+
+.stays-featured-media {
+  position: relative;
+  min-height: 380px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.stays-featured-media img,
+.stay-card__media img,
+.stay-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.stays-featured-badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+}
+
+.stays-featured-stats,
+.stay-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.stays-featured-stats div,
+.stay-info-grid div {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stays-featured-stats strong,
+.stay-info-grid strong {
+  display: block;
+  font-size: 22px;
+  color: #ffd27a;
+}
+
+.stays-featured-stats span,
+.stay-info-grid span {
+  color: rgba(248, 251, 255, 0.72);
+  font-weight: 700;
+}
+
+.stays-catalog {
+  padding: 28px 0 84px;
+}
+
+.stays-section-head {
+  max-width: 760px;
+  margin-bottom: 28px;
+}
+
+.stays-section-head h2.ant-typography {
+  margin: 16px 0 10px;
+  color: #173b61;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1.04;
+  font-weight: 950;
+}
+
+.stays-section-head p.ant-typography {
+  color: #64748b;
+  font-size: 17px;
+}
+
+.stay-card.ant-card {
+  height: 100%;
+  overflow: hidden;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.stay-card.ant-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(252, 163, 17, 0.38);
+  box-shadow: 0 34px 92px rgba(23, 59, 97, 0.18);
+}
+
+.stay-card .ant-card-body {
+  padding: 0;
+}
+
+.stay-card__media {
+  position: relative;
+  height: 238px;
+  overflow: hidden;
+}
+
+.stay-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 12, 25, 0.02), rgba(3, 12, 25, 0.72));
+}
+
+.stay-card__media img {
+  transition: transform 0.5s ease;
+}
+
+.stay-card:hover .stay-card__media img {
+  transform: scale(1.05);
+}
+
+.stay-card__type.ant-tag,
+.stay-card__rating {
+  position: absolute;
+  z-index: 2;
+}
+
+.stay-card__type.ant-tag {
+  top: 16px;
+  left: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-weight: 850;
+  backdrop-filter: blur(14px);
+}
+
+.stay-card__rating {
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.stay-card__rating .ant-rate {
+  color: #fca311;
+  font-size: 14px;
+}
+
+.stay-card__body {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.stay-card__top,
+.stay-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stay-card__top > span {
+  color: #2b7bb9;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.stay-card h3.ant-typography {
+  margin: 0;
+  color: #173b61;
+  font-size: 25px;
+  line-height: 1.14;
+  font-weight: 950;
+}
+
+.stay-card p.ant-typography {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.62;
+}
+
+.stay-card__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stay-card__meta div {
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(23, 59, 97, 0.055);
+  color: #173b61;
+  font-weight: 800;
+}
+
+.stay-card__amenities {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.stay-card__amenities .ant-tag,
+.stay-card__top .ant-tag {
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.stay-card__footer {
+  padding-top: 14px;
+  border-top: 1px solid rgba(23, 59, 97, 0.08);
+}
+
+.stay-card__footer strong {
+  display: block;
+  color: #fca311;
+  font-size: 23px;
+  line-height: 1.1;
+}
+
+.stay-card__footer span,
+.stay-card__footer .ant-typography {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stay-detail-page {
+  padding: 112px 0 84px;
+}
+
+.stay-detail-hero {
+  width: min(100% - 32px, 1220px);
+  margin: 0 auto 28px;
+  padding: clamp(28px, 5vw, 54px);
+  border-radius: 34px;
+  background:
+    linear-gradient(90deg, rgba(3, 12, 25, 0.86), rgba(10, 34, 55, 0.54)),
+    url("../public/images/kyrgyzstan-mountains.jpg") center/cover;
+  box-shadow: 0 30px 84px rgba(23, 59, 97, 0.18);
+}
+
+.stay-detail-hero h1.ant-typography {
+  max-width: 900px;
+}
+
+.stay-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.stay-gallery {
+  display: grid;
+  gap: 12px;
+}
+
+.stay-gallery__main {
+  height: clamp(320px, 52vw, 560px);
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 28px 78px rgba(23, 59, 97, 0.16);
+}
+
+.stay-gallery__thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stay-gallery__thumbs img {
+  height: 120px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.stay-booking-card.ant-card {
+  position: sticky;
+  top: 104px;
+}
+
+.stay-booking-card h2.ant-typography {
+  margin: 6px 0 0;
+  color: #fca311;
+  font-weight: 950;
+}
+
+.stay-booking-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(23, 59, 97, 0.06);
+  font-weight: 900;
+}
+
+.stay-detail-content {
+  padding-top: 24px;
+}
+
+.stay-info-card h3.ant-typography,
+.stay-info-card h4.ant-typography {
+  color: #173b61;
+  font-weight: 950;
+}
+
+.stay-info-card p.ant-typography {
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.stay-info-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stay-info-grid div {
+  background: rgba(23, 59, 97, 0.055);
+}
+
+.stay-info-grid strong {
+  color: #173b61;
+}
+
+.stay-info-grid span {
+  color: #64748b;
+}
+
+.stay-amenity-list {
+  display: grid;
+  gap: 12px;
+}
+
+.stay-amenity-list span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(43, 184, 197, 0.08);
+  color: #173b61;
+  font-weight: 850;
+}
+
+body[data-theme="dark"] .stays-page,
+body[data-theme="dark"] .stay-detail-page {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(43, 184, 197, 0.2), transparent 27%),
+    radial-gradient(circle at 88% 8%, rgba(252, 163, 17, 0.18), transparent 24%),
+    radial-gradient(circle at 74% 78%, rgba(37, 99, 235, 0.14), transparent 30%),
+    linear-gradient(135deg, #030812 0%, #081827 42%, #0e1d2d 68%, #04101d 100%);
+}
+
+body[data-theme="dark"] .stays-search-card.ant-card,
+body[data-theme="dark"] .stay-card.ant-card,
+body[data-theme="dark"] .stay-booking-card.ant-card,
+body[data-theme="dark"] .stay-info-card.ant-card,
+body[data-theme="dark"] .stay-detail-shell.ant-card {
+  background: linear-gradient(145deg, rgba(16, 34, 55, 0.86), rgba(6, 16, 29, 0.78)) !important;
+  border-color: rgba(255, 210, 122, 0.16) !important;
+  box-shadow: 0 28px 78px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+}
+
+body[data-theme="dark"] .stays-page .ant-typography,
+body[data-theme="dark"] .stay-detail-page .ant-typography,
+body[data-theme="dark"] .stay-card h3.ant-typography,
+body[data-theme="dark"] .stay-info-card h3.ant-typography,
+body[data-theme="dark"] .stay-info-card h4.ant-typography,
+body[data-theme="dark"] .stays-section-head h2.ant-typography {
+  color: #f7fbff !important;
+}
+
+body[data-theme="dark"] .stays-page p.ant-typography,
+body[data-theme="dark"] .stay-detail-page p.ant-typography,
+body[data-theme="dark"] .stay-card p.ant-typography {
+  color: rgba(238, 245, 255, 0.76) !important;
+}
+
+body[data-theme="dark"] .stay-card__meta div,
+body[data-theme="dark"] .stay-info-grid div,
+body[data-theme="dark"] .stay-booking-total,
+body[data-theme="dark"] .stay-amenity-list span {
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f7fbff;
+}
+
+body[data-theme="dark"] .stays-search-card .ant-input,
+body[data-theme="dark"] .stays-search-card .ant-input-number,
+body[data-theme="dark"] .stays-search-card .ant-select-selector,
+body[data-theme="dark"] .stays-search-card .ant-picker {
+  background: rgba(255, 255, 255, 0.075) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #f7fbff !important;
+}
+
+@media (max-width: 992px) {
+  .stay-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-booking-card.ant-card {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .stays-hero {
+    min-height: 68vh;
+    padding: 118px 18px 96px;
+  }
+
+  .stays-search-shell,
+  .stays-featured,
+  .stays-catalog,
+  .stay-detail-layout,
+  .stay-detail-content,
+  .stay-detail-hero {
+    width: min(100% - 24px, 1220px);
+  }
+
+  .stays-search-shell {
+    margin-top: -54px;
+  }
+
+  .stays-featured-media,
+  .stay-card__media {
+    min-height: auto;
+    height: 220px;
+  }
+
+  .stays-featured-stats,
+  .stay-info-grid,
+  .stay-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-card__footer,
+  .stay-card__top {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stay-card__footer .ant-btn {
+    width: 100%;
+  }
+
+  .stay-detail-page {
+    padding-top: 92px;
+  }
+
+  .stay-gallery__main {
+    height: 310px;
+    border-radius: 24px;
+  }
+
+  .stay-gallery__thumbs img {
+    height: 82px;
+    border-radius: 16px;
+  }
+}
+
 /* TravelPay CRM admin refresh */
 .crm-admin-page {
   min-height: 100vh;

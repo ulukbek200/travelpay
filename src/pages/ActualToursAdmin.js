@@ -228,7 +228,8 @@ const normalizeTourRecord = (tour, index = 0) => {
 
 const getCurrentTab = (pathname) => {
   if (pathname === '/admin' || pathname === '/admin/home' || pathname === '/business/dashboard') return 'home';
-  if (pathname === '/admin/tours' || pathname === '/admin/accommodations' || pathname === '/business/tours' || pathname === '/business/accommodations') return 'tours';
+  if (pathname === '/admin/tours' || pathname === '/business/tours') return 'tours';
+  if (pathname === '/admin/accommodations' || pathname === '/business/accommodations') return 'accommodations';
   if (pathname === '/admin/bookings' || pathname === '/business/bookings') return 'bookings';
   if (pathname === '/admin/users' || pathname === '/admin/clients' || pathname === '/business/clients') return 'clients';
   if (pathname === '/admin/topups' || pathname === '/admin/savings') return 'savings';
@@ -1423,6 +1424,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         items={[
           { key: homePath, icon: <HomeOutlined />, label: 'Главная' },
           { key: `${basePath}/tours`, icon: <CompassOutlined />, label: 'Туры' },
+          { key: `${basePath}/accommodations`, icon: <HomeOutlined />, label: 'Домики' },
           { key: `${basePath}/bookings`, icon: <CalendarOutlined />, label: 'Бронирования' },
           { key: `${basePath}/clients`, icon: <TeamOutlined />, label: 'Клиенты' },
           ...(!businessMode ? [
