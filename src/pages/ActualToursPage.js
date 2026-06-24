@@ -126,12 +126,6 @@ const fallbackTours = [
   },
 ];
 
-const popularDestinations = KYRGYZSTAN_TOUR_SPOTS.map((spot) => ({
-  title: spot.title,
-  location: spot.location,
-  image: spot.image,
-}));
-
 const formatPrice = (price) => `${Number(price || 0).toLocaleString('ru-RU')} сом`;
 
 const slugify = (value) => String(value || '')
@@ -353,26 +347,6 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
               </Button>
             </div>
           </motion.div>
-        </section>
-
-        <section className="tours-section tours-container" style={styles.popularSection}>
-          <div style={styles.sectionHead}>
-            <Tag style={styles.softTag}>Популярные туры</Tag>
-            <Title level={2} style={styles.sectionTitle}>Локации Кыргызстана, которые хочется открыть красиво</Title>
-          </div>
-          <div style={{ ...styles.destinationStrip, ...(isMobile ? styles.destinationStripMobile : {}) }}>
-            {popularDestinations.map((spot) => (
-              <motion.div key={spot.title} whileHover={{ y: -4 }}>
-                <Button className="travelpay-destination-pill" style={{ ...styles.destinationPill, ...(isMobile ? styles.destinationPillMobile : {}) }}>
-                  <img src={spot.image} alt={spot.title} onError={withTourFallback} style={{ ...styles.destinationPillImage, ...(isMobile ? styles.destinationPillImageMobile : {}) }} />
-                  <span style={styles.destinationCopy}>
-                    <strong>{spot.title}</strong>
-                    <small>{spot.location}</small>
-                  </span>
-                </Button>
-              </motion.div>
-            ))}
-          </div>
         </section>
 
         <section className="tours-section tours-container" style={styles.catalog}>
