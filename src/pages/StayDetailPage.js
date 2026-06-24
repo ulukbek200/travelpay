@@ -5,7 +5,9 @@ import {
   Col,
   Divider,
   Empty,
+  Form,
   Grid,
+  Input,
   InputNumber,
   Modal,
   Rate,
@@ -38,6 +40,7 @@ import {
   normalizeStay,
   withStayFallback,
 } from '../utils/stays';
+import { readCurrentUser } from '../utils/currentUser';
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -79,7 +82,8 @@ const formatDateKey = (date) =>
     String(date.getDate()).padStart(2, '0'),
   ].join('-');
 
-const buildAvailabilityDays = (monthDate, stay, today) => {
+const buildAvailabilityDays = (monthDate, stay, today, availabilityRecords = []) => {
+  const availabilityByKey = new Map(availabilityRecords.map((item) => [item.key, item]));
   const seed = String(stay?.id || stay?.title || 'stay')
     .split('')
     .reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -92,17 +96,19 @@ const buildAvailabilityDays = (monthDate, stay, today) => {
 
   return Array.from({ length: visibleCount }, (_, index) => {
     const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), visibleStart + index);
+    const key = formatDateKey(date);
+    const realAvailability = availabilityByKey.get(key);
     const baseLeft = Math.max(Number(stay?.availableCount || 0), 0);
     const reservedPattern = (date.getDate() + seed) % 6 === 0;
-    const left = reservedPattern ? 0 : Math.max(baseLeft - ((date.getDate() + seed) % 3), 0);
+    const left = realAvailability ? Number(realAvailability.left || 0) : reservedPattern ? 0 : Math.max(baseLeft - ((date.getDate() + seed) % 3), 0);
     const isPast = startOfDay(date) < today;
     return {
       date,
-      key: formatDateKey(date),
+      key,
       label: isSameDay(date, today) ? 'Сегодня' : index === 1 && isSameDay(addDays(today, 1), date) ? 'Завтра' : WEEKDAY_SHORT[date.getDay()],
       day: date.getDate(),
       left,
-      available: !isPast && left > 0,
+      available: realAvailability ? Boolean(realAvailability.available) : !isPast && left > 0,
     };
   });
 };
@@ -113,10 +119,16 @@ const StayDetailPage = () => {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const today = useMemo(() => startOfDay(new Date()), []);
+  const currentUser = readCurrentUser();
+  const [bookingForm] = Form.useForm();
   const [loading, setLoading] = useState(true);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [stays, setStays] = useState([]);
+  const [availabilityRecords, setAvailabilityRecords] = useState([]);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [guests, setGuests] = useState(2);
+  const [nights, setNights] = useState(2);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(startOfDay(new Date())));
   const [selectedTime, setSelectedTime] = useState(CHECK_IN_TIMES[0]);
@@ -139,7 +151,11 @@ const StayDetailPage = () => {
 
   const stay = useMemo(() => stays.find((item) => String(item.id) === String(id)), [id, stays]);
   const gallery = stay?.images?.length ? stay.images : fallbackStays[0].images;
-  const availabilityDays = useMemo(() => buildAvailabilityDays(calendarMonth, stay, today), [calendarMonth, stay, today]);
+  const availabilityMonthKey = useMemo(() => formatDateKey(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1)).slice(0, 7), [calendarMonth]);
+  const availabilityDays = useMemo(
+    () => buildAvailabilityDays(calendarMonth, stay, today, availabilityRecords),
+    [availabilityRecords, calendarMonth, stay, today],
+  );
   const selectedAvailability = useMemo(
     () => availabilityDays.find((day) => day.key === selectedDateKey),
     [availabilityDays, selectedDateKey],
@@ -153,6 +169,26 @@ const StayDetailPage = () => {
       setSelectedDateKey(firstAvailableDay.key);
     }
   }, [availabilityDays, firstAvailableDay, selectedAvailability?.available]);
+
+  useEffect(() => {
+    if (!stay?.id) return;
+
+    const loadAvailability = async () => {
+      setAvailabilityLoading(true);
+      try {
+        const response = await api.get('/stay-bookings/availability', {
+          params: { stayId: stay.id, month: availabilityMonthKey },
+        });
+        setAvailabilityRecords(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        setAvailabilityRecords([]);
+      } finally {
+        setAvailabilityLoading(false);
+      }
+    };
+
+    loadAvailability();
+  }, [availabilityMonthKey, stay?.id]);
 
   if (loading) {
     return (
@@ -172,11 +208,66 @@ const StayDetailPage = () => {
     );
   }
 
-  const nightsPreview = 2;
-  const totalPreview = stay.pricePerNight * nightsPreview;
+  const totalPreview = stay.pricePerNight * nights;
   const selectedDateLabel = selectedAvailability
     ? selectedAvailability.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     : 'выберите дату';
+  const checkOutDate = selectedAvailability ? addDays(selectedAvailability.date, nights) : null;
+  const checkOutLabel = checkOutDate
+    ? checkOutDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+    : 'выберите дату';
+
+  const openBookingModal = () => {
+    bookingForm.setFieldsValue({
+      clientName: currentUser?.name || '',
+      clientPhone: currentUser?.phone || '',
+      clientEmail: currentUser?.email || '',
+      comment: '',
+    });
+    setBookingOpen(true);
+  };
+
+  const submitStayBooking = async () => {
+    if (!selectedAvailability?.available) {
+      message.warning('На выбранную дату свободных домиков нет.');
+      return;
+    }
+
+    try {
+      const values = await bookingForm.validateFields();
+      setBookingSubmitting(true);
+      await api.post('/stay-bookings', {
+        stayId: stay.id,
+        companyId: stay.companyId,
+        companyName: stay.companyName,
+        stayTitle: stay.title,
+        location: stay.location,
+        clientName: values.clientName,
+        clientPhone: values.clientPhone,
+        clientEmail: values.clientEmail,
+        comment: values.comment,
+        guests,
+        nights,
+        checkInDate: selectedAvailability.date.toISOString(),
+        checkOutDate: checkOutDate?.toISOString(),
+        checkInTime: selectedTime,
+        amount: totalPreview,
+      });
+      setBookingOpen(false);
+      message.success('Заявка отправлена. Компания подтвердит бронь в TravelPay Business.');
+      const response = await api.get('/stay-bookings/availability', {
+        params: { stayId: stay.id, month: availabilityMonthKey },
+      });
+      setAvailabilityRecords(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      const fallback = error?.response?.status === 409
+        ? 'На выбранные даты свободных домиков уже нет.'
+        : 'Не удалось отправить заявку. Проверьте данные и попробуйте ещё раз.';
+      message.error(error?.response?.data?.message || fallback);
+    } finally {
+      setBookingSubmitting(false);
+    }
+  };
 
   return (
     <main className="stay-detail-page">
@@ -216,6 +307,7 @@ const StayDetailPage = () => {
                 <div>
                   <Text>Свободные даты</Text>
                   <strong>{MONTH_NAMES[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}</strong>
+                  {availabilityLoading && <Text type="secondary">Обновляем занятость...</Text>}
                 </div>
                 <Space size={8}>
                   <Button
@@ -268,11 +360,15 @@ const StayDetailPage = () => {
               <Text>Гости</Text>
               <InputNumber min={1} max={stay.capacity} value={guests} onChange={setGuests} style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
             </div>
+            <div>
+              <Text>Ночей</Text>
+              <InputNumber min={1} max={30} value={nights} onChange={(value) => setNights(Number(value) || 1)} style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
+            </div>
             <div className="stay-booking-total">
-              <span>{selectedDateLabel} · {selectedTime}</span>
+              <span>{selectedDateLabel} - {checkOutLabel} · {selectedTime}</span>
               <strong>{formatStayPrice(totalPreview)}</strong>
             </div>
-            <Button type="primary" size="large" block disabled={!selectedAvailability?.available} onClick={() => setBookingOpen(true)}>
+            <Button type="primary" size="large" block disabled={!selectedAvailability?.available} onClick={openBookingModal}>
               Забронировать
             </Button>
           </Space>
@@ -318,19 +414,29 @@ const StayDetailPage = () => {
         title="Заявка на бронирование"
         okText="Отправить заявку"
         cancelText="Отмена"
+        confirmLoading={bookingSubmitting}
         onCancel={() => setBookingOpen(false)}
-        onOk={() => {
-          setBookingOpen(false);
-          message.success('Заявка отправлена. Менеджер TravelPay свяжется с вами.');
-        }}
+        onOk={submitStayBooking}
       >
-        <Paragraph>
-          Сейчас это быстрый запрос на бронирование. На следующем этапе подключим полноценную оплату и календарь занятости.
-        </Paragraph>
+        <Paragraph>Оставьте контакты, и компания подтвердит бронь в Business-панели.</Paragraph>
         <Card size="small">
           <strong>{stay.title}</strong>
-          <p>{selectedDateLabel}, {selectedTime} · {guests} гостей · ориентир {formatStayPrice(totalPreview)}</p>
+          <p>{selectedDateLabel} - {checkOutLabel}, {selectedTime} · {guests} гостей · {formatStayPrice(totalPreview)}</p>
         </Card>
+        <Form form={bookingForm} layout="vertical" className="stay-booking-form">
+          <Form.Item name="clientName" label="Имя" rules={[{ required: true, message: 'Укажите имя' }]}>
+            <Input size="large" placeholder="Ваше имя" />
+          </Form.Item>
+          <Form.Item name="clientPhone" label="Телефон" rules={[{ required: true, message: 'Укажите телефон' }]}>
+            <Input size="large" placeholder="+996 ..." />
+          </Form.Item>
+          <Form.Item name="clientEmail" label="Email">
+            <Input size="large" placeholder="email@example.com" />
+          </Form.Item>
+          <Form.Item name="comment" label="Комментарий">
+            <Input.TextArea rows={3} placeholder="Например: нужен трансфер, поздний заезд, дети..." />
+          </Form.Item>
+        </Form>
       </Modal>
     </main>
   );

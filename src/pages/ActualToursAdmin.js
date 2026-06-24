@@ -110,8 +110,10 @@ const TOPUP_STATUS_META = {
 
 const BOOKING_STATUS_META = {
   paid: { label: 'Оплачено', color: 'green', badge: 'success' },
+  confirmed: { label: 'Подтверждено', color: 'green', badge: 'success' },
   pending: { label: 'Ожидает оплаты', color: 'orange', badge: 'warning' },
   cancelled: { label: 'Отменено', color: 'red', badge: 'error' },
+  rejected: { label: 'Отклонено', color: 'red', badge: 'error' },
 };
 
 const statusOptions = Object.entries(STATUS_META).map(([value, meta]) => ({
@@ -201,6 +203,35 @@ const normalizeAccommodation = (item = {}, index = 0) => ({
   linkedTourIds: Array.isArray(item.linkedTourIds) ? item.linkedTourIds : [],
   companyId: Number(item.companyId || 0),
   companyName: item.companyName || '',
+});
+
+const normalizeStayBooking = (item = {}, index = 0) => ({
+  key: `stay-booking-${item.id || index}`,
+  id: item.id || index + 1,
+  type: 'stay_booking',
+  stayId: Number(item.stayId || 0),
+  tourId: `stay-${item.stayId || item.id || index}`,
+  companyId: Number(item.companyId || 0),
+  companyName: item.companyName || '',
+  clientName: item.clientName || '',
+  clientEmail: item.clientEmail || '',
+  clientPhone: item.clientPhone || '',
+  tourTitle: item.stayTitle || item.title || 'Бронь домика',
+  stayTitle: item.stayTitle || item.title || '',
+  location: item.location || '',
+  amount: Number(item.amount || 0),
+  status: item.status || 'pending',
+  paymentStatus: item.status === 'confirmed' ? 'confirmed' : item.status || 'pending',
+  purchasedAt: item.createdAt || item.checkInDate || new Date().toISOString(),
+  travelDate: item.checkInDate || '',
+  bookingDate: item.checkInDate || item.createdAt || new Date().toISOString(),
+  date: item.checkInDate || item.createdAt || new Date().toISOString(),
+  endDate: item.checkOutDate || item.checkInDate || '',
+  durationMinutes: Math.max(Number(item.nights || 1), 1) * 24 * 60,
+  assignedTo: item.companyName || 'TravelPay Business',
+  guests: Number(item.guests || 1),
+  checkInTime: item.checkInTime || '14:00',
+  comment: item.comment || '',
 });
 
 const normalizeTourRecord = (tour, index = 0) => {
@@ -313,6 +344,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [accommodations, setAccommodations] = useState([]);
+  const [stayBookings, setStayBookings] = useState([]);
   const [topupRequests, setTopupRequests] = useState([]);
 
   const [loading, setLoading] = useState(false);
@@ -369,11 +401,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const [toursResponse, usersResponse, companiesResponse, accommodationsResponse, topupsResponse] = await Promise.all([
+      const [toursResponse, usersResponse, companiesResponse, accommodationsResponse, stayBookingsResponse, topupsResponse] = await Promise.all([
         api.get('/tours', { headers: { 'x-user-id': sessionUser?.id } }),
         api.get('/users', { headers: { 'x-user-id': sessionUser?.id } }),
         api.get('/companies', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
         api.get('/accommodations', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
+        api.get('/stay-bookings', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
         api.get('/api/admin/topups', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
       ]);
 
@@ -381,6 +414,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       setUsers((usersResponse.data || []).map(normalizeUser));
       setCompanies(companiesResponse.data || []);
       setAccommodations((accommodationsResponse.data || []).map(normalizeAccommodation));
+      setStayBookings((stayBookingsResponse.data || []).map(normalizeStayBooking));
       setTopupRequests(topupResponseSort(topupsResponse.data || []));
     } catch (error) {
       setMessageState({ type: 'error', text: 'Не удалось загрузить данные админ-панели.' });
@@ -430,16 +464,21 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     return accumulator;
   }, {}), [tours]);
 
-  const bookingRows = useMemo(() => users.flatMap((user) => (user?.travelHistory || []).map((item, index) => ({
-    key: `${user.id}-travel-${index}`,
-    ...item,
-    clientId: user.id,
-    clientName: item.clientName || user.name,
-    clientEmail: item.clientEmail || user.email,
-    clientPhone: item.clientPhone || user.phone || '—',
-    assignedTo: item.assignedTo || currentCompany?.name || 'TravelPay Team',
-    bookingDate: item.date || item.travelDate || item.purchasedAt,
-  }))), [currentCompany?.name, users]);
+  const bookingRows = useMemo(() => {
+    const tourBookings = users.flatMap((user) => (user?.travelHistory || []).map((item, index) => ({
+      key: `${user.id}-travel-${index}`,
+      type: 'tour_booking',
+      ...item,
+      clientId: user.id,
+      clientName: item.clientName || user.name,
+      clientEmail: item.clientEmail || user.email,
+      clientPhone: item.clientPhone || user.phone || '—',
+      assignedTo: item.assignedTo || currentCompany?.name || 'TravelPay Team',
+      bookingDate: item.date || item.travelDate || item.purchasedAt,
+    })));
+
+    return [...tourBookings, ...stayBookings];
+  }, [currentCompany?.name, stayBookings, users]);
 
   const managerOptions = useMemo(() => {
     const unique = Array.from(new Set(bookingRows.map((item) => item.assignedTo).filter(Boolean)));
@@ -499,10 +538,16 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         booking.clientEmail,
         booking.clientPhone,
         booking.tourTitle,
+        booking.stayTitle,
         booking.location,
+        booking.comment,
       ].filter(Boolean).join(' ').toLowerCase();
 
-      const normalizedStatus = booking.status === 'paid' ? 'paid' : booking.status === 'cancelled' ? 'cancelled' : 'pending';
+      const normalizedStatus = booking.status === 'paid' || booking.status === 'confirmed'
+        ? 'paid'
+        : booking.status === 'cancelled' || booking.status === 'rejected'
+          ? 'cancelled'
+          : 'pending';
       const matchesStatus = bookingStatusFilter === 'all' || normalizedStatus === bookingStatusFilter;
       const matchesManager = bookingManagerFilter === 'all' || booking.assignedTo === bookingManagerFilter;
 
@@ -1101,10 +1146,15 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const getBookingActions = (booking) => ({
     items: [
       { key: 'details', icon: <EyeOutlined />, label: 'Подробнее' },
-      { key: 'edit', icon: <EditOutlined />, label: 'Изменить' },
-      { key: 'delete', icon: <DeleteOutlined />, danger: true, label: 'Удалить' },
+      ...(booking.type === 'stay_booking' ? [
+        { key: 'confirm', icon: <CheckOutlined />, label: 'Подтвердить' },
+        { key: 'cancel', icon: <CloseOutlined />, danger: true, label: 'Отменить' },
+      ] : [
+        { key: 'edit', icon: <EditOutlined />, label: 'Изменить' },
+        { key: 'delete', icon: <DeleteOutlined />, danger: true, label: 'Удалить' },
+      ]),
     ],
-    onClick: ({ key }) => {
+    onClick: async ({ key }) => {
       if (key === 'details') {
         Modal.info({
           title: 'Детали бронирования',
@@ -1115,11 +1165,24 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               <div><Text type="secondary">Клиент</Text><br /><strong>{booking.clientName || '—'}</strong></div>
               <div><Text type="secondary">Тур</Text><br /><strong>{booking.tourTitle || '—'}</strong></div>
               <div><Text type="secondary">Дата и время</Text><br /><strong>{formatDateTime(booking.bookingDate)}</strong></div>
+              {booking.type === 'stay_booking' && <div><Text type="secondary">Гости / комментарий</Text><br /><strong>{booking.guests || 1} гостей</strong><br /><Text>{booking.comment || 'Комментария нет'}</Text></div>}
               <div><Text type="secondary">Менеджер</Text><br /><strong>{booking.assignedTo || '—'}</strong></div>
               <div><Text type="secondary">Сумма</Text><br /><strong>{formatMoney(booking.amount)}</strong></div>
             </Space>
           ),
         });
+      }
+
+      if (booking.type === 'stay_booking' && (key === 'confirm' || key === 'cancel')) {
+        try {
+          await api.put(`/stay-bookings/${booking.id}`, {
+            status: key === 'confirm' ? 'confirmed' : 'cancelled',
+          }, { headers: { 'x-user-id': sessionUser?.id } });
+          message.success(key === 'confirm' ? 'Бронь домика подтверждена.' : 'Бронь домика отменена.');
+          loadDashboardData();
+        } catch (error) {
+          message.error(error?.response?.data?.message || 'Не удалось обновить бронь домика.');
+        }
       }
 
       if (key === 'edit') {
@@ -1265,7 +1328,17 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const bookingColumnsLegacy = [
     { title: 'Клиент', dataIndex: 'clientName', width: 180 },
     { title: 'Телефон', dataIndex: 'clientPhone', width: 150 },
-    { title: 'Тур', dataIndex: 'tourTitle', width: 220 },
+    {
+      title: 'Тур / домик',
+      dataIndex: 'tourTitle',
+      width: 240,
+      render: (value, record) => (
+        <Space direction="vertical" size={2}>
+          <span>{value}</span>
+          {record.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
+        </Space>
+      ),
+    },
     { title: 'Дата', dataIndex: 'bookingDate', width: 160, render: formatDateTime },
     { title: 'Сумма', dataIndex: 'amount', width: 140, render: formatMoney },
     {
@@ -1297,7 +1370,17 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         </Space>
       ),
     },
-    { title: 'Тур', dataIndex: 'tourTitle', width: 220 },
+    {
+      title: 'Тур / домик',
+      dataIndex: 'tourTitle',
+      width: 240,
+      render: (value, record) => (
+        <Space direction="vertical" size={2}>
+          <span>{value}</span>
+          {record.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
+        </Space>
+      ),
+    },
     { title: 'Дата', dataIndex: 'bookingDate', width: 150, render: formatDate },
     { title: 'Время', dataIndex: 'bookingDate', width: 110, render: formatTime },
     { title: 'Менеджер', dataIndex: 'assignedTo', width: 180, render: (value) => value || '—' },
@@ -1669,7 +1752,10 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             <Title level={5}>{booking.tourTitle}</Title>
             <Text type="secondary">{booking.clientName} · {booking.clientPhone}</Text>
           </div>
-          <Tag color={meta.color}>{meta.label}</Tag>
+          <Space size={6}>
+            {booking.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
+            <Tag color={meta.color}>{meta.label}</Tag>
+          </Space>
         </div>
         <div className="tp-admin-booking-card__meta">
           <span>{formatDateTime(booking.bookingDate)}</span>
@@ -1694,6 +1780,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       >
         <div className="tp-admin-calendar-agenda-card__top">
           <Tag color={meta.color}>{meta.label}</Tag>
+          {!isTour && item.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
           <Tag>{item.companyName || 'TravelPay'}</Tag>
         </div>
         <div className="tp-admin-calendar-agenda-card__title">

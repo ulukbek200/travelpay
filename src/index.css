@@ -7163,6 +7163,14 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
   font-weight: 900;
 }
 
+.stay-booking-form {
+  margin-top: 18px;
+}
+
+.stay-booking-form .ant-form-item {
+  margin-bottom: 14px;
+}
+
 .stay-detail-content {
   padding-top: 24px;
 }
