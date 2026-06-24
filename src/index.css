@@ -6716,6 +6716,13 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
   color: rgba(248, 251, 255, 0.74);
 }
 
+.stays-company-line {
+  display: inline-flex;
+  margin: -4px 0 14px;
+  color: #ffd27a !important;
+  font-weight: 900;
+}
+
 .stays-featured-media {
   position: relative;
   min-height: 380px;
@@ -6884,6 +6891,18 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
   font-size: 25px;
   line-height: 1.14;
   font-weight: 950;
+}
+
+.stay-card__company {
+  width: fit-content;
+  max-width: 100%;
+  padding: 7px 11px;
+  border-radius: 999px;
+  color: #173b61;
+  background: rgba(252, 163, 17, 0.12);
+  border: 1px solid rgba(252, 163, 17, 0.22);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .stay-card p.ant-typography {
@@ -7100,6 +7119,12 @@ body[data-theme="dark"] .stay-amenity-list span {
   background: rgba(255, 255, 255, 0.075);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f7fbff;
+}
+
+body[data-theme="dark"] .stay-card__company {
+  color: #ffd27a;
+  background: rgba(252, 163, 17, 0.12);
+  border-color: rgba(252, 163, 17, 0.28);
 }
 
 body[data-theme="dark"] .stays-search-card .ant-input,
@@ -8646,6 +8671,11 @@ body.dark .tp-admin-theme-toggle {
   gap: 18px;
 }
 
+.tp-admin-form-drawer--stay .tp-admin-form {
+  display: grid;
+  gap: 18px;
+}
+
 .tp-admin-tour-form-hero {
   display: flex;
   align-items: flex-start;
@@ -8661,6 +8691,55 @@ body.dark .tp-admin-theme-toggle {
     linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(23, 59, 97, 0.96) 55%, rgba(37, 99, 235, 0.88));
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16);
   overflow: hidden;
+}
+
+.tp-admin-stay-form-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid rgba(252, 163, 17, 0.18);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(8, 24, 42, 0.96), rgba(23, 59, 97, 0.88) 56%, rgba(12, 36, 58, 0.94));
+  box-shadow: 0 22px 58px rgba(23, 59, 97, 0.18);
+}
+
+.tp-admin-stay-form-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -12% -45% 35%;
+  height: 170px;
+  background: radial-gradient(circle, rgba(252, 163, 17, 0.28), transparent 64%);
+}
+
+.tp-admin-stay-form-hero strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: #f8fbff;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.tp-admin-stay-form-hero p {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  margin: 8px 0 0;
+  color: rgba(248, 251, 255, 0.72);
+  line-height: 1.55;
+}
+
+.tp-admin-stay-form-hero .ant-tag {
+  position: relative;
+  z-index: 1;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 900;
 }
 
 .tp-admin-tour-form-hero span {
@@ -8700,6 +8779,48 @@ body.dark .tp-admin-theme-toggle {
   background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(16px);
+}
+
+.tp-admin-form-drawer--stay .tp-admin-form > .ant-form-item,
+.tp-admin-form-drawer--stay .tp-admin-form > .ant-row,
+.tp-admin-form-drawer--stay .tp-admin-form > .ant-divider,
+.tp-admin-form-drawer--stay .tp-admin-inline-list {
+  margin-bottom: 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 42px rgba(23, 59, 97, 0.08);
+}
+
+.tp-admin-form-drawer--stay .tp-admin-form > .ant-row {
+  padding-bottom: 0;
+}
+
+.tp-admin-form-drawer--stay .tp-admin-form > .ant-row .ant-form-item {
+  margin-bottom: 18px;
+}
+
+.tp-admin-form-drawer--stay .ant-form-item-label > label {
+  color: #334155 !important;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tp-admin-form-drawer--stay .ant-input,
+.tp-admin-form-drawer--stay .ant-input-number,
+.tp-admin-form-drawer--stay .ant-input-number-input,
+.tp-admin-form-drawer--stay .ant-select-selector,
+.tp-admin-form-drawer--stay textarea.ant-input {
+  min-height: 46px;
+  color: #0f172a !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(100, 116, 139, 0.22) !important;
+  box-shadow: none !important;
+}
+
+.tp-admin-form-drawer--stay textarea.ant-input {
+  min-height: 126px;
 }
 
 .tp-admin-form-drawer--tour .tp-admin-form > .ant-row {
@@ -8785,16 +8906,25 @@ body[data-theme="dark"] .tp-admin-form-drawer--tour .tp-admin-form > .ant-form-i
 body[data-theme="dark"] .tp-admin-form-drawer--tour .tp-admin-form > .ant-row,
 body[data-theme="dark"] .tp-admin-form-drawer--tour .tp-admin-form > .ant-divider,
 body[data-theme="dark"] .tp-admin-form-drawer--tour .tp-admin-linked-box,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .tp-admin-form > .ant-form-item,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .tp-admin-form > .ant-row,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .tp-admin-form > .ant-divider,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .tp-admin-inline-list,
 body.dark .tp-admin-form-drawer--tour .tp-admin-form > .ant-form-item,
 body.dark .tp-admin-form-drawer--tour .tp-admin-form > .ant-row,
 body.dark .tp-admin-form-drawer--tour .tp-admin-form > .ant-divider,
-body.dark .tp-admin-form-drawer--tour .tp-admin-linked-box {
+body.dark .tp-admin-form-drawer--tour .tp-admin-linked-box,
+body.dark .tp-admin-form-drawer--stay .tp-admin-form > .ant-form-item,
+body.dark .tp-admin-form-drawer--stay .tp-admin-form > .ant-row,
+body.dark .tp-admin-form-drawer--stay .tp-admin-form > .ant-divider,
+body.dark .tp-admin-form-drawer--stay .tp-admin-inline-list {
   background: rgba(15, 23, 42, 0.78) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
 }
 
 body[data-theme="dark"] .tp-admin-form-drawer--tour .ant-form-item-label > label,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-form-item-label > label,
 body.dark .tp-admin-form-drawer--tour .ant-form-item-label > label {
   color: #eaf3ff !important;
 }
@@ -8805,12 +8935,22 @@ body[data-theme="dark"] .tp-admin-form-drawer--tour .ant-input-number-input,
 body[data-theme="dark"] .tp-admin-form-drawer--tour .ant-select-selector,
 body[data-theme="dark"] .tp-admin-form-drawer--tour .ant-picker,
 body[data-theme="dark"] .tp-admin-form-drawer--tour textarea.ant-input,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-input,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-input-number,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-input-number-input,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-select-selector,
+body[data-theme="dark"] .tp-admin-form-drawer--stay textarea.ant-input,
 body.dark .tp-admin-form-drawer--tour .ant-input,
 body.dark .tp-admin-form-drawer--tour .ant-input-number,
 body.dark .tp-admin-form-drawer--tour .ant-input-number-input,
 body.dark .tp-admin-form-drawer--tour .ant-select-selector,
 body.dark .tp-admin-form-drawer--tour .ant-picker,
-body.dark .tp-admin-form-drawer--tour textarea.ant-input {
+body.dark .tp-admin-form-drawer--tour textarea.ant-input,
+body.dark .tp-admin-form-drawer--stay .ant-input,
+body.dark .tp-admin-form-drawer--stay .ant-input-number,
+body.dark .tp-admin-form-drawer--stay .ant-input-number-input,
+body.dark .tp-admin-form-drawer--stay .ant-select-selector,
+body.dark .tp-admin-form-drawer--stay textarea.ant-input {
   color: #f8fbff !important;
   background: rgba(255, 255, 255, 0.07) !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
@@ -8819,9 +8959,15 @@ body.dark .tp-admin-form-drawer--tour textarea.ant-input {
 body[data-theme="dark"] .tp-admin-form-drawer--tour .ant-input::placeholder,
 body[data-theme="dark"] .tp-admin-form-drawer--tour textarea.ant-input::placeholder,
 body[data-theme="dark"] .tp-admin-form-drawer--tour .ant-select-selection-placeholder,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-input::placeholder,
+body[data-theme="dark"] .tp-admin-form-drawer--stay textarea.ant-input::placeholder,
+body[data-theme="dark"] .tp-admin-form-drawer--stay .ant-select-selection-placeholder,
 body.dark .tp-admin-form-drawer--tour .ant-input::placeholder,
 body.dark .tp-admin-form-drawer--tour textarea.ant-input::placeholder,
-body.dark .tp-admin-form-drawer--tour .ant-select-selection-placeholder {
+body.dark .tp-admin-form-drawer--tour .ant-select-selection-placeholder,
+body.dark .tp-admin-form-drawer--stay .ant-input::placeholder,
+body.dark .tp-admin-form-drawer--stay textarea.ant-input::placeholder,
+body.dark .tp-admin-form-drawer--stay .ant-select-selection-placeholder {
   color: rgba(226, 238, 255, 0.46) !important;
 }
 

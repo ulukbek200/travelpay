@@ -178,6 +178,8 @@ const createAccommodationEntityDraft = () => ({
   location: '',
   totalCount: 1,
   linkedTourIds: [],
+  companyId: undefined,
+  companyName: '',
 });
 
 const normalizeAccommodation = (item = {}, index = 0) => ({
@@ -197,6 +199,8 @@ const normalizeAccommodation = (item = {}, index = 0) => ({
   extraBedPrice: Number(item.extraBedPrice || 0),
   status: item.status || 'available',
   linkedTourIds: Array.isArray(item.linkedTourIds) ? item.linkedTourIds : [],
+  companyId: Number(item.companyId || 0),
+  companyName: item.companyName || '',
 });
 
 const normalizeTourRecord = (tour, index = 0) => {
@@ -907,7 +911,16 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const openAccommodationDrawer = () => {
     setEditingAccommodationId(null);
     accommodationForm.resetFields();
-    accommodationForm.setFieldsValue(createAccommodationEntityDraft());
+    accommodationForm.setFieldsValue({
+      ...createAccommodationEntityDraft(),
+      companyId: currentCompany?.id ? String(currentCompany.id) : undefined,
+      companyName: currentCompany?.name || '',
+      capacity: 4,
+      totalCount: 1,
+      availableCount: 1,
+      status: 'available',
+      amenities: ['Wi-Fi', 'Парковка', 'Отопление'],
+    });
     setAccommodationDrawerOpen(true);
   };
 
@@ -917,6 +930,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       ...normalizeAccommodation(item),
       title: item.title || item.name,
       images: item.images?.length ? item.images : [''],
+      companyId: item.companyId ? String(item.companyId) : (currentCompany?.id ? String(currentCompany.id) : undefined),
+      companyName: item.companyName || currentCompany?.name || '',
     });
     setAccommodationDrawerOpen(true);
   };
@@ -928,10 +943,14 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   };
 
   const handleSaveAccommodation = async (values) => {
+    const selectedCompanyId = Number(values.companyId || currentCompany?.id || sessionUser?.companyId || 1);
+    const selectedCompany = companiesById.get(selectedCompanyId) || currentCompany;
     const payload = {
       ...values,
       name: values.title,
       title: values.title,
+      companyId: selectedCompanyId,
+      companyName: selectedCompany?.name || values.companyName || currentCompany?.name || 'TravelPay',
       images: (values.images || []).filter(Boolean),
       amenities: values.amenities || [],
       linkedTourIds: values.linkedTourIds || [],
@@ -1138,6 +1157,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       ),
     },
     { title: 'Название', dataIndex: 'title', width: 220 },
+    ...(!businessMode ? [{
+      title: 'Компания',
+      dataIndex: 'companyName',
+      width: 190,
+      render: (value, record) => <Tag color="blue">{value || companiesById.get(Number(record.companyId))?.name || 'TravelPay'}</Tag>,
+    }] : []),
     { title: 'Локация', dataIndex: 'location', width: 180 },
     { title: 'Цена', dataIndex: 'price', width: 130, render: formatMoney },
     { title: 'Длительность', dataIndex: 'duration', width: 120 },
@@ -2767,7 +2792,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         open={accommodationDrawerOpen}
         onClose={closeAccommodationDrawer}
         size={isDesktop ? 720 : '100%'}
-        className="tp-admin-form-drawer"
+        className="tp-admin-form-drawer tp-admin-form-drawer--stay"
         footer={(
           <div className="tp-admin-drawer-footer">
             <Button onClick={closeAccommodationDrawer}>Отмена</Button>
@@ -2778,6 +2803,29 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         )}
       >
         <Form form={accommodationForm} layout="vertical" onFinish={handleSaveAccommodation} className="tp-admin-form">
+          <div className="tp-admin-stay-form-hero">
+            <div>
+              <strong>{editingAccommodationId ? 'Обновите объект проживания' : 'Создайте премиум-домик'}</strong>
+              <p>Заполните фото, локацию, цену и удобства. Компания привяжется автоматически к Business-аккаунту.</p>
+            </div>
+            <Tag color={currentCompany?.status === 'active' ? 'green' : 'gold'}>
+              {currentCompany?.name || 'TravelPay Company'}
+            </Tag>
+          </div>
+
+          {!isSuperAdmin && (
+            <>
+              <Form.Item name="companyId" hidden><Input /></Form.Item>
+              <Form.Item name="companyName" hidden><Input /></Form.Item>
+            </>
+          )}
+
+          {isSuperAdmin && (
+            <Form.Item name="companyId" label="Компания" rules={[{ required: true, message: 'Выберите компанию' }]}>
+              <Select placeholder="Выберите компанию" options={companyOptions} />
+            </Form.Item>
+          )}
+
           <Row gutter={12}>
             <Col xs={24} md={12}>
               <Form.Item name="title" label="Название домика" rules={[{ required: true, message: 'Введите название домика' }]}>

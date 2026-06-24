@@ -169,6 +169,7 @@ const StaysPage = () => {
             <Col xs={24} lg={12}>
               <Tag color="gold"><FireOutlined /> Выбор TravelPay</Tag>
               <Title level={2}>{featuredStay.title}</Title>
+              <Text className="stays-company-line">от {featuredStay.companyName}</Text>
               <Paragraph>{featuredStay.description}</Paragraph>
               <div className="stays-featured-stats">
                 <div><strong>{formatStayPrice(featuredStay.pricePerNight)}</strong><span>за ночь</span></div>
@@ -219,6 +220,7 @@ const StaysPage = () => {
                         <Tag><EnvironmentOutlined /> {stay.city}</Tag>
                         <span>{stay.availableCount} свободно</span>
                       </div>
+                      <div className="stay-card__company">{stay.companyName}</div>
                       <Title level={3}>{stay.title}</Title>
                       <Paragraph ellipsis={{ rows: 2 }}>{stay.description}</Paragraph>
                       <div className="stay-card__meta">

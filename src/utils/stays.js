@@ -142,6 +142,7 @@ export const normalizeStay = (item = {}, index = 0) => {
     images: images.length ? images : fallback.images,
     amenities: Array.isArray(item.amenities) && item.amenities.length ? item.amenities : fallback.amenities,
     rules: item.rules || fallback.rules,
+    companyId: Number(item.companyId || fallback.companyId || 0),
     companyName: item.companyName || fallback.companyName || 'TravelPay',
   };
 };
