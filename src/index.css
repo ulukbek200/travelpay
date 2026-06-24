@@ -6145,6 +6145,132 @@ body.travelpay-admin-drawer-open .ai-concierge-button {
   box-shadow: 0 30px 78px rgba(23, 59, 97, 0.16) !important;
 }
 
+.premium-tour-card {
+  isolation: isolate;
+}
+
+.premium-tour-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.26) 44%, transparent 72%);
+  transform: translateX(-120%);
+  transition: opacity 0.24s ease, transform 0.72s ease;
+}
+
+.premium-tour-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(252, 163, 17, 0.38) !important;
+  box-shadow: 0 34px 90px rgba(23, 59, 97, 0.18) !important;
+}
+
+.premium-tour-card:hover::after {
+  opacity: 1;
+  transform: translateX(120%);
+}
+
+.premium-tour-card .ant-card-body {
+  position: relative;
+  z-index: 2;
+}
+
+.tour-card-meta-grid {
+  transition: transform 0.24s ease;
+}
+
+.premium-tour-card:hover .tour-card-meta-grid {
+  transform: translateY(-2px);
+}
+
+.premium-tour-card .tour-card-meta-grid > div {
+  transition: background 0.24s ease, border-color 0.24s ease, transform 0.24s ease;
+}
+
+.premium-tour-card:hover .tour-card-meta-grid > div {
+  transform: translateY(-1px);
+  background: rgba(23, 59, 97, 0.075) !important;
+  border-color: rgba(43, 184, 197, 0.2) !important;
+}
+
+.premium-tour-card .tour-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-top: 0;
+}
+
+.premium-tour-card .tour-card-actions .ant-btn {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.tour-card-favorite.ant-btn {
+  border-color: rgba(23, 59, 97, 0.12) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  box-shadow: 0 10px 24px rgba(23, 59, 97, 0.1);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, color 0.22s ease;
+}
+
+.tour-card-favorite.ant-btn:hover {
+  color: #e11d48 !important;
+  border-color: rgba(225, 29, 72, 0.3) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 14px 30px rgba(225, 29, 72, 0.13);
+  transform: translateY(-2px);
+}
+
+body[data-theme="dark"] .premium-tour-card {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(180deg, rgba(11, 22, 38, 0.96), rgba(8, 18, 32, 0.9)) !important;
+  box-shadow: 0 30px 82px rgba(0, 0, 0, 0.42) !important;
+}
+
+body[data-theme="dark"] .premium-tour-card .tour-card-title,
+body[data-theme="dark"] .premium-tour-card .tour-card-meta,
+body[data-theme="dark"] .premium-tour-card .tour-price {
+  color: #f8fbff !important;
+}
+
+body[data-theme="dark"] .premium-tour-card .tour-card-meta-grid > div {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #eef5ff !important;
+}
+
+body[data-theme="dark"] .premium-tour-card .tour-card-favorite.ant-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 640px) {
+  .premium-tour-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .premium-tour-card .tour-card-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .premium-tour-card .tour-card-actions .ant-btn,
+  .premium-tour-card .tour-card-actions .ant-btn-icon-only {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .premium-tour-card .tour-card-meta-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 .premium-tour-page-shell {
   position: relative;
 }
@@ -6380,6 +6506,22 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-typography-secondary {
 
   .premium-tours-hero {
     min-height: 60vh !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .premium-tour-card .tour-card-actions {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    flex-direction: initial !important;
+  }
+
+  .premium-tour-card .tour-card-actions .ant-btn,
+  .premium-tour-card .tour-card-actions .ant-btn-icon-only {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 }
 

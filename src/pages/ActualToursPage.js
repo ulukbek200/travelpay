@@ -444,19 +444,30 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                       </div>
 
                       <div style={{ ...styles.cardBody, ...(isMobile ? styles.cardBodyMobile : {}) }}>
-                        <Space size={8} wrap>
+                        <div style={styles.cardTopLine}>
                           <Tag className="tour-card-meta" style={styles.countryTag}>
                             <EnvironmentOutlined /> {tour.city}
                           </Tag>
-                          <Tag className="tour-card-meta" style={styles.durationTag}>
-                            <CalendarOutlined /> {tour.duration}
-                          </Tag>
-                        </Space>
+                          <span style={styles.verifiedPill}>
+                            <ThunderboltOutlined /> Premium route
+                          </span>
+                        </div>
 
                         <Title level={3} className="tour-card-title" style={styles.cardTitle}>{tour.title}</Title>
                         <Paragraph ellipsis={{ rows: 2 }} className="tour-card-text" style={styles.description}>
                           {tour.description}
                         </Paragraph>
+
+                        <div className="tour-card-meta-grid" style={styles.metaGrid}>
+                          <div style={styles.metaTile}>
+                            <CalendarOutlined />
+                            <span>{tour.duration}</span>
+                          </div>
+                          <div style={styles.metaTile}>
+                            <EnvironmentOutlined />
+                            <span>{tour.location || tour.city}</span>
+                          </div>
+                        </div>
 
                         <div style={styles.cardFooter}>
                           <div>
@@ -466,6 +477,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                           </div>
                           <div className="tour-card-actions">
                             <Button
+                              className="tour-card-favorite"
                               shape="circle"
                               icon={<HeartOutlined />}
                               onClick={(event) => {
@@ -886,18 +898,21 @@ const styles = {
   card: {
     width: '100%',
     minWidth: 0,
+    position: 'relative',
     overflow: 'hidden',
     borderRadius: 24,
     border: '1px solid rgba(255,255,255,0.58)',
-    background: 'rgba(255,255,255,0.72)',
-    boxShadow: '0 24px 70px rgba(23,59,97,0.12)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,251,255,0.86))',
+    boxShadow: '0 24px 70px rgba(23,59,97,0.13)',
     backdropFilter: 'blur(20px)',
+    transition: 'transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease',
   },
   imageWrap: {
     position: 'relative',
     width: '100%',
-    height: 236,
+    height: 248,
     overflow: 'hidden',
+    borderBottom: '1px solid rgba(255,255,255,0.42)',
   },
   imageWrapMobile: {
     height: 210,
@@ -912,7 +927,7 @@ const styles = {
   imageShade: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.58))',
+    background: 'linear-gradient(180deg, rgba(6,17,31,0.02) 18%, rgba(6,17,31,0.32) 58%, rgba(6,17,31,0.76) 100%)',
   },
   promoBadge: {
     position: 'absolute',
@@ -966,10 +981,19 @@ const styles = {
     lineHeight: 1.35,
   },
   cardBody: {
-    padding: 20,
+    padding: 22,
+    display: 'grid',
+    gap: 14,
   },
   cardBodyMobile: {
     padding: 16,
+  },
+  cardTopLine: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
   },
   countryTag: {
     borderRadius: 999,
@@ -985,9 +1009,21 @@ const styles = {
     border: '1px solid rgba(252,163,17,0.20)',
     fontWeight: 750,
   },
+  verifiedPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    padding: '7px 10px',
+    borderRadius: 999,
+    background: 'rgba(252,163,17,0.12)',
+    color: BRAND_BLUE,
+    border: '1px solid rgba(252,163,17,0.22)',
+    fontSize: 12,
+    fontWeight: 850,
+  },
   cardTitle: {
     color: BRAND_BLUE,
-    margin: '16px 0 8px',
+    margin: 0,
     fontWeight: 900,
     lineHeight: 1.15,
   },
@@ -995,6 +1031,25 @@ const styles = {
     color: '#64748B',
     lineHeight: 1.66,
     minHeight: 52,
+    marginBottom: 0,
+  },
+  metaGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: 10,
+  },
+  metaTile: {
+    minHeight: 50,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 9,
+    padding: '10px 12px',
+    borderRadius: 16,
+    background: 'rgba(23,59,97,0.055)',
+    border: '1px solid rgba(23,59,97,0.08)',
+    color: BRAND_BLUE,
+    fontSize: 13,
+    fontWeight: 800,
   },
   cardFooter: {
     display: 'flex',
@@ -1002,7 +1057,9 @@ const styles = {
     alignItems: 'center',
     gap: 14,
     flexWrap: 'wrap',
-    marginTop: 18,
+    marginTop: 2,
+    paddingTop: 14,
+    borderTop: '1px solid rgba(23,59,97,0.08)',
   },
   priceLabel: {
     color: '#94A3B8',
@@ -1012,8 +1069,9 @@ const styles = {
   },
   price: {
     color: BRAND_GOLD,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 900,
+    letterSpacing: 0,
   },
   priceNote: {
     marginTop: 6,
@@ -1025,18 +1083,24 @@ const styles = {
     borderRadius: 14,
     height: 42,
     fontWeight: 850,
+    paddingInline: 16,
   },
   detailsButton: {
     borderRadius: 14,
     height: 42,
-    fontWeight: 850,
+    fontWeight: 900,
+    paddingInline: 18,
+    boxShadow: '0 14px 30px rgba(37,99,235,0.24)',
   },
   ratingLine: {
-    marginTop: 16,
+    marginTop: 0,
     display: 'flex',
     alignItems: 'center',
     gap: 8,
     flexWrap: 'wrap',
+    padding: '10px 12px',
+    borderRadius: 16,
+    background: 'rgba(252,163,17,0.08)',
   },
 };
 
