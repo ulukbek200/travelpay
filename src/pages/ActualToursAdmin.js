@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Avatar,
@@ -71,8 +71,6 @@ import { normalizeUser } from '../utils/user';
 const { Header, Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
-
-const formatTime = (value) => (value ? new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—');
 
 const BOOKING_MONTHS = [
   'Январь',
@@ -227,9 +225,10 @@ const normalizeStayBooking = (item = {}, index = 0) => ({
   bookingDate: item.checkInDate || item.createdAt || new Date().toISOString(),
   date: item.checkInDate || item.createdAt || new Date().toISOString(),
   endDate: item.checkOutDate || item.checkInDate || '',
-  durationMinutes: Math.max(Number(item.nights || 1), 1) * 24 * 60,
+  durationMinutes: Number(item.durationMinutes || 120),
   assignedTo: item.companyName || 'TravelPay Business',
   guests: Number(item.guests || 1),
+  nights: Number(item.nights || 1),
   checkInTime: item.checkInTime || '14:00',
   comment: item.comment || '',
 });
@@ -304,13 +303,28 @@ const parseDurationDays = (value) => {
 };
 
 const getBookingStartDate = (booking) => {
-  const value = booking?.bookingDate || booking?.travelDate || booking?.purchasedAt;
-  const parsed = dayjs(value);
+  const value = booking?.startTime || booking?.bookingDate || booking?.travelDate || booking?.purchasedAt;
+  let parsed = dayjs(value);
+  const time = booking?.checkInTime || booking?.time;
+  if (time && parsed.isValid()) {
+    const [hours, minutes] = String(time).split(':').map(Number);
+    if (Number.isFinite(hours)) {
+      parsed = parsed.hour(hours).minute(Number.isFinite(minutes) ? minutes : 0).second(0).millisecond(0);
+    }
+  }
   return parsed.isValid() ? parsed : dayjs();
 };
 
 const getBookingDurationMinutes = (booking) => {
+  if (booking?.allDay) return 24 * 60;
   if (Number(booking?.durationMinutes) > 0) return Number(booking.durationMinutes);
+  if (booking?.endTime) {
+    const start = getBookingStartDate(booking);
+    const end = dayjs(booking.endTime);
+    if (end.isValid() && end.isAfter(start)) {
+      return Math.max(45, end.diff(start, 'minute'));
+    }
+  }
   if (booking?.endDate) {
     const start = getBookingStartDate(booking);
     const end = dayjs(booking.endDate);
@@ -320,6 +334,26 @@ const getBookingDurationMinutes = (booking) => {
   }
   return 60;
 };
+
+const formatCalendarTimeRange = (item) => {
+  if (item?.allDay) return 'Весь день';
+  const start = item?.type === 'tour'
+    ? dayjs(item.startDate)
+    : getBookingStartDate(item);
+  const duration = item?.type === 'tour' ? 90 : getBookingDurationMinutes(item);
+  if (!start.isValid() || duration >= 24 * 60) return 'Весь день';
+  return `${start.format('HH:mm')} - ${start.add(duration, 'minute').format('HH:mm')}`;
+};
+
+const getBookingStatusVisual = (status) => ({
+  paid: { label: 'Подтверждено', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
+  confirmed: { label: 'Подтверждено', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
+  pending: { label: 'Ожидает', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' },
+  new: { label: 'Новая заявка', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.13)' },
+  cancelled: { label: 'Отменено', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.12)' },
+  rejected: { label: 'Отменено', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.12)' },
+  completed: { label: 'Завершено', color: '#64748b', bg: 'rgba(100, 116, 139, 0.13)' },
+}[status] || { label: 'Новая заявка', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.13)' });
 
 const toDayjsField = (value) => {
   const parsed = dayjs(value);
@@ -331,6 +365,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const location = useLocation();
   const screens = useBreakpoint();
   const isDesktop = !!screens.lg;
+  const weekBoardRef = useRef(null);
   const sessionUser = readCurrentUser();
   const isSuperAdmin = sessionUser?.role === 'super_admin';
   const basePath = businessMode ? '/business' : '/admin';
@@ -438,6 +473,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       document.body.classList.remove('travelpay-admin-drawer-open');
     };
   }, [isDesktop, menuOpen]);
+
+  useEffect(() => {
+    if (currentTab !== 'bookings' || bookingTab !== 'week') return;
+    const selectedDay = weekBoardRef.current?.querySelector('.tp-admin-week-board__day-tab.is-selected');
+    selectedDay?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [bookingTab, calendarDate, currentTab]);
 
   const currentCompany = useMemo(() => {
     if (!companies.length) return null;
@@ -735,7 +776,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   ), [calendarDate]);
 
   const weekBoardStartHour = 8;
-  const weekBoardEndHour = 20;
+  const weekBoardEndHour = 22;
+  const weekHourHeight = 96;
   const weekHourRows = useMemo(() => (
     Array.from({ length: weekBoardEndHour - weekBoardStartHour }, (_, index) => weekBoardStartHour + index)
   ), []);
@@ -749,47 +791,68 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           return day.date.isSame(start, 'day') || day.date.isSame(end, 'day') || (day.date.isAfter(start, 'day') && day.date.isBefore(end, 'day'));
         })
         .sort((left, right) => dayjs(left.startDate).valueOf() - dayjs(right.startDate).valueOf())
-        .map((entry, index) => {
+        .map((entry) => {
           const isTour = entry.type === 'tour';
           const start = isTour
             ? dayjs(entry.startDate).hour(9).minute(0)
             : getBookingStartDate(entry);
           const durationMinutes = isTour ? 90 : getBookingDurationMinutes(entry);
           const startMinutes = (start.hour() * 60) + start.minute();
-          const topMinutes = Math.max(0, startMinutes - weekBoardStartHour * 60);
-          const heightMinutes = Math.max(50, durationMinutes);
+          const boardStartMinutes = weekBoardStartHour * 60;
+          const boardEndMinutes = weekBoardEndHour * 60;
+          const endMinutes = Math.min(startMinutes + durationMinutes, boardEndMinutes);
+          const topMinutes = Math.max(0, startMinutes - boardStartMinutes);
+          const visibleDuration = Math.max(45, endMinutes - Math.max(startMinutes, boardStartMinutes));
           const palette = isTour
             ? ({
-                scheduled: { background: 'rgba(59, 130, 246, 0.16)', border: '#2563eb', text: '#0f172a' },
-                in_progress: { background: 'rgba(34, 197, 94, 0.15)', border: '#16a34a', text: '#0f172a' },
-                completed: { background: 'rgba(148, 163, 184, 0.18)', border: '#64748b', text: '#0f172a' },
-                cancelled: { background: 'rgba(239, 68, 68, 0.14)', border: '#dc2626', text: '#0f172a' },
-                sold_out: { background: 'rgba(249, 115, 22, 0.16)', border: '#f97316', text: '#0f172a' },
-              }[entry.status] || { background: 'rgba(59, 130, 246, 0.16)', border: '#2563eb', text: '#0f172a' })
-            : ({
-                paid: { background: 'rgba(59, 130, 246, 0.16)', border: '#0ea5e9', text: '#0f172a' },
-                pending: { background: 'rgba(34, 197, 94, 0.14)', border: '#22c55e', text: '#0f172a' },
-                cancelled: { background: 'rgba(249, 115, 22, 0.14)', border: '#f97316', text: '#0f172a' },
-              }[entry.status] || { background: 'rgba(168, 85, 247, 0.16)', border: '#a855f7', text: '#0f172a' });
+                scheduled: { background: 'rgba(37, 99, 235, 0.13)', border: '#2563eb', text: '#0f172a' },
+                in_progress: { background: 'rgba(22, 163, 74, 0.12)', border: '#16a34a', text: '#0f172a' },
+                completed: { background: 'rgba(100, 116, 139, 0.13)', border: '#64748b', text: '#0f172a' },
+                cancelled: { background: 'rgba(220, 38, 38, 0.12)', border: '#dc2626', text: '#0f172a' },
+                sold_out: { background: 'rgba(245, 158, 11, 0.15)', border: '#f59e0b', text: '#0f172a' },
+              }[entry.status] || { background: 'rgba(37, 99, 235, 0.13)', border: '#2563eb', text: '#0f172a' })
+            : {
+                background: getBookingStatusVisual(entry.status).bg,
+                border: getBookingStatusVisual(entry.status).color,
+                text: '#0f172a',
+              };
 
           return {
             ...entry,
+            startMinute: Math.max(startMinutes, boardStartMinutes),
+            endMinute: Math.max(endMinutes, Math.max(startMinutes, boardStartMinutes) + 45),
             style: {
-              top: `${topMinutes}px`,
-              height: `${heightMinutes}px`,
-              left: `${10 + (index % 2) * 8}px`,
-              right: `${10 + (index % 2) * 8}px`,
+              top: `${(topMinutes / 60) * weekHourHeight}px`,
+              height: `${(visibleDuration / 60) * weekHourHeight}px`,
               background: palette.background,
               borderColor: palette.border,
               color: palette.text,
             },
-            timeLabel: isTour
-              ? `${dayjs(entry.startDate).format('DD.MM')} - ${dayjs(entry.endDate).format('DD.MM')}`
-              : `${start.format('HH:mm')} - ${start.add(durationMinutes, 'minute').format('HH:mm')}`,
+            statusVisual: isTour ? null : getBookingStatusVisual(entry.status),
+            timeLabel: isTour ? formatCalendarTimeRange(entry) : formatCalendarTimeRange(entry),
           };
         });
 
-      return { ...day, items };
+      const lanes = [];
+      const placed = items.map((item) => {
+        const laneIndex = lanes.findIndex((laneEnd) => laneEnd <= item.startMinute);
+        const nextLane = laneIndex === -1 ? lanes.length : laneIndex;
+        lanes[nextLane] = item.endMinute;
+        return { ...item, laneIndex: nextLane };
+      });
+      const laneCount = Math.max(lanes.length, 1);
+
+      return {
+        ...day,
+        items: placed.map((item) => ({
+          ...item,
+          style: {
+            ...item.style,
+            left: `calc(${(item.laneIndex / laneCount) * 100}% + 8px)`,
+            width: `calc(${100 / laneCount}% - 12px)`,
+          },
+        })),
+      };
     })
   ), [weekCalendarDays, weekCalendarEntries]);
 
@@ -1203,6 +1266,22 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     setCalendarDrawerItem(null);
   };
 
+  const updateStayBookingStatus = async (booking, status) => {
+    if (!booking?.id || booking.type !== 'stay_booking') {
+      message.info('Это действие доступно для броней домиков.');
+      return;
+    }
+
+    try {
+      await api.put(`/stay-bookings/${booking.id}`, { status }, { headers: { 'x-user-id': sessionUser?.id } });
+      message.success(status === 'confirmed' ? 'Бронь подтверждена.' : 'Бронь отменена.');
+      setCalendarDrawerItem((current) => current ? { ...current, status } : current);
+      loadDashboardData();
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Не удалось обновить статус брони.');
+    }
+  };
+
   const tourColumns = [
     {
       title: 'Фото',
@@ -1382,7 +1461,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       ),
     },
     { title: 'Дата', dataIndex: 'bookingDate', width: 150, render: formatDate },
-    { title: 'Время', dataIndex: 'bookingDate', width: 110, render: formatTime },
+    { title: 'Время', width: 140, render: (_, record) => formatCalendarTimeRange(record) },
     { title: 'Менеджер', dataIndex: 'assignedTo', width: 180, render: (value) => value || '—' },
     { title: 'Сумма', dataIndex: 'amount', width: 140, render: formatMoney },
     {
@@ -1427,7 +1506,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     { title: 'Тур', dataIndex: 'tourTitle', width: 220 },
     { title: 'Компания', dataIndex: 'companyName', width: 180, render: (value) => value || '—' },
     { title: 'Дата', dataIndex: 'bookingDate', width: 150, render: formatDate },
-    { title: 'Время', dataIndex: 'bookingDate', width: 110, render: formatTime },
+    { title: 'Время', width: 140, render: (_, record) => formatCalendarTimeRange(record) },
     { title: 'Менеджер', dataIndex: 'assignedTo', width: 180, render: (value) => value || '—' },
     { title: 'Сумма', dataIndex: 'amount', width: 140, render: formatMoney },
     {
@@ -1770,24 +1849,34 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     const meta = isTour
       ? (TOUR_CALENDAR_STATUS_META[item.status] || TOUR_CALENDAR_STATUS_META.scheduled)
       : (BOOKING_STATUS_META[item.status] || BOOKING_STATUS_META.pending);
+    const visual = isTour ? null : getBookingStatusVisual(item.status);
 
     return (
       <button
         key={item.key}
         type="button"
         className={`tp-admin-calendar-agenda-card${isTour ? ' is-tour' : ' is-booking'}`}
+        style={!isTour ? { '--booking-accent': visual.color, '--booking-bg': visual.bg } : undefined}
         onClick={() => openCalendarItemDetails(item)}
       >
         <div className="tp-admin-calendar-agenda-card__top">
-          <Tag color={meta.color}>{meta.label}</Tag>
+          <Tag color={meta.color}>{visual?.label || meta.label}</Tag>
           {!isTour && item.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
           <Tag>{item.companyName || 'TravelPay'}</Tag>
         </div>
+        <div className="tp-admin-calendar-agenda-card__time">{isTour ? formatCalendarTimeRange(item) : formatCalendarTimeRange(item)}</div>
         <div className="tp-admin-calendar-agenda-card__title">
           {item.title || item.tourTitle}
         </div>
         <div className="tp-admin-calendar-agenda-card__meta">
-          {isTour ? `${item.bookedSeats}/${item.totalSeats} мест` : (item.clientName || 'Бронь клиента')}
+          {isTour ? `${item.bookedSeats}/${item.totalSeats} мест` : (
+            <>
+              {item.clientName && <span>👤 {item.clientName}</span>}
+              {item.stayTitle && <span>🏠 {item.stayTitle}</span>}
+              {item.guests ? <span>👥 {item.guests}</span> : null}
+              {item.amount ? <span>💰 {formatMoney(item.amount)}</span> : null}
+            </>
+          )}
         </div>
       </button>
     );
@@ -2153,7 +2242,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                 key: 'week',
                 label: 'Неделя',
                 children: (
-                  <div className="tp-admin-week-board">
+                  <div className="tp-admin-week-board" ref={weekBoardRef}>
                     <div className="tp-admin-week-board__header">
                       <div className="tp-admin-week-board__header-spacer" />
                       <div className="tp-admin-week-board__days">
@@ -2198,12 +2287,22 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                               >
                                 <div className="tp-admin-week-event__time">{booking.timeLabel}</div>
                                 <div className="tp-admin-week-event__title">{booking.title || booking.tourTitle}</div>
-                                <div className="tp-admin-week-event__meta">
-                                  {booking.type === 'tour'
-                                    ? `${booking.companyName} · ${booking.bookedSeats}/${booking.totalSeats}`
-                                    : booking.clientName}
-                                  <span>{booking.amount ? formatMoney(booking.amount) : (booking.companyName || '')}</span>
-                                </div>
+                                {booking.type === 'tour' ? (
+                                  <div className="tp-admin-week-event__meta">
+                                    <span>🏕 {booking.companyName}</span>
+                                    <span>👥 {booking.bookedSeats}/{booking.totalSeats} мест</span>
+                                  </div>
+                                ) : (
+                                  <div className="tp-admin-week-event__meta">
+                                    {booking.clientName && <span>👤 {booking.clientName}</span>}
+                                    {booking.tourTitle && <span>🏕 {booking.tourTitle}</span>}
+                                    {booking.stayTitle && <span>🏠 {booking.stayTitle}</span>}
+                                    {booking.guests ? <span>👥 {booking.guests} чел.</span> : null}
+                                    {booking.amount ? <span>💰 {formatMoney(booking.amount)}</span> : null}
+                                    {booking.clientPhone && <span>📞 {booking.clientPhone}</span>}
+                                    {booking.statusVisual && <strong style={{ color: booking.statusVisual.color }}>● {booking.statusVisual.label}</strong>}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -2613,16 +2712,29 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
             <Card size="small" className="tp-admin-inline-card">
               <div className="tp-admin-calendar-detail-grid">
+                {calendarDrawerItem.clientName && <div><Text type="secondary">Клиент</Text><strong>{calendarDrawerItem.clientName}</strong></div>}
+                {calendarDrawerItem.clientPhone && <div><Text type="secondary">Телефон</Text><strong>{calendarDrawerItem.clientPhone}</strong></div>}
+                {calendarDrawerItem.clientEmail && <div><Text type="secondary">Email</Text><strong>{calendarDrawerItem.clientEmail}</strong></div>}
                 <div><Text type="secondary">Даты</Text><strong>{formatDate(calendarDrawerItem.startDate || calendarDrawerItem.bookingDate)} - {formatDate(calendarDrawerItem.endDate || calendarDrawerItem.bookingDate)}</strong></div>
-                <div><Text type="secondary">Маршрут</Text><strong>{calendarDrawerItem.route || calendarDrawerItem.location || 'Маршрут уточняется'}</strong></div>
-                <div><Text type="secondary">Менеджер</Text><strong>{calendarDrawerItem.manager || calendarDrawerItem.assignedTo || '—'}</strong></div>
-                <div><Text type="secondary">Цена</Text><strong>{formatMoney(calendarDrawerItem.price || calendarDrawerItem.amount)}</strong></div>
-                <div><Text type="secondary">Всего мест</Text><strong>{calendarDrawerItem.totalSeats || 1}</strong></div>
-                <div><Text type="secondary">Занято</Text><strong>{calendarDrawerItem.bookedSeats || (calendarDrawerItem.clientName ? 1 : 0)}</strong></div>
-                <div><Text type="secondary">Свободно</Text><strong>{calendarDrawerItem.freeSeats ?? Math.max((calendarDrawerItem.totalSeats || 1) - (calendarDrawerItem.bookedSeats || 0), 0)}</strong></div>
-                <div><Text type="secondary">Статус оплаты</Text><strong>{calendarDrawerItem.paymentStatus || calendarDrawerItem.status || 'pending'}</strong></div>
+                <div><Text type="secondary">Время</Text><strong>{formatCalendarTimeRange(calendarDrawerItem)}</strong></div>
+                {(calendarDrawerItem.tourTitle || calendarDrawerItem.title) && <div><Text type="secondary">Тур</Text><strong>{calendarDrawerItem.tourTitle || calendarDrawerItem.title}</strong></div>}
+                {calendarDrawerItem.stayTitle && <div><Text type="secondary">Домик</Text><strong>{calendarDrawerItem.stayTitle}</strong></div>}
+                {calendarDrawerItem.companyName && <div><Text type="secondary">Компания</Text><strong>{calendarDrawerItem.companyName}</strong></div>}
+                {(calendarDrawerItem.route || calendarDrawerItem.location) && <div><Text type="secondary">Локация</Text><strong>{calendarDrawerItem.route || calendarDrawerItem.location}</strong></div>}
+                {(calendarDrawerItem.guests || calendarDrawerItem.totalSeats) && <div><Text type="secondary">Гости / места</Text><strong>{calendarDrawerItem.guests ? `${calendarDrawerItem.guests} чел.` : `${calendarDrawerItem.bookedSeats || 0}/${calendarDrawerItem.totalSeats}`}</strong></div>}
+                {(calendarDrawerItem.nights || calendarDrawerItem.duration) && <div><Text type="secondary">Длительность</Text><strong>{calendarDrawerItem.nights ? `${calendarDrawerItem.nights} ночи` : calendarDrawerItem.duration}</strong></div>}
+                {(calendarDrawerItem.price || calendarDrawerItem.amount) && <div><Text type="secondary">Стоимость</Text><strong>{formatMoney(calendarDrawerItem.price || calendarDrawerItem.amount)}</strong></div>}
+                <div><Text type="secondary">Статус</Text><strong>{calendarDrawerItem.type === 'tour'
+                  ? (TOUR_CALENDAR_STATUS_META[calendarDrawerItem.status] || TOUR_CALENDAR_STATUS_META.scheduled).label
+                  : getBookingStatusVisual(calendarDrawerItem.status).label}</strong></div>
               </div>
             </Card>
+
+            {calendarDrawerItem.comment && (
+              <Card size="small" className="tp-admin-inline-card" title="Комментарий">
+                <Paragraph style={{ marginBottom: 0 }}>{calendarDrawerItem.comment}</Paragraph>
+              </Card>
+            )}
 
             <Card size="small" className="tp-admin-inline-card" title="Клиенты / брони">
               <Space direction="vertical" size={10} style={{ width: '100%' }}>
@@ -2645,20 +2757,35 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </Card>
 
             <div className="tp-admin-drawer-footer">
-              <Button onClick={() => calendarDrawerItem?.tourId ? navigate(`/tours/${calendarDrawerItem.tourId}`) : navigate(`/tours/${calendarDrawerItem.id}`)}>
-                Открыть тур
-              </Button>
+              {calendarDrawerItem?.type === 'stay_booking' && (
+                <>
+                  <Button type="primary" onClick={() => updateStayBookingStatus(calendarDrawerItem, 'confirmed')}>
+                    Подтвердить
+                  </Button>
+                  <Button onClick={() => message.info('Перенос брони подключим следующим шагом.')}>
+                    Перенести
+                  </Button>
+                  <Button danger onClick={() => updateStayBookingStatus(calendarDrawerItem, 'cancelled')}>
+                    Отменить
+                  </Button>
+                </>
+              )}
+              {calendarDrawerItem?.type === 'tour' && (
+                <Button onClick={() => calendarDrawerItem?.tourId ? navigate(`/tours/${calendarDrawerItem.tourId}`) : navigate(`/tours/${calendarDrawerItem.id}`)}>
+                  Открыть тур
+                </Button>
+              )}
               <Button onClick={() => {
                 if (calendarDrawerItem?.type === 'tour') {
                   startEditTour(calendarDrawerItem);
                   closeCalendarItemDetails();
                 } else {
-                  message.info('Редактирование брони оставил следующим шагом.');
+                  message.info('Редактирование брони подключим следующим шагом.');
                 }
               }}>
                 Редактировать
               </Button>
-              <Button type="primary" onClick={() => navigate('/tour-booking')}>
+              <Button onClick={() => navigate('/tour-booking')}>
                 Создать бронь
               </Button>
             </div>
