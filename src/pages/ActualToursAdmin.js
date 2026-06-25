@@ -402,15 +402,15 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [tourSearch, setTourSearch] = useState('');
   const [tourStatusFilter, setTourStatusFilter] = useState('all');
   const [clientSearch, setClientSearch] = useState('');
-  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingSearch] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingManagerFilter, setBookingManagerFilter] = useState('all');
   const [calendarDate, setCalendarDate] = useState(dayjs());
-  const [bookingTab, setBookingTab] = useState('day');
+  const [bookingTab, setBookingTab] = useState('week');
   const [weekManagerSelection, setWeekManagerSelection] = useState([]);
-  const [calendarCompanyFilter, setCalendarCompanyFilter] = useState('all');
-  const [calendarTourStatusFilter, setCalendarTourStatusFilter] = useState('all');
-  const [calendarMode, setCalendarMode] = useState('all');
+  const [calendarCompanyFilter] = useState('all');
+  const [calendarTourStatusFilter] = useState('all');
+  const [calendarMode] = useState('all');
   const [calendarSearch, setCalendarSearch] = useState('');
   const [calendarDrawerItem, setCalendarDrawerItem] = useState(null);
   const [catalogMode, setCatalogMode] = useState(getCatalogMode(location.pathname));
@@ -722,17 +722,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       items: bookingsForSelectedWeek.filter((booking) => isSameDay(new Date(booking.bookingDate), date)),
     };
   }), [bookingsForSelectedWeek, calendarDate]);
-
-  const selectedDayRevenue = useMemo(() => (
-    bookingsForSelectedDay.reduce((sum, booking) => sum + Number(booking.amount || 0), 0)
-  ), [bookingsForSelectedDay]);
-
-  const selectedMonthBookings = useMemo(() => (
-    filteredBookings.filter((booking) => {
-      const bookingDate = dayjs(booking.bookingDate);
-      return bookingDate.month() === calendarDate.month() && bookingDate.year() === calendarDate.year();
-    })
-  ), [calendarDate, filteredBookings]);
 
   const selectedDayCalendarEntries = useMemo(() => {
     const selected = calendarDate.startOf('day');
@@ -1844,44 +1833,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     );
   };
 
-  const renderCalendarAgendaCard = (item) => {
-    const isTour = item.type === 'tour';
-    const meta = isTour
-      ? (TOUR_CALENDAR_STATUS_META[item.status] || TOUR_CALENDAR_STATUS_META.scheduled)
-      : (BOOKING_STATUS_META[item.status] || BOOKING_STATUS_META.pending);
-    const visual = isTour ? null : getBookingStatusVisual(item.status);
-
-    return (
-      <button
-        key={item.key}
-        type="button"
-        className={`tp-admin-calendar-agenda-card${isTour ? ' is-tour' : ' is-booking'}`}
-        style={!isTour ? { '--booking-accent': visual.color, '--booking-bg': visual.bg } : undefined}
-        onClick={() => openCalendarItemDetails(item)}
-      >
-        <div className="tp-admin-calendar-agenda-card__top">
-          <Tag color={meta.color}>{visual?.label || meta.label}</Tag>
-          {!isTour && item.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
-          <Tag>{item.companyName || 'TravelPay'}</Tag>
-        </div>
-        <div className="tp-admin-calendar-agenda-card__time">{isTour ? formatCalendarTimeRange(item) : formatCalendarTimeRange(item)}</div>
-        <div className="tp-admin-calendar-agenda-card__title">
-          {item.title || item.tourTitle}
-        </div>
-        <div className="tp-admin-calendar-agenda-card__meta">
-          {isTour ? `${item.bookedSeats}/${item.totalSeats} мест` : (
-            <>
-              {item.clientName && <span>👤 {item.clientName}</span>}
-              {item.stayTitle && <span>🏠 {item.stayTitle}</span>}
-              {item.guests ? <span>👥 {item.guests}</span> : null}
-              {item.amount ? <span>💰 {formatMoney(item.amount)}</span> : null}
-            </>
-          )}
-        </div>
-      </button>
-    );
-  };
-
   const renderBookings = () => (
     <Row gutter={[18, 18]}>
       <Col xs={24} xl={7}>
@@ -2037,7 +1988,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const renderBookingsModern = () => (
     <Row gutter={[20, 20]} className="tp-admin-bookings-shell">
-      <Col xs={24} xl={8}>
+      <Col xs={24} xl={5}>
         <Space direction="vertical" size={18} style={{ width: '100%' }}>
           <Card className="tp-admin-card tp-admin-sticky-card tp-admin-bookings-nav" styles={{ body: { padding: 24 } }}>
             <div className="tp-admin-section-head tp-admin-section-head--tight">
@@ -2089,129 +2040,19 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             />
           </Card>
 
-          <Card className="tp-admin-card tp-admin-bookings-team" styles={{ body: { padding: 24 } }}>
-            <div className="tp-admin-section-head tp-admin-section-head--tight">
-              <div>
-                <Text className="tp-admin-section-label">Сотрудники</Text>
-                <Title level={5} style={{ margin: '8px 0 0' }}>Фильтр календаря</Title>
-              </div>
-              <Badge count={weekManagerSelection.length} color="#2563eb" />
-            </div>
-            <Checkbox.Group
-              value={weekManagerSelection}
-              onChange={(values) => setWeekManagerSelection(values)}
-              style={{ width: '100%' }}
-            >
-              <Space direction="vertical" size={10} style={{ width: '100%' }}>
-                {managerOptions.length ? managerOptions.map((manager) => (
-                  <label key={manager.value} className="tp-admin-team-check">
-                    <Checkbox value={manager.value}>{manager.label}</Checkbox>
-                  </label>
-                )) : <Text type="secondary">Пока нет назначенных менеджеров</Text>}
-              </Space>
-            </Checkbox.Group>
-          </Card>
-
-          <Card className="tp-admin-card tp-admin-bookings-summary" styles={{ body: { padding: 24 } }}>
-            <Row gutter={[12, 12]}>
-              <Col span={12}>
-                <Statistic title="На выбранный день" value={selectedDayCalendarEntries.length} />
-              </Col>
-              <Col span={12}>
-                <Statistic title="Сумма за день" value={selectedDayRevenue} formatter={formatMoney} />
-              </Col>
-              <Col span={12}>
-                <Statistic title="За неделю" value={selectedWeekCalendarEntries.length} />
-              </Col>
-              <Col span={12}>
-                <Statistic title="За месяц" value={selectedMonthBookings.length} />
-              </Col>
-            </Row>
-          </Card>
         </Space>
       </Col>
 
-      <Col xs={24} xl={16}>
-        <Card className="tp-admin-card tp-admin-bookings-card" styles={{ body: { padding: 24 } }}>
-          <div className="tp-admin-section-head tp-admin-bookings-head">
+      <Col xs={24} xl={19}>
+        <Card className="tp-admin-card tp-admin-bookings-card tp-admin-bookings-card--focus" styles={{ body: { padding: 24 } }}>
+          <div className="tp-admin-section-head tp-admin-bookings-head tp-admin-bookings-head--compact">
             <div>
               <Text className="tp-admin-section-label">Бронирования</Text>
-              <Title level={3} style={{ margin: '8px 0 10px' }}>Календарь и журнал бронирований</Title>
-              <Paragraph style={{ marginBottom: 0 }}>
-                Следите за загрузкой по дням, неделям и месяцам. Все фильтры и журнал собраны в одном аккуратном рабочем блоке.
-              </Paragraph>
+              <Title level={3} style={{ margin: '8px 0 0' }}>Календарь бронирований</Title>
             </div>
             <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => navigate('/tour-booking')}>
               Создать бронирование
             </Button>
-          </div>
-
-          <div className="tp-admin-filter-grid">
-            <Input.Search
-              allowClear
-              size="large"
-              value={bookingSearch}
-              placeholder="Поиск по клиенту, туру, телефону"
-              onChange={(event) => setBookingSearch(event.target.value)}
-              className="tp-admin-search"
-            />
-            <DatePicker
-              size="large"
-              value={calendarDate}
-              onChange={(value) => value && setCalendarDate(value)}
-              style={{ width: '100%' }}
-            />
-            <Select
-              size="large"
-              value={bookingManagerFilter}
-              onChange={setBookingManagerFilter}
-              style={{ width: '100%' }}
-              options={[{ value: 'all', label: 'Все сотрудники' }, ...managerOptions]}
-            />
-          </div>
-
-          <div className="tp-admin-filter-grid tp-admin-filter-grid--extended">
-            <Select
-              size="large"
-              value={calendarCompanyFilter}
-              onChange={setCalendarCompanyFilter}
-              style={{ width: '100%' }}
-              options={[{ value: 'all', label: 'Все компании' }, ...companyOptions]}
-            />
-            <Select
-              size="large"
-              value={calendarTourStatusFilter}
-              onChange={setCalendarTourStatusFilter}
-              style={{ width: '100%' }}
-              options={[
-                { value: 'all', label: 'Все статусы туров' },
-                ...Object.entries(TOUR_CALENDAR_STATUS_META).map(([value, meta]) => ({ value, label: meta.label })),
-              ]}
-            />
-            <Segmented
-              value={calendarMode}
-              onChange={setCalendarMode}
-              options={[
-                { label: 'Все', value: 'all' },
-                { label: 'Только туры', value: 'tours' },
-                { label: 'Только брони', value: 'bookings' },
-              ]}
-              className="tp-admin-segmented tp-admin-segmented--mode"
-            />
-          </div>
-
-          <div className="tp-admin-toolbar tp-admin-toolbar--bookings">
-            <Segmented
-              value={bookingStatusFilter}
-              onChange={setBookingStatusFilter}
-              options={[
-                { label: 'Все', value: 'all' },
-                { label: 'Оплачено', value: 'paid' },
-                { label: 'Ожидает', value: 'pending' },
-                { label: 'Отменено', value: 'cancelled' },
-              ]}
-              className="tp-admin-segmented"
-            />
           </div>
 
           <Tabs
@@ -2219,25 +2060,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             onChange={setBookingTab}
             className="tp-admin-tabs"
             items={[
-              {
-                key: 'day',
-                label: 'День',
-                children: selectedDayCalendarEntries.length ? (
-                  <div className="tp-admin-booking-list">
-                    {selectedDayCalendarEntries.map(renderCalendarAgendaCard)}
-                  </div>
-                ) : (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="На выбранный день бронирований нет"
-                    className="tp-admin-empty"
-                  >
-                    <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/tour-booking')}>
-                      Создать первое бронирование
-                    </Button>
-                  </Empty>
-                ),
-              },
               {
                 key: 'week',
                 label: 'Неделя',
@@ -2349,20 +2171,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                         </div>
                       ) : null;
                     }}
-                  />
-                ),
-              },
-              {
-                key: 'all',
-                label: 'Бронирования',
-                children: (
-                  <Table
-                    rowKey="key"
-                    dataSource={filteredBookings}
-                    columns={bookingTableColumnsExtended}
-                    pagination={{ pageSize: 8, showSizeChanger: false }}
-                    scroll={{ x: 1220 }}
-                    locale={{ emptyText: 'Бронирований пока нет' }}
                   />
                 ),
               },

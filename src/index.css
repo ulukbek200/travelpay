@@ -9510,10 +9510,22 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
   margin-bottom: 22px;
 }
 
+.tp-admin-bookings-head--compact {
+  margin-bottom: 14px;
+}
+
+.tp-admin-bookings-card--focus .ant-card-body {
+  padding: 28px !important;
+}
+
 .tp-admin-bookings-nav .ant-card-body,
 .tp-admin-bookings-summary .ant-card-body,
 .tp-admin-bookings-card .ant-card-body {
   padding: 24px !important;
+}
+
+.tp-admin-bookings-card--focus.ant-card .ant-card-body {
+  padding: 28px !important;
 }
 
 .tp-admin-mini-calendar-header {
@@ -9884,7 +9896,7 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
 .tp-admin-week-board__body {
   display: grid;
   grid-template-columns: 74px minmax(0, 1fr);
-  max-height: 760px;
+  max-height: 860px;
   overflow: auto;
 }
 
@@ -9904,7 +9916,7 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
 
 .tp-admin-week-board__grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(160px, 1fr));
+  grid-template-columns: repeat(7, minmax(190px, 1fr));
 }
 
 .tp-admin-week-board__column {
