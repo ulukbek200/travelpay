@@ -766,7 +766,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const weekBoardStartHour = 8;
   const weekBoardEndHour = 22;
-  const weekHourHeight = 96;
+  const weekHourHeight = 72;
   const weekHourRows = useMemo(() => (
     Array.from({ length: weekBoardEndHour - weekBoardStartHour }, (_, index) => weekBoardStartHour + index)
   ), []);
@@ -1987,14 +1987,13 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   void renderBookings;
 
   const renderBookingsModern = () => (
-    <Row gutter={[20, 20]} className="tp-admin-bookings-shell">
-      <Col xs={24} xl={5}>
+    <Row gutter={[0, 0]} className="tp-admin-bookings-shell tp-admin-bookings-shell--salon">
+      <Col xs={24} xl={4}>
         <Space direction="vertical" size={18} style={{ width: '100%' }}>
-          <Card className="tp-admin-card tp-admin-sticky-card tp-admin-bookings-nav" styles={{ body: { padding: 24 } }}>
+          <Card className="tp-admin-card tp-admin-sticky-card tp-admin-bookings-nav tp-admin-bookings-nav--flat" styles={{ body: { padding: 24 } }}>
             <div className="tp-admin-section-head tp-admin-section-head--tight">
               <div>
-                <Text className="tp-admin-section-label">Навигация по датам</Text>
-                <Title level={4} style={{ margin: '8px 0 0' }}>Календарь</Title>
+                <Title level={4} style={{ margin: 0 }}>Календарь</Title>
               </div>
               <Badge count={selectedDayCalendarEntries.length} color="#2563eb" />
             </div>
@@ -2043,16 +2042,20 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         </Space>
       </Col>
 
-      <Col xs={24} xl={19}>
-        <Card className="tp-admin-card tp-admin-bookings-card tp-admin-bookings-card--focus" styles={{ body: { padding: 24 } }}>
-          <div className="tp-admin-section-head tp-admin-bookings-head tp-admin-bookings-head--compact">
+      <Col xs={24} xl={20}>
+        <Card className="tp-admin-card tp-admin-bookings-card tp-admin-bookings-card--focus tp-admin-bookings-card--salon" styles={{ body: { padding: 0 } }}>
+          <div className="tp-admin-section-head tp-admin-bookings-head tp-admin-bookings-head--compact tp-admin-bookings-salon-head">
             <div>
-              <Text className="tp-admin-section-label">Бронирования</Text>
-              <Title level={3} style={{ margin: '8px 0 0' }}>Календарь бронирований</Title>
+              <Title level={2} style={{ margin: 0 }}>Календарь</Title>
             </div>
-            <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => navigate('/tour-booking')}>
-              Создать бронирование
-            </Button>
+            <Space wrap className="tp-admin-bookings-salon-actions">
+              <Button shape="circle" icon={<ReloadOutlined />} onClick={loadDashboardData} loading={loading} />
+              <Button shape="circle" icon={<UserOutlined />} />
+              <Button type="primary" size="large">Продажа</Button>
+              <Button size="large" className="tp-admin-bookings-create" onClick={() => navigate('/tour-booking')}>
+                Создать запись
+              </Button>
+            </Space>
           </div>
 
           <Tabs
@@ -2111,18 +2114,14 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                                 <div className="tp-admin-week-event__title">{booking.title || booking.tourTitle}</div>
                                 {booking.type === 'tour' ? (
                                   <div className="tp-admin-week-event__meta">
-                                    <span>🏕 {booking.companyName}</span>
-                                    <span>👥 {booking.bookedSeats}/{booking.totalSeats} мест</span>
+                                    <span>{booking.companyName}</span>
+                                    <span>{booking.bookedSeats}/{booking.totalSeats} мест</span>
                                   </div>
                                 ) : (
                                   <div className="tp-admin-week-event__meta">
-                                    {booking.clientName && <span>👤 {booking.clientName}</span>}
-                                    {booking.tourTitle && <span>🏕 {booking.tourTitle}</span>}
-                                    {booking.stayTitle && <span>🏠 {booking.stayTitle}</span>}
-                                    {booking.guests ? <span>👥 {booking.guests} чел.</span> : null}
-                                    {booking.amount ? <span>💰 {formatMoney(booking.amount)}</span> : null}
-                                    {booking.clientPhone && <span>📞 {booking.clientPhone}</span>}
-                                    {booking.statusVisual && <strong style={{ color: booking.statusVisual.color }}>● {booking.statusVisual.label}</strong>}
+                                    {booking.clientName && <span>{booking.clientName}</span>}
+                                    {booking.clientPhone && <span>{booking.clientPhone}</span>}
+                                    {booking.statusVisual && <strong style={{ color: booking.statusVisual.color }}>{booking.statusVisual.label}</strong>}
                                   </div>
                                 )}
                               </div>
