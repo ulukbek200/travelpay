@@ -409,8 +409,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [bookingTab, setBookingTab] = useState('week');
   const [weekManagerSelection, setWeekManagerSelection] = useState([]);
   const [calendarCompanyFilter] = useState('all');
-  const [calendarTourStatusFilter] = useState('all');
-  const [calendarMode] = useState('all');
   const [calendarSearch, setCalendarSearch] = useState('');
   const [calendarDrawerItem, setCalendarDrawerItem] = useState(null);
   const [catalogMode, setCatalogMode] = useState(getCatalogMode(location.pathname));
@@ -652,23 +650,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     new Map(tourCalendarEntries.map((tour) => [Number(tour.id), tour]))
   ), [tourCalendarEntries]);
 
-  const filteredTourCalendarEntries = useMemo(() => {
-    const query = calendarSearch.trim().toLowerCase();
-
-    return tourCalendarEntries.filter((tour) => {
-      const matchesCompany = calendarCompanyFilter === 'all' || String(tour.companyId) === calendarCompanyFilter;
-      const matchesStatus = calendarTourStatusFilter === 'all' || tour.status === calendarTourStatusFilter;
-      const haystack = [
-        tour.title,
-        tour.companyName,
-        tour.route,
-        tour.location,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      return matchesCompany && matchesStatus && (!query || haystack.includes(query));
-    });
-  }, [calendarCompanyFilter, calendarSearch, calendarTourStatusFilter, tourCalendarEntries]);
-
   const filteredBookingCalendarEntries = useMemo(() => filteredBookings
     .map((booking) => {
       const linkedTour = toursCalendarById.get(Number(booking.tourId));
@@ -694,11 +675,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       return matchesScope && matchesCompanyFilter;
     }), [calendarCompanyFilter, companiesById, currentCompany?.id, currentCompany?.name, filteredBookings, isSuperAdmin, sessionUser?.companyId, toursCalendarById]);
 
-  const calendarEntries = useMemo(() => {
-    if (calendarMode === 'tours') return filteredTourCalendarEntries;
-    if (calendarMode === 'bookings') return filteredBookingCalendarEntries;
-    return [...filteredTourCalendarEntries, ...filteredBookingCalendarEntries];
-  }, [calendarMode, filteredBookingCalendarEntries, filteredTourCalendarEntries]);
+  const calendarEntries = useMemo(() => filteredBookingCalendarEntries, [filteredBookingCalendarEntries]);
 
   const bookingsForSelectedDay = useMemo(() => {
     const current = calendarDate.toDate();
@@ -1988,7 +1965,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const renderBookingsModern = () => (
     <Row gutter={[0, 0]} className="tp-admin-bookings-shell tp-admin-bookings-shell--salon">
-      <Col xs={24} xl={4}>
+      <Col xs={24} xl={5}>
         <Space direction="vertical" size={18} style={{ width: '100%' }}>
           <Card className="tp-admin-card tp-admin-sticky-card tp-admin-bookings-nav tp-admin-bookings-nav--flat" styles={{ body: { padding: 24 } }}>
             <div className="tp-admin-section-head tp-admin-section-head--tight">
@@ -2042,7 +2019,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         </Space>
       </Col>
 
-      <Col xs={24} xl={20}>
+      <Col xs={24} xl={19}>
         <Card className="tp-admin-card tp-admin-bookings-card tp-admin-bookings-card--focus tp-admin-bookings-card--salon" styles={{ body: { padding: 0 } }}>
           <div className="tp-admin-section-head tp-admin-bookings-head tp-admin-bookings-head--compact tp-admin-bookings-salon-head">
             <div>

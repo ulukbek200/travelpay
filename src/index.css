@@ -9603,12 +9603,28 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
 .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content th {
   color: #111827;
   font-size: 13px;
+  text-align: center;
+}
+
+.tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell {
+  padding: 3px 0;
+  text-align: center;
 }
 
 .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell-inner {
-  min-width: 32px;
-  height: 32px;
-  line-height: 32px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  line-height: 30px;
   font-weight: 800;
 }
 
@@ -10454,12 +10470,45 @@ body.dark .tp-admin-bookings-card .ant-select-selection-placeholder {
     grid-template-columns: 1fr;
   }
 
+  .tp-admin-bookings-shell--salon {
+    border-radius: 20px;
+  }
+
+  .tp-admin-bookings-nav--flat.ant-card {
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.1) !important;
+  }
+
   .tp-admin-week-board__body {
     overflow: auto;
   }
 }
 
 @media (max-width: 767px) {
+  .tp-admin-bookings-salon-head {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .tp-admin-bookings-salon-head h2.ant-typography {
+    font-size: 28px !important;
+  }
+
+  .tp-admin-bookings-salon-actions {
+    width: 100%;
+  }
+
+  .tp-admin-bookings-salon-actions .ant-btn {
+    height: 42px;
+    min-width: 42px;
+  }
+
+  .tp-admin-bookings-create {
+    flex: 1;
+  }
+
   .tp-admin-mini-calendar-header__controls {
     grid-template-columns: 1fr;
   }
@@ -10479,7 +10528,12 @@ body.dark .tp-admin-bookings-card .ant-select-selection-placeholder {
   }
 
   .tp-admin-week-board__grid {
-    min-width: 980px;
+    min-width: 960px;
+    grid-template-columns: repeat(7, minmax(136px, 1fr));
+  }
+
+  .tp-admin-week-board__day-tab {
+    min-width: 136px;
   }
 
   .tp-admin-calendar-detail-grid {
