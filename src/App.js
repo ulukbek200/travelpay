@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ConfigProvider, theme as antdTheme } from 'antd';
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,7 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import TravelBotWidget from "./components/TravelBotWidget";
 
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 
 import HomePage from './pages/HomePage';
@@ -272,6 +273,51 @@ function AppContent({ favorites, setFavorites }) {
   );
 }
 
+const travelPayThemeTokens = {
+  colorPrimary: '#5b6cff',
+  colorInfo: '#5b6cff',
+  colorSuccess: '#1fa77a',
+  colorWarning: '#f6b44b',
+  colorError: '#ef5b68',
+  colorBgBase: '#20242a',
+  colorBgContainer: 'rgba(255,255,255,0.06)',
+  colorBgElevated: '#242932',
+  colorText: '#ffffff',
+  colorTextSecondary: 'rgba(255,255,255,0.65)',
+  colorBorder: 'rgba(255,255,255,0.10)',
+  colorBorderSecondary: 'rgba(255,255,255,0.08)',
+  borderRadius: 18,
+  boxShadow: '0 20px 60px rgba(0,0,0,0.28)',
+};
+
+function AppShell({ favorites, setFavorites }) {
+  const { theme } = useTheme();
+
+  return (
+    <ConfigProvider
+      theme={theme === 'dark'
+        ? {
+            algorithm: antdTheme.darkAlgorithm,
+            token: travelPayThemeTokens,
+            components: {
+              Button: { borderRadius: 18, controlHeight: 42 },
+              Card: { borderRadiusLG: 22 },
+              Modal: { borderRadiusLG: 22 },
+              Drawer: { borderRadiusLG: 22 },
+              Table: { headerBg: 'rgba(255,255,255,0.07)', rowHoverBg: 'rgba(91,108,255,0.12)' },
+              Segmented: { itemSelectedBg: 'rgba(91,108,255,0.22)' },
+            },
+          }
+        : undefined}
+    >
+      <Router>
+        <ScrollToTop />
+        <AppContent favorites={favorites} setFavorites={setFavorites} />
+      </Router>
+    </ConfigProvider>
+  );
+}
+
 function App() {
   const [favorites, setFavorites] = useState(() => {
     return readCurrentUser()?.favorites || [];
@@ -283,10 +329,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Router>
-        <ScrollToTop />
-        <AppContent favorites={favorites} setFavorites={setFavorites} />
-      </Router>
+      <AppShell favorites={favorites} setFavorites={setFavorites} />
     </ThemeProvider>
   );
 }

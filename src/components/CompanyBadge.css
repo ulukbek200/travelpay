@@ -1,0 +1,117 @@
+.company-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 18px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+}
+
+.company-badge--glass {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(16px);
+}
+
+.company-badge--plain {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.company-badge--compact {
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 16px;
+}
+
+.company-badge__avatar {
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #5b6cff, #7c5cff);
+  color: #fff;
+}
+
+.company-badge__content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.company-badge__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.company-badge__title {
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.company-badge__city {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: rgba(17, 24, 39, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.company-badge__check {
+  color: #4f6bff;
+  font-size: 15px;
+  flex: 0 0 auto;
+}
+
+.company-badge--compact .company-badge__title {
+  font-size: 13px;
+}
+
+.company-badge--compact .company-badge__city {
+  font-size: 11px;
+}
+
+.company-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.16);
+}
+
+body[data-theme="dark"] .company-badge,
+body.dark .company-badge {
+  color: #fff;
+}
+
+body[data-theme="dark"] .company-badge--glass,
+body.dark .company-badge--glass {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+body[data-theme="dark"] .company-badge--plain,
+body.dark .company-badge--plain {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body[data-theme="dark"] .company-badge__title,
+body.dark .company-badge__title {
+  color: #fff;
+}
+
+body[data-theme="dark"] .company-badge__city,
+body.dark .company-badge__city {
+  color: rgba(255, 255, 255, 0.65);
+}

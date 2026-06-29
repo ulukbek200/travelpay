@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Badge,
   Button,
   Card,
   Empty,
   Rate,
+  Select,
   Skeleton,
   Space,
   Tag,
@@ -22,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import api from '../api';
+import CompanyBadge from '../components/CompanyBadge';
 import { readCurrentUser } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
 import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
@@ -162,13 +164,21 @@ export const normalizeTour = (tour, index = 0) => {
     promoColor: badge.color,
     hasAccommodation: Boolean(tour.hasAccommodation),
     accommodations: Array.isArray(tour.accommodations) ? tour.accommodations : [],
+    companyId: tour.companyId || null,
+    companyName: tour.companyName || 'TravelPay Partner',
+    companyLogo: tour.companyLogo || '',
+    companyCity: tour.companyCity || tour.city || 'Kyrgyzstan',
+    companyVerified: Boolean(tour.companyVerified),
+    createdByBusiness: Boolean(tour.createdByBusiness),
   };
 };
 
 const ActualToursPage = ({ favorites = [], setFavorites }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [companyFilter, setCompanyFilter] = useState(location.state?.companyFilter ? String(location.state.companyFilter) : 'all');
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1200 : window.innerWidth,
   );
@@ -205,6 +215,25 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
     () => [...tours].sort((a, b) => b.rating - a.rating || a.price - b.price).slice(0, 3),
     [tours],
   );
+
+  const companyOptions = useMemo(() => {
+    const seen = new Map();
+    tours.forEach((tour) => {
+      const key = String(tour.companyId || tour.companyName || 'partner');
+      if (!seen.has(key)) {
+        seen.set(key, {
+          value: key,
+          label: tour.companyName || 'TravelPay Partner',
+        });
+      }
+    });
+    return [{ value: 'all', label: 'Все компании' }, ...Array.from(seen.values())];
+  }, [tours]);
+
+  const visibleTours = useMemo(() => {
+    if (companyFilter === 'all') return tours;
+    return tours.filter((tour) => String(tour.companyId || tour.companyName || 'partner') === companyFilter);
+  }, [companyFilter, tours]);
 
   const featuredTours = useMemo(
     () => hotTours.length ? hotTours : fallbackTours.slice(0, 3).map(normalizeTour),
@@ -358,6 +387,13 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                 Реальные направления, удобное бронирование и премиальная подача без лишних фильтров и перегруженных блоков.
               </Paragraph>
             </div>
+            <Select
+              value={companyFilter}
+              onChange={setCompanyFilter}
+              options={companyOptions}
+              style={styles.companyFilter}
+              popupMatchSelectWidth={false}
+            />
             <Button
               onClick={() => navigate('/favorites')}
               icon={<HeartOutlined />}
@@ -376,11 +412,11 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                 </Card>
               ))}
             </div>
-          ) : tours.length === 0 ? (
+          ) : visibleTours.length === 0 ? (
             <Empty description="Туры пока не найдены. Попробуйте вернуться чуть позже." style={styles.empty} />
           ) : (
             <div id="travelpay-tour-grid" className="tours-grid" style={{ ...styles.toursGrid, ...(isTablet ? styles.toursGridTablet : {}), ...(isMobile ? styles.toursGridMobile : {}) }}>
-              {tours.map((tour, index) => {
+              {visibleTours.map((tour, index) => {
                 const isHot = featuredTours.some((featured) => featured.id === tour.id);
 
                 return (
@@ -426,6 +462,15 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                             <ThunderboltOutlined /> Premium route
                           </span>
                         </div>
+
+                        <CompanyBadge
+                          companyName={tour.companyName}
+                          companyLogo={tour.companyLogo}
+                          companyCity={tour.companyCity}
+                          companyVerified={tour.companyVerified}
+                          size="compact"
+                          variant="glass"
+                        />
 
                         <Title level={3} className="tour-card-title" style={styles.cardTitle}>{tour.title}</Title>
                         <Paragraph ellipsis={{ rows: 2 }} className="tour-card-text" style={styles.description}>
@@ -851,6 +896,9 @@ const styles = {
     height: 46,
     borderRadius: 16,
     fontWeight: 800,
+  },
+  companyFilter: {
+    minWidth: 220,
   },
   empty: {
     padding: 'clamp(36px, 8vw, 80px)',

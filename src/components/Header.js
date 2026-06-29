@@ -59,7 +59,10 @@ const Header = () => {
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
+    document.body.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('travelpay_theme', theme);
+    localStorage.setItem('theme', theme);
+    window.dispatchEvent(new CustomEvent('travelpay-theme-change', { detail: theme }));
   }, [theme]);
 
   const selectedKey = useMemo(() => {

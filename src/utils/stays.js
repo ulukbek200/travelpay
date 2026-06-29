@@ -43,6 +43,9 @@ export const fallbackStays = [
     amenities: ['Wi-Fi', 'Кухня', 'Парковка', 'Вид на горы', 'Отопление'],
     rules: 'Заезд после 14:00, выезд до 12:00. Вечеринки по согласованию.',
     companyName: 'TravelPay Stays',
+    companyLogo: '',
+    companyCity: 'Ала-Арча, Кыргызстан',
+    companyVerified: true,
   },
   {
     id: 'issyk-kul-lake-cottage',
@@ -64,6 +67,9 @@ export const fallbackStays = [
     amenities: ['Wi-Fi', 'Мангал', 'Кухня', 'У озера', 'Можно с детьми'],
     rules: 'Без шумных мероприятий после 23:00. Домик бронируется минимум на 2 ночи.',
     companyName: 'Issyk Stay Group',
+    companyLogo: '',
+    companyCity: 'Бостери, Кыргызстан',
+    companyVerified: true,
   },
   {
     id: 'son-kul-yurt-premium',
@@ -85,6 +91,9 @@ export const fallbackStays = [
     amenities: ['Завтрак', 'Вид на горы', 'Отопление', 'Можно с детьми'],
     rules: 'Рекомендуем тёплую одежду. Трансфер доступен по запросу.',
     companyName: 'Nomad Comfort',
+    companyLogo: '',
+    companyCity: 'Сон-Куль, Кыргызстан',
+    companyVerified: true,
   },
   {
     id: 'karakol-forest-house',
@@ -106,6 +115,9 @@ export const fallbackStays = [
     amenities: ['Wi-Fi', 'Кухня', 'Парковка', 'Отопление'],
     rules: 'Можно раннее заселение при свободных местах.',
     companyName: 'Karakol Base',
+    companyLogo: '',
+    companyCity: 'Каракол, Кыргызстан',
+    companyVerified: true,
   },
 ];
 
@@ -143,7 +155,11 @@ export const normalizeStay = (item = {}, index = 0) => {
     amenities: Array.isArray(item.amenities) && item.amenities.length ? item.amenities : fallback.amenities,
     rules: item.rules || fallback.rules,
     companyId: Number(item.companyId || fallback.companyId || 0),
-    companyName: item.companyName || fallback.companyName || 'TravelPay',
+    companyName: item.companyName || fallback.companyName || 'TravelPay Partner',
+    companyLogo: item.companyLogo || fallback.companyLogo || '',
+    companyCity: item.companyCity || item.city || fallback.companyCity || fallback.city || 'Kyrgyzstan',
+    companyVerified: Boolean(item.companyVerified ?? fallback.companyVerified),
+    createdByBusiness: Boolean(item.createdByBusiness),
   };
 };
 

@@ -1,3 +1,31 @@
+:root {
+  --bg-main: #ffffff;
+  --bg-section: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-soft: rgba(15, 23, 42, 0.10);
+  --accent: #5b6cff;
+  --accent-2: #7c5cff;
+  --green-accent: #1fa77a;
+  --shadow-soft: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+body[data-theme="dark"],
+body.dark {
+  --bg-main: #20242a;
+  --bg-section: #242932;
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-card-hover: rgba(255, 255, 255, 0.095);
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.65);
+  --border-soft: rgba(255, 255, 255, 0.10);
+  --accent: #5b6cff;
+  --accent-2: #7c5cff;
+  --green-accent: #1fa77a;
+  --shadow-soft: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
 
 
 body {
@@ -7093,7 +7121,7 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
 }
 
 .stay-date-pill:not(:disabled):hover,
-.stay-time-pill:hover {
+.stay-time-pill:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(23, 59, 97, 0.14);
 }
@@ -7151,6 +7179,51 @@ body[data-theme="dark"] .premium-tour-page-shell .ant-btn-default:hover {
   color: #ffffff;
   background: linear-gradient(135deg, #173b61, #2b7bb9);
   box-shadow: 0 14px 28px rgba(43, 123, 185, 0.24);
+}
+
+.stay-time-pill--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  color: #64748b;
+  background: #e2e8f0;
+  box-shadow: none;
+}
+
+.stay-time-pill span,
+.stay-time-pill small {
+  display: block;
+  line-height: 1.05;
+}
+
+.stay-time-pill small {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.stay-prepay-card.ant-card {
+  margin-top: 14px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 251, 235, 0.98), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba(245, 158, 11, 0.22);
+}
+
+.stay-prepay-card__inner {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.stay-prepay-card__qr {
+  padding: 8px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+}
+
+.stay-receipt-upload .ant-upload-drag {
+  border-radius: 16px !important;
 }
 
 .stay-booking-total {
@@ -7296,9 +7369,29 @@ body[data-theme="dark"] .stay-time-pill--selected {
   background: linear-gradient(135deg, #ffd27a, #fca311);
 }
 
+body[data-theme="dark"] .stay-time-pill--disabled {
+  color: rgba(238, 245, 255, 0.5);
+  background: rgba(148, 163, 184, 0.12);
+  opacity: 0.55;
+}
+
 body[data-theme="dark"] .stay-date-pill--disabled {
   color: rgba(238, 245, 255, 0.22);
   background: rgba(255, 255, 255, 0.035);
+}
+
+body[data-theme="dark"] .stay-prepay-card.ant-card {
+  background: linear-gradient(145deg, rgba(24, 38, 58, 0.94), rgba(9, 18, 32, 0.9)) !important;
+  border-color: rgba(252, 163, 17, 0.2) !important;
+}
+
+body[data-theme="dark"] .stay-prepay-card__qr {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+body[data-theme="dark"] .stay-receipt-upload .ant-upload-drag {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 body[data-theme="dark"] .stays-search-card .ant-input,
@@ -9423,34 +9516,41 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
 }
 
 /* TravelPay Bookings polish */
-.tp-admin-sidebar-shell {
+body[data-theme="dark"] .tp-admin-sidebar-shell,
+body.dark .tp-admin-sidebar-shell {
   background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
 }
 
-.tp-admin-brand__title {
+body[data-theme="dark"] .tp-admin-brand__title,
+body.dark .tp-admin-brand__title {
   color: #f8fafc;
 }
 
-.tp-admin-brand__subtitle {
+body[data-theme="dark"] .tp-admin-brand__subtitle,
+body.dark .tp-admin-brand__subtitle {
   color: #94a3b8;
 }
 
-.tp-admin-menu.ant-menu .ant-menu-item {
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item {
   color: rgba(248, 250, 252, 0.88);
 }
 
-.tp-admin-menu.ant-menu .ant-menu-item .ant-menu-item-icon {
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item .ant-menu-item-icon,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item .ant-menu-item-icon {
   color: #94a3b8;
 }
 
-.tp-admin-menu.ant-menu .ant-menu-item:hover {
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item:hover,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item:hover {
   color: #f8fafc !important;
   background: rgba(37, 99, 235, 0.16) !important;
 }
 
-.tp-admin-menu.ant-menu .ant-menu-item-selected {
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item-selected,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
   color: #f8fafc !important;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.34), rgba(59, 130, 246, 0.2)) !important;
   box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.24);
@@ -9960,6 +10060,17 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
   line-height: 1;
 }
 
+.tp-admin-week-board__day-tab small {
+  display: block;
+  margin-top: 4px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tp-admin-week-board__day-tab.is-selected {
   box-shadow: inset 0 -3px 0 #2d45ff;
 }
@@ -9993,6 +10104,11 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
 .tp-admin-week-board__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(150px, 1fr));
+}
+
+.tp-admin-day-board .tp-admin-week-board__days,
+.tp-admin-day-board .tp-admin-week-board__grid {
+  grid-template-columns: repeat(var(--resource-count, 1), minmax(190px, 1fr));
 }
 
 .tp-admin-week-board__column {
@@ -10070,6 +10186,44 @@ body.dark .tp-admin-page .ant-table-tbody > tr > td {
 
 .tp-admin-week-event__meta span,
 .tp-admin-week-event__meta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tp-admin-resource-filter__group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.tp-admin-resource-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.tp-admin-resource-check:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+}
+
+.tp-admin-resource-check > span:last-child {
+  min-width: 0;
+}
+
+.tp-admin-resource-check strong,
+.tp-admin-resource-check .ant-typography {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -10348,6 +10502,17 @@ body.dark .tp-admin-bookings-card .ant-segmented {
   background: #f1f5f9 !important;
 }
 
+body[data-theme="dark"] .tp-admin-bookings-shell .tp-admin-week-board__day-tab small,
+body.dark .tp-admin-bookings-shell .tp-admin-week-board__day-tab small {
+  color: #cbd5e1;
+}
+
+body[data-theme="dark"] .tp-admin-resource-check,
+body.dark .tp-admin-resource-check {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.62);
+}
+
 body[data-theme="dark"] .tp-admin-bookings-shell .tp-admin-week-board__column,
 body.dark .tp-admin-bookings-shell .tp-admin-week-board__column {
   border-right-color: rgba(15, 23, 42, 0.08);
@@ -10532,8 +10697,17 @@ body.dark .tp-admin-bookings-card .ant-select-selection-placeholder {
     grid-template-columns: repeat(7, minmax(136px, 1fr));
   }
 
+  .tp-admin-day-board .tp-admin-week-board__grid {
+    min-width: calc(var(--resource-count, 1) * 180px);
+    grid-template-columns: repeat(var(--resource-count, 1), minmax(180px, 1fr));
+  }
+
   .tp-admin-week-board__day-tab {
     min-width: 136px;
+  }
+
+  .tp-admin-day-board .tp-admin-week-board__day-tab {
+    min-width: 180px;
   }
 
   .tp-admin-calendar-detail-grid {
@@ -10677,4 +10851,1029 @@ body[data-theme="dark"] .business-page .ant-alert,
 .dark .business-page .ant-alert {
   background: rgba(34, 197, 94, 0.12) !important;
   border-color: rgba(34, 197, 94, 0.28) !important;
+}
+
+/* Premium TravelPay dark theme unification */
+body[data-theme="dark"],
+body.dark {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(96, 92, 255, 0.32), transparent 32%),
+    radial-gradient(circle at 100% 18%, rgba(20, 184, 137, 0.35), transparent 34%),
+    radial-gradient(circle at 50% 64%, rgba(63, 126, 204, 0.14), transparent 36%),
+    linear-gradient(180deg, #1f2328 0%, #20242a 100%) !important;
+  color: var(--text-main) !important;
+  color-scheme: dark;
+}
+
+body[data-theme="dark"] #root,
+body[data-theme="dark"] main,
+body[data-theme="dark"] .ant-layout,
+body[data-theme="dark"] .home-page,
+body[data-theme="dark"] .tours-page,
+body[data-theme="dark"] .tour-detail-page,
+body[data-theme="dark"] .booking-page,
+body[data-theme="dark"] .profile-page,
+body[data-theme="dark"] .savings-page,
+body[data-theme="dark"] .savings-plan-page,
+body[data-theme="dark"] .stays-page,
+body[data-theme="dark"] .stay-detail-page,
+body[data-theme="dark"] .favorites-page,
+body[data-theme="dark"] .business-page,
+body[data-theme="dark"] .business-page--register,
+body[data-theme="dark"] .business-page--login,
+body[data-theme="dark"] .tp-admin-page,
+body.dark #root,
+body.dark main,
+body.dark .ant-layout,
+body.dark .home-page,
+body.dark .tours-page,
+body.dark .tour-detail-page,
+body.dark .booking-page,
+body.dark .profile-page,
+body.dark .savings-page,
+body.dark .savings-plan-page,
+body.dark .stays-page,
+body.dark .stay-detail-page,
+body.dark .favorites-page,
+body.dark .business-page,
+body.dark .business-page--register,
+body.dark .business-page--login,
+body.dark .tp-admin-page {
+  background:
+    radial-gradient(circle at 0% 20%, rgba(96, 92, 255, 0.28), transparent 30%),
+    radial-gradient(circle at 100% 18%, rgba(20, 184, 137, 0.30), transparent 32%),
+    linear-gradient(180deg, #1f2328 0%, #20242a 100%) !important;
+  color: var(--text-main) !important;
+}
+
+body[data-theme="dark"] .ant-card,
+body[data-theme="dark"] .ant-modal-content,
+body[data-theme="dark"] .ant-drawer-content,
+body[data-theme="dark"] .ant-popover-inner,
+body[data-theme="dark"] .ant-dropdown-menu,
+body[data-theme="dark"] .ant-alert,
+body[data-theme="dark"] .business-surface-card,
+body[data-theme="dark"] .business-login-card,
+body[data-theme="dark"] .business-form-pane,
+body[data-theme="dark"] .tour-card,
+body[data-theme="dark"] .tour-detail-card,
+body[data-theme="dark"] .stay-card,
+body[data-theme="dark"] .premium-card,
+body[data-theme="dark"] .booking-card,
+body[data-theme="dark"] .tp-admin-panel,
+body[data-theme="dark"] .tp-admin-card,
+body[data-theme="dark"] .tp-admin-page-card,
+body.dark .ant-card,
+body.dark .ant-modal-content,
+body.dark .ant-drawer-content,
+body.dark .ant-popover-inner,
+body.dark .ant-dropdown-menu,
+body.dark .ant-alert,
+body.dark .business-surface-card,
+body.dark .business-login-card,
+body.dark .business-form-pane,
+body.dark .tour-card,
+body.dark .tour-detail-card,
+body.dark .stay-card,
+body.dark .premium-card,
+body.dark .booking-card,
+body.dark .tp-admin-panel,
+body.dark .tp-admin-card,
+body.dark .tp-admin-page-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--text-main) !important;
+  backdrop-filter: blur(22px);
+}
+
+body[data-theme="dark"] .ant-card,
+body[data-theme="dark"] .tour-card,
+body[data-theme="dark"] .stay-card,
+body[data-theme="dark"] .booking-card,
+body[data-theme="dark"] .tp-admin-panel,
+body[data-theme="dark"] .tp-admin-card,
+body.dark .ant-card,
+body.dark .tour-card,
+body.dark .stay-card,
+body.dark .booking-card,
+body.dark .tp-admin-panel,
+body.dark .tp-admin-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+body[data-theme="dark"] .ant-card:hover,
+body[data-theme="dark"] .tour-card:hover,
+body[data-theme="dark"] .stay-card:hover,
+body[data-theme="dark"] .booking-card:hover,
+body.dark .ant-card:hover,
+body.dark .tour-card:hover,
+body.dark .stay-card:hover,
+body.dark .booking-card:hover {
+  background: var(--bg-card-hover) !important;
+  border-color: rgba(124, 92, 255, 0.34) !important;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.38) !important;
+  transform: translateY(-2px);
+}
+
+body[data-theme="dark"] h1,
+body[data-theme="dark"] h2,
+body[data-theme="dark"] h3,
+body[data-theme="dark"] h4,
+body[data-theme="dark"] h5,
+body[data-theme="dark"] p,
+body[data-theme="dark"] label,
+body[data-theme="dark"] .ant-typography,
+body[data-theme="dark"] .ant-form-item-label > label,
+body[data-theme="dark"] .ant-statistic-title,
+body[data-theme="dark"] .ant-table,
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark h5,
+body.dark p,
+body.dark label,
+body.dark .ant-typography,
+body.dark .ant-form-item-label > label,
+body.dark .ant-statistic-title,
+body.dark .ant-table {
+  color: var(--text-main) !important;
+}
+
+body[data-theme="dark"] .ant-typography-secondary,
+body[data-theme="dark"] .ant-form-item-extra,
+body[data-theme="dark"] .ant-form-item-explain,
+body[data-theme="dark"] .ant-empty-description,
+body[data-theme="dark"] .ant-breadcrumb,
+body[data-theme="dark"] .ant-table-thead > tr > th,
+body.dark .ant-typography-secondary,
+body.dark .ant-form-item-extra,
+body.dark .ant-form-item-explain,
+body.dark .ant-empty-description,
+body.dark .ant-breadcrumb,
+body.dark .ant-table-thead > tr > th {
+  color: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] .ant-input,
+body[data-theme="dark"] .ant-input-affix-wrapper,
+body[data-theme="dark"] .ant-input-number,
+body[data-theme="dark"] .ant-select-selector,
+body[data-theme="dark"] .ant-picker,
+body[data-theme="dark"] .ant-mentions,
+body[data-theme="dark"] textarea.ant-input,
+body[data-theme="dark"] .ant-upload-drag,
+body[data-theme="dark"] .ant-segmented,
+body.dark .ant-input,
+body.dark .ant-input-affix-wrapper,
+body.dark .ant-input-number,
+body.dark .ant-select-selector,
+body.dark .ant-picker,
+body.dark .ant-mentions,
+body.dark textarea.ant-input,
+body.dark .ant-upload-drag,
+body.dark .ant-segmented {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+body[data-theme="dark"] .ant-input::placeholder,
+body[data-theme="dark"] textarea.ant-input::placeholder,
+body[data-theme="dark"] .ant-select-selection-placeholder,
+body[data-theme="dark"] .ant-picker-input > input::placeholder,
+body.dark .ant-input::placeholder,
+body.dark textarea.ant-input::placeholder,
+body.dark .ant-select-selection-placeholder,
+body.dark .ant-picker-input > input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+body[data-theme="dark"] .ant-input:focus,
+body[data-theme="dark"] .ant-input-focused,
+body[data-theme="dark"] .ant-input-affix-wrapper-focused,
+body[data-theme="dark"] .ant-picker-focused,
+body[data-theme="dark"] .ant-select-focused .ant-select-selector,
+body.dark .ant-input:focus,
+body.dark .ant-input-focused,
+body.dark .ant-input-affix-wrapper-focused,
+body.dark .ant-picker-focused,
+body.dark .ant-select-focused .ant-select-selector {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(91, 108, 255, 0.18) !important;
+}
+
+body[data-theme="dark"] .ant-btn-primary,
+body.dark .ant-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
+  border: 0 !important;
+  box-shadow: 0 14px 34px rgba(91, 108, 255, 0.34) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .ant-btn-default,
+body[data-theme="dark"] .ant-btn-dashed,
+body.dark .ant-btn-default,
+body.dark .ant-btn-dashed {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .ant-btn-dangerous,
+body.dark .ant-btn-dangerous {
+  color: #ffb4bd !important;
+  border-color: rgba(239, 91, 104, 0.32) !important;
+  background: rgba(239, 91, 104, 0.12) !important;
+}
+
+body[data-theme="dark"] .ant-table-wrapper .ant-table,
+body[data-theme="dark"] .ant-table-container,
+body[data-theme="dark"] .ant-table-thead > tr > th,
+body[data-theme="dark"] .ant-table-tbody > tr > td,
+body.dark .ant-table-wrapper .ant-table,
+body.dark .ant-table-container,
+body.dark .ant-table-thead > tr > th,
+body.dark .ant-table-tbody > tr > td {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-theme="dark"] .ant-table-thead > tr > th,
+body.dark .ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+body[data-theme="dark"] .ant-table-tbody > tr:hover > td,
+body.dark .ant-table-tbody > tr:hover > td {
+  background: rgba(91, 108, 255, 0.12) !important;
+}
+
+body[data-theme="dark"] .ant-tabs-tab,
+body[data-theme="dark"] .ant-tabs-tab-btn,
+body.dark .ant-tabs-tab,
+body.dark .ant-tabs-tab-btn {
+  color: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] .ant-tabs-tab-active .ant-tabs-tab-btn,
+body.dark .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .ant-tabs-ink-bar,
+body.dark .ant-tabs-ink-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2)) !important;
+}
+
+body[data-theme="dark"] .ant-segmented-item-selected,
+body.dark .ant-segmented-item-selected {
+  background: rgba(91, 108, 255, 0.24) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(91, 108, 255, 0.22) !important;
+}
+
+body[data-theme="dark"] .premium-site-header,
+body[data-theme="dark"] .site-header,
+body[data-theme="dark"] .tp-admin-header,
+body[data-theme="dark"] .tp-admin-sidebar-shell,
+body[data-theme="dark"] .tp-admin-profile-chip,
+body[data-theme="dark"] .travelpay-mobile-drawer .ant-drawer-content,
+body.dark .premium-site-header,
+body.dark .site-header,
+body.dark .tp-admin-header,
+body.dark .tp-admin-sidebar-shell,
+body.dark .tp-admin-profile-chip,
+body.dark .travelpay-mobile-drawer .ant-drawer-content {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: var(--text-main) !important;
+  backdrop-filter: blur(22px);
+}
+
+body[data-theme="dark"] .tp-admin-sidebar-shell,
+body.dark .tp-admin-sidebar-shell {
+  border-radius: 24px !important;
+}
+
+body[data-theme="dark"] .tp-admin-nav-item,
+body[data-theme="dark"] .mobile-menu-panel a,
+body.dark .tp-admin-nav-item,
+body.dark .mobile-menu-panel a {
+  color: rgba(255, 255, 255, 0.72) !important;
+  transition: all 0.2s ease;
+}
+
+body[data-theme="dark"] .tp-admin-nav-item:hover,
+body[data-theme="dark"] .mobile-menu-panel a:hover,
+body.dark .tp-admin-nav-item:hover,
+body.dark .mobile-menu-panel a:hover {
+  background: rgba(91, 108, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tp-admin-nav-item.active,
+body[data-theme="dark"] .mobile-menu-panel a.active,
+body.dark .tp-admin-nav-item.active,
+body.dark .mobile-menu-panel a.active {
+  background: linear-gradient(135deg, rgba(91, 108, 255, 0.32), rgba(124, 92, 255, 0.20)) !important;
+  border-color: rgba(126, 145, 255, 0.34) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tp-admin-week-board,
+body[data-theme="dark"] .tp-admin-week-shell,
+body[data-theme="dark"] .tp-admin-mini-calendar,
+body[data-theme="dark"] .tp-admin-calendar-sidebar,
+body[data-theme="dark"] .tp-admin-full-calendar,
+body[data-theme="dark"] .ant-picker-calendar,
+body[data-theme="dark"] .ant-picker-panel,
+body.dark .tp-admin-week-board,
+body.dark .tp-admin-week-shell,
+body.dark .tp-admin-mini-calendar,
+body.dark .tp-admin-calendar-sidebar,
+body.dark .tp-admin-full-calendar,
+body.dark .ant-picker-calendar,
+body.dark .ant-picker-panel {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(22px);
+}
+
+body[data-theme="dark"] .tp-admin-week-board__time,
+body[data-theme="dark"] .tp-admin-week-board__column,
+body[data-theme="dark"] .tp-admin-week-board__resource,
+body[data-theme="dark"] .tp-admin-week-board__day,
+body.dark .tp-admin-week-board__time,
+body.dark .tp-admin-week-board__column,
+body.dark .tp-admin-week-board__resource,
+body.dark .tp-admin-week-board__day {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+body[data-theme="dark"] .tp-admin-week-board__column,
+body.dark .tp-admin-week-board__column {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.055) 0,
+      rgba(255, 255, 255, 0.055) 1px,
+      transparent 1px,
+      transparent 48px
+    ),
+    rgba(255, 255, 255, 0.018) !important;
+}
+
+body[data-theme="dark"] .tp-admin-week-event,
+body.dark .tp-admin-week-event {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32) !important;
+}
+
+body[data-theme="dark"] .tp-admin-mini-calendar__day,
+body[data-theme="dark"] .ant-picker-cell-inner,
+body.dark .tp-admin-mini-calendar__day,
+body.dark .ant-picker-cell-inner {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+body[data-theme="dark"] .tp-admin-mini-calendar__day.is-active,
+body[data-theme="dark"] .ant-picker-cell-selected .ant-picker-cell-inner,
+body.dark .tp-admin-mini-calendar__day.is-active,
+body.dark .ant-picker-cell-selected .ant-picker-cell-inner {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .stay-time-pill--disabled,
+body[data-theme="dark"] .stay-date-pill--disabled,
+body.dark .stay-time-pill--disabled,
+body.dark .stay-date-pill--disabled {
+  background: rgba(255, 255, 255, 0.045) !important;
+  color: rgba(255, 255, 255, 0.34) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-theme="dark"] .ant-tag,
+body.dark .ant-tag {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .ant-divider,
+body.dark .ant-divider {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item {
+  color: rgba(255, 255, 255, 0.76) !important;
+  transition: all 0.2s ease;
+}
+
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item .ant-menu-item-icon,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item .ant-menu-item-icon {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item:hover,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item:hover {
+  background: rgba(91, 108, 255, 0.14) !important;
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item-selected,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
+  background: linear-gradient(135deg, rgba(91, 108, 255, 0.34), rgba(124, 92, 255, 0.22)) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 145, 255, 0.34), 0 16px 34px rgba(91, 108, 255, 0.18) !important;
+}
+
+body[data-theme="dark"] .tp-admin-menu.ant-menu .ant-menu-item-selected .ant-menu-item-icon,
+body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected .ant-menu-item-icon {
+  color: #8ea0ff !important;
+}
+
+body[data-theme="dark"] .tp-admin-brand__title,
+body[data-theme="dark"] .tp-admin-profile-chip strong,
+body[data-theme="dark"] .tp-admin-location strong,
+body.dark .tp-admin-brand__title,
+body.dark .tp-admin-profile-chip strong,
+body.dark .tp-admin-location strong {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tp-admin-brand__subtitle,
+body[data-theme="dark"] .tp-admin-profile-chip span,
+body[data-theme="dark"] .tp-admin-location span,
+body.dark .tp-admin-brand__subtitle,
+body.dark .tp-admin-profile-chip span,
+body.dark .tp-admin-location span {
+  color: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell,
+body.dark .tp-admin-bookings-shell {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon,
+body[data-theme="dark"] .tp-admin-bookings-nav--flat.ant-card,
+body[data-theme="dark"] .tp-admin-bookings-summary .ant-statistic,
+body[data-theme="dark"] .tp-admin-team-check,
+body[data-theme="dark"] .tp-admin-resource-check,
+body[data-theme="dark"] .tp-admin-week-board__day-tab,
+body[data-theme="dark"] .tp-admin-week-board__hours,
+body[data-theme="dark"] .tp-admin-week-board__header-spacer,
+body.dark .tp-admin-bookings-shell--salon,
+body.dark .tp-admin-bookings-nav--flat.ant-card,
+body.dark .tp-admin-bookings-summary .ant-statistic,
+body.dark .tp-admin-team-check,
+body.dark .tp-admin-resource-check,
+body.dark .tp-admin-week-board__day-tab,
+body.dark .tp-admin-week-board__hours,
+body.dark .tp-admin-week-board__header-spacer {
+  background: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-soft) !important;
+  backdrop-filter: blur(22px);
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content th,
+body[data-theme="dark"] .tp-admin-mini-calendar .ant-picker-content th,
+body[data-theme="dark"] .ant-picker-content th,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content th,
+body.dark .tp-admin-mini-calendar .ant-picker-content th,
+body.dark .ant-picker-content th {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-mini,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-panel,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-date-panel,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-body,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar table,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar thead,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar tbody,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar tr,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar td,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-date,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-date-content,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-mini,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-panel,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-date-panel,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-body,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar table,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar thead,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar tbody,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar tr,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar td,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-date,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-date-content {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar,
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-bookings-nav--flat.ant-card,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-bookings-nav--flat.ant-card {
+  background:
+    radial-gradient(circle at top left, rgba(91, 108, 255, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(36, 41, 50, 0.92) 0%, rgba(26, 31, 41, 0.94) 100%) !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-body,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-body {
+  padding: 8px 0 0 !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-date-today,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-calendar-date-today {
+  border-color: rgba(124, 92, 255, 0.38) !important;
+}
+
+body[data-theme="dark"] .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell:hover .ant-picker-cell-inner,
+body.dark .tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell:hover .ant-picker-cell-inner {
+  background: rgba(91, 108, 255, 0.16) !important;
+}
+
+body[data-theme="dark"] .ant-picker-cell,
+body[data-theme="dark"] .ant-picker-cell-in-view,
+body[data-theme="dark"] .ant-picker-cell-in-view .ant-picker-cell-inner,
+body.dark .ant-picker-cell,
+body.dark .ant-picker-cell-in-view,
+body.dark .ant-picker-cell-in-view .ant-picker-cell-inner {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+body[data-theme="dark"] .ant-picker-cell-disabled .ant-picker-cell-inner,
+body.dark .ant-picker-cell-disabled .ant-picker-cell-inner {
+  color: rgba(255, 255, 255, 0.25) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+body[data-theme="dark"] .ant-modal-header,
+body[data-theme="dark"] .ant-drawer-header,
+body[data-theme="dark"] .ant-drawer-footer,
+body.dark .ant-modal-header,
+body.dark .ant-drawer-header,
+body.dark .ant-drawer-footer {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+body[data-theme="dark"] .ant-modal-title,
+body[data-theme="dark"] .ant-drawer-title,
+body[data-theme="dark"] .ant-modal-close,
+body[data-theme="dark"] .ant-drawer-close,
+body.dark .ant-modal-title,
+body.dark .ant-drawer-title,
+body.dark .ant-modal-close,
+body.dark .ant-drawer-close {
+  color: #ffffff !important;
+}
+
+body[data-theme="dark"] a,
+body.dark a {
+  color: #9aa7ff;
+}
+
+/* Calendar alignment polish */
+.tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content {
+  table-layout: fixed !important;
+  border-spacing: 0 !important;
+}
+
+.tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-content th {
+  width: 14.285%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell {
+  width: 14.285%;
+  min-width: 0;
+  height: 44px;
+  padding: 4px 0 !important;
+  vertical-align: middle;
+}
+
+.tp-admin-bookings-shell--salon .tp-admin-mini-calendar .ant-picker-cell-inner {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  line-height: 34px !important;
+  white-space: nowrap;
+}
+
+.tp-admin-mini-calendar__badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  margin: 0 !important;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 16px;
+}
+
+.tp-admin-week-board {
+  overflow: auto !important;
+  max-height: 780px;
+  overscroll-behavior: contain;
+}
+
+.tp-admin-week-board__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-width: calc(74px + (7 * 150px));
+  background: #ffffff;
+}
+
+.tp-admin-week-board__body {
+  overflow: visible !important;
+  max-height: none !important;
+  min-width: calc(74px + (7 * 150px));
+}
+
+.tp-admin-week-board__header-spacer,
+.tp-admin-week-board__hours {
+  position: sticky;
+  left: 0;
+  z-index: 18;
+}
+
+.tp-admin-week-board__header-spacer {
+  z-index: 22;
+}
+
+.tp-admin-week-board__days,
+.tp-admin-week-board__grid {
+  min-width: calc(7 * 150px);
+}
+
+.tp-admin-day-board .tp-admin-week-board__header,
+.tp-admin-day-board .tp-admin-week-board__body {
+  min-width: calc(74px + (var(--resource-count, 1) * 190px));
+}
+
+.tp-admin-day-board .tp-admin-week-board__days,
+.tp-admin-day-board .tp-admin-week-board__grid {
+  min-width: calc(var(--resource-count, 1) * 190px);
+}
+
+.tp-admin-week-board__day-tab {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.tp-admin-week-board__hour {
+  white-space: nowrap;
+}
+
+body[data-theme="dark"] .tp-admin-week-board__header,
+body.dark .tp-admin-week-board__header,
+body[data-theme="dark"] .tp-admin-week-board__header-spacer,
+body.dark .tp-admin-week-board__header-spacer,
+body[data-theme="dark"] .tp-admin-week-board__hours,
+body.dark .tp-admin-week-board__hours {
+  background: rgba(15, 23, 42, 0.92) !important;
+}
+
+body[data-theme="dark"] .tp-admin-mini-calendar__badge,
+body.dark .tp-admin-mini-calendar__badge {
+  background: rgba(91, 108, 255, 0.24);
+  color: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .tp-admin-week-board {
+    max-height: 72vh;
+  }
+
+  .tp-admin-week-board__header,
+  .tp-admin-week-board__body {
+    min-width: calc(60px + (7 * 136px));
+  }
+
+  .tp-admin-week-board__days,
+  .tp-admin-week-board__grid {
+    min-width: calc(7 * 136px);
+  }
+
+  .tp-admin-day-board .tp-admin-week-board__header,
+  .tp-admin-day-board .tp-admin-week-board__body {
+    min-width: calc(60px + (var(--resource-count, 1) * 150px));
+  }
+
+  .tp-admin-day-board .tp-admin-week-board__days,
+  .tp-admin-day-board .tp-admin-week-board__grid {
+    min-width: calc(var(--resource-count, 1) * 150px);
+  }
+}
+
+/* Booking event cards */
+.tp-admin-week-event.is-booking {
+  min-height: 76px;
+  padding: 10px 11px;
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.44)),
+    var(--booking-bg, rgba(37, 99, 235, 0.10)) !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+}
+
+.tp-admin-week-event__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.tp-admin-week-event__title {
+  color: #0f172a;
+}
+
+.tp-admin-week-event__meta {
+  gap: 3px;
+}
+
+.tp-admin-week-event__meta span {
+  position: relative;
+  padding-left: 10px;
+  color: rgba(15, 23, 42, 0.74);
+  font-weight: 750;
+}
+
+.tp-admin-week-event__meta span::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.56em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.tp-admin-week-event__meta strong {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 2px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.60);
+  font-size: 10px;
+}
+
+body[data-theme="dark"] .tp-admin-week-event.is-booking,
+body.dark .tp-admin-week-event.is-booking {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.46)),
+    var(--booking-bg, rgba(91, 108, 255, 0.16)) !important;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.26);
+}
+
+body[data-theme="dark"] .tp-admin-week-event__time,
+body.dark .tp-admin-week-event__time {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .tp-admin-week-event__title,
+body.dark .tp-admin-week-event__title {
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .tp-admin-week-event__meta span,
+body.dark .tp-admin-week-event__meta span {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+body[data-theme="dark"] .tp-admin-week-event__meta strong,
+body.dark .tp-admin-week-event__meta strong {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 767px) {
+  .tp-admin-week-event {
+    min-height: 92px;
+    padding: 10px;
+  }
+
+  .tp-admin-week-event__title {
+    -webkit-line-clamp: 1;
+  }
+
+  .tp-admin-week-event__meta {
+    font-size: 10px;
+  }
+}
+/* Schedule-X booking calendar */
+.tp-admin-schedulex-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 32px 20px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tp-admin-schedulex-shell {
+  padding: 18px 28px 30px;
+  min-height: 760px;
+}
+
+.tp-admin-schedulex-shell .sx-react-calendar-wrapper,
+.tp-admin-schedulex-shell .sx__calendar-wrapper,
+.tp-admin-schedulex-shell .sx__calendar {
+  width: 100%;
+  min-height: 720px;
+}
+
+.tp-admin-schedulex-shell .sx__calendar {
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.10);
+}
+
+.tp-sx-event-card {
+  height: 100%;
+  min-height: 56px;
+  padding: 8px 10px 9px;
+  border-left: 4px solid var(--tp-sx-status, #2563eb);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(248,250,252,0.78));
+  color: #101827;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tp-sx-event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+}
+
+.tp-sx-event-card__time {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--tp-sx-status, #2563eb);
+}
+
+.tp-sx-event-card__title {
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tp-sx-event-card__object {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tp-sx-event-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.64);
+}
+
+.tp-sx-event-card__meta strong {
+  color: var(--tp-sx-status, #2563eb);
+}
+
+body.dark .tp-admin-schedulex-toolbar,
+[data-theme="dark"] .tp-admin-schedulex-toolbar {
+  border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark .tp-admin-schedulex-shell .sx__calendar,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__calendar {
+  --sx-color-primary: #5b6cff;
+  --sx-color-on-primary: #ffffff;
+  --sx-color-primary-container: rgba(91, 108, 255, 0.20);
+  --sx-color-on-primary-container: #ffffff;
+  --sx-color-surface: rgba(255, 255, 255, 0.06);
+  --sx-color-surface-dim: rgba(255, 255, 255, 0.04);
+  --sx-color-surface-bright: rgba(255, 255, 255, 0.10);
+  --sx-color-surface-container: rgba(255, 255, 255, 0.07);
+  --sx-color-surface-container-low: rgba(255, 255, 255, 0.05);
+  --sx-color-surface-container-high: rgba(255, 255, 255, 0.10);
+  --sx-color-background: rgba(31, 35, 40, 0.86);
+  --sx-color-on-background: #ffffff;
+  --sx-color-on-surface: #ffffff;
+  --sx-color-outline: rgba(255, 255, 255, 0.22);
+  --sx-color-outline-variant: rgba(255, 255, 255, 0.10);
+  --sx-internal-color-text: #ffffff;
+  background:
+    radial-gradient(circle at 0% 20%, rgba(96, 92, 255, 0.20), transparent 30%),
+    radial-gradient(circle at 100% 16%, rgba(20, 184, 137, 0.20), transparent 32%),
+    rgba(31, 35, 40, 0.84);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(20px);
+}
+
+body.dark .tp-admin-schedulex-shell .sx__week-grid,
+body.dark .tp-admin-schedulex-shell .sx__date-grid,
+body.dark .tp-admin-schedulex-shell .sx__month-grid,
+body.dark .tp-admin-schedulex-shell .sx__month-agenda,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__week-grid,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__date-grid,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__month-grid,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__month-agenda {
+  background: transparent;
+}
+
+body.dark .tp-admin-schedulex-shell .sx__week-grid__hour,
+body.dark .tp-admin-schedulex-shell .sx__week-grid__date,
+body.dark .tp-admin-schedulex-shell .sx__time-grid-day,
+body.dark .tp-admin-schedulex-shell .sx__month-grid-day,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__week-grid__hour,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__week-grid__date,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__time-grid-day,
+[data-theme="dark"] .tp-admin-schedulex-shell .sx__month-grid-day {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.dark .tp-sx-event-card,
+[data-theme="dark"] .tp-sx-event-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.06));
+  color: #ffffff;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.30);
+}
+
+body.dark .tp-sx-event-card__object,
+body.dark .tp-sx-event-card__meta,
+[data-theme="dark"] .tp-sx-event-card__object,
+[data-theme="dark"] .tp-sx-event-card__meta {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+@media (max-width: 768px) {
+  .tp-admin-schedulex-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 0 16px 16px;
+  }
+
+  .tp-admin-schedulex-shell {
+    padding: 14px;
+    min-height: 620px;
+    overflow-x: auto;
+  }
+
+  .tp-admin-schedulex-shell .sx-react-calendar-wrapper,
+  .tp-admin-schedulex-shell .sx__calendar-wrapper,
+  .tp-admin-schedulex-shell .sx__calendar {
+    min-width: 860px;
+    min-height: 640px;
+  }
 }

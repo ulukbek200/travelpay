@@ -30,6 +30,7 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import CompanyBadge from '../components/CompanyBadge';
 import {
   STAY_AMENITIES,
   STAY_TYPE_OPTIONS,
@@ -53,6 +54,7 @@ const StaysPage = () => {
   const [filters, setFilters] = useState({
     query: '',
     type: 'all',
+    company: 'all',
     guests: null,
     maxPrice: null,
     amenity: 'all',
@@ -82,9 +84,21 @@ const StaysPage = () => {
     const matchesGuests = !filters.guests || Number(stay.capacity) >= Number(filters.guests);
     const matchesPrice = !filters.maxPrice || Number(stay.pricePerNight) <= Number(filters.maxPrice);
     const matchesAmenity = filters.amenity === 'all' || stay.amenities.includes(filters.amenity);
+    const matchesCompany = filters.company === 'all' || String(stay.companyId || stay.companyName || 'partner') === filters.company;
     const isVisible = stay.status !== 'archived' && stay.status !== 'sold_out';
-    return matchesQuery && matchesType && matchesGuests && matchesPrice && matchesAmenity && isVisible;
+    return matchesQuery && matchesType && matchesGuests && matchesPrice && matchesAmenity && matchesCompany && isVisible;
   }), [filters, stays]);
+
+  const companyOptions = useMemo(() => {
+    const seen = new Map();
+    stays.forEach((stay) => {
+      const key = String(stay.companyId || stay.companyName || 'partner');
+      if (!seen.has(key)) {
+        seen.set(key, { value: key, label: stay.companyName || 'TravelPay Partner' });
+      }
+    });
+    return [{ value: 'all', label: 'Все компании' }, ...Array.from(seen.values())];
+  }, [stays]);
 
   const featuredStay = filteredStays[0] || stays[0] || fallbackStays[0];
 
@@ -138,6 +152,10 @@ const StaysPage = () => {
               <InputNumber size="large" min={1} max={30} value={filters.guests} placeholder="2+" onChange={(value) => setFilter('guests', value)} />
             </Col>
             <Col xs={24} sm={12} lg={4}>
+              <Text>Компания</Text>
+              <Select size="large" value={filters.company} options={companyOptions} onChange={(value) => setFilter('company', value)} />
+            </Col>
+            <Col xs={24} sm={12} lg={4}>
               <Text>Цена до</Text>
               <InputNumber size="large" min={0} step={1000} value={filters.maxPrice} placeholder="сом" onChange={(value) => setFilter('maxPrice', value)} />
             </Col>
@@ -169,7 +187,13 @@ const StaysPage = () => {
             <Col xs={24} lg={12}>
               <Tag color="gold"><FireOutlined /> Выбор TravelPay</Tag>
               <Title level={2}>{featuredStay.title}</Title>
-              <Text className="stays-company-line">от {featuredStay.companyName}</Text>
+              <CompanyBadge
+                companyName={featuredStay.companyName}
+                companyLogo={featuredStay.companyLogo}
+                companyCity={featuredStay.companyCity}
+                companyVerified={featuredStay.companyVerified}
+                variant="plain"
+              />
               <Paragraph>{featuredStay.description}</Paragraph>
               <div className="stays-featured-stats">
                 <div><strong>{formatStayPrice(featuredStay.pricePerNight)}</strong><span>за ночь</span></div>
@@ -220,7 +244,14 @@ const StaysPage = () => {
                         <Tag><EnvironmentOutlined /> {stay.city}</Tag>
                         <span>{stay.availableCount} свободно</span>
                       </div>
-                      <div className="stay-card__company">{stay.companyName}</div>
+                      <CompanyBadge
+                        companyName={stay.companyName}
+                        companyLogo={stay.companyLogo}
+                        companyCity={stay.companyCity}
+                        companyVerified={stay.companyVerified}
+                        size="compact"
+                        variant="glass"
+                      />
                       <Title level={3}>{stay.title}</Title>
                       <Paragraph ellipsis={{ rows: 2 }}>{stay.description}</Paragraph>
                       <div className="stay-card__meta">
