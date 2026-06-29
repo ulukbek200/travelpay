@@ -50,21 +50,21 @@ const { useBreakpoint } = Grid;
 const PAYMENT_QR_URL = process.env.REACT_APP_PAYMENT_QR_URL || '/images/payment-qr.png';
 
 const MONTH_NAMES = [
-  'РЇРЅРІР°СЂСЊ',
-  'Р¤РµРІСЂР°Р»СЊ',
-  'РњР°СЂС‚',
-  'РђРїСЂРµР»СЊ',
-  'РњР°Р№',
-  'РСЋРЅСЊ',
-  'РСЋР»СЊ',
-  'РђРІРіСѓСЃС‚',
-  'РЎРµРЅС‚СЏР±СЂСЊ',
-  'РћРєС‚СЏР±СЂСЊ',
-  'РќРѕСЏР±СЂСЊ',
-  'Р”РµРєР°Р±СЂСЊ',
+  'Январь',
+  'Февраль',
+  'Март',
+  'Апрель',
+  'Май',
+  'Июнь',
+  'Июль',
+  'Август',
+  'Сентябрь',
+  'Октябрь',
+  'Ноябрь',
+  'Декабрь',
 ];
 
-const WEEKDAY_SHORT = ['Р’СЃ', 'РџРЅ', 'Р’С‚', 'РЎСЂ', 'Р§С‚', 'РџС‚', 'РЎР±'];
+const WEEKDAY_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const CHECK_IN_TIMES = ['14:00', '16:00', '18:00'];
 const SLOT_DURATION_MINUTES = 120;
 
@@ -133,7 +133,7 @@ const buildAvailabilityDays = (monthDate, stay, today, availabilityRecords = [])
     return {
       date,
       key,
-      label: isSameDay(date, today) ? 'РЎРµРіРѕРґРЅСЏ' : index === 1 && isSameDay(addDays(today, 1), date) ? 'Р—Р°РІС‚СЂР°' : WEEKDAY_SHORT[date.getDay()],
+      label: isSameDay(date, today) ? 'Сегодня' : index === 1 && isSameDay(addDays(today, 1), date) ? 'Завтра' : WEEKDAY_SHORT[date.getDay()],
       day: date.getDate(),
       left,
       available: realAvailability ? Boolean(realAvailability.available) : !isPast && left > 0,
@@ -266,8 +266,8 @@ const StayDetailPage = () => {
   if (!stay) {
     return (
       <main className="stay-detail-page">
-        <Empty description="Р”РѕРјРёРє РЅРµ РЅР°Р№РґРµРЅ">
-          <Button type="primary" onClick={() => navigate('/stays')}>Р’РµСЂРЅСѓС‚СЊСЃСЏ РІ РєР°С‚Р°Р»РѕРі</Button>
+        <Empty description="Домик не найден">
+          <Button type="primary" onClick={() => navigate('/stays')}>Вернуться в каталог</Button>
         </Empty>
       </main>
     );
@@ -276,15 +276,15 @@ const StayDetailPage = () => {
   const totalPreview = stay.pricePerNight * nights;
   const selectedDateLabel = selectedAvailability
     ? selectedAvailability.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
-    : 'РІС‹Р±РµСЂРёС‚Рµ РґР°С‚Сѓ';
+    : 'выберите дату';
   const checkOutDate = selectedAvailability ? addDays(selectedAvailability.date, nights) : null;
   const checkOutLabel = checkOutDate
     ? checkOutDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
-    : 'РІС‹Р±РµСЂРёС‚Рµ РґР°С‚Сѓ';
+    : 'выберите дату';
 
   const openBookingModal = () => {
     if (bookedTimeSet.has(selectedTime)) {
-      message.warning('Р­С‚Рѕ РІСЂРµРјСЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ. Р’С‹Р±РµСЂРёС‚Рµ СЃРІРѕР±РѕРґРЅС‹Р№ СЃР»РѕС‚.');
+      message.warning('Это время уже занято. Выберите свободный слот.');
       return;
     }
 
@@ -302,12 +302,12 @@ const StayDetailPage = () => {
     const file = nextFiles[0]?.originFileObj || nextFiles[0];
 
     if (file && !['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'].includes(file.type)) {
-      message.error('РџРѕРґРґРµСЂР¶РёРІР°СЋС‚СЃСЏ С‚РѕР»СЊРєРѕ JPG, PNG Рё PDF.');
+      message.error('Поддерживаются только JPG, PNG и PDF.');
       return;
     }
 
     if (file && file.size > 5 * 1024 * 1024) {
-      message.error('РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ С„Р°Р№Р»Р° вЂ” 5 MB.');
+      message.error('Максимальный размер файла — 5 MB.');
       return;
     }
 
@@ -316,18 +316,18 @@ const StayDetailPage = () => {
 
   const submitStayBooking = async () => {
     if (!selectedAvailability?.available) {
-      message.warning('РќР° РІС‹Р±СЂР°РЅРЅСѓСЋ РґР°С‚Сѓ СЃРІРѕР±РѕРґРЅС‹С… РґРѕРјРёРєРѕРІ РЅРµС‚.');
+      message.warning('На выбранную дату свободных домиков нет.');
       return;
     }
 
     if (bookedTimeSet.has(selectedTime)) {
-      message.error('Р­С‚Рѕ РІСЂРµРјСЏ СѓР¶Рµ Р·Р°РЅСЏС‚Рѕ. Р’С‹Р±РµСЂРёС‚Рµ РґСЂСѓРіРѕР№ СЃР»РѕС‚.');
+      message.error('Это время уже занято. Выберите другой слот.');
       return;
     }
 
     const uploadFile = receiptFiles[0]?.originFileObj || receiptFiles[0];
     if (!uploadFile) {
-      message.error('Р—Р°РіСЂСѓР·РёС‚Рµ С‡РµРє РїСЂРµРґРѕРїР»Р°С‚С‹.');
+      message.error('Загрузите чек предоплаты.');
       return;
     }
 
@@ -362,7 +362,7 @@ const StayDetailPage = () => {
       });
       setBookingOpen(false);
       setReceiptFiles([]);
-      message.success('Р—Р°СЏРІРєР° РѕС‚РїСЂР°РІР»РµРЅР°. РљРѕРјРїР°РЅРёСЏ РїРѕРґС‚РІРµСЂРґРёС‚ Р±СЂРѕРЅСЊ РІ TravelPay Business.');
+      message.success('Заявка отправлена. Компания подтвердит бронь в TravelPay Business.');
       const [availabilityResponse, bookingsResponse] = await Promise.all([
         api.get('/stay-bookings/availability', {
           params: { stayId: stay.id, month: availabilityMonthKey },
@@ -375,8 +375,8 @@ const StayDetailPage = () => {
       setStayBookings(Array.isArray(bookingsResponse.data) ? bookingsResponse.data : []);
     } catch (error) {
       const fallback = error?.response?.status === 409
-        ? 'РќР° РІС‹Р±СЂР°РЅРЅС‹Рµ РґР°С‚С‹ СЃРІРѕР±РѕРґРЅС‹С… РґРѕРјРёРєРѕРІ СѓР¶Рµ РЅРµС‚.'
-        : 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РїСЂР°РІРёС‚СЊ Р·Р°СЏРІРєСѓ. РџСЂРѕРІРµСЂСЊС‚Рµ РґР°РЅРЅС‹Рµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·.';
+        ? 'На выбранные даты свободных домиков уже нет.'
+        : 'Не удалось отправить заявку. Проверьте данные и попробуйте ещё раз.';
       message.error(error?.response?.data?.message || fallback);
     } finally {
       setBookingSubmitting(false);
@@ -387,7 +387,7 @@ const StayDetailPage = () => {
     <main className="stay-detail-page">
       <section className="stay-detail-hero">
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/stays')}>
-          РќР°Р·Р°Рґ Рє РґРѕРјРёРєР°Рј
+          Назад к домикам
         </Button>
         <Tag className="stays-kicker"><HomeOutlined /> {getStayTypeLabel(stay.type)}</Tag>
         <Title>{stay.title}</Title>
@@ -411,17 +411,17 @@ const StayDetailPage = () => {
         </div>
 
         <Card className="stay-booking-card">
-          <Text>РЎС‚РѕРёРјРѕСЃС‚СЊ</Text>
+          <Text>Стоимость</Text>
           <Title level={2}>{formatStayPrice(stay.pricePerNight)}</Title>
-          <Paragraph>Р·Р° РЅРѕС‡СЊ, Р±РµР· СЃРєСЂС‹С‚С‹С… РїР»Р°С‚РµР¶РµР№</Paragraph>
+          <Paragraph>за ночь, без скрытых платежей</Paragraph>
           <Divider />
           <Space direction="vertical" size={14} style={{ width: '100%' }}>
             <div className="stay-availability">
               <div className="stay-availability__head">
                 <div>
-                  <Text>РЎРІРѕР±РѕРґРЅС‹Рµ РґР°С‚С‹</Text>
+                  <Text>Свободные даты</Text>
                   <strong>{MONTH_NAMES[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}</strong>
-                  {availabilityLoading && <Text type="secondary">РћР±РЅРѕРІР»СЏРµРј Р·Р°РЅСЏС‚РѕСЃС‚СЊ...</Text>}
+                  {availabilityLoading && <Text type="secondary">Обновляем занятость...</Text>}
                 </div>
                 <Space size={8}>
                   <Button
@@ -449,13 +449,13 @@ const StayDetailPage = () => {
                     >
                       <span>{day.label}</span>
                       <strong>{day.day}</strong>
-                      <small>{day.available ? `${day.left} СЃРІРѕР±РѕРґРЅРѕ` : 'Р·Р°РЅСЏС‚Рѕ'}</small>
+                      <small>{day.available ? `${day.left} свободно` : 'занято'}</small>
                     </button>
                   );
                 })}
               </div>
               <div className="stay-availability__times">
-                <Text><ClockCircleOutlined /> Р’СЂРµРјСЏ Р·Р°РµР·РґР°</Text>
+                <Text><ClockCircleOutlined /> Время заезда</Text>
                 <div>
                   {CHECK_IN_TIMES.map((time) => {
                     const isBooked = bookedTimeSet.has(time);
@@ -470,7 +470,7 @@ const StayDetailPage = () => {
                         }}
                       >
                         <span>{time}</span>
-                        {isBooked && <small>Р—Р°РЅСЏС‚Рѕ</small>}
+                        {isBooked && <small>Занято</small>}
                       </button>
                     );
                   })}
@@ -478,11 +478,11 @@ const StayDetailPage = () => {
               </div>
             </div>
             <div>
-              <Text>Р“РѕСЃС‚Рё</Text>
+              <Text>Гости</Text>
               <InputNumber min={1} max={stay.capacity} value={guests} onChange={setGuests} style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
             </div>
             <div>
-              <Text>РќРѕС‡РµР№</Text>
+              <Text>Ночей</Text>
               <InputNumber min={1} max={30} value={nights} onChange={(value) => setNights(Number(value) || 1)} style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
             </div>
             <div className="stay-booking-total">
@@ -490,7 +490,7 @@ const StayDetailPage = () => {
               <strong>{formatStayPrice(totalPreview)}</strong>
             </div>
             <Button type="primary" size="large" block disabled={!selectedAvailability?.available} onClick={openBookingModal}>
-              Р—Р°Р±СЂРѕРЅРёСЂРѕРІР°С‚СЊ
+              Забронировать
             </Button>
           </Space>
         </Card>
@@ -500,19 +500,19 @@ const StayDetailPage = () => {
         <Row gutter={[22, 22]}>
           <Col xs={24} lg={15}>
             <Card className="stay-info-card">
-              <Title level={3}>Рћ РґРѕРјРёРєРµ</Title>
+              <Title level={3}>О домике</Title>
               <Paragraph>{stay.description}</Paragraph>
               <div className="stay-info-grid">
-                <div><TeamOutlined /><strong>{stay.capacity}</strong><span>РіРѕСЃС‚РµР№</span></div>
-                <div><HomeOutlined /><strong>{stay.rooms}</strong><span>РєРѕРјРЅР°С‚С‹</span></div>
-                <div><CalendarOutlined /><strong>{stay.availableCount}</strong><span>СЃРІРѕР±РѕРґРЅРѕ</span></div>
-                <div><SafetyCertificateOutlined /><strong>РџСЂРѕРІРµСЂРµРЅРѕ</strong><span>TravelPay</span></div>
+                <div><TeamOutlined /><strong>{stay.capacity}</strong><span>гостей</span></div>
+                <div><HomeOutlined /><strong>{stay.rooms}</strong><span>комнаты</span></div>
+                <div><CalendarOutlined /><strong>{stay.availableCount}</strong><span>свободно</span></div>
+                <div><SafetyCertificateOutlined /><strong>Проверено</strong><span>TravelPay</span></div>
               </div>
             </Card>
           </Col>
           <Col xs={24} lg={9}>
             <Card className="stay-info-card">
-              <Title level={4}>РЈРґРѕР±СЃС‚РІР°</Title>
+              <Title level={4}>Удобства</Title>
               <div className="stay-amenity-list">
                 {stay.amenities.map((amenity) => (
                   <span key={amenity}><CheckCircleOutlined /> {amenity}</span>
@@ -522,9 +522,9 @@ const StayDetailPage = () => {
           </Col>
           <Col xs={24}>
             <Card className="stay-info-card">
-              <Title level={4}>РџСЂР°РІРёР»Р° РїСЂРѕР¶РёРІР°РЅРёСЏ</Title>
+              <Title level={4}>Правила проживания</Title>
               <Paragraph>{stay.rules}</Paragraph>
-              <Text type="secondary">РђРґСЂРµСЃ: {stay.address}</Text>
+              <Text type="secondary">Адрес: {stay.address}</Text>
             </Card>
           </Col>
         </Row>
@@ -532,26 +532,26 @@ const StayDetailPage = () => {
 
       <Modal
         open={bookingOpen}
-        title="Р—Р°СЏРІРєР° РЅР° Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ"
-        okText="РћС‚РїСЂР°РІРёС‚СЊ Р·Р°СЏРІРєСѓ"
-        cancelText="РћС‚РјРµРЅР°"
+        title="Заявка на бронирование"
+        okText="Отправить заявку"
+        cancelText="Отмена"
         confirmLoading={bookingSubmitting}
         onCancel={() => setBookingOpen(false)}
         onOk={submitStayBooking}
       >
-        <Paragraph>РћСЃС‚Р°РІСЊС‚Рµ РєРѕРЅС‚Р°РєС‚С‹, Рё РєРѕРјРїР°РЅРёСЏ РїРѕРґС‚РІРµСЂРґРёС‚ Р±СЂРѕРЅСЊ РІ Business-РїР°РЅРµР»Рё.</Paragraph>
+        <Paragraph>Оставьте контакты, и компания подтвердит бронь в Business-панели.</Paragraph>
         <Card size="small">
           <strong>{stay.title}</strong>
-          <p>{selectedDateLabel} - {checkOutLabel}, {selectedTime} В· {guests} РіРѕСЃС‚РµР№ В· {formatStayPrice(totalPreview)}</p>
+          <p>{selectedDateLabel} - {checkOutLabel}, {selectedTime} В· {guests} гостей В· {formatStayPrice(totalPreview)}</p>
         </Card>
         <Card size="small" className="stay-prepay-card">
           <Space align="start" size={16} className="stay-prepay-card__inner">
-            <Image width={118} height={118} src={PAYMENT_QR_URL} alt="QR РґР»СЏ РїСЂРµРґРѕРїР»Р°С‚С‹" preview={false} className="stay-prepay-card__qr" />
+            <Image width={118} height={118} src={PAYMENT_QR_URL} alt="QR для предоплаты" preview={false} className="stay-prepay-card__qr" />
             <div>
-              <Tag color="gold">РџСЂРµРґРѕРїР»Р°С‚Р°</Tag>
+              <Tag color="gold">Предоплата</Tag>
               <Paragraph>
-                РћС‚СЃРєР°РЅРёСЂСѓР№С‚Рµ QR-РєРѕРґ Рё РІРЅРµСЃРёС‚Рµ РїСЂРµРґРѕРїР»Р°С‚Сѓ. РџРѕСЃР»Рµ РѕРїР»Р°С‚С‹ Р·Р°РіСЂСѓР·РёС‚Рµ С‡РµРє,
-                С‡С‚РѕР±С‹ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РїРѕРґС‚РІРµСЂРґРёР» Р±СЂРѕРЅРёСЂРѕРІР°РЅРёРµ.
+                Отсканируйте QR-код и внесите предоплату. После оплаты загрузите чек,
+                чтобы администратор подтвердил бронирование.
               </Paragraph>
             </div>
           </Space>
@@ -564,22 +564,22 @@ const StayDetailPage = () => {
             className="stay-receipt-upload"
           >
             <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-            <p className="ant-upload-text">Р—Р°РіСЂСѓР·РёС‚Рµ С‡РµРє РѕРїР»Р°С‚С‹</p>
-            <p className="ant-upload-hint">JPG, PNG РёР»Рё PDF РґРѕ 5 MB</p>
+            <p className="ant-upload-text">Загрузите чек оплаты</p>
+            <p className="ant-upload-hint">JPG, PNG или PDF до 5 MB</p>
           </Upload.Dragger>
         </Card>
         <Form form={bookingForm} layout="vertical" className="stay-booking-form">
-          <Form.Item name="clientName" label="РРјСЏ" rules={[{ required: true, message: 'РЈРєР°Р¶РёС‚Рµ РёРјСЏ' }]}>
-            <Input size="large" placeholder="Р’Р°С€Рµ РёРјСЏ" />
+          <Form.Item name="clientName" label="Имя" rules={[{ required: true, message: 'Укажите имя' }]}>
+            <Input size="large" placeholder="Ваше имя" />
           </Form.Item>
-          <Form.Item name="clientPhone" label="РўРµР»РµС„РѕРЅ" rules={[{ required: true, message: 'РЈРєР°Р¶РёС‚Рµ С‚РµР»РµС„РѕРЅ' }]}>
+          <Form.Item name="clientPhone" label="Телефон" rules={[{ required: true, message: 'Укажите телефон' }]}>
             <Input size="large" placeholder="+996 ..." />
           </Form.Item>
           <Form.Item name="clientEmail" label="Email">
             <Input size="large" placeholder="email@example.com" />
           </Form.Item>
-          <Form.Item name="comment" label="РљРѕРјРјРµРЅС‚Р°СЂРёР№">
-            <Input.TextArea rows={3} placeholder="РќР°РїСЂРёРјРµСЂ: РЅСѓР¶РµРЅ С‚СЂР°РЅСЃС„РµСЂ, РїРѕР·РґРЅРёР№ Р·Р°РµР·Рґ, РґРµС‚Рё..." />
+          <Form.Item name="comment" label="Комментарий">
+            <Input.TextArea rows={3} placeholder="Например: нужен трансфер, поздний заезд, дети..." />
           </Form.Item>
         </Form>
       </Modal>
