@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -6,16 +6,15 @@ import {
   Card,
   Checkbox,
   Col,
-  DatePicker,
   Divider,
   Form,
   Input,
   InputNumber,
+  Radio,
   Row,
   Select,
   Space,
   Tag,
-  TimePicker,
   Typography,
   message,
 } from 'antd';
@@ -24,7 +23,6 @@ import {
   CalendarOutlined,
   CarOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined,
   CompassOutlined,
   CreditCardOutlined,
   EnvironmentOutlined,
@@ -33,10 +31,10 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
+import api from '../api';
 import { readCurrentUser } from '../utils/currentUser';
-import { normalizeSavings } from '../utils/savings';
 import { TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
-import { normalizeUser, syncCurrentUser, updateUserById } from '../utils/user';
+import { normalizeUser, syncCurrentUser } from '../utils/user';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -44,6 +42,13 @@ const BRAND_BLUE = '#1d3557';
 const BRAND_GOLD = '#fca311';
 
 const formatPrice = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
+const formatDeparture = (value) => new Date(value).toLocaleString('ru-RU', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'long',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 const ACCOMMODATION_TYPE_LABELS = {
   standard: 'Стандарт',
@@ -58,12 +63,36 @@ const TourBookingPage = () => {
   const { tour } = location.state || {};
   const [form] = Form.useForm();
   const [people, setPeople] = useState(2);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [departureSlots, setDepartureSlots] = useState([]);
+  const [departuresLoading, setDeparturesLoading] = useState(true);
+  const [selectedDepartureSlotId, setSelectedDepartureSlotId] = useState('');
   const [selectedAccommodationId, setSelectedAccommodationId] = useState(null);
   const [extraBedSelected, setExtraBedSelected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [payingWithSavings, setPayingWithSavings] = useState(false);
   const currentUser = normalizeUser(readCurrentUser());
+
+  useEffect(() => {
+    let active = true;
+    if (!tour?.id) return undefined;
+
+    setDeparturesLoading(true);
+    api.get('/tour-bookings/availability', { params: { tourId: tour.id } })
+      .then((response) => {
+        if (!active) return;
+        const available = (response.data || [])
+          .filter((slot) => slot.active !== false && !slot.soldOut && new Date(slot.startAt).getTime() > Date.now());
+        setDepartureSlots(available);
+        if (available.length === 1) {
+          setSelectedDepartureSlotId(available[0].id);
+          form.setFieldValue('departureSlotId', available[0].id);
+        }
+      })
+      .catch(() => active && setDepartureSlots([]))
+      .finally(() => active && setDeparturesLoading(false));
+
+    return () => { active = false; };
+  }, [form, tour?.id]);
 
   const pricePerPerson = Number(String(tour?.price || 0).replace(/[^0-9]/g, '')) || 0;
   const baseTotal = useMemo(() => pricePerPerson * people, [pricePerPerson, people]);
@@ -75,6 +104,10 @@ const TourBookingPage = () => {
   const selectedAccommodation = useMemo(
     () => accommodations.find((item) => item.id === selectedAccommodationId) || null,
     [accommodations, selectedAccommodationId],
+  );
+  const selectedDeparture = useMemo(
+    () => departureSlots.find((slot) => slot.id === selectedDepartureSlotId) || null,
+    [departureSlots, selectedDepartureSlotId],
   );
   const accommodationTotal = Number(selectedAccommodation?.pricePerNight || 0);
   const extraBedTotal = selectedAccommodation?.extraBedAvailable && extraBedSelected
@@ -113,27 +146,51 @@ const TourBookingPage = () => {
     return true;
   };
 
+  const ensureDepartureSelected = () => {
+    if (!selectedDeparture) {
+      message.warning('Выберите дату и время из расписания тур-компании.');
+      return false;
+    }
+    if (Number(selectedDeparture.remainingSeats || 0) < people) {
+      message.warning(`На это отправление осталось мест: ${selectedDeparture.remainingSeats || 0}.`);
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (values) => {
+    if (!ensureDepartureSelected()) return;
     if (!ensureAccommodationSelected()) return;
 
+    if (!currentUser?.id) {
+      message.warning('Войдите в аккаунт, чтобы оформить бронирование.');
+      navigate('/login');
+      return;
+    }
+
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      navigate('/VisaPaymentPage', {
-        state: {
-          tour,
-          total,
-          people,
-          booking: {
-            ...values,
-            accommodation: selectedAccommodation,
-            accommodationTotal,
-            extraBedSelected,
-            extraBedTotal,
-          },
+    navigate('/VisaPaymentPage', {
+      state: {
+        tour,
+        total,
+        people,
+        booking: {
+          clientName: values.name,
+          clientPhone: values.phone,
+          clientEmail: currentUser.email || '',
+          departureSlotId: selectedDeparture.id,
+          travelDate: selectedDeparture.startAt,
+          transport: values.transport,
+          guide: values.guide,
+          comment: values.comment || '',
+          accommodation: selectedAccommodation,
+          accommodationTotal,
+          extraBedSelected,
+          extraBedTotal,
         },
-      });
-    }, 700);
+      },
+    });
+    setSubmitting(false);
   };
 
   const handlePayWithSavings = async () => {
@@ -149,6 +206,7 @@ const TourBookingPage = () => {
     }
 
     if (!ensureAccommodationSelected()) return;
+    if (!ensureDepartureSelected()) return;
 
     if (!canPayWithSavings) {
       message.error('Недостаточно средств');
@@ -159,68 +217,26 @@ const TourBookingPage = () => {
 
     try {
       const formValues = form.getFieldsValue();
-      const nextSavings = normalizeSavings({
-        ...currentUser.savings,
-        currentAmount: Math.max(savingsAmount - total, 0),
-      });
-      const travelDate = formValues?.date?.toISOString?.() || new Date().toISOString();
-      const durationDays = Math.max(Number(String(tour?.duration || '').match(/\d+/)?.[0] || 1), 1);
-      const endDate = formValues?.date?.add?.(durationDays - 1, 'day')?.toISOString?.() || travelDate;
-      const companyId = Number(tour.companyId || currentUser?.companyId || 1);
-      const companyName = tour.companyName || tour.company || 'TravelPay';
-
-      const bookingRecord = {
-        id: `booking-${Date.now()}`,
+      const response = await api.post('/tour-bookings', {
         tourId: tour.id,
-        companyId,
-        companyName,
-        clientName: currentUser?.name || '',
-        clientPhone: currentUser?.phone || '',
+        clientName: formValues.name || currentUser?.name || '',
+        clientPhone: formValues.phone || currentUser?.phone || '',
         clientEmail: currentUser?.email || '',
-        tourTitle: tour.title,
-        location: tour.location || tour.country || 'TravelPay',
-        image: tour.image,
-        amount: total,
-        status: 'paid',
-        paymentStatus: 'paid',
-        purchasedAt: new Date().toISOString(),
-        travelDate,
-        date: travelDate,
-        endDate,
-        durationMinutes: durationDays * 24 * 60,
-        assignedTo: tour.manager || companyName,
+        people,
+        departureSlotId: selectedDeparture.id,
+        transport: formValues.transport,
+        guide: formValues.guide,
+        comment: formValues.comment || '',
         paymentMethod: 'savings',
         accommodation: selectedAccommodation,
-        accommodationTotal,
         extraBedSelected,
-        extraBedTotal,
-        baseTourAmount: baseTotal,
-      };
+      }, { headers: { 'x-user-id': currentUser.id } });
 
-      const notifications = [
-        {
-          id: `notification-${Date.now()}`,
-          type: 'booking',
-          title: 'Тур оплачен из накоплений',
-          description: `${tour.title} успешно добавлен в историю поездок.`,
-          date: new Date().toISOString(),
-          read: false,
-        },
-        ...(currentUser.notifications || []),
-      ];
-
-      const nextUser = await updateUserById(currentUser.id, {
-        ...currentUser,
-        savings: nextSavings,
-        travelHistory: [bookingRecord, ...(currentUser.travelHistory || [])],
-        bookings: [bookingRecord, ...(currentUser.bookings || [])],
-        notifications,
-        isLoggedIn: true,
-      });
-
-      syncCurrentUser({ ...nextUser, isLoggedIn: true });
+      syncCurrentUser({ ...response.data.user, isLoggedIn: true });
       message.success('Тур успешно оплачен из накоплений.');
       navigate('/profile');
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Не удалось оплатить тур из накоплений.');
     } finally {
       setPayingWithSavings(false);
     }
@@ -302,7 +318,7 @@ const TourBookingPage = () => {
                   showIcon
                   type="info"
                   style={styles.alert}
-                  title="Бронирование пока не оплачивается онлайн — менеджер свяжется с вами для подтверждения"
+                  title="Выберите оплату из накоплений или внесите предоплату по QR и прикрепите чек"
                 />
 
                 <Alert
@@ -338,30 +354,38 @@ const TourBookingPage = () => {
                       </Form.Item>
                     </Col>
 
-                    <Col xs={24} md={12}>
-                      <Form.Item name="date" label="Дата начала тура" rules={[{ required: true, message: 'Выберите дату' }]}>
-                        <DatePicker
-                          size="large"
-                          style={{ width: '100%' }}
-                          suffixIcon={<CalendarOutlined />}
-                          onChange={(value) => {
-                            setSelectedDate(value);
-                            setSelectedAccommodationId(null);
-                            setExtraBedSelected(false);
-                          }}
-                        />
-                      </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                      <Form.Item name="time" label="Желаемое время выезда">
-                        <TimePicker
-                          size="large"
-                          format="HH:mm"
-                          placeholder="09:00"
-                          suffixIcon={<ClockCircleOutlined />}
-                          style={{ width: '100%' }}
-                        />
+                    <Col xs={24}>
+                      <Form.Item
+                        name="departureSlotId"
+                        label="Выберите отправление"
+                        rules={[{ required: true, message: 'Выберите дату и время из расписания' }]}
+                      >
+                        {departuresLoading ? (
+                          <Alert showIcon type="info" title="Загружаем расписание тур-компании..." />
+                        ) : departureSlots.length ? (
+                          <Radio.Group
+                            className="tour-departure-picker"
+                            onChange={(event) => {
+                              setSelectedDepartureSlotId(event.target.value);
+                              setSelectedAccommodationId(null);
+                              setExtraBedSelected(false);
+                            }}
+                          >
+                            {departureSlots.map((slot) => (
+                              <Radio.Button key={slot.id} value={slot.id} className="tour-departure-option">
+                                <span className="tour-departure-option__date">{formatDeparture(slot.startAt)}</span>
+                                <span className="tour-departure-option__seats">Свободно {slot.remainingSeats} из {slot.seats}</span>
+                              </Radio.Button>
+                            ))}
+                          </Radio.Group>
+                        ) : (
+                          <Alert
+                            showIcon
+                            type="warning"
+                            title="У этого тура пока нет доступных отправлений"
+                            description="Тур-компания добавит новые даты и время."
+                          />
+                        )}
                       </Form.Item>
                     </Col>
 
@@ -412,7 +436,7 @@ const TourBookingPage = () => {
                     </Col>
                   </Row>
 
-                  {tour.hasAccommodation && selectedDate && (
+                  {tour.hasAccommodation && selectedDeparture && (
                     <div className="booking-accommodation-section">
                       <div className="booking-accommodation-head">
                         <div>

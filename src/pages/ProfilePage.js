@@ -13,6 +13,7 @@ import {
   Grid,
   Input,
   Layout,
+  Popconfirm,
   Progress,
   Row,
   Select,
@@ -27,6 +28,8 @@ import {
 } from 'antd';
 import {
   BellOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
   CompassOutlined,
   CrownOutlined,
   FireOutlined,
@@ -59,8 +62,29 @@ const BRAND_GOLD = '#fca311';
 const TURQUOISE = '#14b8a6';
 const DEFAULT_AVATAR = 'https://www.w3schools.com/howto/img_avatar.png';
 
+const TOUR_BOOKING_META = {
+  pending_payment: { label: 'Ожидает оплату', color: 'orange' },
+  payment_review: { label: 'Чек на проверке', color: 'blue' },
+  confirmed: { label: 'Подтверждено', color: 'green' },
+  completed: { label: 'Завершено', color: 'cyan' },
+  cancelled: { label: 'Отменено', color: 'red' },
+  rejected: { label: 'Отклонено', color: 'volcano' },
+};
+
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
+const formatDateTime = (value) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 const fileToDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -76,12 +100,30 @@ const levelColors = {
   Platinum: '#0ea5e9',
 };
 
+const getTourBookingMeta = (booking) => {
+  const key = booking?.status || 'pending_payment';
+  return TOUR_BOOKING_META[key] || TOUR_BOOKING_META.pending_payment;
+};
+
+const canCancelTourBooking = (booking) => {
+  if (!booking?.travelDate) return false;
+  if (['cancelled', 'rejected', 'completed'].includes(booking.status)) return false;
+  const travelTime = new Date(booking.travelDate).getTime();
+  if (Number.isNaN(travelTime) || travelTime <= Date.now()) return false;
+  const hoursBeforeDeparture = (travelTime - Date.now()) / (60 * 60 * 1000);
+  if (booking.status === 'confirmed') return hoursBeforeDeparture >= 24;
+  return true;
+};
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const screens = useBreakpoint();
   const isDesktop = !!screens.lg;
   const [form] = Form.useForm();
   const [user, setUser] = useState(null);
+  const [tourBookings, setTourBookings] = useState([]);
+  const [tourBookingsLoading, setTourBookingsLoading] = useState(true);
+  const [cancellingBookingId, setCancellingBookingId] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
   const [theme, setTheme] = useState(() => localStorage.getItem('dashboard_theme') || 'dark');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -95,28 +137,34 @@ const ProfilePage = () => {
     const loadUser = async () => {
       try {
         const currentUser = readCurrentUser();
-
         if (!currentUser?.id) {
           navigate('/login');
           return;
         }
 
-        const response = await api.get(`/users/${currentUser.id}`, {
-          headers: { 'x-user-id': currentUser.id },
-        });
+        setTourBookingsLoading(true);
+        const headers = { 'x-user-id': currentUser.id };
+        const [response, bookingsResponse] = await Promise.all([
+          api.get(`/users/${currentUser.id}`, { headers }),
+          api.get('/tour-bookings', { headers }),
+        ]);
+
         const nextUser = syncCurrentUser({
           ...normalizeUser(response.data),
           country: response.data.country || 'Kyrgyzstan',
           preferredLanguage: response.data.preferredLanguage || 'RU',
-          travelPreferences: response.data.travelPreferences || 'Luxury travel, mountains, city breaks',
+          travelPreferences: response.data.travelPreferences || 'Горы, озёра, комфортный отдых',
           isLoggedIn: true,
         });
 
         setUser(nextUser);
+        setTourBookings(bookingsResponse.data || []);
         setAvatarPreview(nextUser?.avatar || DEFAULT_AVATAR);
         form.setFieldsValue(nextUser);
       } catch (error) {
         navigate('/login');
+      } finally {
+        setTourBookingsLoading(false);
       }
     };
 
@@ -124,9 +172,34 @@ const ProfilePage = () => {
   }, [form, navigate]);
 
   const savingsMetrics = useMemo(() => getSavingsMetrics(user?.savings), [user?.savings]);
-  const level = useMemo(() => user?.level || getUserLevel(savingsMetrics.currentAmount), [user?.level, savingsMetrics.currentAmount]);
-  const unreadNotifications = useMemo(() => (user?.notifications || []).filter((item) => !item.read).length, [user?.notifications]);
+  const level = useMemo(
+    () => user?.level || getUserLevel(savingsMetrics.currentAmount),
+    [user?.level, savingsMetrics.currentAmount],
+  );
+  const unreadNotifications = useMemo(
+    () => (user?.notifications || []).filter((item) => !item.read).length,
+    [user?.notifications],
+  );
   const displayAvatar = avatarPreview || user?.avatar || DEFAULT_AVATAR;
+  const activeTourBookings = useMemo(
+    () => tourBookings.filter((item) => !['completed', 'cancelled', 'rejected'].includes(item.status)),
+    [tourBookings],
+  );
+  const favoriteItems = (user?.favorites || []).slice(0, 4);
+
+  const historyColumns = [
+    { title: 'Тур', dataIndex: 'tourTitle' },
+    { title: 'Дата покупки', dataIndex: 'purchasedAt', render: formatDate },
+    { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
+    {
+      title: 'Статус',
+      dataIndex: 'status',
+      render: (status) => {
+        const meta = TOUR_BOOKING_META[status] || { label: status || 'Статус', color: 'default' };
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+    },
+  ];
 
   const handleAvatarUpload = async (file) => {
     if (!file.type?.startsWith('image/')) {
@@ -177,6 +250,40 @@ const ProfilePage = () => {
     }
   };
 
+  const handleCancelTourBooking = async (booking) => {
+    if (!user?.id) return;
+
+    try {
+      setCancellingBookingId(booking.id);
+      const response = await api.post(
+        `/tour-bookings/${booking.id}/cancel`,
+        { reason: 'Отменено клиентом из личного кабинета' },
+        { headers: { 'x-user-id': user.id } },
+      );
+
+      const nextBooking = response.data?.booking || null;
+      const nextUser = response.data?.user
+        ? syncCurrentUser({ ...normalizeUser(response.data.user), isLoggedIn: true })
+        : null;
+
+      if (nextBooking) {
+        setTourBookings((current) => current.map((item) => (item.id === nextBooking.id ? nextBooking : item)));
+      }
+
+      if (nextUser) {
+        setUser(nextUser);
+        setAvatarPreview(nextUser?.avatar || DEFAULT_AVATAR);
+        form.setFieldsValue(nextUser);
+      }
+
+      message.success('Бронь тура отменена.');
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Не удалось отменить бронь.');
+    } finally {
+      setCancellingBookingId(null);
+    }
+  };
+
   const handleLogout = () => {
     clearCurrentUser();
     setMenuOpen(false);
@@ -188,23 +295,15 @@ const ProfilePage = () => {
     navigate(path);
   };
 
-  const favoriteItems = (user?.favorites || []).slice(0, 4);
-  const historyColumns = [
-    { title: 'Тур', dataIndex: 'tourTitle' },
-    { title: 'Дата покупки', dataIndex: 'purchasedAt', render: formatDate },
-    { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
-    { title: 'Статус', dataIndex: 'status', render: (status) => <Tag color="success">{status}</Tag> },
-  ];
-
   const sidebarContent = (
     <div style={styles.sidebarInner} className="travelpay-profile-sidebar travelpay-profile-sidebar-card">
       <Space orientation="vertical" size={10} style={{ width: '100%' }}>
         <div style={styles.sidebarUser}>
           <Avatar size={52} src={displayAvatar} icon={<UserOutlined />} />
           <div style={{ minWidth: 0 }}>
-            <Text style={{ color: '#fff', fontWeight: 800 }}>{user?.name || 'TravelPay user'}</Text>
+            <Text style={{ color: '#fff', fontWeight: 800 }}>{user?.name || 'Пользователь'}</Text>
             <br />
-            <Text style={{ color: '#bfdbfe', fontSize: 12 }}>{user?.email || 'profile'}</Text>
+            <Text style={{ color: '#bfdbfe', fontSize: 12 }}>{user?.email || 'profile@travelpay.app'}</Text>
           </div>
         </div>
         <Button block icon={<HomeOutlined />} onClick={() => handleNavigate('/')}>Главная</Button>
@@ -258,14 +357,19 @@ const ProfilePage = () => {
                 <Text style={styles.kicker}>Профиль пользователя</Text>
                 <Title style={styles.pageTitle}>Личный кабинет TravelPay</Title>
                 <Paragraph style={styles.pageSubtitle}>
-                  Управляйте накоплениями, поездками, достижениями, уведомлениями и бонусами в одном SaaS-интерфейсе.
+                  Управляйте накоплениями, поездками, достижениями, уведомлениями и бонусами в одном личном кабинете.
                 </Paragraph>
               </div>
               <Space wrap>
                 <Badge count={unreadNotifications}>
                   <Button shape="circle" icon={<BellOutlined />} />
                 </Badge>
-                <Switch checked={theme === 'dark'} onChange={(checked) => setTheme(checked ? 'dark' : 'light')} checkedChildren="Dark" unCheckedChildren="Light" />
+                <Switch
+                  checked={theme === 'dark'}
+                  onChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                  checkedChildren="Dark"
+                  unCheckedChildren="Light"
+                />
               </Space>
             </div>
 
@@ -274,7 +378,7 @@ const ProfilePage = () => {
                 type="success"
                 showIcon
                 title="Цель накопления достигнута"
-                description="Теперь вы можете выбрать любой доступный тур и оплатить его накопленными средствами."
+                description="Теперь вы можете выбрать любой доступный тур и оплатить его накоплениями."
                 action={<Button type="primary" onClick={() => navigate('/tours')}>Выбрать тур</Button>}
               />
             )}
@@ -292,7 +396,9 @@ const ProfilePage = () => {
                       <Tag color={getSavingsStatusColor(savingsMetrics.status)}>{formatSavingsStatus(savingsMetrics.status)}</Tag>
                       <Tag icon={<CrownOutlined />} color="gold" style={{ fontWeight: 800 }}>{level}</Tag>
                       <Progress percent={savingsMetrics.progressPercent} strokeColor={{ '0%': TURQUOISE, '100%': BRAND_GOLD }} />
-                      <Button type="primary" block onClick={() => navigate('/savings')} style={styles.primaryButton}>Открыть накопления</Button>
+                      <Button type="primary" block onClick={() => navigate('/savings')} style={styles.primaryButton}>
+                        Открыть накопления
+                      </Button>
                     </Space>
                   </Card>
                 </motion.div>
@@ -300,9 +406,20 @@ const ProfilePage = () => {
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
                   <Card title="Уровень и streak" style={styles.glassCard}>
                     <Space orientation="vertical" size={14} style={{ width: '100%' }}>
-                      <Statistic title="Уровень пользователя" value={level} styles={{ content: { color: levelColors[level] || BRAND_BLUE } }} />
-                      <Alert type="info" showIcon icon={<FireOutlined />} title={`🔥 Вы пополняете баланс ${user?.travelStreakMonths || 0} месяца подряд`} />
-                      <Text type="secondary">Следующий уровень открывает больше доверия, бонусов и персональных офферов.</Text>
+                      <Statistic
+                        title="Уровень пользователя"
+                        value={level}
+                        styles={{ content: { color: levelColors[level] || BRAND_BLUE } }}
+                      />
+                      <Alert
+                        type="info"
+                        showIcon
+                        icon={<FireOutlined />}
+                        title={`🔥 Вы пополняете баланс ${user?.travelStreakMonths || 0} месяца подряд`}
+                      />
+                      <Text type="secondary">
+                        Следующий уровень открывает больше бонусов, персональных предложений и доверия внутри сервиса.
+                      </Text>
                     </Space>
                   </Card>
                 </motion.div>
@@ -361,6 +478,78 @@ const ProfilePage = () => {
                   </Card>
 
                   <Card title="История путешествий" style={styles.glassCard}>
+                    <Space orientation="vertical" size={16} style={{ width: '100%', marginBottom: 20 }}>
+                      <div style={styles.progressHeader}>
+                        <Text strong>Мои туры</Text>
+                        <Tag color="processing">{activeTourBookings.length}</Tag>
+                      </div>
+
+                      {tourBookingsLoading ? (
+                        <Alert type="info" showIcon message="Загружаем ваши туры..." />
+                      ) : activeTourBookings.length ? activeTourBookings.map((booking) => {
+                        const meta = getTourBookingMeta(booking);
+                        const canCancel = canCancelTourBooking(booking);
+
+                        return (
+                          <Card key={booking.id} size="small" className="profile-tour-booking-card" style={styles.listCard}>
+                            <div className="profile-tour-booking-card__head">
+                              <div>
+                                <Text strong>{booking.tourTitle || 'Тур'}</Text>
+                                <br />
+                                <Text type="secondary">{booking.companyName || booking.location || 'TravelPay'}</Text>
+                              </div>
+                              <Tag color={meta.color}>{meta.label}</Tag>
+                            </div>
+
+                            <div className="profile-tour-booking-card__grid">
+                              <div className="profile-tour-booking-card__item">
+                                <CalendarOutlined />
+                                <span>{formatDateTime(booking.travelDate)}</span>
+                              </div>
+                              <div className="profile-tour-booking-card__item">
+                                <ClockCircleOutlined />
+                                <span>{booking.departureTime || '—'}</span>
+                              </div>
+                              <div className="profile-tour-booking-card__item">
+                                <WalletOutlined />
+                                <span>{formatMoney(booking.amount)}</span>
+                              </div>
+                              <div className="profile-tour-booking-card__item">
+                                <CompassOutlined />
+                                <span>{`${booking.people || 1} чел.`}</span>
+                              </div>
+                            </div>
+
+                            <div className="profile-tour-booking-card__footer">
+                              <Text type="secondary">
+                                {booking.paymentMethod === 'savings'
+                                  ? 'Оплачено накоплениями'
+                                  : `Предоплата: ${formatMoney(booking.prepaymentAmount)}`}
+                              </Text>
+
+                              {canCancel ? (
+                                <Popconfirm
+                                  title="Отменить бронь?"
+                                  description={booking.status === 'confirmed'
+                                    ? 'Подтверждённую бронь можно отменить только минимум за 24 часа до выезда.'
+                                    : 'Бронь будет сразу отменена.'}
+                                  okText="Отменить"
+                                  cancelText="Назад"
+                                  onConfirm={() => handleCancelTourBooking(booking)}
+                                >
+                                  <Button danger size="small" loading={cancellingBookingId === booking.id}>Отменить</Button>
+                                </Popconfirm>
+                              ) : (
+                                <Tag>{booking.status === 'confirmed' ? 'Отмена закрыта менее чем за 24 часа' : 'Отмена недоступна'}</Tag>
+                              )}
+                            </div>
+                          </Card>
+                        );
+                      }) : (
+                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="У вас пока нет активных броней по турам" />
+                      )}
+                    </Space>
+
                     <div className="travelpay-table-shell">
                       <Table
                         rowKey="id"
@@ -423,14 +612,11 @@ const ProfilePage = () => {
                             <Avatar size={88} src={displayAvatar} icon={<UserOutlined />} className="profile-avatar-editor__preview" />
                             <div className="profile-avatar-editor__body">
                               <Text strong>Аватар профиля</Text>
-                              <Text type="secondary">Загрузите изображение или вставьте ссылку. После сохранения аватар обновится в профиле и хедере.</Text>
+                              <Text type="secondary">
+                                Загрузите изображение или вставьте ссылку. После сохранения аватар обновится в профиле и хедере.
+                              </Text>
                               <Space wrap>
-                                <Upload
-                                  accept="image/*"
-                                  maxCount={1}
-                                  showUploadList={false}
-                                  beforeUpload={handleAvatarUpload}
-                                >
+                                <Upload accept="image/*" maxCount={1} showUploadList={false} beforeUpload={handleAvatarUpload}>
                                   <Button icon={<PictureOutlined />}>Загрузить аватар</Button>
                                 </Upload>
                                 <Button onClick={resetAvatar}>Вернуть дефолт</Button>
@@ -438,13 +624,10 @@ const ProfilePage = () => {
                             </div>
                           </div>
                         </Col>
+
                         <Col xs={24}>
                           <Form.Item name="avatar" label="Ссылка на аватар">
-                            <Input
-                              placeholder="https://example.com/avatar.jpg"
-                              onChange={handleAvatarUrlChange}
-                              allowClear
-                            />
+                            <Input placeholder="https://example.com/avatar.jpg" onChange={handleAvatarUrlChange} allowClear />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}><Form.Item name="name" label="Имя"><Input /></Form.Item></Col>
@@ -486,7 +669,7 @@ const styles = {
       ? 'radial-gradient(circle at top left, rgba(20,184,166,0.15), transparent 28%), #081526'
       : 'linear-gradient(180deg, #f7fbff 0%, #edf5fb 100%)',
   }),
-  sider: (isDark) => ({
+  sider: () => ({
     position: 'sticky',
     top: 24,
     alignSelf: 'flex-start',
@@ -533,15 +716,11 @@ const styles = {
     color: BRAND_BLUE,
     fontSize: 'clamp(24px, 4vw, 40px)',
     lineHeight: 1.08,
-    wordBreak: 'normal',
-    whiteSpace: 'normal',
   },
   pageSubtitle: {
     maxWidth: 780,
     color: '#64748b',
     margin: 0,
-    wordBreak: 'normal',
-    whiteSpace: 'normal',
   },
   glassCard: {
     borderRadius: 20,

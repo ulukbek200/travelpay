@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ConfigProvider, theme as antdTheme } from 'antd';
+import { App as AntApp, ConfigProvider, theme as antdTheme } from 'antd';
 import {
   BrowserRouter as Router,
   Routes,
@@ -310,10 +310,12 @@ function AppShell({ favorites, setFavorites }) {
           }
         : undefined}
     >
-      <Router>
-        <ScrollToTop />
-        <AppContent favorites={favorites} setFavorites={setFavorites} />
-      </Router>
+      <AntApp>
+        <Router>
+          <ScrollToTop />
+          <AppContent favorites={favorites} setFavorites={setFavorites} />
+        </Router>
+      </AntApp>
     </ConfigProvider>
   );
 }

@@ -1,6 +1,28 @@
 import React, { useState } from 'react';
-import { Alert, Button, Card, Form, Input, Layout, Result, Space, Tag, Typography, message } from 'antd';
-import { BankOutlined, CalendarOutlined, CompassOutlined, LockOutlined, MailOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  Input,
+  Layout,
+  Result,
+  Space,
+  Tag,
+  Typography,
+  Upload,
+  message,
+} from 'antd';
+import {
+  BankOutlined,
+  CalendarOutlined,
+  CompassOutlined,
+  InboxOutlined,
+  LockOutlined,
+  MailOutlined,
+  SafetyCertificateOutlined,
+  WalletOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { saveCurrentUser } from '../utils/currentUser';
@@ -10,9 +32,19 @@ import { getApiErrorMessage } from '../utils/apiErrors';
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
+const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
 const BusinessLoginPage = () => {
   const navigate = useNavigate();
+  const [loginForm] = Form.useForm();
+  const [paymentForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [companyState, setCompanyState] = useState(null);
 
   const handleSubmit = async (values) => {
@@ -24,18 +56,13 @@ const BusinessLoginPage = () => {
         password: values.password,
       });
 
-      if (response.data.status === 'pending') {
-        setCompanyState(response.data);
-        return;
-      }
-
       const user = syncCurrentUser({ ...response.data.user, isLoggedIn: true });
       saveCurrentUser(user);
       message.success('Добро пожаловать в TravelPay Business');
       navigate('/business/dashboard');
     } catch (error) {
       const data = error.response?.data;
-      if (data?.status === 'rejected' || data?.status === 'blocked') {
+      if (data?.status) {
         setCompanyState(data);
         return;
       }
@@ -45,15 +72,105 @@ const BusinessLoginPage = () => {
     }
   };
 
+  const handleSubscriptionPayment = async (values) => {
+    try {
+      setPaymentLoading(true);
+      const file = values.receipt?.[0]?.originFileObj;
+      if (!file) {
+        message.error('Загрузите чек оплаты подписки.');
+        return;
+      }
+
+      const receiptImage = await fileToDataUrl(file);
+      const response = await api.post('/business/subscription/pay', {
+        companyId: companyState?.company?.id,
+        email: companyState?.user?.email,
+        receiptImage,
+        receiptName: file.name,
+        receiptType: file.type,
+        comment: values.comment,
+      });
+
+      setCompanyState((current) => ({
+        ...(current || {}),
+        status: 'payment_review',
+        message: 'Оплата подписки отправлена и ждёт подтверждения super admin.',
+        company: response.data.company,
+      }));
+      paymentForm.resetFields();
+      message.success('Оплата подписки отправлена на проверку.');
+    } catch (error) {
+      message.error(getApiErrorMessage(error, 'Не удалось отправить оплату подписки.'));
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   const renderCompanyState = () => {
     if (!companyState) return null;
+
+    if (companyState.status === 'payment_review') {
+      return (
+        <Result
+          status="info"
+          title="Оплата подписки на проверке"
+          subTitle="Super admin получил уведомление и проверит платёж. После подтверждения доступ откроется на 30 дней."
+          extra={<Button onClick={() => setCompanyState(null)}>Вернуться ко входу</Button>}
+        />
+      );
+    }
+
+    if (companyState.status === 'subscription_required' || companyState.status === 'rejected') {
+      return (
+        <Space direction="vertical" size={18} style={{ width: '100%' }}>
+          <Alert
+            type={companyState.status === 'rejected' ? 'warning' : 'info'}
+            showIcon
+            message={companyState.status === 'rejected' ? 'Оплата подписки отклонена' : 'Нужна оплата подписки'}
+            description={companyState.message || 'Оплатите подписку и отправьте чек на проверку.'}
+          />
+
+          <Card size="small" style={{ borderRadius: 16 }}>
+            <Space direction="vertical" size={10} style={{ width: '100%' }}>
+              <Text strong>Подписка TravelPay Business</Text>
+              <Text>14 900 сом за 30 дней доступа</Text>
+              <Text type="secondary">
+                После оплаты super admin и компания получат уведомления о статусе платежа.
+              </Text>
+            </Space>
+          </Card>
+
+          <Form form={paymentForm} layout="vertical" onFinish={handleSubscriptionPayment}>
+            <Form.Item
+              name="receipt"
+              label="Чек оплаты подписки"
+              valuePropName="fileList"
+              getValueFromEvent={(event) => event?.fileList || []}
+              rules={[{ required: true, message: 'Загрузите чек оплаты' }]}
+            >
+              <Upload beforeUpload={() => false} maxCount={1}>
+                <Button icon={<InboxOutlined />}>Загрузить чек</Button>
+              </Upload>
+            </Form.Item>
+            <Form.Item name="comment" label="Комментарий">
+              <Input.TextArea rows={3} placeholder="Например: оплата за июль" />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" loading={paymentLoading} block icon={<WalletOutlined />}>
+              Отправить оплату подписки
+            </Button>
+          </Form>
+
+          <Button onClick={() => setCompanyState(null)}>Назад ко входу</Button>
+        </Space>
+      );
+    }
 
     if (companyState.status === 'pending') {
       return (
         <Result
           status="info"
-          title="Компания ожидает подтверждения"
-          subTitle="После проверки TravelPay вы сможете публиковать туры."
+          title="Компания ожидает завершения регистрации"
+          subTitle="Примите договор и оплатите подписку, чтобы открыть Business."
           extra={<Button onClick={() => setCompanyState(null)}>Вернуться ко входу</Button>}
         />
       );
@@ -62,8 +179,8 @@ const BusinessLoginPage = () => {
     return (
       <Result
         status="warning"
-        title={companyState.status === 'rejected' ? 'Заявка компании отклонена' : 'Доступ компании ограничен'}
-        subTitle={companyState.message || companyState.company?.rejectionReason || 'Свяжитесь с администратором TravelPay.'}
+        title="Доступ компании ограничен"
+        subTitle={companyState.message || 'Свяжитесь с super admin TravelPay.'}
         extra={<Button onClick={() => setCompanyState(null)}>Вернуться ко входу</Button>}
       />
     );
@@ -79,32 +196,33 @@ const BusinessLoginPage = () => {
               <Tag color="gold">TravelPay Business</Tag>
               <Title style={styles.title}>Вход для тур-компаний</Title>
               <Paragraph style={styles.subtitle}>
-                Клиенты входят через обычный TravelPay. Компании используют отдельный Business-доступ.
+                Компании работают в отдельном кабинете: публикуют туры, управляют календарём, следят за оплатами и бронями.
               </Paragraph>
               <div className="business-login-metrics" style={styles.metrics}>
                 <div style={styles.metric}>
                   <CompassOutlined />
                   <strong>Туры</strong>
-                  <span>публикация после проверки</span>
+                  <span>создание и управление расписанием</span>
                 </div>
                 <div style={styles.metric}>
                   <CalendarOutlined />
-                  <strong>Календарь</strong>
-                  <span>места, даты, брони</span>
+                  <strong>Подписка</strong>
+                  <span>доступ открывается на 30 дней</span>
                 </div>
                 <div style={styles.metric}>
                   <SafetyCertificateOutlined />
-                  <strong>Доступ</strong>
-                  <span>только своя компания</span>
+                  <strong>Уведомления</strong>
+                  <span>компания и super admin видят статусы оплаты</span>
                 </div>
               </div>
               <Alert
                 type="success"
                 showIcon
                 message="Данные компании защищены"
-                description="После входа менеджеры видят только свои туры, бронирования, календарь и клиентов."
+                description="После входа сотрудники компании видят только свои туры, бронирования, календарь и статусы подписки."
               />
             </div>
+
             <div className="business-form-pane" style={styles.formPane}>
               {companyState ? renderCompanyState() : (
                 <Space direction="vertical" size={18} style={{ width: '100%' }}>
@@ -112,7 +230,7 @@ const BusinessLoginPage = () => {
                     <Text type="secondary"><BankOutlined /> Business account</Text>
                     <Title level={3} style={{ margin: '8px 0 0' }}>Войти в кабинет</Title>
                   </div>
-                  <Form layout="vertical" onFinish={handleSubmit}>
+                  <Form form={loginForm} layout="vertical" onFinish={handleSubmit}>
                     <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Введите email' }]}>
                       <Input size="large" prefix={<MailOutlined />} />
                     </Form.Item>

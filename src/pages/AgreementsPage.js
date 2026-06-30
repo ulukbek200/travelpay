@@ -3,35 +3,36 @@ import { Button } from 'antd';
 
 const agreements = [
   {
-    title: 'Договор о туристических услугах',
-    content: 'Вы соглашаетесь с программой тура, сроками, обязанностями сторон, условиями страхования и безопасностью маршрута.',
-  },
-  {
-    title: 'Договор-оферта',
-    content: 'Оферта вступает в силу с момента бронирования. Оплата, изменения маршрута и условия отмены регулируются правилами оферты.',
-  },
-  {
-    title: 'Агентский договор',
-    content: 'TravelPay действует от вашего имени при бронировании транспорта, отелей и сопутствующих сервисов.',
-  },
-  {
     title: 'Пользовательское соглашение',
-    content: 'Сайт используется по правилам сервиса. Персональные данные защищаются по закону, а копирование без разрешения запрещено.',
+    content: 'Используя TravelPay, пользователь подтверждает достоверность данных, соблюдает правила сервиса и принимает условия бронирования, оплаты и возврата.',
   },
   {
-    title: 'Политика возврата и отмены',
-    content: 'Бесплатная отмена доступна за 7 дней до начала тура. При более поздней отмене применяется частичный возврат.',
+    title: 'Договор-оферта по турам',
+    content: 'Тур оформляется по условиям опубликованной оферты. В ней фиксируются программа, стоимость, дата выезда, порядок оплаты, отмены и возврата.',
+  },
+  {
+    title: 'Договор для компаний',
+    content: 'Тур-компания принимает условия размещения в TravelPay Business, подтверждает право продавать свои туры и соглашается с подпиской на 30 календарных дней.',
+  },
+  {
+    title: 'Политика конфиденциальности',
+    content: 'TravelPay обрабатывает персональные данные только для регистрации, бронирования, оплаты, уведомлений и клиентской поддержки.',
+  },
+  {
+    title: 'Возврат и отмена',
+    content: 'Условия возврата зависят от типа тура, даты отмены и правил компании. Финальное решение по возврату отображается в деталях бронирования.',
   },
 ];
 
 const AgreementsPage = () => {
   const [openIndex, setOpenIndex] = useState(null);
-  const [agree1, setAgree1] = useState(false);
-  const [agree2, setAgree2] = useState(false);
+  const [agreeRules, setAgreeRules] = useState(false);
+  const [agreeData, setAgreeData] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (!agreeRules || !agreeData) return;
     setSubmitted(true);
   };
 
@@ -39,30 +40,34 @@ const AgreementsPage = () => {
     <div style={styles.body}>
       <div style={styles.container}>
         <h1 style={styles.heading}>Соглашения и условия TravelPay</h1>
+        <p style={styles.lead}>
+          Здесь собраны основные условия для клиентов и тур-компаний: работа платформы, оферта, подписка и правила обработки данных.
+        </p>
 
         <div style={styles.accordion}>
           {agreements.map((item, index) => (
             <div key={item.title} style={styles.accordionItem}>
-              <div
+              <button
+                type="button"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 style={{
                   ...styles.accordionHeader,
                   ...(openIndex === index ? styles.activeHeader : {}),
                 }}
               >
-                {item.title}
+                <span>{item.title}</span>
                 <span
                   style={{
                     ...styles.toggleIcon,
                     transform: openIndex === index ? 'rotate(135deg)' : 'rotate(45deg)',
                   }}
                 />
-              </div>
+              </button>
 
               <div
                 style={{
                   ...styles.accordionContent,
-                  maxHeight: openIndex === index ? '300px' : '0',
+                  maxHeight: openIndex === index ? '220px' : '0',
                   padding: openIndex === index ? '18px 24px' : '0 24px',
                 }}
               >
@@ -74,12 +79,12 @@ const AgreementsPage = () => {
 
         <form onSubmit={handleSubmit} style={styles.checkboxGroup}>
           <label style={styles.label}>
-            <input type="checkbox" checked={agree1} onChange={() => setAgree1(!agree1)} style={styles.checkbox} />
-            Я ознакомлен(а) со всеми условиями
+            <input type="checkbox" checked={agreeRules} onChange={() => setAgreeRules(!agreeRules)} style={styles.checkbox} />
+            Я ознакомился(ась) с условиями сервиса и договорами
           </label>
           <label style={styles.label}>
-            <input type="checkbox" checked={agree2} onChange={() => setAgree2(!agree2)} style={styles.checkbox} />
-            Соглашаюсь на обработку персональных данных
+            <input type="checkbox" checked={agreeData} onChange={() => setAgreeData(!agreeData)} style={styles.checkbox} />
+            Я согласен(на) на обработку персональных данных
           </label>
 
           <Button
@@ -89,14 +94,14 @@ const AgreementsPage = () => {
             className="travelpay-primary-button"
             style={{
               ...styles.button,
-              ...(agree1 && agree2 ? {} : styles.buttonDisabled),
+              ...(!(agreeRules && agreeData) ? styles.buttonDisabled : {}),
             }}
-            disabled={!(agree1 && agree2)}
+            disabled={!(agreeRules && agreeData)}
           >
-            Подтвердить и продолжить
+            Подтвердить
           </Button>
 
-          {submitted && <div style={styles.success}>Спасибо, всё подтверждено.</div>}
+          {submitted && <div style={styles.success}>Спасибо, согласие сохранено.</div>}
         </form>
       </div>
     </div>
@@ -106,34 +111,43 @@ const AgreementsPage = () => {
 const styles = {
   body: {
     fontFamily: '"Poppins", sans-serif',
-    background: '#FFFFFF',
+    background: '#f4f8ff',
     minHeight: '100vh',
-    color: '#333333',
+    color: '#1f2937',
     padding: '24px',
   },
   container: {
-    maxWidth: '900px',
-    margin: '50px auto',
+    maxWidth: '920px',
+    margin: '32px auto',
     padding: '40px',
-    background: '#FFFFFF',
-    borderRadius: '20px',
-    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.1)',
+    background: '#ffffff',
+    borderRadius: '24px',
+    boxShadow: '0 18px 48px rgba(15, 23, 42, 0.08)',
   },
   heading: {
     textAlign: 'center',
     fontSize: '32px',
-    color: '#0D47A1',
-    marginBottom: '40px',
+    color: '#0f4aa1',
+    marginBottom: '12px',
+  },
+  lead: {
+    margin: '0 auto 32px',
+    maxWidth: '700px',
+    textAlign: 'center',
+    lineHeight: 1.6,
+    color: '#4b5563',
   },
   accordion: {
-    borderRadius: '16px',
+    borderRadius: '18px',
     overflow: 'hidden',
+    border: '1px solid #dbe7ff',
   },
   accordionItem: {
-    borderBottom: '1px solid #E0E0E0',
+    borderBottom: '1px solid #e5e7eb',
   },
   accordionHeader: {
-    background: 'linear-gradient(135deg, #FFFFFF, #E3F2FD)',
+    width: '100%',
+    background: 'linear-gradient(135deg, #ffffff, #eef5ff)',
     padding: '20px 24px',
     cursor: 'pointer',
     display: 'flex',
@@ -141,30 +155,32 @@ const styles = {
     alignItems: 'center',
     fontWeight: 600,
     fontSize: '17px',
-    color: '#1565C0',
-    userSelect: 'none',
+    color: '#1565c0',
+    border: 'none',
+    textAlign: 'left',
   },
   activeHeader: {
-    backgroundColor: '#E0F7FA',
+    background: 'linear-gradient(135deg, #eef7ff, #e0f2fe)',
   },
   toggleIcon: {
     width: '12px',
     height: '12px',
-    borderRight: '3px solid #42A5F5',
-    borderBottom: '3px solid #42A5F5',
+    borderRight: '3px solid #3b82f6',
+    borderBottom: '3px solid #3b82f6',
     transition: 'transform 0.3s ease',
     marginLeft: '10px',
+    flexShrink: 0,
   },
   accordionContent: {
     overflow: 'hidden',
-    background: '#FFFFFF',
+    background: '#ffffff',
     fontSize: '15px',
-    color: '#444444',
-    transition: 'max-height 0.4s ease, padding 0.4s ease',
+    color: '#374151',
+    transition: 'max-height 0.35s ease, padding 0.35s ease',
   },
   accordionText: {
     margin: 0,
-    lineHeight: 1.6,
+    lineHeight: 1.7,
   },
   checkboxGroup: {
     marginTop: '30px',
@@ -172,16 +188,16 @@ const styles = {
   label: {
     fontSize: '15px',
     display: 'block',
-    marginBottom: '10px',
+    marginBottom: '12px',
     fontWeight: 500,
   },
   checkbox: {
     marginRight: '10px',
     transform: 'scale(1.2)',
-    accentColor: '#2196F3',
+    accentColor: '#2563eb',
   },
   button: {
-    marginTop: '25px',
+    marginTop: '24px',
     width: '100%',
     height: 48,
     borderRadius: '14px',
@@ -191,9 +207,9 @@ const styles = {
     opacity: 0.55,
   },
   success: {
-    marginTop: '20px',
-    color: 'green',
-    fontWeight: 'bold',
+    marginTop: '18px',
+    color: '#15803d',
+    fontWeight: 700,
     textAlign: 'center',
   },
 };

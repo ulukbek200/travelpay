@@ -46,6 +46,7 @@ export const fallbackStays = [
     companyLogo: '',
     companyCity: 'Ала-Арча, Кыргызстан',
     companyVerified: true,
+    extraServices: [],
   },
   {
     id: 'issyk-kul-lake-cottage',
@@ -70,6 +71,7 @@ export const fallbackStays = [
     companyLogo: '',
     companyCity: 'Бостери, Кыргызстан',
     companyVerified: true,
+    extraServices: [],
   },
   {
     id: 'son-kul-yurt-premium',
@@ -94,6 +96,7 @@ export const fallbackStays = [
     companyLogo: '',
     companyCity: 'Сон-Куль, Кыргызстан',
     companyVerified: true,
+    extraServices: [],
   },
   {
     id: 'karakol-forest-house',
@@ -118,6 +121,7 @@ export const fallbackStays = [
     companyLogo: '',
     companyCity: 'Каракол, Кыргызстан',
     companyVerified: true,
+    extraServices: [],
   },
 ];
 
@@ -158,6 +162,26 @@ export const normalizeStay = (item = {}, index = 0) => {
     companyName: item.companyName || fallback.companyName || 'TravelPay Partner',
     companyLogo: item.companyLogo || fallback.companyLogo || '',
     companyCity: item.companyCity || item.city || fallback.companyCity || fallback.city || 'Kyrgyzstan',
+    extraServices: Array.isArray(item.extraServices)
+      ? item.extraServices.map((service, serviceIndex) => ({
+        id: service.id || `service-${serviceIndex + 1}`,
+        title: service.title || service.name || '',
+        description: service.description || '',
+        type: service.type || 'toggle',
+        price: Number(service.price || 0),
+        maxQuantity: Number(service.maxQuantity || 1),
+        unitLabel: service.unitLabel || 'шт.',
+        active: service.active !== false,
+        sortOrder: Number(service.sortOrder ?? serviceIndex),
+        options: Array.isArray(service.options)
+          ? service.options.map((option, optionIndex) => ({
+            id: option.id || `option-${optionIndex + 1}`,
+            label: option.label || option.title || '',
+            price: Number(option.price || 0),
+          }))
+          : [],
+      }))
+      : fallback.extraServices,
     companyVerified: Boolean(item.companyVerified ?? fallback.companyVerified),
     createdByBusiness: Boolean(item.createdByBusiness),
   };

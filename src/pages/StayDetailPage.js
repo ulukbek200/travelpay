@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  App,
+  Badge,
   Button,
   Card,
+  Checkbox,
   Col,
   Divider,
   Empty,
@@ -13,12 +16,15 @@ import {
   Modal,
   Rate,
   Row,
+  Select,
   Skeleton,
   Space,
+  Statistic,
+  Steps,
   Tag,
+  Tooltip,
   Typography,
   Upload,
-  message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -32,7 +38,9 @@ import {
   RightOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import CompanyBadge from '../components/CompanyBadge';
@@ -48,6 +56,7 @@ import { readCurrentUser } from '../utils/currentUser';
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 const PAYMENT_QR_URL = process.env.REACT_APP_PAYMENT_QR_URL || '/images/payment-qr.png';
+const BOOKING_STEPS = ['Даты', 'Гости', 'Услуги', 'Предоплата', 'Подтверждение'];
 
 const MONTH_NAMES = [
   'Январь',
@@ -110,6 +119,17 @@ const formatDateKey = (date) =>
     String(date.getDate()).padStart(2, '0'),
   ].join('-');
 
+const buildDefaultExtrasSelection = (services = []) => services.reduce((acc, service) => {
+  if (service.type === 'quantity') {
+    acc[service.id] = { quantity: 0 };
+  } else if (service.type === 'select') {
+    acc[service.id] = { selectedOptionId: '' };
+  } else {
+    acc[service.id] = { selected: false };
+  }
+  return acc;
+}, {});
+
 const buildAvailabilityDays = (monthDate, stay, today, availabilityRecords = []) => {
   const availabilityByKey = new Map(availabilityRecords.map((item) => [item.key, item]));
   const seed = String(stay?.id || stay?.title || 'stay')
@@ -145,10 +165,12 @@ const StayDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const screens = useBreakpoint();
+  const { message } = App.useApp();
   const isMobile = !screens.md;
   const today = useMemo(() => startOfDay(new Date()), []);
   const currentUser = readCurrentUser();
   const [bookingForm] = Form.useForm();
+  const [bookingContactPreview, setBookingContactPreview] = useState({});
   const [loading, setLoading] = useState(true);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
@@ -156,9 +178,11 @@ const StayDetailPage = () => {
   const [availabilityRecords, setAvailabilityRecords] = useState([]);
   const [stayBookings, setStayBookings] = useState([]);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingStep, setBookingStep] = useState(0);
   const [receiptFiles, setReceiptFiles] = useState([]);
   const [guests, setGuests] = useState(2);
   const [nights, setNights] = useState(2);
+  const [selectedExtras, setSelectedExtras] = useState({});
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDateKey, setSelectedDateKey] = useState(() => formatDateKey(startOfDay(new Date())));
   const [selectedTime, setSelectedTime] = useState(CHECK_IN_TIMES[0]);
@@ -180,6 +204,10 @@ const StayDetailPage = () => {
   }, []);
 
   const stay = useMemo(() => stays.find((item) => String(item.id) === String(id)), [id, stays]);
+  const activeExtraServices = useMemo(
+    () => (Array.isArray(stay?.extraServices) ? stay.extraServices.filter((service) => service.active !== false) : []),
+    [stay],
+  );
   const gallery = stay?.images?.length ? stay.images : fallbackStays[0].images;
   const availabilityMonthKey = useMemo(() => formatDateKey(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1)).slice(0, 7), [calendarMonth]);
   const availabilityDays = useMemo(
@@ -212,6 +240,10 @@ const StayDetailPage = () => {
 
     return new Set(Array.from(counts.entries()).filter(([, count]) => count >= total).map(([time]) => time));
   }, [selectedDateKey, stay?.availableCount, stay?.totalCount, stayBookings]);
+
+  useEffect(() => {
+    setSelectedExtras(buildDefaultExtrasSelection(activeExtraServices));
+  }, [activeExtraServices]);
 
   useEffect(() => {
     if (bookedTimeSet.has(selectedTime)) {
@@ -273,7 +305,50 @@ const StayDetailPage = () => {
     );
   }
 
-  const totalPreview = stay.pricePerNight * nights;
+  const baseTotal = stay.pricePerNight * nights;
+  const extrasSummary = activeExtraServices.map((service) => {
+    const selection = selectedExtras[service.id] || {};
+    if (service.type === 'quantity') {
+      const quantity = Math.min(Math.max(Number(selection.quantity) || 0, 0), Math.max(Number(service.maxQuantity) || 1, 1));
+      return {
+        serviceId: service.id,
+        title: service.title,
+        quantity,
+        unitPrice: Number(service.price || 0),
+        total: quantity * Number(service.price || 0),
+        meta: quantity > 0 ? `${quantity} ${service.unitLabel || 'шт.'}` : '',
+        selectedOptionId: '',
+      };
+    }
+
+    if (service.type === 'select') {
+      const option = (service.options || []).find((item) => String(item.id) === String(selection.selectedOptionId));
+      return {
+        serviceId: service.id,
+        title: service.title,
+        quantity: option ? 1 : 0,
+        unitPrice: Number(option?.price || 0),
+        total: Number(option?.price || 0),
+        meta: option?.label || '',
+        selectedOptionId: option?.id || '',
+      };
+    }
+
+    const selected = Boolean(selection.selected);
+    return {
+      serviceId: service.id,
+      title: service.title,
+      quantity: selected ? 1 : 0,
+      unitPrice: Number(service.price || 0),
+      total: selected ? Number(service.price || 0) : 0,
+      meta: selected ? 'Добавлено' : '',
+      selectedOptionId: '',
+    };
+  }).filter((item) => item.quantity > 0 || item.total > 0);
+  const extrasTotal = extrasSummary.reduce((sum, item) => sum + item.total, 0);
+  const totalPreview = baseTotal + extrasTotal;
+  const prepaymentPercent = Math.min(Math.max(Number(stay.prepaymentPercent || 30), 10), 100);
+  const prepaymentAmount = Math.round((totalPreview * prepaymentPercent) / 100);
   const selectedDateLabel = selectedAvailability
     ? selectedAvailability.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     : 'выберите дату';
@@ -294,7 +369,21 @@ const StayDetailPage = () => {
       clientEmail: currentUser?.email || '',
       comment: '',
     });
+    setBookingContactPreview({
+      clientName: currentUser?.name || '',
+      clientPhone: currentUser?.phone || '',
+      clientEmail: currentUser?.email || '',
+      comment: '',
+    });
+    setBookingStep(0);
     setBookingOpen(true);
+  };
+
+  const closeBookingModal = () => {
+    setBookingOpen(false);
+    setBookingStep(0);
+    setReceiptFiles([]);
+    setBookingContactPreview({});
   };
 
   const handleReceiptChange = ({ fileList }) => {
@@ -333,6 +422,12 @@ const StayDetailPage = () => {
 
     try {
       const values = await bookingForm.validateFields();
+      const safeValues = {
+        clientName: values.clientName || bookingContactPreview.clientName || '',
+        clientPhone: values.clientPhone || bookingContactPreview.clientPhone || '',
+        clientEmail: values.clientEmail || bookingContactPreview.clientEmail || '',
+        comment: values.comment || bookingContactPreview.comment || '',
+      };
       setBookingSubmitting(true);
       const paymentReceiptUrl = await fileToDataUrl(uploadFile);
       await api.post('/stay-bookings', {
@@ -341,18 +436,28 @@ const StayDetailPage = () => {
         companyName: stay.companyName,
         stayTitle: stay.title,
         location: stay.location,
-        clientName: values.clientName,
-        clientPhone: values.clientPhone,
-        clientEmail: values.clientEmail,
-        comment: values.comment,
+        clientName: safeValues.clientName,
+        clientPhone: safeValues.clientPhone,
+        clientEmail: safeValues.clientEmail,
+        comment: safeValues.comment,
         guests,
         nights,
+        extras: extrasSummary.map((item) => ({
+          serviceId: item.serviceId,
+          quantity: item.quantity,
+          selected: item.quantity > 0,
+          selectedOptionId: item.selectedOptionId,
+        })),
         checkInDate: selectedAvailability.date.toISOString(),
         checkOutDate: checkOutDate?.toISOString(),
         checkInTime: selectedTime,
         startTime: selectedTime,
         endTime: addMinutesToTime(selectedTime, SLOT_DURATION_MINUTES),
         amount: totalPreview,
+        baseAmount: baseTotal,
+        extrasAmount: extrasTotal,
+        prepaymentPercent,
+        prepaymentAmount,
         status: 'payment_review',
         paymentStatus: 'review',
         paymentReceiptUrl,
@@ -360,8 +465,7 @@ const StayDetailPage = () => {
         paymentReceiptType: uploadFile.type,
         prepaymentRequired: true,
       });
-      setBookingOpen(false);
-      setReceiptFiles([]);
+      closeBookingModal();
       message.success('Заявка отправлена. Компания подтвердит бронь в TravelPay Business.');
       const [availabilityResponse, bookingsResponse] = await Promise.all([
         api.get('/stay-bookings/availability', {
@@ -382,6 +486,243 @@ const StayDetailPage = () => {
       setBookingSubmitting(false);
     }
   };
+
+  const goToNextBookingStep = async () => {
+    if (bookingStep === 0) {
+      if (!selectedAvailability?.available) {
+        message.warning('Выберите доступную дату.');
+        return;
+      }
+      if (bookedTimeSet.has(selectedTime)) {
+        message.warning('Этот слот уже занят. Выберите другое время.');
+        return;
+      }
+    }
+
+    if (bookingStep === 3) {
+      const uploadFile = receiptFiles[0]?.originFileObj || receiptFiles[0];
+      if (!uploadFile) {
+        message.error('Загрузите чек предоплаты.');
+        return;
+      }
+      try {
+        await bookingForm.validateFields();
+      } catch (error) {
+        return;
+      }
+    }
+
+    setBookingStep((current) => Math.min(current + 1, BOOKING_STEPS.length - 1));
+  };
+
+  const goToPreviousBookingStep = () => {
+    setBookingStep((current) => Math.max(current - 1, 0));
+  };
+
+  const bookingStepItems = BOOKING_STEPS.map((title) => ({ title }));
+  const bookingStepContent = [
+    (
+      <div className="stay-booking-wizard__stack">
+        <Card className="stay-booking-step-card" variant="borderless">
+          <Badge color="#2b7bb9" text="Шаг 1" />
+          <Title level={4}>Выберите дату и время заезда</Title>
+          <Paragraph>
+            Доступные слоты подтягиваются из календаря компании. Занятые варианты сразу скрыты из бронирования.
+          </Paragraph>
+          <div className="stay-booking-step-grid">
+            <div>
+              <Text type="secondary">Заезд</Text>
+              <div className="stay-booking-step-stat">{selectedDateLabel}</div>
+            </div>
+            <div>
+              <Text type="secondary">Выезд</Text>
+              <div className="stay-booking-step-stat">{checkOutLabel}</div>
+            </div>
+            <div>
+              <Text type="secondary">Время</Text>
+              <div className="stay-booking-step-stat">{selectedTime}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    ),
+    (
+      <div className="stay-booking-wizard__stack">
+        <Card className="stay-booking-step-card" variant="borderless">
+          <Badge color="#7c5cff" text="Шаг 2" />
+          <Title level={4}>Укажите состав поездки</Title>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={12}>
+              <Card size="small" className="stay-booking-metric-card">
+                <Statistic title="Количество гостей" value={guests} suffix={`из ${stay.capacity}`} />
+                <InputNumber min={1} max={stay.capacity} value={guests} onChange={setGuests} size="large" style={{ width: '100%', marginTop: 12 }} />
+              </Card>
+            </Col>
+            <Col xs={24} md={12}>
+              <Card size="small" className="stay-booking-metric-card">
+                <Statistic title="Количество ночей" value={nights} suffix="ночей" />
+                <InputNumber min={1} max={30} value={nights} onChange={(value) => setNights(Number(value) || 1)} size="large" style={{ width: '100%', marginTop: 12 }} />
+              </Card>
+            </Col>
+          </Row>
+        </Card>
+      </div>
+    ),
+    (
+      <div className="stay-booking-wizard__stack">
+        <Card className="stay-booking-step-card" variant="borderless">
+          <Badge color="#14b8a6" text="Шаг 3" />
+          <Title level={4}>Добавьте дополнительные услуги</Title>
+          <Paragraph>Компания сама настроила доступные опции для этого домика. Можно оставить только проживание.</Paragraph>
+          {activeExtraServices.length ? (
+            <div className="stay-extra-services__list">
+              {activeExtraServices.map((service) => {
+                const selection = selectedExtras[service.id] || {};
+                return (
+                  <Card key={`wizard-${service.id}`} size="small" className="stay-extra-service-card">
+                    <div className="stay-extra-service-card__top">
+                      <div>
+                        <strong>{service.title}</strong>
+                        {service.description ? <p>{service.description}</p> : null}
+                      </div>
+                      <span>{formatStayPrice(service.price)}</span>
+                    </div>
+                    {service.type === 'quantity' && (
+                      <InputNumber
+                        min={0}
+                        max={Math.max(Number(service.maxQuantity) || 1, 1)}
+                        value={selection.quantity || 0}
+                        onChange={(value) => setSelectedExtras((current) => ({
+                          ...current,
+                          [service.id]: { quantity: Number(value) || 0 },
+                        }))}
+                        style={{ width: '100%' }}
+                        addonAfter={service.unitLabel || 'шт.'}
+                      />
+                    )}
+                    {service.type === 'select' && (
+                      <Select
+                        allowClear
+                        placeholder="Выберите вариант"
+                        value={selection.selectedOptionId || undefined}
+                        onChange={(value) => setSelectedExtras((current) => ({
+                          ...current,
+                          [service.id]: { selectedOptionId: value || '' },
+                        }))}
+                        options={(service.options || []).map((option) => ({
+                          value: option.id,
+                          label: `${option.label} — ${formatStayPrice(option.price)}`,
+                        }))}
+                      />
+                    )}
+                    {service.type === 'toggle' && (
+                      <Checkbox
+                        checked={Boolean(selection.selected)}
+                        onChange={(event) => setSelectedExtras((current) => ({
+                          ...current,
+                          [service.id]: { selected: event.target.checked },
+                        }))}
+                      >
+                        Добавить к бронированию
+                      </Checkbox>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Empty description="Для этого домика пока не добавлены дополнительные услуги." />
+          )}
+        </Card>
+      </div>
+    ),
+    (
+      <div className="stay-booking-wizard__stack">
+        <Card className="stay-booking-step-card stay-prepay-card" variant="borderless">
+          <div className="stay-booking-prepay-head">
+            <div>
+              <Badge color="#f59e0b" text="Шаг 4" />
+              <Title level={4}>Предоплата и контакты</Title>
+              <Paragraph>Для подтверждения бронирования внесите предоплату и загрузите чек.</Paragraph>
+            </div>
+            <Tooltip title="Процент предоплаты настраивается компанией для этого домика.">
+              <Tag color="gold" icon={<InfoCircleOutlined />}>{prepaymentPercent}% предоплата</Tag>
+            </Tooltip>
+          </div>
+          <Space align={isMobile ? 'start' : 'center'} size={16} orientation={isMobile ? 'vertical' : 'horizontal'} className="stay-prepay-card__inner">
+            <Image width={118} height={118} src={PAYMENT_QR_URL} alt="QR для предоплаты" preview={false} className="stay-prepay-card__qr" />
+            <div className="stay-prepay-card__copy">
+              <Statistic title="Минимальная сумма к оплате" value={prepaymentAmount} suffix="сом" />
+              <Paragraph>После загрузки чека заявка уйдет компании на проверку и подтверждение.</Paragraph>
+            </div>
+          </Space>
+          <Upload.Dragger
+            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+            maxCount={1}
+            fileList={receiptFiles}
+            beforeUpload={() => false}
+            onChange={handleReceiptChange}
+            className="stay-receipt-upload"
+          >
+            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+            <p className="ant-upload-text">Загрузите чек оплаты</p>
+            <p className="ant-upload-hint">JPG, PNG или PDF до 5 MB</p>
+          </Upload.Dragger>
+          <div className="stay-booking-form">
+            <Row gutter={12}>
+              <Col xs={24} md={12}>
+                <Form.Item name="clientName" label="Имя" rules={[{ required: true, message: 'Укажите имя' }]}>
+                  <Input size="large" placeholder="Ваше имя" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item name="clientPhone" label="Телефон" rules={[{ required: true, message: 'Укажите телефон' }]}>
+                  <Input size="large" placeholder="+996 ..." />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Form.Item name="clientEmail" label="Email">
+              <Input size="large" placeholder="email@example.com" />
+            </Form.Item>
+            <Form.Item name="comment" label="Комментарий">
+              <Input.TextArea rows={3} placeholder="Например: нужен трансфер, поздний заезд, дети..." />
+            </Form.Item>
+          </div>
+        </Card>
+      </div>
+    ),
+    (
+      <div className="stay-booking-wizard__stack">
+        <Card className="stay-booking-step-card" variant="borderless">
+          <Badge color="#22c55e" text="Шаг 5" />
+          <Title level={4}>Подтверждение бронирования</Title>
+          <Paragraph>Проверьте детали перед отправкой заявки в TravelPay Business.</Paragraph>
+          <div className="stay-booking-summary stay-booking-summary--panel">
+            <div><span>Домик</span><strong>{stay.title}</strong></div>
+            <div><span>Компания</span><strong>{stay.companyName}</strong></div>
+            <div><span>Даты</span><strong>{selectedDateLabel} - {checkOutLabel}</strong></div>
+            <div><span>Время</span><strong>{selectedTime} - {addMinutesToTime(selectedTime, SLOT_DURATION_MINUTES)}</strong></div>
+            <div><span>Гости</span><strong>{guests}</strong></div>
+            <div><span>Контакт</span><strong>{bookingContactPreview.clientName || '—'}</strong></div>
+            <div><span>Телефон</span><strong>{bookingContactPreview.clientPhone || '—'}</strong></div>
+            <Divider style={{ margin: '8px 0' }} />
+            <div><span>Проживание</span><strong>{formatStayPrice(baseTotal)}</strong></div>
+            {extrasSummary.map((item) => (
+              <div key={`summary-${item.serviceId}`}>
+                <span>{item.title}{item.meta ? ` · ${item.meta}` : ''}</span>
+                <strong>{formatStayPrice(item.total)}</strong>
+              </div>
+            ))}
+            <div><span>Предоплата</span><strong>{formatStayPrice(prepaymentAmount)}</strong></div>
+            <div className="stay-booking-summary__total">
+              <span>Итого</span>
+              <strong>{formatStayPrice(totalPreview)}</strong>
+            </div>
+          </div>
+        </Card>
+      </div>
+    ),
+  ][bookingStep];
 
   return (
     <main className="stay-detail-page">
@@ -415,7 +756,7 @@ const StayDetailPage = () => {
           <Title level={2}>{formatStayPrice(stay.pricePerNight)}</Title>
           <Paragraph>за ночь, без скрытых платежей</Paragraph>
           <Divider />
-          <Space direction="vertical" size={14} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={14} style={{ width: '100%' }}>
             <div className="stay-availability">
               <div className="stay-availability__head">
                 <div>
@@ -485,6 +826,72 @@ const StayDetailPage = () => {
               <Text>Ночей</Text>
               <InputNumber min={1} max={30} value={nights} onChange={(value) => setNights(Number(value) || 1)} style={{ width: '100%', marginTop: 8 }} size={isMobile ? 'middle' : 'large'} />
             </div>
+            {activeExtraServices.length > 0 && (
+              <div className="stay-extra-services">
+                <div className="stay-extra-services__head">
+                  <Text strong>Дополнительные услуги</Text>
+                  <Tag color="cyan">{activeExtraServices.length}</Tag>
+                </div>
+                <div className="stay-extra-services__list">
+                  {activeExtraServices.map((service) => {
+                    const selection = selectedExtras[service.id] || {};
+                    return (
+                      <Card key={service.id} size="small" className="stay-extra-service-card">
+                        <div className="stay-extra-service-card__top">
+                          <div>
+                            <strong>{service.title}</strong>
+                            {service.description ? <p>{service.description}</p> : null}
+                          </div>
+                          <span>{formatStayPrice(service.price)}</span>
+                        </div>
+
+                        {service.type === 'quantity' && (
+                          <InputNumber
+                            min={0}
+                            max={Math.max(Number(service.maxQuantity) || 1, 1)}
+                            value={selection.quantity || 0}
+                            onChange={(value) => setSelectedExtras((current) => ({
+                              ...current,
+                              [service.id]: { quantity: Number(value) || 0 },
+                            }))}
+                            style={{ width: '100%' }}
+                            addonAfter={service.unitLabel || 'шт.'}
+                          />
+                        )}
+
+                        {service.type === 'select' && (
+                          <Select
+                            allowClear
+                            placeholder="Выберите вариант"
+                            value={selection.selectedOptionId || undefined}
+                            onChange={(value) => setSelectedExtras((current) => ({
+                              ...current,
+                              [service.id]: { selectedOptionId: value || '' },
+                            }))}
+                            options={(service.options || []).map((option) => ({
+                              value: option.id,
+                              label: `${option.label} — ${formatStayPrice(option.price)}`,
+                            }))}
+                          />
+                        )}
+
+                        {service.type === 'toggle' && (
+                          <Checkbox
+                            checked={Boolean(selection.selected)}
+                            onChange={(event) => setSelectedExtras((current) => ({
+                              ...current,
+                              [service.id]: { selected: event.target.checked },
+                            }))}
+                          >
+                            Добавить к бронированию
+                          </Checkbox>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="stay-booking-total">
               <span>{selectedDateLabel} - {checkOutLabel} В· {selectedTime}</span>
               <strong>{formatStayPrice(totalPreview)}</strong>
@@ -533,55 +940,92 @@ const StayDetailPage = () => {
       <Modal
         open={bookingOpen}
         title="Заявка на бронирование"
-        okText="Отправить заявку"
-        cancelText="Отмена"
-        confirmLoading={bookingSubmitting}
-        onCancel={() => setBookingOpen(false)}
-        onOk={submitStayBooking}
+        width={isMobile ? '100%' : 880}
+        footer={(
+          <div className="stay-booking-wizard__footer">
+            <Button onClick={closeBookingModal}>Отмена</Button>
+            <Space>
+              {bookingStep > 0 && (
+                <Button onClick={goToPreviousBookingStep}>
+                  Назад
+                </Button>
+              )}
+              {bookingStep < BOOKING_STEPS.length - 1 ? (
+                <Button type="primary" onClick={goToNextBookingStep}>
+                  Далее
+                </Button>
+              ) : (
+                <Button type="primary" loading={bookingSubmitting} onClick={submitStayBooking}>
+                  Подтвердить бронирование
+                </Button>
+              )}
+            </Space>
+          </div>
+        )}
+        onCancel={closeBookingModal}
+        className="stay-booking-wizard-modal"
       >
-        <Paragraph>Оставьте контакты, и компания подтвердит бронь в Business-панели.</Paragraph>
-        <Card size="small">
-          <strong>{stay.title}</strong>
-          <p>{selectedDateLabel} - {checkOutLabel}, {selectedTime} В· {guests} гостей В· {formatStayPrice(totalPreview)}</p>
-        </Card>
-        <Card size="small" className="stay-prepay-card">
-          <Space align="start" size={16} className="stay-prepay-card__inner">
-            <Image width={118} height={118} src={PAYMENT_QR_URL} alt="QR для предоплаты" preview={false} className="stay-prepay-card__qr" />
-            <div>
-              <Tag color="gold">Предоплата</Tag>
-              <Paragraph>
-                Отсканируйте QR-код и внесите предоплату. После оплаты загрузите чек,
-                чтобы администратор подтвердил бронирование.
-              </Paragraph>
-            </div>
-          </Space>
-          <Upload.Dragger
-            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-            maxCount={1}
-            fileList={receiptFiles}
-            beforeUpload={() => false}
-            onChange={handleReceiptChange}
-            className="stay-receipt-upload"
+        <div className="stay-booking-wizard">
+          <Form
+            form={bookingForm}
+            layout="vertical"
+            className="stay-booking-form-shell"
+            onValuesChange={(_, values) => {
+              setBookingContactPreview({
+                clientName: values.clientName || '',
+                clientPhone: values.clientPhone || '',
+                clientEmail: values.clientEmail || '',
+                comment: values.comment || '',
+              });
+            }}
           >
-            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-            <p className="ant-upload-text">Загрузите чек оплаты</p>
-            <p className="ant-upload-hint">JPG, PNG или PDF до 5 MB</p>
-          </Upload.Dragger>
-        </Card>
-        <Form form={bookingForm} layout="vertical" className="stay-booking-form">
-          <Form.Item name="clientName" label="Имя" rules={[{ required: true, message: 'Укажите имя' }]}>
-            <Input size="large" placeholder="Ваше имя" />
-          </Form.Item>
-          <Form.Item name="clientPhone" label="Телефон" rules={[{ required: true, message: 'Укажите телефон' }]}>
-            <Input size="large" placeholder="+996 ..." />
-          </Form.Item>
-          <Form.Item name="clientEmail" label="Email">
-            <Input size="large" placeholder="email@example.com" />
-          </Form.Item>
-          <Form.Item name="comment" label="Комментарий">
-            <Input.TextArea rows={3} placeholder="Например: нужен трансфер, поздний заезд, дети..." />
-          </Form.Item>
-        </Form>
+            <Card size="small" className="stay-booking-wizard__hero">
+              <div>
+                <strong>{stay.title}</strong>
+                <p>{selectedDateLabel} - {checkOutLabel} · {selectedTime} · {guests} гостей</p>
+              </div>
+              <div className="stay-booking-wizard__hero-price">
+                <span>Итого</span>
+                <strong>{formatStayPrice(totalPreview)}</strong>
+              </div>
+            </Card>
+            <Steps current={bookingStep} items={bookingStepItems} responsive className="stay-booking-wizard__steps" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={bookingStep}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -18 }}
+                transition={{ duration: 0.22 }}
+              >
+                <Row gutter={[20, 20]}>
+                  <Col xs={24} lg={16}>
+                    {bookingStepContent}
+                  </Col>
+                  <Col xs={24} lg={8}>
+                    <Card className="stay-booking-side-card" variant="borderless">
+                      <Badge color="#5b6cff" text="Стоимость" />
+                      <div className="stay-booking-summary stay-booking-summary--side">
+                        <div><span>Проживание</span><strong>{formatStayPrice(baseTotal)}</strong></div>
+                        {extrasSummary.length ? extrasSummary.map((item) => (
+                          <div key={`side-${item.serviceId}`}>
+                            <span>{item.title}{item.meta ? ` · ${item.meta}` : ''}</span>
+                            <strong>{formatStayPrice(item.total)}</strong>
+                          </div>
+                        )) : <div><span>Доп. услуги</span><strong>0 сом</strong></div>}
+                        <div><span>Предоплата {prepaymentPercent}%</span><strong>{formatStayPrice(prepaymentAmount)}</strong></div>
+                        <div className="stay-booking-summary__total">
+                          <span>Итого</span>
+                          <strong>{formatStayPrice(totalPreview)}</strong>
+                        </div>
+                      </div>
+                    </Card>
+                  </Col>
+                </Row>
+              </motion.div>
+            </AnimatePresence>
+          </Form>
+        </div>
       </Modal>
     </main>
   );
