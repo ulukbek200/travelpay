@@ -93,6 +93,37 @@ const STAY_BOOKING_SLOT_DURATION_MINUTES = 120;
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
 const formatDateTime = (value) => (value ? new Date(value).toLocaleString('ru-RU') : '—');
+const getDaysRemaining = (value) => {
+  if (!value) return null;
+  const diff = new Date(value).getTime() - Date.now();
+  if (Number.isNaN(diff)) return null;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+};
+const getSubscriptionHealthMeta = (company) => {
+  const status = company?.subscriptionStatus;
+  const daysRemaining = getDaysRemaining(company?.subscriptionExpiresAt);
+
+  if (status === 'expired') {
+    return { label: 'Подписка истекла', color: 'red', tone: 'danger', daysRemaining };
+  }
+  if (status === 'active' && daysRemaining !== null && daysRemaining <= 3) {
+    return { label: `Истекает через ${Math.max(daysRemaining, 0)} дн.`, color: 'orange', tone: 'accent', daysRemaining };
+  }
+  if (status === 'active') {
+    return { label: 'Подписка активна', color: 'green', tone: 'success', daysRemaining };
+  }
+  if (status === 'payment_review') {
+    return { label: 'Платёж на проверке', color: 'blue', tone: 'info', daysRemaining };
+  }
+  if (status === 'pending_payment') {
+    return { label: 'Ожидает оплату', color: 'gold', tone: 'info', daysRemaining };
+  }
+  if (status === 'rejected') {
+    return { label: 'Нужна повторная подача', color: 'red', tone: 'danger', daysRemaining };
+  }
+
+  return { label: 'Статус обновляется', color: 'default', tone: 'muted', daysRemaining };
+};
 
 const clockToMinutesLabel = (value) => {
   const match = String(value || '').match(/(\d{1,2}):(\d{2})/);
@@ -709,6 +740,52 @@ const buildStayBookingTimelineEntries = (booking, reviewerName) => {
   return entries;
 };
 
+const buildBusinessSubscriptionTimelineEntries = (request, reviewerName) => {
+  if (!request) return [];
+
+  const entries = [];
+
+  if (request.createdAt) {
+    entries.push({
+      key: 'submitted',
+      tone: 'info',
+      title: 'Отправлена',
+      time: request.createdAt,
+      description: 'Компания отправила документы и оплату подписки.',
+    });
+  }
+
+  entries.push({
+    key: 'review',
+    tone: request.status === 'pending' ? 'accent' : 'info',
+    title: 'На проверке',
+    time: request.createdAt || new Date().toISOString(),
+    description: 'Заявка ожидает решение супер-админа.',
+  });
+
+  if (request.status === 'approved' && request.reviewedAt) {
+    entries.push({
+      key: 'approved',
+      tone: 'success',
+      title: 'Подтверждена',
+      time: request.reviewedAt,
+      description: request.adminComment || (reviewerName ? `Подтвердил: ${reviewerName}.` : 'Подписка активирована.'),
+    });
+  }
+
+  if (request.status === 'rejected' && request.reviewedAt) {
+    entries.push({
+      key: 'rejected',
+      tone: 'danger',
+      title: 'Отклонена',
+      time: request.reviewedAt,
+      description: request.adminComment || (reviewerName ? `Отклонил: ${reviewerName}.` : 'Заявка отклонена супер-админом.'),
+    });
+  }
+
+  return entries;
+};
+
 const buildStayBookingEditorExtras = (services = [], extras = []) => {
   const byId = new Map((extras || []).map((item) => [String(item.serviceId), item]));
   return services.reduce((acc, service) => {
@@ -788,6 +865,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [tourForm] = Form.useForm();
   const [accommodationForm] = Form.useForm();
   const [reviewForm] = Form.useForm();
+  const [companyRequestReviewForm] = Form.useForm();
   const [stayBookingDecisionForm] = Form.useForm();
   const [stayBookingForm] = Form.useForm();
   const watchedStayBookingNights = Form.useWatch('nights', stayBookingForm);
@@ -837,9 +915,17 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [calendarSearch, setCalendarSearch] = useState('');
   const [calendarDrawerItem, setCalendarDrawerItem] = useState(null);
   const [catalogMode, setCatalogMode] = useState(getCatalogMode(location.pathname));
+  const [companyOnboardingSearch, setCompanyOnboardingSearch] = useState('');
+  const [companyOnboardingStatusFilter, setCompanyOnboardingStatusFilter] = useState('all');
+  const [companyCenterCompanyId, setCompanyCenterCompanyId] = useState(null);
   const [stayBookingDecisionOpen, setStayBookingDecisionOpen] = useState(false);
   const [stayBookingDecisionLoading, setStayBookingDecisionLoading] = useState(false);
   const [stayBookingDecisionItem, setStayBookingDecisionItem] = useState(null);
+  const [documentPreview, setDocumentPreview] = useState(null);
+  const [companyRequestReviewOpen, setCompanyRequestReviewOpen] = useState(false);
+  const [companyRequestReviewLoading, setCompanyRequestReviewLoading] = useState(false);
+  const [companyRequestReviewAction, setCompanyRequestReviewAction] = useState('approve');
+  const [companyRequestReviewItem, setCompanyRequestReviewItem] = useState(null);
 
   const hasAccommodation = Form.useWatch('hasAccommodation', tourForm);
   const currentTab = useMemo(() => getCurrentTab(location.pathname), [location.pathname]);
@@ -863,14 +949,14 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     setLoading(true);
     try {
       const [toursResponse, usersResponse, companiesResponse, accommodationsResponse, stayBookingsResponse, tourBookingsResponse, topupsResponse, businessSubscriptionsResponse] = await Promise.all([
-        api.get('/tours', { headers: { 'x-user-id': sessionUser?.id } }),
-        api.get('/users', { headers: { 'x-user-id': sessionUser?.id } }),
-        api.get('/companies', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
-        api.get('/accommodations', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
-        api.get('/stay-bookings', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
-        api.get('/tour-bookings', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
-        api.get('/api/admin/topups', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
-        api.get('/api/admin/business-subscriptions', { headers: { 'x-user-id': sessionUser?.id } }).catch(() => ({ data: [] })),
+        api.get('/tours'),
+        api.get('/users'),
+        api.get('/companies').catch(() => ({ data: [] })),
+        api.get('/accommodations').catch(() => ({ data: [] })),
+        api.get('/stay-bookings').catch(() => ({ data: [] })),
+        api.get('/tour-bookings').catch(() => ({ data: [] })),
+        api.get('/api/admin/topups').catch(() => ({ data: [] })),
+        api.get('/api/admin/business-subscriptions').catch(() => ({ data: [] })),
       ]);
 
       setTours((toursResponse.data || []).map(normalizeTourRecord));
@@ -886,7 +972,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     } finally {
       setLoading(false);
     }
-  }, [sessionUser?.id]);
+  }, []);
 
   useEffect(() => {
     loadDashboardData();
@@ -937,6 +1023,58 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     () => businessSubscriptionRequests.filter((item) => item.status === 'pending'),
     [businessSubscriptionRequests],
   );
+  const businessRequestsByCompany = useMemo(() => {
+    const map = new Map();
+    businessSubscriptionRequests.forEach((request) => {
+      const companyId = Number(request.companyId);
+      const list = map.get(companyId) || [];
+      list.push(request);
+      map.set(companyId, list);
+    });
+
+    map.forEach((list, key) => {
+      map.set(key, [...list].sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0)));
+    });
+
+    return map;
+  }, [businessSubscriptionRequests]);
+  const expiringCompanies = useMemo(() => companies.filter((company) => {
+    const meta = getSubscriptionHealthMeta(company);
+    return company.subscriptionStatus === 'active' && meta.daysRemaining !== null && meta.daysRemaining <= 3;
+  }), [companies]);
+  const companyCenterCompany = useMemo(() => (
+    companyCenterCompanyId ? (companiesById.get(Number(companyCenterCompanyId)) || null) : null
+  ), [companiesById, companyCenterCompanyId]);
+  const companyCenterRequests = useMemo(() => (
+    companyCenterCompanyId ? (businessRequestsByCompany.get(Number(companyCenterCompanyId)) || []) : []
+  ), [businessRequestsByCompany, companyCenterCompanyId]);
+  const currentBusinessSubscriptionRequest = useMemo(() => (
+    [...businessSubscriptionRequests]
+      .sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0))[0] || null
+  ), [businessSubscriptionRequests]);
+  const currentCompanyBillingHistory = useMemo(() => (
+    currentCompany?.id ? (businessRequestsByCompany.get(Number(currentCompany.id)) || []) : []
+  ), [businessRequestsByCompany, currentCompany?.id]);
+  const currentBusinessRequestReviewerName = useMemo(() => (
+    currentBusinessSubscriptionRequest?.reviewedBy
+      ? (usersById.get(Number(currentBusinessSubscriptionRequest.reviewedBy))?.name || '')
+      : ''
+  ), [currentBusinessSubscriptionRequest?.reviewedBy, usersById]);
+  const currentBusinessRequestTimeline = useMemo(() => (
+    buildBusinessSubscriptionTimelineEntries(currentBusinessSubscriptionRequest, currentBusinessRequestReviewerName)
+  ), [currentBusinessSubscriptionRequest, currentBusinessRequestReviewerName]);
+  const previewIsPdf = useMemo(
+    () => String(documentPreview?.type || documentPreview?.url || '').toLowerCase().includes('pdf'),
+    [documentPreview],
+  );
+  const businessRequestReviewerName = useMemo(() => (
+    companyRequestReviewItem?.reviewedBy
+      ? (usersById.get(Number(companyRequestReviewItem.reviewedBy))?.name || '')
+      : ''
+  ), [companyRequestReviewItem?.reviewedBy, usersById]);
+  const businessRequestTimeline = useMemo(() => (
+    buildBusinessSubscriptionTimelineEntries(companyRequestReviewItem, businessRequestReviewerName)
+  ), [companyRequestReviewItem, businessRequestReviewerName]);
   const calendarDrawerReviewerName = useMemo(() => (
     calendarDrawerItem?.paymentReviewedBy
       ? (usersById.get(Number(calendarDrawerItem.paymentReviewedBy))?.name || '')
@@ -1429,6 +1567,47 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     setTourDrawerOpen(true);
   };
 
+  const openDocumentPreview = (options) => {
+    if (!options?.url) return;
+    setDocumentPreview({
+      title: options.title || 'Просмотр документа',
+      name: options.name || '',
+      url: options.url,
+      type: options.type || '',
+    });
+  };
+
+  const closeDocumentPreview = () => {
+    setDocumentPreview(null);
+  };
+
+  const openCompanyRequestReviewModal = (request, action) => {
+    if (!request?.id) return;
+    setCompanyRequestReviewItem(request);
+    setCompanyRequestReviewAction(action);
+    setCompanyRequestReviewOpen(true);
+    companyRequestReviewForm.resetFields();
+    companyRequestReviewForm.setFieldsValue({
+      adminComment: request.adminComment || '',
+    });
+  };
+
+  const closeCompanyRequestReviewModal = () => {
+    if (companyRequestReviewLoading) return;
+    setCompanyRequestReviewOpen(false);
+    setCompanyRequestReviewItem(null);
+    companyRequestReviewForm.resetFields();
+  };
+
+  const openCompanyCenter = (companyId) => {
+    if (!companyId) return;
+    setCompanyCenterCompanyId(Number(companyId));
+  };
+
+  const closeCompanyCenter = () => {
+    setCompanyCenterCompanyId(null);
+  };
+
   const startEditTour = (tour) => {
     setEditingTourId(tour.id);
     tourForm.setFieldsValue({
@@ -1499,9 +1678,9 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
     try {
       if (editingTourId) {
-        await api.put(`/tours/${editingTourId}`, payload, { headers: { 'x-user-id': sessionUser?.id } });
+        await api.put(`/tours/${editingTourId}`, payload);
       } else {
-        await api.post('/tours', payload, { headers: { 'x-user-id': sessionUser?.id } });
+        await api.post('/tours', payload);
       }
 
       await loadDashboardData();
@@ -1513,6 +1692,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   };
 
   const updateCompanyStatus = async (company, status) => {
+    if (!isSuperAdmin) {
+      setMessageState({ type: 'error', text: 'Изменять статус компании может только super admin.' });
+      return;
+    }
+
     const rejectionReason = status === 'rejected'
       ? 'Заявка отклонена администратором TravelPay. Свяжитесь с поддержкой для уточнения документов.'
       : '';
@@ -1527,7 +1711,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         await api.put(`/companies/${company.id}`, {
           status,
           rejectionReason,
-        }, { headers: { 'x-user-id': sessionUser?.id } });
+        });
         await loadDashboardData();
         setMessageState({ type: 'success', text: 'Статус компании обновлен.' });
       },
@@ -1536,7 +1720,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const deleteTour = async (id) => {
     try {
-      await api.delete(`/tours/${id}`, { headers: { 'x-user-id': sessionUser?.id } });
+      await api.delete(`/tours/${id}`);
       await loadDashboardData();
       setMessageState({ type: 'success', text: 'Тур удалён.' });
     } catch (error) {
@@ -1615,9 +1799,9 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
     try {
       if (editingAccommodationId) {
-        await api.put(`/accommodations/${editingAccommodationId}`, payload, { headers: { 'x-user-id': sessionUser?.id } });
+        await api.put(`/accommodations/${editingAccommodationId}`, payload);
       } else {
-        await api.post('/accommodations', payload, { headers: { 'x-user-id': sessionUser?.id } });
+        await api.post('/accommodations', payload);
       }
 
       await loadDashboardData();
@@ -1630,7 +1814,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const deleteAccommodation = async (id) => {
     try {
-      await api.delete(`/accommodations/${id}`, { headers: { 'x-user-id': sessionUser?.id } });
+      await api.delete(`/accommodations/${id}`);
       await loadDashboardData();
       setMessageState({ type: 'success', text: 'Домик удалён.' });
     } catch (error) {
@@ -1693,7 +1877,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           selected: item.selected,
           selectedOptionId: item.selectedOptionId,
         })),
-      }, { headers: { 'x-user-id': sessionUser?.id } });
+      });
 
       await loadDashboardData();
       closeStayBookingEditor();
@@ -1711,8 +1895,6 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       await api.put(`/users/${user.id}`, {
         ...user,
         role: user.role === 'company_admin' ? 'user' : 'company_admin',
-      }, {
-        headers: { 'x-user-id': sessionUser?.id },
       });
 
       await loadDashboardData();
@@ -1751,7 +1933,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
     setReviewLoading(true);
     try {
-      await api.put(endpoint, values, { headers: { 'x-user-id': sessionUser?.id } });
+      await api.put(endpoint, values);
       await loadDashboardData();
       closeReviewModal();
       setMessageState({
@@ -1859,7 +2041,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           const resource = booking.type === 'stay_booking' ? 'stay-bookings' : 'tour-bookings';
           await api.put(`/${resource}/${booking.id}`, {
             status: key === 'confirm' ? 'confirmed' : 'cancelled',
-          }, { headers: { 'x-user-id': sessionUser?.id } });
+          });
           message.success(key === 'confirm' ? 'Бронирование подтверждено.' : 'Бронирование отменено.');
           loadDashboardData();
         } catch (error) {
@@ -1909,32 +2091,47 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   };
 
   const approveBusinessSubscription = async (request) => {
-    try {
-      await api.put(`/api/admin/business-subscriptions/${request.id}/approve`, {}, { headers: { 'x-user-id': sessionUser?.id } });
-      await loadDashboardData();
-      setMessageState({ type: 'success', text: 'Подписка компании активирована на 30 дней.' });
-    } catch (error) {
-      setMessageState({ type: 'error', text: error.response?.data?.message || 'Не удалось подтвердить оплату подписки.' });
-    }
+    openCompanyRequestReviewModal(request, 'approve');
   };
 
   const rejectBusinessSubscription = async (request) => {
-    Modal.confirm({
-      title: 'Отклонить оплату подписки?',
-      content: `Компания: ${request.companyName || request.companyEmail || 'TravelPay Business'}.`,
-      okText: 'Отклонить',
-      cancelText: 'Отмена',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await api.put(`/api/admin/business-subscriptions/${request.id}/reject`, {}, { headers: { 'x-user-id': sessionUser?.id } });
-          await loadDashboardData();
-          setMessageState({ type: 'success', text: 'Заявка на оплату подписки отклонена.' });
-        } catch (error) {
-          setMessageState({ type: 'error', text: error.response?.data?.message || 'Не удалось отклонить оплату подписки.' });
-        }
-      },
-    });
+    openCompanyRequestReviewModal(request, 'reject');
+  };
+
+  const handleCompanyRequestReviewSubmit = async (values) => {
+    if (!companyRequestReviewItem) return;
+
+    const endpoint = companyRequestReviewAction === 'approve'
+      ? `/api/admin/business-subscriptions/${companyRequestReviewItem.id}/approve`
+      : `/api/admin/business-subscriptions/${companyRequestReviewItem.id}/reject`;
+
+    setCompanyRequestReviewLoading(true);
+    try {
+      await api.put(endpoint, {
+        adminComment: values.adminComment,
+      });
+      await loadDashboardData();
+      setCompanyRequestReviewOpen(false);
+      setCompanyRequestReviewItem(null);
+      companyRequestReviewForm.resetFields();
+      setMessageState({
+        type: 'success',
+        text: companyRequestReviewAction === 'approve'
+          ? 'Заявка компании подтверждена, подписка активирована.'
+          : 'Заявка компании отклонена с комментарием супер-админа.',
+      });
+    } catch (error) {
+      setMessageState({
+        type: 'error',
+        text: error.response?.data?.message || (
+          companyRequestReviewAction === 'approve'
+            ? 'Не удалось подтвердить заявку компании.'
+            : 'Не удалось отклонить заявку компании.'
+        ),
+      });
+    } finally {
+      setCompanyRequestReviewLoading(false);
+    }
   };
 
   const closeStayBookingRejectModal = () => {
@@ -1952,7 +2149,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
     try {
       const resource = booking.type === 'stay_booking' ? 'stay-bookings' : 'tour-bookings';
-      await api.put(`/${resource}/${booking.id}`, { status }, { headers: { 'x-user-id': sessionUser?.id } });
+      await api.put(`/${resource}/${booking.id}`, { status });
       const successMessage = status === 'confirmed'
         ? 'Бронь подтверждена.'
         : status === 'rejected'
@@ -1986,7 +2183,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       await api.put(
         `/${resource}/${stayBookingDecisionItem.id}`,
         { status: 'rejected', rejectionReason: values.rejectionReason },
-        { headers: { 'x-user-id': sessionUser?.id } },
+        {},
       );
       message.success('Заявка отклонена.');
       setCalendarDrawerItem((current) => (current ? {
@@ -2313,6 +2510,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     { key: 'add-tour', label: 'Добавить тур', icon: <PlusOutlined />, onClick: openCreateTourDrawer },
     { key: 'add-client', label: 'Добавить клиента', icon: <TeamOutlined />, onClick: () => navigate(`${basePath}/clients`) },
     { key: 'add-booking', label: 'Создать бронь', icon: <CalendarOutlined />, onClick: () => navigate(`${basePath}/bookings`) },
+    ...(!businessMode ? [{ key: 'companies', label: 'Проверить компании', icon: <BankOutlined />, onClick: () => navigate('/admin/companies') }] : []),
   ];
 
   const headerBranchText = currentCompany?.address || currentCompany?.name || 'TravelPay Company';
@@ -2388,6 +2586,13 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                 <span>{formatDateTime(item.createdAt)}</span>
                 <strong>{item.type || 'notification'}</strong>
               </div>
+              {!businessMode && (item.type === 'business-registration' || item.type === 'business-subscription') && (
+                <div style={{ marginTop: 12 }}>
+                  <Button type="primary" size="small" onClick={() => navigate('/admin/companies')}>
+                    Открыть компании
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </Space>
@@ -2399,6 +2604,122 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const renderDashboard = () => (
     <Space direction="vertical" size={18} style={{ width: '100%' }}>
+      {businessMode && currentBusinessSubscriptionRequest && (
+        <Card className="tp-admin-card" styles={{ body: { padding: 20 } }}>
+          <div className="tp-admin-section-head">
+            <div>
+              <Text className="tp-admin-section-label">TravelPay Business</Text>
+              <Title level={3} style={{ marginBottom: 6 }}>Статус заявки компании</Title>
+              <Paragraph style={{ marginBottom: 0 }}>
+                {currentBusinessSubscriptionRequest.status === 'approved'
+                  ? 'Супер-админ подтвердил вашу заявку и открыл подписку.'
+                  : currentBusinessSubscriptionRequest.status === 'rejected'
+                    ? 'Заявка отклонена. Ниже есть причина и история проверки.'
+                    : 'Заявка отправлена и сейчас находится на проверке у супер-админа.'}
+              </Paragraph>
+            </div>
+            <Tag color={(TOPUP_STATUS_META[currentBusinessSubscriptionRequest.status] || TOPUP_STATUS_META.pending).color}>
+              {(TOPUP_STATUS_META[currentBusinessSubscriptionRequest.status] || TOPUP_STATUS_META.pending).label}
+            </Tag>
+          </div>
+
+          <Row gutter={[16, 16]}>
+            <Col xs={24} xl={14}>
+              <Card size="small" className="tp-admin-inline-card" title="История заявки">
+                <div className="tp-admin-timeline">
+                  {currentBusinessRequestTimeline.map((entry, index) => (
+                    <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone}`}>
+                      <div className="tp-admin-timeline__rail">
+                        <span className="tp-admin-timeline__dot" />
+                        {index < currentBusinessRequestTimeline.length - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                      </div>
+                      <div className="tp-admin-timeline__content">
+                        <div className="tp-admin-timeline__head">
+                          <strong>{entry.title}</strong>
+                          <Text type="secondary">{formatDateTime(entry.time)}</Text>
+                        </div>
+                        <Text type="secondary">{entry.description}</Text>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} xl={10}>
+              <Card size="small" className="tp-admin-inline-card" title="Решение супер-админа">
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <div>
+                    <Text type="secondary">Состояние подписки</Text>
+                    <div>
+                      <Tag color={getSubscriptionHealthMeta(currentCompany).color}>
+                        {getSubscriptionHealthMeta(currentCompany).label}
+                      </Tag>
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary">Комментарий</Text>
+                    <div><strong>{currentBusinessSubscriptionRequest.adminComment || 'Комментарий пока не добавлен.'}</strong></div>
+                  </div>
+                  <div>
+                    <Text type="secondary">Проверено</Text>
+                    <div><strong>{formatDateTime(currentBusinessSubscriptionRequest.reviewedAt)}</strong></div>
+                  </div>
+                  <div>
+                    <Text type="secondary">Проверил</Text>
+                    <div><strong>{currentBusinessRequestReviewerName || 'Ожидает решения'}</strong></div>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+            <Col xs={24}>
+              <Card size="small" className="tp-admin-inline-card" title="История оплат компании">
+                <Table
+                  rowKey="id"
+                  size="small"
+                  pagination={false}
+                  dataSource={currentCompanyBillingHistory}
+                  locale={{ emptyText: 'История оплат пока пуста' }}
+                  columns={[
+                    { title: 'Дата', dataIndex: 'createdAt', render: (value) => formatDateTime(value) },
+                    { title: 'Сумма', dataIndex: 'amount', render: (value) => formatMoney(value) },
+                    {
+                      title: 'Статус',
+                      dataIndex: 'status',
+                      render: (value) => {
+                        const meta = TOPUP_STATUS_META[value] || TOPUP_STATUS_META.pending;
+                        return <Tag color={meta.color}>{meta.label}</Tag>;
+                      },
+                    },
+                    { title: 'Комментарий admin', dataIndex: 'adminComment', render: (value) => value || '—' },
+                  ]}
+                />
+              </Card>
+            </Col>
+          </Row>
+        </Card>
+      )}
+      {!businessMode && pendingBusinessSubscriptionRequests.length > 0 && (
+        <Card
+          className="tp-admin-card"
+          styles={{ body: { padding: 20 } }}
+        >
+          <div className="tp-admin-section-head" style={{ marginBottom: 0 }}>
+            <div>
+              <Text className="tp-admin-section-label">Super Admin</Text>
+              <Title level={3} style={{ marginBottom: 6 }}>Новые заявки от компаний</Title>
+              <Paragraph style={{ marginBottom: 0 }}>
+                Сейчас ожидают проверки {pendingBusinessSubscriptionRequests.length} {pendingBusinessSubscriptionRequests.length === 1 ? 'заявка' : pendingBusinessSubscriptionRequests.length < 5 ? 'заявки' : 'заявок'} на подключение и оплату подписки.
+              </Paragraph>
+            </div>
+            <Space wrap>
+              <Badge count={pendingBusinessSubscriptionRequests.length} color="#2563eb" />
+              <Button type="primary" icon={<BankOutlined />} onClick={() => navigate('/admin/companies')}>
+                Открыть раздел компаний
+              </Button>
+            </Space>
+          </div>
+        </Card>
+      )}
       <Row gutter={[16, 16]}>
         {dashboardStats.map((item) => (
           <Col xs={24} sm={12} xl={4.8} key={item.title}>
@@ -3125,6 +3446,46 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       inactive: { color: 'default', label: 'Inactive' },
       archived: { color: 'default', label: 'Archived' },
     };
+    const normalizedSearch = companyOnboardingSearch.trim().toLowerCase();
+    const filteredCompanies = companies.filter((company) => {
+      const matchesSearch = !normalizedSearch || [
+        company.name,
+        company.email,
+        company.phone,
+        company.city,
+        company.address,
+      ].some((value) => String(value || '').toLowerCase().includes(normalizedSearch));
+
+      if (!matchesSearch) return false;
+      if (companyOnboardingStatusFilter === 'all') return true;
+      if (companyOnboardingStatusFilter === 'new') {
+        return (businessRequestsByCompany.get(Number(company.id)) || []).some((request) => request.status === 'pending');
+      }
+      if (companyOnboardingStatusFilter === 'expiring') {
+        const meta = getSubscriptionHealthMeta(company);
+        return company.subscriptionStatus === 'active' && meta.daysRemaining !== null && meta.daysRemaining <= 3;
+      }
+      return company.status === companyOnboardingStatusFilter || company.subscriptionStatus === companyOnboardingStatusFilter;
+    });
+    const filteredRequests = businessSubscriptionRequests.filter((request) => {
+      const matchesSearch = !normalizedSearch || [
+        request.companyName,
+        request.ownerEmail,
+        request.ownerName,
+      ].some((value) => String(value || '').toLowerCase().includes(normalizedSearch));
+
+      if (!matchesSearch) return false;
+      if (companyOnboardingStatusFilter === 'all') return true;
+      if (companyOnboardingStatusFilter === 'new') return request.status === 'pending';
+      return request.status === companyOnboardingStatusFilter;
+    });
+    const onboardingStats = [
+      { label: 'Все компании', value: companies.length, color: 'default' },
+      { label: 'Новые заявки', value: pendingBusinessSubscriptionRequests.length, color: 'blue' },
+      { label: 'Активные', value: companies.filter((item) => item.status === 'active').length, color: 'green' },
+      { label: 'Отклонённые', value: companies.filter((item) => item.status === 'rejected').length, color: 'red' },
+      { label: 'Скоро истекают', value: expiringCompanies.length, color: 'orange' },
+    ];
     const columns = [
       { title: 'Компания', dataIndex: 'name', render: (value, record) => (
         <Space>
@@ -3153,6 +3514,19 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           return <Tag color={meta.color}>{meta.label}</Tag>;
         },
       },
+      {
+        title: 'Биллинг',
+        width: 190,
+        render: (_, record) => {
+          const meta = getSubscriptionHealthMeta(record);
+          return (
+            <Space direction="vertical" size={4}>
+              <Tag color={meta.color}>{meta.label}</Tag>
+              <Text type="secondary">{record.subscriptionExpiresAt ? `До ${formatDate(record.subscriptionExpiresAt)}` : 'Дата не назначена'}</Text>
+            </Space>
+          );
+        },
+      },
       { title: 'До', dataIndex: 'subscriptionExpiresAt', width: 130, render: (value) => formatDate(value) },
       { title: 'Телефон', dataIndex: 'phone', width: 150 },
       { title: 'Статус', dataIndex: 'status', width: 130, render: (status) => {
@@ -3163,10 +3537,13 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       { title: 'Документы', dataIndex: 'documents', width: 130, render: (items) => (items?.length ? `${items.length} файл(ов)` : '—') },
       {
         title: 'Действия',
-        width: 260,
+        width: 360,
         fixed: 'right',
         render: (_, record) => (
           <Space wrap size={8}>
+            <Button size="small" onClick={() => openCompanyCenter(record.id)}>
+              Центр
+            </Button>
             <Button size="small" type="primary" icon={<CheckOutlined />} disabled={record.status === 'active'} onClick={() => updateCompanyStatus(record, 'active')}>
               Active
             </Button>
@@ -3194,33 +3571,113 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               <Tag color="gold">Pending</Tag>
             </Badge>
             <Badge count={pendingBusinessSubscriptionRequests.length} showZero>
-              <Tag color="blue">Новые оплаты</Tag>
+              <Tag color="blue">Новые заявки</Tag>
             </Badge>
           </Space>
         </div>
+        <Row gutter={[12, 12]} style={{ marginBottom: 18 }}>
+          {onboardingStats.map((item) => (
+            <Col xs={12} xl={6} key={item.label}>
+              <Card size="small" className="tp-admin-inline-card">
+                <Space direction="vertical" size={4}>
+                  <Text type="secondary">{item.label}</Text>
+                  <div>
+                    <Tag color={item.color}>{item.value}</Tag>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+        <Row gutter={[12, 12]} style={{ marginBottom: 18 }}>
+          <Col xs={24} xl={12}>
+            <Input
+              value={companyOnboardingSearch}
+              onChange={(event) => setCompanyOnboardingSearch(event.target.value)}
+              placeholder="Поиск по компании, email, телефону или владельцу"
+              allowClear
+            />
+          </Col>
+          <Col xs={24} xl={12}>
+            <Segmented
+              block
+              value={companyOnboardingStatusFilter}
+              onChange={setCompanyOnboardingStatusFilter}
+              options={[
+                { label: 'Все', value: 'all' },
+                { label: 'Новые', value: 'new' },
+                { label: 'Активные', value: 'active' },
+                { label: 'Скоро истекают', value: 'expiring' },
+                { label: 'Отклонённые', value: 'rejected' },
+                { label: 'Проверка оплаты', value: 'payment_review' },
+              ]}
+            />
+          </Col>
+        </Row>
         <Table
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={companies}
+          dataSource={filteredCompanies}
           scroll={{ x: 1100 }}
           pagination={{ pageSize: 8 }}
         />
         <Divider />
+        <div style={{ marginBottom: 16 }}>
+          <Title level={4} style={{ marginBottom: 4 }}>Заявки на подключение и оплату</Title>
+          <Text type="secondary">
+            Здесь супер-админ видит новые регистрации компаний: договор, Instagram, паспорт владельца и чек оплаты подписки.
+          </Text>
+        </div>
         <Table
           rowKey="id"
           loading={loading}
-          dataSource={businessSubscriptionRequests}
+          dataSource={filteredRequests}
           pagination={{ pageSize: 6 }}
-          locale={{ emptyText: 'Пока нет оплат подписки' }}
+          locale={{ emptyText: 'Пока нет новых заявок на подключение компаний' }}
           columns={[
-            { title: 'Компания', dataIndex: 'companyName', render: (value, record) => value || record.companyEmail || 'TravelPay Business' },
-            { title: 'Email', dataIndex: 'ownerEmail' },
+            {
+              title: 'Компания',
+              dataIndex: 'companyName',
+              render: (value, record) => (
+                <div>
+                  <strong>{value || 'TravelPay Business'}</strong>
+                  <div><Text type="secondary">{record.ownerEmail || 'Email не указан'}</Text></div>
+                </div>
+              ),
+            },
             {
               title: 'Instagram',
               dataIndex: 'instagramUrl',
               render: (value) => (
                 value ? <Button type="link" href={value} target="_blank" rel="noreferrer">Открыть</Button> : '—'
+              ),
+            },
+            {
+              title: 'Паспорт',
+              dataIndex: 'passportName',
+              render: (value, record) => (
+                record.passportImage
+                  ? (
+                    <Space size={4} wrap>
+                      <Button
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => openDocumentPreview({
+                          title: 'Паспорт владельца',
+                          name: value || 'passport',
+                          url: record.passportImage,
+                          type: record.passportType,
+                        })}
+                      >
+                        Смотреть
+                      </Button>
+                      <Button type="link" href={record.passportImage} target="_blank" rel="noreferrer">
+                        Открыть
+                      </Button>
+                    </Space>
+                  )
+                  : '—'
               ),
             },
             { title: 'Сумма', dataIndex: 'amount', render: (value) => formatMoney(value) },
@@ -3234,11 +3691,65 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               },
             },
             {
-              title: 'Чек',
+              title: 'История заявки',
+              width: 320,
+              render: (_, record) => {
+                const reviewerName = record.reviewedBy
+                  ? (usersById.get(Number(record.reviewedBy))?.name || '')
+                  : '';
+                const timeline = buildBusinessSubscriptionTimelineEntries(record, reviewerName);
+
+                return (
+                  <div className="tp-admin-timeline">
+                    {timeline.map((entry, index) => (
+                      <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone}`}>
+                        <div className="tp-admin-timeline__rail">
+                          <span className="tp-admin-timeline__dot" />
+                          {index < timeline.length - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                        </div>
+                        <div className="tp-admin-timeline__content">
+                          <div className="tp-admin-timeline__head">
+                            <strong>{entry.title}</strong>
+                            <Text type="secondary">{formatDateTime(entry.time)}</Text>
+                          </div>
+                          <Text type="secondary">{entry.description}</Text>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              },
+            },
+            {
+              title: 'Комментарий admin',
+              dataIndex: 'adminComment',
+              width: 240,
+              render: (value) => value || '—',
+            },
+            {
+              title: 'Чек оплаты',
               dataIndex: 'receiptName',
               render: (value, record) => (
                 record.receiptImage
-                  ? <Button type="link" href={record.receiptImage} target="_blank" rel="noreferrer">{value || 'Открыть чек'}</Button>
+                  ? (
+                    <Space size={4} wrap>
+                      <Button
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => openDocumentPreview({
+                          title: 'Чек оплаты подписки',
+                          name: value || 'receipt',
+                          url: record.receiptImage,
+                          type: record.receiptType,
+                        })}
+                      >
+                        Смотреть
+                      </Button>
+                      <Button type="link" href={record.receiptImage} target="_blank" rel="noreferrer">
+                        Открыть
+                      </Button>
+                    </Space>
+                  )
                   : '—'
               ),
             },
@@ -3246,6 +3757,9 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               title: 'Действия',
               render: (_, record) => (
                 <Space wrap size={8}>
+                  <Button size="small" onClick={() => openCompanyCenter(record.companyId)}>
+                    Центр
+                  </Button>
                   <Button size="small" type="primary" disabled={record.status !== 'pending'} onClick={() => approveBusinessSubscription(record)}>
                     Подтвердить
                   </Button>
@@ -3294,31 +3808,88 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     const isRejected = currentCompany.status === 'rejected' || currentCompany.subscriptionStatus === 'rejected';
     const isPaymentReview = currentCompany.subscriptionStatus === 'payment_review';
     const isSubscriptionRequired = ['pending_payment', 'expired'].includes(currentCompany.subscriptionStatus);
+    const isExpired = currentCompany.subscriptionStatus === 'expired';
     return (
       <div className="tp-admin-page">
         <Layout className="tp-admin-layout">
           <Layout className="tp-admin-main">
             <Content className="tp-admin-content">
               <Card className="tp-admin-card">
-                <Result
-                  status={isRejected ? 'warning' : 'info'}
-                  title={isRejected
-                    ? 'Заявка или оплата подписки отклонена'
-                    : (isPaymentReview
-                      ? 'Оплата подписки на проверке'
-                      : (isSubscriptionRequired ? 'Нужно оплатить подписку' : 'Компания ожидает подтверждения'))}
-                  subTitle={isRejected
-                    ? (currentCompany.rejectionReason || 'Свяжитесь с администратором TravelPay.')
-                    : (isPaymentReview
-                      ? 'Чек уже отправлен. После проверки супер-администратором доступ откроется автоматически.'
-                      : (isSubscriptionRequired
-                        ? `Доступ к Business открывается после оплаты месячной подписки. Статус: ${currentCompanySubscriptionMeta.label}.`
-                        : 'Заявка компании отправлена. После проверки и оплаты подписки вы сможете публиковать туры.'))}
-                  extra={[
-                    <Button key="business" onClick={() => navigate('/business')}>TravelPay Business</Button>,
-                    <Button key="logout" type="primary" onClick={handleLogout}>Выйти</Button>,
-                  ]}
-                />
+                <Space direction="vertical" size={18} style={{ width: '100%' }}>
+                  <Result
+                    status={isRejected ? 'warning' : 'info'}
+                    title={isRejected
+                      ? 'Заявка или оплата подписки отклонена'
+                      : (isPaymentReview
+                        ? 'Оплата подписки на проверке'
+                        : (isSubscriptionRequired ? 'Нужно оплатить подписку' : 'Компания ожидает подтверждения'))}
+                    subTitle={isRejected
+                      ? (currentCompany.rejectionReason || currentBusinessSubscriptionRequest?.adminComment || 'Свяжитесь с администратором TravelPay.')
+                      : (isPaymentReview
+                        ? 'Чек уже отправлен. После проверки супер-администратором доступ откроется автоматически.'
+                        : (isSubscriptionRequired
+                          ? `Доступ к Business открывается после оплаты месячной подписки. Статус: ${currentCompanySubscriptionMeta.label}.`
+                          : 'Заявка компании отправлена. После проверки и оплаты подписки вы сможете публиковать туры.'))}
+                    extra={[
+                      <Button key="business" onClick={() => navigate('/business')}>TravelPay Business</Button>,
+                      <Button key="logout" type="primary" onClick={handleLogout}>Выйти</Button>,
+                    ]}
+                  />
+
+                  {currentBusinessSubscriptionRequest && (
+                    <Row gutter={[16, 16]}>
+                      <Col xs={24} xl={14}>
+                        <Card size="small" className="tp-admin-inline-card" title="История заявки">
+                          <div className="tp-admin-timeline">
+                            {currentBusinessRequestTimeline.map((entry, index) => (
+                              <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone}`}>
+                                <div className="tp-admin-timeline__rail">
+                                  <span className="tp-admin-timeline__dot" />
+                                  {index < currentBusinessRequestTimeline.length - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                                </div>
+                                <div className="tp-admin-timeline__content">
+                                  <div className="tp-admin-timeline__head">
+                                    <strong>{entry.title}</strong>
+                                    <Text type="secondary">{formatDateTime(entry.time)}</Text>
+                                  </div>
+                                  <Text type="secondary">{entry.description}</Text>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      </Col>
+                      <Col xs={24} xl={10}>
+                        <Card size="small" className="tp-admin-inline-card" title="Комментарий супер-админа">
+                          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                            <div>
+                              <Text type="secondary">Комментарий</Text>
+                              <div><strong>{currentBusinessSubscriptionRequest.adminComment || currentCompany.rejectionReason || 'Комментарий появится после решения супер-админа.'}</strong></div>
+                            </div>
+                            <div>
+                              <Text type="secondary">Статус</Text>
+                              <div>
+                                <Tag color={(TOPUP_STATUS_META[currentBusinessSubscriptionRequest.status] || TOPUP_STATUS_META.pending).color}>
+                                  {(TOPUP_STATUS_META[currentBusinessSubscriptionRequest.status] || TOPUP_STATUS_META.pending).label}
+                                </Tag>
+                              </div>
+                            </div>
+                            {isExpired && (
+                              <div>
+                                <Text type="secondary">Подписка действовала до</Text>
+                                <div><strong>{formatDate(currentCompany.subscriptionExpiresAt)}</strong></div>
+                              </div>
+                            )}
+                            <div>
+                              <Text type="secondary">Проверил</Text>
+                              <div><strong>{currentBusinessRequestReviewerName || 'Ожидает решения'}</strong></div>
+                            </div>
+                          </Space>
+                        </Card>
+                      </Col>
+                    </Row>
+                  )}
+                </Space>
               </Card>
             </Content>
           </Layout>
@@ -3422,6 +3993,181 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           </Content>
         </Layout>
       </Layout>
+
+      <Drawer
+        title="Центр онбординга компании"
+        open={Boolean(companyCenterCompany)}
+        onClose={closeCompanyCenter}
+        width={isDesktop ? 760 : '100%'}
+        className="tp-admin-form-drawer"
+        extra={companyCenterCompany ? <Tag color="blue">{companyCenterCompany.name}</Tag> : null}
+      >
+        {companyCenterCompany && (
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Card size="small" className="tp-admin-inline-card" title="Профиль компании">
+              <Row gutter={[12, 12]}>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Компания</Text>
+                  <div><strong>{companyCenterCompany.name}</strong></div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Email</Text>
+                  <div><strong>{companyCenterCompany.email || '—'}</strong></div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Телефон</Text>
+                  <div><strong>{companyCenterCompany.phone || '—'}</strong></div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Подписка</Text>
+                  <div>
+                    <Tag color={(SUBSCRIPTION_STATUS_META[companyCenterCompany.subscriptionStatus] || SUBSCRIPTION_STATUS_META.pending_payment).color}>
+                      {(SUBSCRIPTION_STATUS_META[companyCenterCompany.subscriptionStatus] || SUBSCRIPTION_STATUS_META.pending_payment).label}
+                    </Tag>
+                  </div>
+                </Col>
+                <Col xs={24}>
+                  <Text type="secondary">Причина / комментарий</Text>
+                  <div><strong>{companyCenterCompany.rejectionReason || 'Компания активна или причина не указана.'}</strong></div>
+                </Col>
+                <Col xs={24}>
+                  <Text type="secondary">Состояние подписки</Text>
+                  <div>
+                    <Tag color={getSubscriptionHealthMeta(companyCenterCompany).color}>
+                      {getSubscriptionHealthMeta(companyCenterCompany).label}
+                    </Tag>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+
+            <Card size="small" className="tp-admin-inline-card" title="История подач компании">
+              {companyCenterRequests.length ? (
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  {companyCenterRequests.map((request) => {
+                    const reviewerName = request.reviewedBy
+                      ? (usersById.get(Number(request.reviewedBy))?.name || '')
+                      : '';
+                    const timeline = buildBusinessSubscriptionTimelineEntries(request, reviewerName);
+
+                    return (
+                      <Card key={request.id} size="small" className="tp-admin-inline-card">
+                        <div className="tp-admin-section-head tp-admin-section-head--tight">
+                          <div>
+                            <strong>Подача #{request.id}</strong>
+                            <div><Text type="secondary">{formatDateTime(request.createdAt)}</Text></div>
+                          </div>
+                          <Space wrap>
+                            <Tag color={(TOPUP_STATUS_META[request.status] || TOPUP_STATUS_META.pending).color}>
+                              {(TOPUP_STATUS_META[request.status] || TOPUP_STATUS_META.pending).label}
+                            </Tag>
+                            {request.status === 'pending' && (
+                              <>
+                                <Button size="small" type="primary" onClick={() => approveBusinessSubscription(request)}>Подтвердить</Button>
+                                <Button size="small" danger onClick={() => rejectBusinessSubscription(request)}>Отклонить</Button>
+                              </>
+                            )}
+                          </Space>
+                        </div>
+                        <Row gutter={[12, 12]}>
+                          <Col xs={24} xl={13}>
+                            <div className="tp-admin-timeline">
+                              {timeline.map((entry, index) => (
+                                <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone}`}>
+                                  <div className="tp-admin-timeline__rail">
+                                    <span className="tp-admin-timeline__dot" />
+                                    {index < timeline.length - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                                  </div>
+                                  <div className="tp-admin-timeline__content">
+                                    <div className="tp-admin-timeline__head">
+                                      <strong>{entry.title}</strong>
+                                      <Text type="secondary">{formatDateTime(entry.time)}</Text>
+                                    </div>
+                                    <Text type="secondary">{entry.description}</Text>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </Col>
+                          <Col xs={24} xl={11}>
+                            <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                              <div>
+                                <Text type="secondary">Instagram</Text>
+                                <div>
+                                  {request.instagramUrl ? <Button type="link" href={request.instagramUrl} target="_blank" rel="noreferrer" style={{ paddingInline: 0 }}>Открыть Instagram</Button> : <strong>—</strong>}
+                                </div>
+                              </div>
+                              <div>
+                                <Text type="secondary">Комментарий admin</Text>
+                                <div><strong>{request.adminComment || 'Пока без комментария.'}</strong></div>
+                              </div>
+                              <Space wrap>
+                                {request.passportImage && (
+                                  <Button
+                                    size="small"
+                                    icon={<EyeOutlined />}
+                                    onClick={() => openDocumentPreview({
+                                      title: 'Паспорт владельца',
+                                      name: request.passportName || 'passport',
+                                      url: request.passportImage,
+                                      type: request.passportType,
+                                    })}
+                                  >
+                                    Паспорт
+                                  </Button>
+                                )}
+                                {request.receiptImage && (
+                                  <Button
+                                    size="small"
+                                    icon={<EyeOutlined />}
+                                    onClick={() => openDocumentPreview({
+                                      title: 'Чек оплаты подписки',
+                                      name: request.receiptName || 'receipt',
+                                      url: request.receiptImage,
+                                      type: request.receiptType,
+                                    })}
+                                  >
+                                    Чек
+                                  </Button>
+                                )}
+                              </Space>
+                            </Space>
+                          </Col>
+                        </Row>
+                      </Card>
+                    );
+                  })}
+                </Space>
+              ) : (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="У компании пока нет заявок на подключение" />
+              )}
+            </Card>
+
+            <Card size="small" className="tp-admin-inline-card" title="История оплат и продлений">
+              <Table
+                rowKey="id"
+                size="small"
+                pagination={false}
+                dataSource={companyCenterRequests}
+                locale={{ emptyText: 'История оплат пока пуста' }}
+                columns={[
+                  { title: 'Дата', dataIndex: 'createdAt', render: (value) => formatDateTime(value) },
+                  { title: 'Сумма', dataIndex: 'amount', render: (value) => formatMoney(value) },
+                  {
+                    title: 'Статус',
+                    dataIndex: 'status',
+                    render: (value) => {
+                      const meta = TOPUP_STATUS_META[value] || TOPUP_STATUS_META.pending;
+                      return <Tag color={meta.color}>{meta.label}</Tag>;
+                    },
+                  },
+                  { title: 'Комментарий', dataIndex: 'adminComment', render: (value) => value || '—' },
+                ]}
+              />
+            </Card>
+          </Space>
+        )}
+      </Drawer>
 
       {/* calendar drawer */}
       <Drawer
@@ -3878,6 +4624,123 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        open={Boolean(documentPreview)}
+        title={documentPreview?.title || 'Просмотр документа'}
+        footer={(
+          <Space>
+            {documentPreview?.url && (
+              <Button href={documentPreview.url} target="_blank" rel="noreferrer" icon={previewIsPdf ? <FilePdfOutlined /> : <EyeOutlined />}>
+                Открыть в новой вкладке
+              </Button>
+            )}
+            <Button type="primary" onClick={closeDocumentPreview}>Закрыть</Button>
+          </Space>
+        )}
+        onCancel={closeDocumentPreview}
+        width={860}
+      >
+        {documentPreview?.name && (
+          <div style={{ marginBottom: 12 }}>
+            <Text type="secondary">{documentPreview.name}</Text>
+          </div>
+        )}
+
+        {previewIsPdf ? (
+          <iframe
+            title={documentPreview?.title || 'document-preview'}
+            src={documentPreview?.url}
+            style={{ width: '100%', height: '70vh', border: 'none', borderRadius: 12, background: '#fff' }}
+          />
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Image
+              src={documentPreview?.url}
+              alt={documentPreview?.name || documentPreview?.title || 'Документ'}
+              style={{ maxHeight: '70vh', objectFit: 'contain', borderRadius: 12 }}
+            />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={companyRequestReviewOpen}
+        title={companyRequestReviewAction === 'approve' ? 'Подтвердить заявку компании' : 'Отклонить заявку компании'}
+        okText={companyRequestReviewAction === 'approve' ? 'Подтвердить заявку' : 'Отклонить заявку'}
+        cancelText="Отмена"
+        okButtonProps={{ danger: companyRequestReviewAction === 'reject' }}
+        confirmLoading={companyRequestReviewLoading}
+        onOk={() => companyRequestReviewForm.submit()}
+        onCancel={closeCompanyRequestReviewModal}
+        width={820}
+      >
+        {companyRequestReviewItem && (
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Card size="small" className="tp-admin-inline-card" title="Заявка компании">
+              <Row gutter={[12, 12]}>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Компания</Text>
+                  <div><strong>{companyRequestReviewItem.companyName || 'TravelPay Business'}</strong></div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Email</Text>
+                  <div><strong>{companyRequestReviewItem.ownerEmail || '—'}</strong></div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Instagram</Text>
+                  <div>
+                    {companyRequestReviewItem.instagramUrl ? (
+                      <Button type="link" href={companyRequestReviewItem.instagramUrl} target="_blank" rel="noreferrer" style={{ paddingInline: 0 }}>
+                        Открыть Instagram
+                      </Button>
+                    ) : <strong>—</strong>}
+                  </div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Text type="secondary">Сумма</Text>
+                  <div><strong>{formatMoney(companyRequestReviewItem.amount)}</strong></div>
+                </Col>
+              </Row>
+            </Card>
+
+            <Card size="small" className="tp-admin-inline-card" title="История заявки">
+              <div className="tp-admin-timeline">
+                {businessRequestTimeline.map((entry, index) => (
+                  <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone}`}>
+                    <div className="tp-admin-timeline__rail">
+                      <span className="tp-admin-timeline__dot" />
+                      {index < businessRequestTimeline.length - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                    </div>
+                    <div className="tp-admin-timeline__content">
+                      <div className="tp-admin-timeline__head">
+                        <strong>{entry.title}</strong>
+                        <Text type="secondary">{formatDateTime(entry.time)}</Text>
+                      </div>
+                      <Text type="secondary">{entry.description}</Text>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Form form={companyRequestReviewForm} layout="vertical" onFinish={handleCompanyRequestReviewSubmit}>
+              <Form.Item
+                name="adminComment"
+                label={companyRequestReviewAction === 'approve' ? 'Комментарий супер-админа' : 'Причина отклонения'}
+                rules={[{ required: true, message: companyRequestReviewAction === 'approve' ? 'Добавьте комментарий для компании.' : 'Укажите причину отклонения заявки.' }]}
+              >
+                <Input.TextArea
+                  rows={5}
+                  placeholder={companyRequestReviewAction === 'approve'
+                    ? 'Например: документы проверены, подписка активирована, доступ открыт на 30 дней.'
+                    : 'Например: чек нечитаемый, паспорт не совпадает с владельцем, нужна повторная подача заявки.'}
+                />
+              </Form.Item>
+            </Form>
+          </Space>
+        )}
       </Modal>
 
       <Drawer

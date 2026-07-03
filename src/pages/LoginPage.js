@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Checkbox, Divider, Form, Input, Space, Typography, message } from 'antd';
+import { App, Button, Checkbox, Divider, Form, Input, Space, Typography } from 'antd';
 import {
   FacebookFilled,
   GoogleOutlined,
@@ -11,11 +11,33 @@ import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
 import { emailRules, loginPasswordRules } from '../components/auth/authValidation';
 import { getApiErrorMessage } from '../utils/apiErrors';
-import { canAccessAdminPanel, syncCurrentUser } from '../utils/user';
+import { clearCurrentUser, saveAuthSession, saveBusinessSession } from '../utils/currentUser';
+import { canAccessBusinessPanel, getAdminLandingPath, syncCurrentUser } from '../utils/user';
 
 const { Text } = Typography;
 
+const extractAuthPayload = (payload) => {
+  const responseUser = payload?.user || payload || null;
+  const token = String(
+    payload?.authToken
+    || payload?.token
+    || responseUser?.authToken
+    || responseUser?.token
+    || '',
+  ).trim();
+  const companyId = String(responseUser?.companyId || payload?.companyId || '').trim();
+  const role = String(responseUser?.role || payload?.role || '').trim().toLowerCase();
+
+  return {
+    responseUser,
+    token,
+    companyId,
+    role,
+  };
+};
+
 const LoginPage = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -28,14 +50,68 @@ const LoginPage = () => {
         email: email.trim().toLowerCase(),
         password: password.trim(),
       });
-      const user = syncCurrentUser({ ...response.data, isLoggedIn: true });
-      message.success('Добро пожаловать в TravelPay');
+
+      const {
+        responseUser,
+        token,
+        companyId,
+        role,
+      } = extractAuthPayload(response.data);
+      const businessAccount = canAccessBusinessPanel(responseUser);
+
+      console.log('LOGIN RESPONSE:', response.data);
+      console.log('TOKEN:', token);
+      console.log('COMPANY ID:', companyId);
+      console.log('ROLE:', role);
+
+      if (!token) {
+        clearCurrentUser();
+        message.error('Не удалось завершить вход. Сервер не выдал токен.');
+        return;
+      }
+
+      const user = syncCurrentUser({ ...responseUser, authToken: token, isLoggedIn: true });
+      saveAuthSession({
+        token,
+        user,
+        role,
+        companyId,
+      });
+
+      if (businessAccount) {
+        if (!companyId) {
+          clearCurrentUser();
+          message.error('Не удалось определить компанию для TravelPay Business.');
+          return;
+        }
+
+        saveBusinessSession({
+          token,
+          user,
+          companyId,
+          role,
+        });
+
+        try {
+          await api.get(`/companies/${companyId}`);
+        } catch (companyError) {
+          clearCurrentUser();
+          if (companyError.response?.status === 403) {
+            message.error('У вас нет доступа к этой компании');
+            return;
+          }
+          throw companyError;
+        }
+      }
+
       if (location.state?.redirectTo && location.state?.tour) {
+        message.success('Добро пожаловать в TravelPay');
         navigate(location.state.redirectTo, { state: { tour: location.state.tour }, replace: true });
         return;
       }
 
-      navigate(canAccessAdminPanel(user) ? '/admin/tours' : '/profile');
+      message.success(businessAccount ? 'Добро пожаловать в TravelPay Business' : 'Добро пожаловать в TravelPay');
+      navigate(getAdminLandingPath(user));
     } catch (err) {
       message.error(getApiErrorMessage(
         err,

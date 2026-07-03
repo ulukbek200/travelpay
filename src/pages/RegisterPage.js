@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Checkbox, Divider, Form, Input, Space, Typography, message } from 'antd';
+import { App, Button, Checkbox, Divider, Form, Input, Space, Typography } from 'antd';
 import {
   FacebookFilled,
   GoogleOutlined,
@@ -20,12 +20,34 @@ import {
   requiredRule,
 } from '../components/auth/authValidation';
 import { getApiErrorMessage } from '../utils/apiErrors';
+import { saveAuthSession } from '../utils/currentUser';
 import { DEFAULT_SAVINGS } from '../utils/savings';
 import { syncCurrentUser } from '../utils/user';
 
 const { Text } = Typography;
 
+const extractAuthPayload = (payload) => {
+  const responseUser = payload?.user || payload || null;
+  const token = String(
+    payload?.authToken
+    || payload?.token
+    || responseUser?.authToken
+    || responseUser?.token
+    || '',
+  ).trim();
+  const companyId = String(responseUser?.companyId || payload?.companyId || '').trim();
+  const role = String(responseUser?.role || payload?.role || 'user').trim().toLowerCase();
+
+  return {
+    responseUser,
+    token,
+    companyId,
+    role,
+  };
+};
+
 const RegisterPage = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -34,6 +56,7 @@ const RegisterPage = () => {
 
     try {
       const email = values.email.trim().toLowerCase();
+      const password = values.password.trim();
       const existing = await api.get('/users', { params: { email } });
 
       if (existing.data.length > 0) {
@@ -41,11 +64,11 @@ const RegisterPage = () => {
         return;
       }
 
-      const response = await api.post('/users', {
+      const registerResponse = await api.post('/users', {
         name: values.name.trim(),
         email,
         phone: values.phone,
-        password: values.password,
+        password,
         balance: 0,
         role: 'user',
         avatar: 'https://www.w3schools.com/howto/img_avatar.png',
@@ -54,7 +77,36 @@ const RegisterPage = () => {
         savings: DEFAULT_SAVINGS,
       });
 
-      syncCurrentUser({ ...response.data, isLoggedIn: true });
+      let {
+        responseUser,
+        token,
+        companyId,
+        role,
+      } = extractAuthPayload(registerResponse.data);
+
+      if (!token) {
+        const loginResponse = await api.post('/auth/login', { email, password });
+        ({
+          responseUser,
+          token,
+          companyId,
+          role,
+        } = extractAuthPayload(loginResponse.data));
+      }
+
+      if (!token) {
+        message.error('Аккаунт создан, но сервер не выдал токен. Перезапустите backend и войдите снова.');
+        return;
+      }
+
+      const user = syncCurrentUser({ ...responseUser, authToken: token, isLoggedIn: true });
+      saveAuthSession({
+        token,
+        user,
+        role,
+        companyId,
+      });
+
       message.success('Аккаунт успешно создан');
       navigate('/profile');
     } catch (err) {

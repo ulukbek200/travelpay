@@ -18,6 +18,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ActualToursPage from './pages/ActualToursPage';
 import TourDetailPage from './pages/TourDetailPage';
@@ -32,6 +33,7 @@ import AgreementsPage from './pages/AgreementsPage';
 import VisaPaymentPage from './pages/VisaPaymentPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SavingsPlanPage from './pages/SavingsPlanPage';
+import StaffPortalPage from './pages/StaffPortalPage';
 import { readCurrentUser, subscribeToCurrentUser } from './utils/currentUser';
 
 function AppContent({ favorites, setFavorites }) {
@@ -39,6 +41,8 @@ function AppContent({ favorites, setFavorites }) {
 
   const hideLayoutPaths = [
     '/login',
+    '/staff',
+    '/admin/login',
     '/register',
     '/booking',
     '/profile',
@@ -80,8 +84,10 @@ function AppContent({ favorites, setFavorites }) {
       {/* ROUTES */}
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/staff" element={<StaffPortalPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/business" element={<BusinessLandingPage />} />
         <Route path="/travelpay-business" element={<BusinessLandingPage />} />
         <Route path="/business/register" element={<BusinessRegisterPage />} />

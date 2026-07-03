@@ -49,9 +49,9 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
+import { clearCurrentUser, hasActiveSession, readCurrentUser } from '../utils/currentUser';
 import { formatSavingsStatus, getSavingsMetrics, getSavingsStatusColor } from '../utils/savings';
-import { canAccessAdminPanel, getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
+import { canAccessAdminPanel, getAdminLandingPath, getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -137,16 +137,16 @@ const ProfilePage = () => {
     const loadUser = async () => {
       try {
         const currentUser = readCurrentUser();
-        if (!currentUser?.id) {
+        if (!hasActiveSession(currentUser)) {
+          clearCurrentUser();
           navigate('/login');
           return;
         }
 
         setTourBookingsLoading(true);
-        const headers = { 'x-user-id': currentUser.id };
         const [response, bookingsResponse] = await Promise.all([
-          api.get(`/users/${currentUser.id}`, { headers }),
-          api.get('/tour-bookings', { headers }),
+          api.get(`/users/${currentUser.id}`),
+          api.get('/tour-bookings'),
         ]);
 
         const nextUser = syncCurrentUser({
@@ -236,8 +236,6 @@ const ProfilePage = () => {
         ...values,
         avatar,
         isLoggedIn: true,
-      }, {
-        headers: { 'x-user-id': user.id },
       });
 
       const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
@@ -258,7 +256,7 @@ const ProfilePage = () => {
       const response = await api.post(
         `/tour-bookings/${booking.id}/cancel`,
         { reason: 'Отменено клиентом из личного кабинета' },
-        { headers: { 'x-user-id': user.id } },
+        {},
       );
 
       const nextBooking = response.data?.booking || null;
@@ -311,7 +309,7 @@ const ProfilePage = () => {
         <Button block icon={<CompassOutlined />} onClick={() => handleNavigate('/tours')}>Туры</Button>
         <Button block icon={<HeartOutlined />} onClick={() => handleNavigate('/favorites')}>Избранное</Button>
         {canAccessAdminPanel(user) && (
-          <Button block icon={<TeamOutlined />} onClick={() => handleNavigate('/admin/tours')}>
+          <Button block icon={<TeamOutlined />} onClick={() => handleNavigate(getAdminLandingPath(user))}>
             Админка
           </Button>
         )}

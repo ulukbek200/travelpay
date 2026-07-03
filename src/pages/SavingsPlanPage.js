@@ -39,7 +39,7 @@ import dayjs from 'dayjs';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
+import { clearCurrentUser, hasActiveSession, readCurrentUser } from '../utils/currentUser';
 import {
   buildSavingsChartData,
   createSavingsPlan,
@@ -121,14 +121,16 @@ const SavingsPlanPage = () => {
       try {
         const currentUser = readCurrentUser();
 
-        if (!currentUser?.id) {
+        if (!hasActiveSession(currentUser)) {
+          clearCurrentUser();
+          navigate('/login');
           setLoading(false);
           return;
         }
 
         const [response, requestsResponse] = await Promise.all([
           api.get(`/users/${currentUser.id}`),
-          api.get('/api/topup/my-requests', { headers: { 'x-user-id': currentUser.id } }),
+          api.get('/api/topup/my-requests'),
         ]);
 
         const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
@@ -142,7 +144,7 @@ const SavingsPlanPage = () => {
     };
 
     loadUser();
-  }, []);
+  }, [navigate]);
 
   const savingsMetrics = useMemo(() => getSavingsMetrics(user?.savings, new Date(now)), [user?.savings, now]);
   const projectedPlan = useMemo(() => createSavingsPlan({
@@ -301,8 +303,6 @@ const SavingsPlanPage = () => {
         receiptName: uploadFile.name,
         receiptType: uploadFile.type,
         comment: paymentComment,
-      }, {
-        headers: { 'x-user-id': user.id },
       });
 
       setTopupRequests((requests) => [response.data, ...requests]);

@@ -4,14 +4,14 @@ import { readCurrentUser, saveCurrentUser } from './currentUser';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ADMIN_ROLES = new Set(['super_admin', 'company_admin', 'company_manager']);
-const BUSINESS_ROLES = new Set(['company_admin', 'company_manager']);
+const BUSINESS_ROLES = new Set(['business', 'company_admin', 'company_manager', 'super_admin']);
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
 const normalizeRole = (value) => {
   const role = String(value || 'user').trim().toLowerCase();
   if (role === 'admin') return 'super_admin';
   if (role === 'manager') return 'company_manager';
-  if (ADMIN_ROLES.has(role) || role === 'user') return role;
+  if (ADMIN_ROLES.has(role) || BUSINESS_ROLES.has(role) || role === 'user') return role;
   return 'user';
 };
 const normalizeDate = (value) => {
@@ -137,6 +137,7 @@ export const normalizeUser = (user) => {
 
   return {
     ...user,
+    authToken: user.authToken || '',
     role: normalizeRole(user.role),
     companyId: Number(user.companyId) || 1,
     favorites: ensureArray(user.favorites),
@@ -162,15 +163,28 @@ export const normalizeUser = (user) => {
 export const canAccessAdminPanel = (user) => ADMIN_ROLES.has(normalizeRole(user?.role));
 export const canAccessBusinessPanel = (user) => BUSINESS_ROLES.has(normalizeRole(user?.role));
 export const canAccessTravelPayAdmin = (user) => normalizeRole(user?.role) === 'super_admin';
+export const getAdminLandingPath = (user) => {
+  const role = normalizeRole(user?.role);
+  if (role === 'super_admin') return '/admin/tours';
+  if (BUSINESS_ROLES.has(role)) return '/business/dashboard';
+  return '/profile';
+};
 
 export const syncCurrentUser = (user) => {
+  const previousUser = normalizeUser(readCurrentUser());
   const normalizedUser = normalizeUser(user);
 
   if (normalizedUser) {
-    saveCurrentUser(normalizedUser);
+    saveCurrentUser({
+      ...normalizedUser,
+      authToken: normalizedUser.authToken || previousUser?.authToken || '',
+    });
   }
 
-  return normalizedUser;
+  return normalizedUser ? {
+    ...normalizedUser,
+    authToken: normalizedUser.authToken || previousUser?.authToken || '',
+  } : normalizedUser;
 };
 
 export const updateUserById = async (userId, updates, method = 'put') => {

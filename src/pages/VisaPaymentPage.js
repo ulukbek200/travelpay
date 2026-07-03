@@ -126,7 +126,7 @@ const VisaPaymentPage = () => {
         paymentReceiptName: receiptFile.name,
         paymentReceiptType: receiptFile.type,
         comment: [booking.comment, comment].filter(Boolean).join('\n'),
-      }, { headers: { 'x-user-id': currentUser.id } });
+      });
 
       setCreatedBooking(response.data.booking);
       message.success('Чек отправлен на проверку.');

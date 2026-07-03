@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  App,
   Alert,
   Button,
   Card,
@@ -11,13 +12,13 @@ import {
   Tag,
   Typography,
   Upload,
-  message,
 } from 'antd';
 import {
   BankOutlined,
   CalendarOutlined,
   CompassOutlined,
   InboxOutlined,
+  InstagramOutlined,
   LockOutlined,
   MailOutlined,
   SafetyCertificateOutlined,
@@ -25,12 +26,19 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { saveCurrentUser } from '../utils/currentUser';
+import {
+  clearCurrentUser,
+  consumeAuthRedirectError,
+  saveBusinessSession,
+  saveCurrentUser,
+} from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
 import { getApiErrorMessage } from '../utils/apiErrors';
 
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
+
+const ALLOWED_BUSINESS_ROLES = new Set(['business', 'company_admin', 'company_manager', 'admin', 'super_admin']);
 
 const fileToDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -40,6 +48,7 @@ const fileToDataUrl = (file) => new Promise((resolve, reject) => {
 });
 
 const BusinessLoginPage = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [loginForm] = Form.useForm();
   const [paymentForm] = Form.useForm();
@@ -47,25 +56,81 @@ const BusinessLoginPage = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [companyState, setCompanyState] = useState(null);
 
+  useEffect(() => {
+    const authError = consumeAuthRedirectError();
+    if (authError) {
+      message.error(authError);
+    }
+  }, [message]);
+
   const handleSubmit = async (values) => {
     setLoading(true);
     setCompanyState(null);
+
     try {
       const response = await api.post('/business/login', {
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
 
-      const user = syncCurrentUser({ ...response.data.user, isLoggedIn: true });
+      console.log('LOGIN RESPONSE:', response.data);
+
+      const responseUser = response.data?.user || null;
+      const token = String(response.data?.token || responseUser?.authToken || '').trim();
+      const companyId = String(responseUser?.companyId || response.data?.company?.id || '').trim();
+      const role = String(responseUser?.role || '').trim().toLowerCase();
+
+      console.log('TOKEN:', token);
+      console.log('COMPANY ID:', companyId);
+      console.log('ROLE:', role);
+
+      if (!token || !companyId) {
+        clearCurrentUser();
+        message.error('Не удалось завершить вход в TravelPay Business.');
+        return;
+      }
+
+      if (!ALLOWED_BUSINESS_ROLES.has(role)) {
+        clearCurrentUser();
+        message.error('Этот аккаунт не имеет доступа к TravelPay Business');
+        return;
+      }
+
+      const user = syncCurrentUser({
+        ...responseUser,
+        authToken: token,
+        companyId: Number(companyId) || responseUser?.companyId,
+        role,
+        isLoggedIn: true,
+      });
+
       saveCurrentUser(user);
+      saveBusinessSession({
+        token,
+        user: responseUser,
+        company: response.data?.company || null,
+        companyId,
+        role,
+      });
+
+      await api.get(`/companies/${companyId}`);
+
       message.success('Добро пожаловать в TravelPay Business');
       navigate('/business/dashboard');
     } catch (error) {
       const data = error.response?.data;
+
       if (data?.status) {
         setCompanyState(data);
         return;
       }
+
+      if (error.response?.status === 403) {
+        clearCurrentUser();
+        message.error('У вас нет доступа к этой компании');
+        return;
+      }
+
       message.error(getApiErrorMessage(error, 'Не удалось войти в TravelPay Business.'));
     } finally {
       setLoading(false);
@@ -75,26 +140,41 @@ const BusinessLoginPage = () => {
   const handleSubscriptionPayment = async (values) => {
     try {
       setPaymentLoading(true);
-      const file = values.receipt?.[0]?.originFileObj;
-      if (!file) {
+      const receiptFile = values.receipt?.[0]?.originFileObj;
+      const passportFile = values.passport?.[0]?.originFileObj;
+      const isRejectedResubmission = companyState?.status === 'rejected';
+
+      if (!receiptFile) {
         message.error('Загрузите чек оплаты подписки.');
         return;
       }
 
-      const receiptImage = await fileToDataUrl(file);
+      if (isRejectedResubmission && !passportFile) {
+        message.error('Загрузите паспорт для повторной проверки.');
+        return;
+      }
+
+      const receiptImage = await fileToDataUrl(receiptFile);
+      const passportImage = passportFile ? await fileToDataUrl(passportFile) : '';
       const response = await api.post('/business/subscription/pay', {
         companyId: companyState?.company?.id,
         email: companyState?.user?.email,
         receiptImage,
-        receiptName: file.name,
-        receiptType: file.type,
+        receiptName: receiptFile.name,
+        receiptType: receiptFile.type,
+        passportImage,
+        passportName: passportFile?.name || '',
+        passportType: passportFile?.type || '',
+        instagramUrl: values.instagramUrl,
         comment: values.comment,
       });
 
       setCompanyState((current) => ({
         ...(current || {}),
         status: 'payment_review',
-        message: 'Оплата подписки отправлена и ждёт подтверждения super admin.',
+        message: isRejectedResubmission
+          ? 'Повторная заявка компании отправлена и ждёт подтверждения super admin.'
+          : 'Оплата подписки отправлена и ждёт подтверждения super admin.',
         company: response.data.company,
       }));
       paymentForm.resetFields();
@@ -121,12 +201,13 @@ const BusinessLoginPage = () => {
     }
 
     if (companyState.status === 'subscription_required' || companyState.status === 'rejected') {
+      const isRejected = companyState.status === 'rejected';
       return (
         <Space direction="vertical" size={18} style={{ width: '100%' }}>
           <Alert
-            type={companyState.status === 'rejected' ? 'warning' : 'info'}
+            type={isRejected ? 'warning' : 'info'}
             showIcon
-            message={companyState.status === 'rejected' ? 'Оплата подписки отклонена' : 'Нужна оплата подписки'}
+            message={isRejected ? 'Заявка компании отклонена' : 'Нужна оплата подписки'}
             description={companyState.message || 'Оплатите подписку и отправьте чек на проверку.'}
           />
 
@@ -135,12 +216,41 @@ const BusinessLoginPage = () => {
               <Text strong>Подписка TravelPay Business</Text>
               <Text>14 900 сом за 30 дней доступа</Text>
               <Text type="secondary">
-                После оплаты super admin и компания получат уведомления о статусе платежа.
+                {isRejected
+                  ? 'Для повторной проверки обновите документы компании: Instagram, паспорт владельца и новый чек оплаты.'
+                  : 'После оплаты super admin и компания получат уведомления о статусе платежа.'}
               </Text>
             </Space>
           </Card>
 
           <Form form={paymentForm} layout="vertical" onFinish={handleSubscriptionPayment}>
+            {isRejected && (
+              <>
+                <Form.Item
+                  name="instagramUrl"
+                  label="Ссылка на Instagram"
+                  initialValue={companyState.company?.instagramUrl || ''}
+                  rules={[
+                    { required: true, message: 'Добавьте ссылку на Instagram' },
+                    { type: 'url', message: 'Введите полную ссылку на Instagram' },
+                  ]}
+                >
+                  <Input prefix={<InstagramOutlined />} placeholder="https://instagram.com/your_company" />
+                </Form.Item>
+                <Form.Item
+                  name="passport"
+                  label="Паспорт владельца"
+                  valuePropName="fileList"
+                  getValueFromEvent={(event) => event?.fileList || []}
+                  rules={[{ required: true, message: 'Загрузите паспорт владельца' }]}
+                >
+                  <Upload beforeUpload={() => false} maxCount={1}>
+                    <Button icon={<InboxOutlined />}>Загрузить паспорт</Button>
+                  </Upload>
+                </Form.Item>
+              </>
+            )}
+
             <Form.Item
               name="receipt"
               label="Чек оплаты подписки"
@@ -152,11 +262,13 @@ const BusinessLoginPage = () => {
                 <Button icon={<InboxOutlined />}>Загрузить чек</Button>
               </Upload>
             </Form.Item>
+
             <Form.Item name="comment" label="Комментарий">
-              <Input.TextArea rows={3} placeholder="Например: оплата за июль" />
+              <Input.TextArea rows={3} placeholder={isRejected ? 'Например: обновили паспорт и отправили новый чек' : 'Например: оплата за июль'} />
             </Form.Item>
+
             <Button type="primary" htmlType="submit" loading={paymentLoading} block icon={<WalletOutlined />}>
-              Отправить оплату подписки
+              {isRejected ? 'Отправить заявку повторно' : 'Отправить оплату подписки'}
             </Button>
           </Form>
 

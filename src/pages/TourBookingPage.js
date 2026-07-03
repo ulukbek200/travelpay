@@ -230,7 +230,7 @@ const TourBookingPage = () => {
         paymentMethod: 'savings',
         accommodation: selectedAccommodation,
         extraBedSelected,
-      }, { headers: { 'x-user-id': currentUser.id } });
+      });
 
       syncCurrentUser({ ...response.data.user, isLoggedIn: true });
       message.success('Тур успешно оплачен из накоплений.');

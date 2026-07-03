@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Empty, Modal, Space, Tag, Typography, message } from 'antd';
+import { App, Button, Card, Empty, Modal, Space, Tag, Typography } from 'antd';
 import { CalendarOutlined, DeleteOutlined, EnvironmentOutlined, EyeOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ const BRAND_GOLD = '#fca311';
 const formatPrice = (price) => `${Number(String(price || 0).replace(/[^0-9]/g, '') || 0).toLocaleString()} сом`;
 
 const FavoritesPage = ({ favorites, setFavorites }) => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [selectedTour, setSelectedTour] = useState(null);
 
