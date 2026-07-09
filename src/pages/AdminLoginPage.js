@@ -11,13 +11,32 @@ import { syncCurrentUser } from '../utils/user';
 
 const { Paragraph, Text } = Typography;
 
-const extractAdminAuthPayload = (payload) => {
+const extractAdminAuthPayload = (payload, headers = {}) => {
   const responseUser = payload?.user || payload || null;
+  const headerAuthorization = String(
+    headers?.authorization
+    || headers?.Authorization
+    || headers?.['x-auth-token']
+    || headers?.['X-Auth-Token']
+    || '',
+  ).trim();
+  const bearerToken = headerAuthorization.toLowerCase().startsWith('bearer ')
+    ? headerAuthorization.slice(7).trim()
+    : headerAuthorization;
   const token = String(
     payload?.authToken
     || payload?.token
+    || payload?.accessToken
+    || payload?.access_token
+    || payload?.jwt
+    || payload?.jwtToken
     || responseUser?.authToken
     || responseUser?.token
+    || responseUser?.accessToken
+    || responseUser?.access_token
+    || responseUser?.jwt
+    || responseUser?.jwtToken
+    || bearerToken
     || '',
   ).trim();
   const role = String(responseUser?.role || payload?.role || '').trim().toLowerCase();
@@ -52,11 +71,12 @@ const AdminLoginPage = () => {
         token,
         role,
         companyId,
-      } = extractAdminAuthPayload(response.data);
+      } = extractAdminAuthPayload(response.data, response.headers);
 
       console.log('ADMIN TOKEN:', token);
       console.log('ADMIN ROLE:', role);
       console.log('ADMIN COMPANY ID:', companyId);
+      console.log('ADMIN RESPONSE HEADERS:', response.headers);
 
       if (!token) {
         clearCurrentUser();
