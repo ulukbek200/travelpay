@@ -82,7 +82,8 @@ function AppContent({ favorites, setFavorites }) {
       {!hideLayout && <Header />}
 
       {/* ROUTES */}
-      <Routes>
+      <div className={hideLayout ? undefined : 'public-layout-shell'}>
+        <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/staff" element={<StaffPortalPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -263,15 +264,16 @@ function AppContent({ favorites, setFavorites }) {
           )}
         />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
 
       {/* 🔥 AI CHAT WIDGET (ГЛОБАЛЬНО НА ВСЁМ САЙТЕ) */}
       {location.pathname === '/' && <TravelBotWidget />}

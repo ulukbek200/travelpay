@@ -24,8 +24,8 @@ const copy = {
     toursTitle: 'Популярные форматы отдыха',
     toursText: 'Каждый формат построен вокруг красивой картинки, понятного предложения и удобного перехода к каталогу.',
     whyTitle: 'Почему выбирают TravelPay',
-    galleryTitle: 'Живая галерея туров',
-    galleryText: 'Реальные локации Кыргызстана с компактной сеткой, затемнением фото и быстрой навигацией.',
+    galleryTitle: 'Действующие туры',
+    galleryText: 'Актуальные туры по Кыргызстану с понятными карточками, ценами и быстрым переходом к бронированию.',
     faqTitle: 'Частые вопросы',
     partnerTitle: 'Партнёрство для туркомпаний',
     partnerText: 'Оставьте контакты, если хотите публиковать туры и получать заявки внутри TravelPay.',
@@ -49,8 +49,8 @@ const copy = {
     toursTitle: 'Popular travel formats',
     toursText: 'Each format is built around strong imagery, clean structure, and direct navigation to the catalog.',
     whyTitle: 'Why TravelPay',
-    galleryTitle: 'Live tour gallery',
-    galleryText: 'Real Kyrgyzstan locations with responsive cards, image overlays, and clear travel metadata.',
+    galleryTitle: 'Active tours',
+    galleryText: 'Current tours across Kyrgyzstan with clear cards, pricing, and fast booking access.',
     faqTitle: 'FAQ',
     partnerTitle: 'Partnership for tour companies',
     partnerText: 'Leave your contacts if you want to publish tours and receive requests inside TravelPay.',
@@ -74,8 +74,8 @@ const copy = {
     toursTitle: 'Саякат форматтары',
     toursText: 'Ар бир формат кооз визуал, түшүнүктүү структура жана каталогго тез өтүү үчүн түзүлгөн.',
     whyTitle: 'Эмне үчүн TravelPay',
-    galleryTitle: 'Тирүү тур галереясы',
-    galleryText: 'Чыныгы локациялар, адаптивдүү карточкалар жана сүрөт үстүндөгү маалымат менен.',
+    galleryTitle: 'Учурдагы турлар',
+    galleryText: 'Кыргызстан боюнча актуалдуу турлар баасы жана брондоого тез өтүү менен көрсөтүлөт.',
     faqTitle: 'FAQ',
     partnerTitle: 'Туркомпаниялар үчүн өнөктөштүк',
     partnerText: 'TravelPay ичинде тур жайгаштырып, суроо-талап алуу үчүн байланыш калтырыңыз.',
@@ -184,14 +184,7 @@ const HomePage = () => {
 
   const t = copy[language] || copy.RU;
 
-  const showcaseCards = useMemo(
-    () =>
-      KYRGYZSTAN_TOUR_SPOTS.map((spot, index) => ({
-        ...spot,
-        accent: index % 2 === 0 ? 'gold' : 'blue',
-      })),
-    [],
-  );
+  const showcaseCards = [];
   const galleryCards = useMemo(
     () =>
       [...KYRGYZSTAN_TOUR_SPOTS, ...extraGallerySpots].map((spot, index) => ({
@@ -232,7 +225,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="home-section" style={styles.section}>
+      {false && <section className="home-section" style={styles.section}>
         <div className="home-shell" style={styles.sectionInner}>
           <motion.div {...motionCard} style={styles.sectionHeader}>
             <Tag style={styles.sectionTag}>{t.showcaseTitle}</Tag>
@@ -270,7 +263,7 @@ const HomePage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       <section className="home-section dark" style={styles.darkSection}>
         <div className="home-shell" style={styles.sectionInner}>
@@ -363,7 +356,7 @@ const HomePage = () => {
       </section>
 
       <section id="partnership" className="home-section" style={styles.partnerSection}>
-        <div className="home-shell" style={styles.partnerGrid}>
+        <div className="home-shell home-partner-grid" style={styles.partnerGrid}>
           <motion.div {...motionCard} style={styles.partnerCopy}>
             <Tag style={styles.darkTag}>TravelPay B2B</Tag>
             <Title level={2} style={styles.darkTitle}>{t.partnerTitle}</Title>
@@ -438,7 +431,7 @@ const HomePage = () => {
             />
           </div>
 
-          <div style={styles.footerSocials}>
+          <div className="home-footer-socials" style={styles.footerSocials}>
             {socialLinks.map((item) => (
               <a key={item.key} href={item.href} style={styles.footerLink}>
                 {item.icon}

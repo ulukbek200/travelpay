@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Badge,
   Button,
   Card,
   Col,
@@ -21,7 +20,6 @@ import {
 import {
   CalendarOutlined,
   EnvironmentOutlined,
-  FireOutlined,
   HomeOutlined,
   SearchOutlined,
   TeamOutlined,
@@ -45,6 +43,12 @@ const { Title, Paragraph, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { useBreakpoint } = Grid;
 
+const heroMotion = {
+  initial: { opacity: 0, y: 28 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] },
+};
+
 const StaysPage = () => {
   const navigate = useNavigate();
   const screens = useBreakpoint();
@@ -61,6 +65,14 @@ const StaysPage = () => {
   });
 
   useEffect(() => {
+    document.body.classList.add('travelpay-stays-page-active');
+
+    return () => {
+      document.body.classList.remove('travelpay-stays-page-active');
+    };
+  }, []);
+
+  useEffect(() => {
     const loadStays = async () => {
       try {
         const response = await api.get('/accommodations');
@@ -68,7 +80,7 @@ const StaysPage = () => {
         setStays(source.map(normalizeStay));
       } catch (error) {
         setStays(fallbackStays.map(normalizeStay));
-        message.info('Сервер недоступен, показаны демо-домики.');
+        message.info('Сервер временно недоступен, показаны демо-домики.');
       } finally {
         setLoading(false);
       }
@@ -77,30 +89,35 @@ const StaysPage = () => {
     loadStays();
   }, []);
 
-  const filteredStays = useMemo(() => stays.filter((stay) => {
-    const haystack = `${stay.title} ${stay.location} ${stay.description} ${stay.companyName}`.toLowerCase();
-    const matchesQuery = !filters.query || haystack.includes(filters.query.toLowerCase());
-    const matchesType = filters.type === 'all' || stay.type === filters.type;
-    const matchesGuests = !filters.guests || Number(stay.capacity) >= Number(filters.guests);
-    const matchesPrice = !filters.maxPrice || Number(stay.pricePerNight) <= Number(filters.maxPrice);
-    const matchesAmenity = filters.amenity === 'all' || stay.amenities.includes(filters.amenity);
-    const matchesCompany = filters.company === 'all' || String(stay.companyId || stay.companyName || 'partner') === filters.company;
-    const isVisible = stay.status !== 'archived' && stay.status !== 'sold_out';
-    return matchesQuery && matchesType && matchesGuests && matchesPrice && matchesAmenity && matchesCompany && isVisible;
-  }), [filters, stays]);
+  const filteredStays = useMemo(
+    () =>
+      stays.filter((stay) => {
+        const haystack = `${stay.title} ${stay.location} ${stay.description} ${stay.companyName}`.toLowerCase();
+        const matchesQuery = !filters.query || haystack.includes(filters.query.toLowerCase());
+        const matchesType = filters.type === 'all' || stay.type === filters.type;
+        const matchesGuests = !filters.guests || Number(stay.capacity) >= Number(filters.guests);
+        const matchesPrice = !filters.maxPrice || Number(stay.pricePerNight) <= Number(filters.maxPrice);
+        const matchesAmenity = filters.amenity === 'all' || stay.amenities.includes(filters.amenity);
+        const matchesCompany = filters.company === 'all' || String(stay.companyId || stay.companyName || 'partner') === filters.company;
+        const isVisible = stay.status !== 'archived' && stay.status !== 'sold_out';
+
+        return matchesQuery && matchesType && matchesGuests && matchesPrice && matchesAmenity && matchesCompany && isVisible;
+      }),
+    [filters, stays],
+  );
 
   const companyOptions = useMemo(() => {
     const seen = new Map();
+
     stays.forEach((stay) => {
       const key = String(stay.companyId || stay.companyName || 'partner');
       if (!seen.has(key)) {
         seen.set(key, { value: key, label: stay.companyName || 'TravelPay Partner' });
       }
     });
+
     return [{ value: 'all', label: 'Все компании' }, ...Array.from(seen.values())];
   }, [stays]);
-
-  const featuredStay = filteredStays[0] || stays[0] || fallbackStays[0];
 
   const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
 
@@ -108,26 +125,70 @@ const StaysPage = () => {
     <main className="stays-page">
       <section className="stays-hero">
         <div className="stays-hero__bg" />
-        <motion.div
-          className="stays-hero__content"
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72 }}
-        >
-          <Tag className="stays-kicker"><HomeOutlined /> TravelPay Stays</Tag>
-          <Title>Домики и коттеджи для отдыха в Кыргызстане</Title>
-          <Paragraph>
-            Выбирайте шале, юрты, глэмпинги и гостевые дома с понятной ценой, свободными местами и быстрым бронированием.
-          </Paragraph>
-          <Space wrap size={12}>
-            <Button type="primary" size="large" icon={<SearchOutlined />} onClick={() => document.getElementById('stays-catalog')?.scrollIntoView({ behavior: 'smooth' })}>
-              Найти домик
-            </Button>
-            <Button size="large" icon={<ThunderboltOutlined />} onClick={() => navigate('/business')}>
-              Разместить объект
-            </Button>
-          </Space>
-        </motion.div>
+        <div className="stays-hero__ambient-glow stays-hero__ambient-glow--gold" />
+        <div className="stays-hero__ambient-glow stays-hero__ambient-glow--blue" />
+
+        <div className="stays-hero__layout">
+          <motion.div className="stays-hero__content" {...heroMotion}>
+            <Tag className="stays-kicker">
+              <HomeOutlined />
+              TravelPay Stays
+            </Tag>
+
+            <div className="stays-hero__headline">
+              <Title>
+                Домики и
+                <br />
+                коттеджи для
+                <br />
+                отдыха в
+                <br />
+                <span>Кыргызстане</span>
+              </Title>
+              <span className="stays-hero__sparkle">✦</span>
+            </div>
+
+            <div className="stays-hero__line" />
+
+            <Paragraph>
+              Выбирайте шале, юрты, глэмпинги и гостевые дома с понятной ценой, свободными местами и быстрым
+              бронированием.
+            </Paragraph>
+
+            <Space wrap size={14} className="stays-hero__actions">
+              <Button
+                className="stays-hero__primary"
+                type="primary"
+                size="large"
+                icon={<SearchOutlined />}
+                onClick={() => document.getElementById('stays-catalog')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Найти домик
+              </Button>
+              <Button
+                className="stays-hero__secondary"
+                size="large"
+                icon={<ThunderboltOutlined />}
+                onClick={() => navigate('/business')}
+              >
+                Разместить объект
+              </Button>
+            </Space>
+          </motion.div>
+
+          <motion.div
+            className="stays-hero__visual"
+            initial={{ opacity: 0, y: 32, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.82, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="stays-hero__visual-image" />
+            <div className="stays-hero__visual-overlay" />
+            <div className="stays-hero__visual-sheen" />
+            <div className="stays-hero__visual-glow" />
+            <div className="stays-hero__visual-line" />
+          </motion.div>
+        </div>
       </section>
 
       <section className="stays-search-shell">
@@ -164,47 +225,17 @@ const StaysPage = () => {
               <RangePicker size="large" style={{ width: '100%' }} placeholder={['Заезд', 'Выезд']} />
             </Col>
           </Row>
+
           <div className="stays-amenities-row">
-            <Button type={filters.amenity === 'all' ? 'primary' : 'default'} onClick={() => setFilter('amenity', 'all')}>Все удобства</Button>
+            <Button type={filters.amenity === 'all' ? 'primary' : 'default'} onClick={() => setFilter('amenity', 'all')}>
+              Все удобства
+            </Button>
             {STAY_AMENITIES.slice(0, isMobile ? 5 : 10).map((amenity) => (
               <Button key={amenity} type={filters.amenity === amenity ? 'primary' : 'default'} onClick={() => setFilter('amenity', amenity)}>
                 {amenity}
               </Button>
             ))}
           </div>
-        </Card>
-      </section>
-
-      <section className="stays-featured">
-        <Card className="stays-featured-card">
-          <Row gutter={[24, 24]} align="middle">
-            <Col xs={24} lg={12}>
-              <div className="stays-featured-media">
-                <img src={featuredStay.images?.[0]} alt={featuredStay.title} onError={withStayFallback} />
-                <Badge count="Best view" className="stays-featured-badge" />
-              </div>
-            </Col>
-            <Col xs={24} lg={12}>
-              <Tag color="gold"><FireOutlined /> Выбор TravelPay</Tag>
-              <Title level={2}>{featuredStay.title}</Title>
-              <CompanyBadge
-                companyName={featuredStay.companyName}
-                companyLogo={featuredStay.companyLogo}
-                companyCity={featuredStay.companyCity}
-                companyVerified={featuredStay.companyVerified}
-                variant="plain"
-              />
-              <Paragraph>{featuredStay.description}</Paragraph>
-              <div className="stays-featured-stats">
-                <div><strong>{formatStayPrice(featuredStay.pricePerNight)}</strong><span>за ночь</span></div>
-                <div><strong>{featuredStay.capacity}</strong><span>гостей</span></div>
-                <div><strong>{featuredStay.availableCount}</strong><span>свободно</span></div>
-              </div>
-              <Button type="primary" size="large" onClick={() => navigate(`/stays/${featuredStay.id}`)}>
-                Смотреть объект
-              </Button>
-            </Col>
-          </Row>
         </Card>
       </section>
 
@@ -237,11 +268,18 @@ const StaysPage = () => {
                     <div className="stay-card__media">
                       <img src={stay.images?.[0]} alt={stay.title} onError={withStayFallback} />
                       <Tag className="stay-card__type">{getStayTypeLabel(stay.type)}</Tag>
-                      <div className="stay-card__rating"><Rate disabled allowHalf value={stay.rating} /> <span>{stay.rating}</span></div>
+                      <div className="stay-card__rating">
+                        <Rate disabled allowHalf value={stay.rating} />
+                        <span>{stay.rating}</span>
+                      </div>
                     </div>
                     <div className="stay-card__body">
                       <div className="stay-card__top">
-                        <Tag><EnvironmentOutlined /> {stay.city}</Tag>
+                        <Tag>
+                          <EnvironmentOutlined />
+                          {' '}
+                          {stay.city}
+                        </Tag>
                         <span>{stay.availableCount} свободно</span>
                       </div>
                       <CompanyBadge
@@ -268,10 +306,13 @@ const StaysPage = () => {
                           <strong>{formatStayPrice(stay.pricePerNight)}</strong>
                           <span>за ночь</span>
                         </div>
-                        <Button type="primary" onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(`/stays/${stay.id}`);
-                        }}>
+                        <Button
+                          type="primary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/stays/${stay.id}`);
+                          }}
+                        >
                           Подробнее
                         </Button>
                       </div>

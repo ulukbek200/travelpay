@@ -244,16 +244,17 @@ const TourBookingPage = () => {
 
   return (
     <main className="booking-page" style={styles.page}>
-      <Button type="text" style={styles.logo} onClick={() => navigate('/')}>
+      <Button type="text" className="booking-page-logo" style={styles.logo} onClick={() => navigate('/')}>
         <span>TravelPay</span>
         <small>by Barsbek Travel</small>
       </Button>
 
-      <section style={styles.shell}>
+      <section className="booking-page-shell" style={styles.shell}>
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65 }}
+          className="booking-page-header"
           style={styles.header}
         >
           <Tag style={styles.heroTag}>Premium booking</Tag>
@@ -271,7 +272,7 @@ const TourBookingPage = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.15 }}
             >
-              <Card style={styles.tourCard} styles={{ body: { padding: 0 } }}>
+              <Card className="booking-tour-card" style={styles.tourCard} styles={{ body: { padding: 0 } }}>
                 <div style={styles.imageWrap}>
                   <img
                     src={tour.image || TOUR_IMAGE_FALLBACK}
@@ -291,14 +292,14 @@ const TourBookingPage = () => {
                     {tour.description || 'Премиальный маршрут с локальным гидом, комфортным транспортом и красивыми локациями.'}
                   </Paragraph>
 
-                  <div style={styles.featureGrid}>
+                  <div className="booking-feature-grid" style={styles.featureGrid}>
                     <div style={styles.feature}><CalendarOutlined /><span>{tour.duration || 'Срок уточняется'}</span></div>
                     <div style={styles.feature}><TeamOutlined /><span>{people} туриста</span></div>
                     <div style={styles.feature}><CompassOutlined /><span>Локальный гид</span></div>
                     <div style={styles.feature}><CarOutlined /><span>Комфорт трансфер</span></div>
                   </div>
 
-                  <div style={styles.pricePanel}>
+                  <div className="booking-price-panel" style={styles.pricePanel}>
                     <Text>Цена за человека</Text>
                     <strong>{formatPrice(pricePerPerson)}</strong>
                   </div>
@@ -313,7 +314,7 @@ const TourBookingPage = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.22 }}
             >
-              <Card style={styles.formCard}>
+              <Card className="booking-form-card" style={styles.formCard}>
                 <Alert
                   showIcon
                   type="info"
@@ -521,7 +522,7 @@ const TourBookingPage = () => {
                     </div>
                   )}
 
-                  <div style={styles.summaryCard}>
+                  <div className="booking-summary-card" style={styles.summaryCard}>
                     <Space direction="vertical" size={4}>
                       <Text style={styles.summaryLabel}>Итоговая стоимость</Text>
                       <Title level={2} style={styles.total}>{formatPrice(total)}</Title>
@@ -561,6 +562,7 @@ const TourBookingPage = () => {
         </Row>
 
         <motion.div
+          className="booking-trust-row"
           style={styles.trustRow}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

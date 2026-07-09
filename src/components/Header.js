@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Drawer, Dropdown, Layout, Menu, Segmented, Space, Typography } from 'antd';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Avatar, Button, Drawer, Dropdown, Layout, Segmented, Space, Typography } from 'antd';
 import {
   DownOutlined,
   GlobalOutlined,
@@ -10,15 +10,18 @@ import {
   SunOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { LayoutGroup, motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clearCurrentUser, readCurrentUser, subscribeToCurrentUser } from '../utils/currentUser';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
+const SCROLL_THRESHOLD = 72;
+const HIDE_THRESHOLD = 132;
+const DELTA_THRESHOLD = 6;
+
 const BRAND_BLUE = '#173B61';
-const BRAND_BLUE_LIGHT = '#2B7BB9';
-const BRAND_GOLD = '#FCA311';
 
 const navItems = [
   { key: '/', label: 'Главная' },
@@ -28,6 +31,13 @@ const navItems = [
   { key: 'partnership', label: 'Партнёрство' },
 ];
 
+const springTransition = {
+  type: 'spring',
+  stiffness: 380,
+  damping: 30,
+  mass: 0.7,
+};
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,11 +45,15 @@ const Header = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('travelpay_theme') || 'light');
   const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [headerState, setHeaderState] = useState({ scrolled: false, hidden: false });
 
-  const isHome = location.pathname === '/';
-  const glassMode = isHome && !isScrolled;
-  const isDark = theme === 'dark';
+  const lastScrollYRef = useRef(0);
+  const frameRef = useRef(null);
+  const headerStateRef = useRef(headerState);
+
+  useEffect(() => {
+    headerStateRef.current = headerState;
+  }, [headerState]);
 
   useEffect(() => {
     const parsedUser = readCurrentUser();
@@ -51,19 +65,57 @@ const Header = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 24);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
     document.body.setAttribute('data-theme', theme);
     document.body.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('travelpay_theme', theme);
     localStorage.setItem('theme', theme);
     window.dispatchEvent(new CustomEvent('travelpay-theme-change', { detail: theme }));
   }, [theme]);
+
+  useEffect(() => {
+    const updateHeaderState = () => {
+      const nextY = window.scrollY || 0;
+      const delta = nextY - lastScrollYRef.current;
+
+      const nextScrolled = nextY > SCROLL_THRESHOLD;
+      let nextHidden = headerStateRef.current.hidden;
+
+      if (nextY <= 12) {
+        nextHidden = false;
+      } else if (delta > DELTA_THRESHOLD && nextY > HIDE_THRESHOLD) {
+        nextHidden = true;
+      } else if (delta < -DELTA_THRESHOLD) {
+        nextHidden = false;
+      }
+
+      lastScrollYRef.current = nextY;
+
+      const prev = headerStateRef.current;
+      if (prev.scrolled !== nextScrolled || prev.hidden !== nextHidden) {
+        const nextState = { scrolled: nextScrolled, hidden: nextHidden };
+        headerStateRef.current = nextState;
+        setHeaderState(nextState);
+      }
+    };
+
+    const handleScroll = () => {
+      if (frameRef.current) return;
+      frameRef.current = window.requestAnimationFrame(() => {
+        updateHeaderState();
+        frameRef.current = null;
+      });
+    };
+
+    updateHeaderState();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frameRef.current) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
 
   const selectedKey = useMemo(() => {
     if (location.pathname === '/') return '/';
@@ -73,25 +125,15 @@ const Header = () => {
     return '';
   }, [location.pathname]);
 
-  const surfaceStyle = {
-    ...(isDark ? styles.headerDark : styles.headerLight),
-    ...(glassMode ? styles.headerGlass : {}),
-  };
-  const textColor = isDark || glassMode ? '#F8FBFF' : BRAND_BLUE;
-  const drawerSurfaceStyle = isDark ? styles.drawerSurfaceDark : styles.drawerSurface;
-  const drawerBrandStyle = isDark ? styles.drawerBrandButtonDark : styles.drawerBrandButton;
-  const drawerSectionLabelStyle = isDark ? styles.drawerSectionLabelDark : styles.drawerSectionLabel;
-  const drawerNavStyle = isDark ? styles.drawerNavButtonDark : styles.drawerNavButton;
-  const drawerUtilityStyle = isDark ? styles.drawerUtilityButtonDark : styles.drawerUtilityButton;
-
-  const handleLanguageChange = (value) => {
+  const handleLanguageChange = useCallback((value) => {
     setLanguage(value);
     localStorage.setItem('travelpay_language', value);
     window.dispatchEvent(new CustomEvent('travelpay-language-change', { detail: value }));
-  };
+  }, []);
 
-  const goToPartnership = () => {
+  const goToPartnership = useCallback(() => {
     setMobileMenuOpen(false);
+
     if (location.pathname !== '/') {
       navigate('/');
       window.setTimeout(() => {
@@ -101,34 +143,44 @@ const Header = () => {
     }
 
     document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  }, [location.pathname, navigate]);
 
-  const handleNavigate = (key) => {
+  const handleNavigate = useCallback((key) => {
     setMobileMenuOpen(false);
+
     if (key === 'partnership') {
       goToPartnership();
       return;
     }
-    navigate(key);
-  };
 
-  const handleLogout = () => {
+    navigate(key);
+  }, [goToPartnership, navigate]);
+
+  const handleLogout = useCallback(() => {
     clearCurrentUser();
     setCurrentUser(null);
     setMobileMenuOpen(false);
     navigate('/');
-  };
+  }, [navigate]);
 
-  const languageMenu = {
+  const toggleTheme = useCallback(() => {
+    setTheme((value) => (value === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  const languageMenu = useMemo(() => ({
     items: ['KG', 'RU', 'EN'].map((item) => ({
       key: item,
-      label: <span style={item === language ? styles.languageActive : styles.languageLabel}>{item}</span>,
+      label: (
+        <span style={item === language ? styles.languageActive : styles.languageLabel}>
+          {item}
+        </span>
+      ),
     })),
     selectedKeys: [language],
     onClick: ({ key }) => handleLanguageChange(key),
-  };
+  }), [handleLanguageChange, language]);
 
-  const userMenu = {
+  const userMenu = useMemo(() => ({
     items: [
       { key: 'profile', icon: <UserOutlined />, label: 'Профиль' },
       { type: 'divider' },
@@ -138,36 +190,46 @@ const Header = () => {
       if (key === 'profile') navigate('/profile');
       if (key === 'logout') handleLogout();
     },
-  };
+  }), [handleLogout, navigate]);
+
+  const shellClassName = [
+    'travelpay-premium-header-shell',
+    headerState.scrolled ? 'is-scrolled' : 'is-top',
+    headerState.hidden ? 'is-hidden' : 'is-visible',
+    mobileMenuOpen ? 'is-drawer-open' : '',
+  ].filter(Boolean).join(' ');
 
   const drawerContent = (
     <div style={styles.drawerBody}>
       <div style={styles.drawerTop}>
-        <Button type="text" onClick={() => navigate('/')} style={drawerBrandStyle}>
+        <Button type="text" onClick={() => navigate('/')} style={styles.drawerBrandButton}>
           <span style={styles.brandCopy}>
-            <span style={{ ...styles.brandTitle, color: isDark ? '#F8FBFF' : BRAND_BLUE }}>TravelPay</span>
-            <span style={{ ...styles.brandSubtitle, color: isDark ? 'rgba(226,238,255,0.76)' : 'rgba(23,59,97,0.62)' }}>Premium travel platform</span>
+            <span style={styles.drawerBrandTitle}>TravelPay</span>
+            <span style={styles.drawerBrandSubtitle}>Premium travel platform</span>
           </span>
         </Button>
       </div>
 
       <Space orientation="vertical" size={10} style={{ width: '100%' }}>
-        {navItems.map((item) => (
-          <Button
-            key={item.key}
-            block
-            type={selectedKey === item.key ? 'primary' : 'default'}
-            onClick={() => handleNavigate(item.key)}
-            className="travelpay-header-button travelpay-drawer-nav-button"
-            style={selectedKey === item.key ? styles.drawerPrimaryNav : drawerNavStyle}
-          >
-            {item.label}
-          </Button>
-        ))}
+        {navItems.map((item) => {
+          const isSelected = selectedKey === item.key;
+          return (
+            <Button
+              key={item.key}
+              block
+              type={isSelected ? 'primary' : 'default'}
+              onClick={() => handleNavigate(item.key)}
+              className="travelpay-drawer-nav-button"
+              style={isSelected ? styles.drawerPrimaryNav : styles.drawerNavButton}
+            >
+              {item.label}
+            </Button>
+          );
+        })}
       </Space>
 
       <div style={styles.drawerSection}>
-        <Text strong style={drawerSectionLabelStyle}>Язык</Text>
+        <Text strong style={styles.drawerSectionLabel}>Язык</Text>
         <Segmented
           block
           value={language}
@@ -179,9 +241,8 @@ const Header = () => {
       <Button
         block
         icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
-        onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
-        className="travelpay-header-button"
-        style={drawerUtilityStyle}
+        onClick={toggleTheme}
+        style={styles.drawerUtilityButton}
       >
         {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
       </Button>
@@ -194,7 +255,6 @@ const Header = () => {
               type="primary"
               icon={<UserOutlined />}
               onClick={() => handleNavigate('/profile')}
-              className="travelpay-header-button"
               style={styles.drawerPrimaryButton}
             >
               Профиль
@@ -204,7 +264,6 @@ const Header = () => {
               danger
               icon={<LogoutOutlined />}
               onClick={handleLogout}
-              className="travelpay-header-button"
             >
               Выйти
             </Button>
@@ -215,8 +274,7 @@ const Header = () => {
               block
               icon={<LoginOutlined />}
               onClick={() => handleNavigate('/login')}
-              className="travelpay-header-button"
-              style={drawerUtilityStyle}
+              style={styles.drawerUtilityButton}
             >
               Войти
             </Button>
@@ -224,7 +282,6 @@ const Header = () => {
               block
               type="primary"
               onClick={() => handleNavigate('/tours')}
-              className="travelpay-header-button"
               style={styles.drawerPrimaryButton}
             >
               Выбрать тур
@@ -236,104 +293,122 @@ const Header = () => {
   );
 
   return (
-    <AntHeader className="premium-site-header" style={{ ...styles.headerShell, ...surfaceStyle }}>
-      <div style={styles.inner}>
-        <Button
-          type="text"
-          onClick={() => navigate('/')}
-          aria-label="TravelPay home"
-          className="travelpay-logo-button"
-          style={styles.logoButton}
-        >
-          <span className="brand" style={styles.brandCopy}>
-            <span className="brand-title" style={{ ...styles.logoText, color: textColor }}>TravelPay</span>
-            <span className="brand-subtitle" style={{ ...styles.logoSub, color: theme === 'dark' || glassMode ? 'rgba(248,251,255,0.72)' : 'rgba(23,59,97,0.62)' }}>
-              by Barsbek Travel
-            </span>
-          </span>
-        </Button>
-
-        <Menu
-          mode="horizontal"
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          items={navItems}
-          onClick={({ key }) => handleNavigate(key)}
-          className="premium-header-menu"
-          style={{ ...styles.menu, color: textColor }}
-        />
-
-        <Space size={10} className="desktop-header-actions" style={styles.actions}>
-          <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
-            <Button
-              icon={<GlobalOutlined />}
-              className="travelpay-header-button"
-              style={glassMode || theme === 'dark' ? styles.utilityButtonGlass : styles.utilityButton}
-            >
-              {language}
-              <DownOutlined style={{ fontSize: 10 }} />
-            </Button>
-          </Dropdown>
-
+    <AntHeader className={shellClassName}>
+      <div className="travelpay-premium-header-surface">
+        <div className="travelpay-premium-header-inner">
           <Button
-            aria-label="Toggle theme"
-            icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
-            onClick={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
-            className="travelpay-header-button"
-            style={styles.themeButton}
-          />
+            type="text"
+            onClick={() => navigate('/')}
+            aria-label="TravelPay home"
+            className="travelpay-premium-brand-button"
+            style={styles.logoButton}
+          >
+            <span className="travelpay-premium-brand-copy" style={styles.brandCopy}>
+              <span className="travelpay-premium-brand-title">TravelPay</span>
+              <span className="travelpay-premium-brand-subtitle">by Barsbek Travel</span>
+            </span>
+          </Button>
 
-          {currentUser ? (
-            <Dropdown menu={userMenu} trigger={['click']} placement="bottomRight">
-              <Button
-                className="travelpay-header-button"
-                style={glassMode || theme === 'dark' ? styles.profileButtonGlass : styles.profileButton}
-              >
-                <Avatar size={24} src={currentUser.avatar} icon={<UserOutlined />} />
-                <Text style={{ ...styles.profileName, color: textColor }}>{currentUser.name}</Text>
+          <LayoutGroup id="travelpay-header-nav">
+            <nav className="travelpay-premium-nav" aria-label="Primary">
+              {navItems.map((item) => {
+                const isActive = selectedKey === item.key;
+
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => handleNavigate(item.key)}
+                    className={`travelpay-premium-nav-item${isActive ? ' is-active' : ''}`}
+                  >
+                    {isActive ? (
+                      <motion.span
+                        layoutId="travelpay-active-pill"
+                        transition={springTransition}
+                        className="travelpay-premium-nav-pill"
+                      />
+                    ) : null}
+                    <span className="travelpay-premium-nav-label">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </LayoutGroup>
+
+          <div className="travelpay-premium-actions">
+            <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">
+              <Button className="travelpay-premium-action-button travelpay-premium-lang-button">
+                <span className="travelpay-premium-action-icon travelpay-premium-lang-icon">
+                  <GlobalOutlined />
+                </span>
+                <span>{language}</span>
+                <DownOutlined style={{ fontSize: 10 }} />
               </Button>
             </Dropdown>
-          ) : (
-            <>
-              <Button
-                icon={<LoginOutlined />}
-                onClick={() => navigate('/login')}
-                className="travelpay-header-button"
-                style={glassMode || theme === 'dark' ? styles.utilityButtonGlass : styles.utilityButton}
-              >
-                Войти
-              </Button>
-              <Button
-                type="primary"
-                onClick={() => navigate('/tours')}
-                className="travelpay-header-button"
-                style={styles.primaryButton}
-              >
-                Выбрать тур
-              </Button>
-            </>
-          )}
-        </Space>
 
-        <Button
-          aria-label="Open menu"
-          icon={<MenuOutlined />}
-          onClick={() => setMobileMenuOpen(true)}
-          className="mobile-menu-button travelpay-header-button"
-          style={glassMode || theme === 'dark' ? styles.mobileButtonGlass : styles.mobileButton}
-        />
+            <Button
+              aria-label="Toggle theme"
+              onClick={toggleTheme}
+              className="travelpay-premium-theme-button"
+            >
+              <motion.span
+                animate={{ rotate: theme === 'dark' ? 180 : 0 }}
+                transition={{ duration: 0.42, ease: [0.4, 0, 0.2, 1] }}
+                className="travelpay-premium-theme-icon"
+              >
+                {theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+              </motion.span>
+            </Button>
+
+            {currentUser ? (
+              <Dropdown menu={userMenu} trigger={['click']} placement="bottomRight">
+                <Button className="travelpay-premium-profile-button">
+                  <Avatar size={28} src={currentUser.avatar} icon={<UserOutlined />} />
+                  <Text className="travelpay-premium-profile-name">
+                    {currentUser.name}
+                  </Text>
+                </Button>
+              </Dropdown>
+            ) : (
+              <>
+                <Button
+                  icon={<LoginOutlined />}
+                  onClick={() => navigate('/login')}
+                  className="travelpay-premium-action-button"
+                >
+                  Войти
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() => navigate('/tours')}
+                  className="travelpay-premium-cta-button"
+                >
+                  Выбрать тур
+                </Button>
+              </>
+            )}
+          </div>
+
+          <Button
+            aria-label="Open menu"
+            icon={<MenuOutlined />}
+            onClick={() => setMobileMenuOpen(true)}
+            className="travelpay-premium-mobile-button"
+          />
+        </div>
       </div>
 
       <Drawer
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         placement="right"
-        size="min(86vw, 360px)"
+        size="min(88vw, 360px)"
         closeIcon={null}
         className="travelpay-mobile-drawer"
         title={null}
         styles={{
           body: styles.drawerWrapper,
-          section: drawerSurfaceStyle,
+          section: styles.drawerSurface,
           header: { display: 'none' },
         }}
       >
@@ -344,52 +419,15 @@ const Header = () => {
 };
 
 const styles = {
-  headerShell: {
-    position: 'sticky',
-    top: 14,
-    zIndex: 900,
-    width: 'min(100% - 24px, 1240px)',
-    margin: '0 auto 10px',
-    height: 76,
-    padding: 0,
-    borderRadius: 28,
-    overflow: 'hidden',
-    backdropFilter: 'blur(24px)',
-    transition: 'transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease',
-  },
-  headerLight: {
-    background: 'rgba(255,255,255,0.78)',
-    border: '1px solid rgba(255,255,255,0.88)',
-    boxShadow: '0 24px 68px rgba(23,59,97,0.12)',
-  },
-  headerDark: {
-    background: 'rgba(6,20,35,0.82)',
-    border: '1px solid rgba(255,255,255,0.10)',
-    boxShadow: '0 24px 68px rgba(0,0,0,0.30)',
-  },
-  headerGlass: {
-    background: 'rgba(7, 23, 40, 0.42)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    boxShadow: '0 26px 72px rgba(5,13,24,0.22)',
-  },
-  inner: {
-    width: '100%',
-    maxWidth: 1200,
-    height: '100%',
-    margin: '0 auto',
-    padding: '0 20px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 14,
-  },
   logoButton: {
-    height: 52,
+    height: '100%',
     border: 'none',
     paddingInline: 0,
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 12,
-    flexShrink: 0,
+    justifyContent: 'flex-start',
+    background: 'transparent',
+    boxShadow: 'none',
   },
   brandCopy: {
     display: 'flex',
@@ -398,207 +436,92 @@ const styles = {
     minWidth: 0,
     gap: 2,
   },
-  logoText: {
-    fontSize: 19,
-    fontWeight: 900,
-    lineHeight: 1,
-    letterSpacing: -0.02,
-  },
-  logoSub: {
-    fontSize: 11,
-    fontWeight: 700,
-    lineHeight: 1.1,
-  },
-  menu: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
-    borderBottom: 'none',
-    background: 'transparent',
-    fontWeight: 800,
-  },
-  actions: {
-    flexShrink: 0,
-  },
-  utilityButton: {
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(23,59,97,0.10)',
-    background: 'rgba(255,255,255,0.86)',
-    color: BRAND_BLUE,
-    fontWeight: 800,
-    boxShadow: '0 12px 30px rgba(23,59,97,0.08)',
-  },
-  utilityButtonGlass: {
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.14)',
-    background: 'rgba(255,255,255,0.08)',
-    color: '#F8FBFF',
-    fontWeight: 800,
-    boxShadow: '0 12px 30px rgba(0,0,0,0.14)',
-  },
-  themeButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(252,163,17,0.38)',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #FFD27A)`,
-    color: BRAND_BLUE,
-    boxShadow: '0 14px 30px rgba(252,163,17,0.24)',
-  },
-  profileButton: {
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(23,59,97,0.10)',
-    background: 'rgba(255,255,255,0.90)',
-    color: BRAND_BLUE,
-    fontWeight: 800,
-    boxShadow: '0 12px 30px rgba(23,59,97,0.08)',
-  },
-  profileButtonGlass: {
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.14)',
-    background: 'rgba(255,255,255,0.08)',
-    color: '#F8FBFF',
-    fontWeight: 800,
-    boxShadow: '0 12px 30px rgba(0,0,0,0.14)',
-  },
-  profileName: {
-    maxWidth: 86,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    fontWeight: 800,
-  },
-  primaryButton: {
-    height: 42,
-    borderRadius: 16,
-    border: 'none',
-    background: `linear-gradient(135deg, ${BRAND_BLUE_LIGHT}, ${BRAND_BLUE})`,
-    color: '#FFFFFF',
-    fontWeight: 800,
-    boxShadow: '0 16px 34px rgba(43,123,185,0.26)',
-  },
-  mobileButton: {
-    display: 'none',
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(23,59,97,0.10)',
-    background: 'rgba(255,255,255,0.90)',
-    color: BRAND_BLUE,
-  },
-  mobileButtonGlass: {
-    display: 'none',
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.14)',
-    background: 'rgba(255,255,255,0.08)',
-    color: '#F8FBFF',
-  },
   languageLabel: {
-    fontWeight: 800,
+    color: BRAND_BLUE,
+    fontWeight: 700,
   },
   languageActive: {
-    fontWeight: 900,
-    color: BRAND_BLUE,
+    color: '#0B1320',
+    fontWeight: 800,
   },
   drawerWrapper: {
-    padding: 12,
+    padding: 0,
     background: 'transparent',
   },
   drawerSurface: {
-    borderRadius: 28,
-    overflow: 'hidden',
-    background: 'linear-gradient(180deg, rgba(247,250,255,0.96), rgba(237,244,255,0.96))',
-  },
-  drawerSurfaceDark: {
-    borderRadius: 28,
-    overflow: 'hidden',
-    background: 'linear-gradient(180deg, rgba(8,20,34,0.98), rgba(10,28,48,0.98))',
-    border: '1px solid rgba(255,255,255,0.10)',
-    boxShadow: '0 24px 70px rgba(0,0,0,0.42)',
+    background: 'linear-gradient(180deg, rgba(9,16,29,0.98), rgba(7,13,24,0.98))',
   },
   drawerBody: {
+    minHeight: '100%',
+    padding: 24,
     display: 'flex',
     flexDirection: 'column',
     gap: 18,
+    background: 'linear-gradient(180deg, rgba(8,15,28,0.98), rgba(6,11,20,0.98))',
   },
   drawerTop: {
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   drawerBrandButton: {
-    height: 'auto',
-    padding: 0,
-    color: BRAND_BLUE,
-  },
-  drawerBrandButtonDark: {
-    height: 'auto',
+    height: 58,
     padding: 0,
     color: '#F8FBFF',
   },
+  drawerBrandTitle: {
+    fontSize: 22,
+    lineHeight: 1,
+    fontWeight: 900,
+    color: '#F8FBFF',
+  },
+  drawerBrandSubtitle: {
+    fontSize: 12,
+    lineHeight: 1.2,
+    fontWeight: 700,
+    color: 'rgba(226,238,255,0.72)',
+  },
   drawerSection: {
-    display: 'grid',
+    display: 'flex',
+    flexDirection: 'column',
     gap: 10,
   },
   drawerSectionLabel: {
-    color: BRAND_BLUE,
-  },
-  drawerSectionLabelDark: {
-    color: '#EAF3FF',
+    color: 'rgba(226,238,255,0.76)',
   },
   drawerNavButton: {
     height: 48,
     borderRadius: 16,
-    border: '1px solid rgba(23,59,97,0.08)',
-    background: '#FFFFFF',
-    color: BRAND_BLUE,
-    fontWeight: 800,
-    justifyContent: 'flex-start',
-  },
-  drawerNavButtonDark: {
-    height: 48,
-    borderRadius: 16,
-    border: '1px solid rgba(255,255,255,0.12)',
-    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.10)',
+    background: 'rgba(255,255,255,0.06)',
     color: '#F8FBFF',
     fontWeight: 800,
-    justifyContent: 'flex-start',
   },
   drawerPrimaryNav: {
     height: 48,
     borderRadius: 16,
     border: 'none',
-    background: `linear-gradient(135deg, ${BRAND_BLUE_LIGHT}, ${BRAND_BLUE})`,
-    color: '#FFFFFF',
-    fontWeight: 800,
-    justifyContent: 'flex-start',
+    background: 'linear-gradient(135deg, rgba(252,163,17,0.96), rgba(255,210,122,0.94))',
+    color: '#0B1320',
+    fontWeight: 900,
+    boxShadow: '0 18px 40px rgba(252,163,17,0.28)',
   },
   drawerUtilityButton: {
-    height: 46,
+    height: 48,
     borderRadius: 16,
-    fontWeight: 800,
-  },
-  drawerUtilityButtonDark: {
-    height: 46,
-    borderRadius: 16,
-    fontWeight: 800,
+    border: '1px solid rgba(255,255,255,0.10)',
+    background: 'rgba(255,255,255,0.06)',
     color: '#F8FBFF',
-    background: 'rgba(255,255,255,0.08)',
-    border: '1px solid rgba(255,255,255,0.16)',
+    fontWeight: 800,
   },
   drawerPrimaryButton: {
-    height: 46,
+    height: 50,
     borderRadius: 16,
     border: 'none',
-    background: `linear-gradient(135deg, ${BRAND_GOLD}, #FFD27A)`,
-    color: BRAND_BLUE,
+    background: 'linear-gradient(135deg, #2B7BB9, #173B61)',
+    color: '#FFFFFF',
     fontWeight: 900,
+    boxShadow: '0 16px 36px rgba(23,59,97,0.28)',
   },
 };
 

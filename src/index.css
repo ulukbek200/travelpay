@@ -12430,3 +12430,1366 @@ body.dark .tp-sx-event-card__meta,
   color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
 }
+
+/* 2026-07 adaptive polish: Home / Tour detail / Booking / Profile */
+.home-partner-grid,
+.home-footer-socials,
+.tour-detail-hero-shell,
+.tour-detail-content-shell,
+.booking-page-shell,
+.booking-page-header,
+.booking-summary-card,
+.travelpay-dashboard-container,
+.travelpay-stats-grid,
+.profile-avatar-editor,
+.profile-tour-booking-card__grid,
+.profile-tour-booking-card__head,
+.profile-tour-booking-card__footer {
+  min-width: 0;
+}
+
+.tour-detail-hero-shell {
+  max-width: 100%;
+}
+
+.tour-detail-content-shell,
+.booking-page-shell,
+.travelpay-dashboard-container {
+  width: min(100%, 1200px);
+  max-width: calc(100vw - 24px);
+}
+
+.booking-page-logo {
+  max-width: min(260px, 82vw);
+  white-space: normal;
+}
+
+.booking-feature-grid {
+  width: 100%;
+}
+
+.booking-price-panel,
+.booking-summary-card,
+.tour-detail-bottom-banner .ant-card-body {
+  min-width: 0;
+}
+
+.tour-detail-gallery-grid img,
+.booking-accommodation-card img {
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .tour-detail-hero-shell {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+    padding-top: 96px !important;
+    padding-bottom: 64px !important;
+  }
+
+  .tour-detail-sidebar {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .tour-detail-bottom-banner .ant-row {
+    align-items: stretch !important;
+  }
+
+  .booking-summary-card {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .booking-summary-card .ant-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-page .home-hero-section {
+    min-height: auto !important;
+    padding: 118px 18px 56px !important;
+    margin-top: -72px !important;
+  }
+
+  .home-page .home-section,
+  .home-page section[style],
+  .home-page footer[style] {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .home-tour-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .home-tour-card-shell,
+  .home-tour-media-card,
+  .home-partner-grid > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .home-partner-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .home-footer-socials {
+    width: 100%;
+  }
+
+  .home-footer-socials a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tour-detail-page > section:first-child {
+    min-height: auto !important;
+  }
+
+  .tour-detail-hero-shell {
+    width: 100% !important;
+    padding: 84px 14px 40px !important;
+  }
+
+  .tour-detail-hero-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .tour-detail-hero-actions .ant-btn,
+  .tour-detail-hero-card-shell,
+  .tour-detail-sidebar .ant-btn {
+    width: 100% !important;
+  }
+
+  .tour-detail-content-shell {
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  .tour-detail-page .ant-card {
+    border-radius: 22px !important;
+  }
+
+  .tour-detail-gallery-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tour-detail-gallery-grid > * {
+    min-height: 180px !important;
+  }
+
+  .tour-detail-bottom-banner .ant-card-body {
+    padding: 18px !important;
+  }
+
+  .booking-page {
+    padding: 18px 12px 54px !important;
+    background-attachment: scroll !important;
+  }
+
+  .booking-page-shell {
+    margin-top: 22px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  .booking-page-header {
+    margin-bottom: 20px !important;
+  }
+
+  .booking-tour-card .ant-card-body,
+  .booking-form-card .ant-card-body {
+    padding: 18px !important;
+  }
+
+  .booking-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .booking-price-panel {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .tour-departure-picker {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .tour-departure-picker .tour-departure-option {
+    width: 100% !important;
+  }
+
+  .booking-accommodation-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .booking-summary-card {
+    padding: 16px !important;
+  }
+
+  .booking-summary-card .ant-typography,
+  .booking-summary-card strong,
+  .booking-price-breakdown {
+    overflow-wrap: anywhere;
+  }
+
+  .booking-trust-row {
+    justify-content: stretch !important;
+    gap: 10px !important;
+  }
+
+  .booking-trust-row span {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .travelpay-dashboard-container {
+    max-width: calc(100vw - 20px) !important;
+    padding: 16px 0 28px !important;
+  }
+
+  .travelpay-dashboard-container .ant-card-head,
+  .travelpay-dashboard-container .ant-card-body {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .travelpay-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .profile-avatar-editor {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .profile-tour-booking-card__head,
+  .profile-tour-booking-card__footer {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .profile-tour-booking-card__grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .home-page .home-hero-section {
+    padding-top: 108px !important;
+    padding-bottom: 42px !important;
+  }
+
+  .home-page h1.ant-typography,
+  .tour-detail-page h1.ant-typography,
+  .booking-page h1.ant-typography,
+  .travelpay-profile-page h1.ant-typography {
+    line-height: 1.08 !important;
+  }
+
+  .home-page .ant-space,
+  .tour-detail-hero-actions,
+  .booking-page .ant-space {
+    width: 100%;
+  }
+
+  .home-page .ant-space-item,
+  .tour-detail-hero-actions .ant-btn,
+  .booking-page .ant-space-item {
+    width: 100%;
+  }
+
+  .home-page .travelpay-primary-button,
+  .home-page .travelpay-secondary-button {
+    width: 100% !important;
+  }
+
+  .tour-detail-hero-shell {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .booking-page-logo {
+    width: 100%;
+    align-items: center !important;
+    text-align: center;
+  }
+
+  .booking-page-header .ant-alert,
+  .booking-form-card .ant-alert {
+    border-radius: 14px !important;
+  }
+
+  .travelpay-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .travelpay-profile-page .ant-badge,
+  .travelpay-profile-page .ant-switch {
+    max-width: 100%;
+  }
+}
+.public-layout-shell {
+  padding-top: 84px;
+}
+
+.travelpay-premium-header-shell.ant-layout-header {
+  --tp-header-height: 76px;
+  --tp-header-shift: 0px;
+  --tp-header-scale: 1;
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 1200;
+  width: min(calc(100% - 24px), 1280px);
+  height: var(--tp-header-height);
+  padding: 0;
+  background: transparent;
+  transform: translate3d(-50%, var(--tp-header-shift), 0) scale(var(--tp-header-scale));
+  transform-origin: top center;
+  transition:
+    transform .35s cubic-bezier(.4,0,.2,1),
+    height .35s cubic-bezier(.4,0,.2,1),
+    opacity .35s cubic-bezier(.4,0,.2,1);
+  will-change: transform, opacity, height;
+  backface-visibility: hidden;
+}
+
+.travelpay-premium-header-shell.ant-layout-header.is-scrolled {
+  --tp-header-height: 60px;
+  --tp-header-shift: 0px;
+  --tp-header-scale: 0.978;
+}
+
+.travelpay-premium-header-shell.ant-layout-header.is-hidden {
+  --tp-header-shift: -140%;
+}
+
+.travelpay-premium-header-surface {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(9, 18, 32, 0.72);
+  box-shadow: 0 16px 42px rgba(3, 8, 18, 0.24);
+  overflow: hidden;
+  transition:
+    background .35s cubic-bezier(.4,0,.2,1),
+    box-shadow .35s cubic-bezier(.4,0,.2,1),
+    border-color .35s cubic-bezier(.4,0,.2,1),
+    backdrop-filter .35s cubic-bezier(.4,0,.2,1),
+    border-radius .35s cubic-bezier(.4,0,.2,1);
+  will-change: backdrop-filter, transform, opacity;
+}
+
+.travelpay-premium-header-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 35%, rgba(252,163,17,0.05) 100%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.travelpay-premium-header-shell.ant-layout-header.is-scrolled .travelpay-premium-header-surface {
+  border-radius: 18px;
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(5, 12, 22, 0.78);
+  box-shadow:
+    0 22px 60px rgba(2, 6, 14, 0.38),
+    0 8px 24px rgba(252,163,17,0.10);
+  backdrop-filter: blur(20px) saturate(165%);
+  -webkit-backdrop-filter: blur(20px) saturate(165%);
+}
+
+.travelpay-premium-header-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px 0 20px;
+}
+
+.travelpay-premium-brand-button.ant-btn {
+  min-width: 172px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: #f8fbff;
+}
+
+.travelpay-premium-brand-copy {
+  transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .35s cubic-bezier(.4,0,.2,1);
+}
+
+.travelpay-premium-brand-title {
+  display: block;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #f8fbff;
+}
+
+.travelpay-premium-brand-subtitle {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: rgba(226,238,255,0.72);
+  transition: opacity .3s cubic-bezier(.4,0,.2,1), transform .3s cubic-bezier(.4,0,.2,1), max-height .3s cubic-bezier(.4,0,.2,1);
+}
+
+.travelpay-premium-header-shell.ant-layout-header.is-scrolled .travelpay-premium-brand-subtitle {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+}
+
+.travelpay-premium-nav {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.travelpay-premium-nav-item {
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(248,251,255,0.86);
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform .3s cubic-bezier(.4,0,.2,1), color .3s cubic-bezier(.4,0,.2,1), filter .3s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+
+.travelpay-premium-nav-item:hover {
+  transform: translate3d(0, -2px, 0) scale(1.03);
+  filter: drop-shadow(0 10px 18px rgba(252,163,17,0.14));
+}
+
+.travelpay-premium-nav-item:focus-visible {
+  box-shadow: 0 0 0 2px rgba(252,163,17,0.38);
+}
+
+.travelpay-premium-nav-label {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: color .3s cubic-bezier(.4,0,.2,1), text-shadow .3s cubic-bezier(.4,0,.2,1);
+}
+
+.travelpay-premium-nav-item:hover .travelpay-premium-nav-label {
+  color: #fff7e2;
+  text-shadow: 0 0 22px rgba(252,163,17,0.25);
+}
+
+.travelpay-premium-nav-item.is-active .travelpay-premium-nav-label {
+  color: #fff3d4;
+}
+
+.travelpay-premium-nav-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(252,163,17,0.32), rgba(255,210,122,0.18));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 10px 28px rgba(252,163,17,0.18);
+  border: 1px solid rgba(252,163,17,0.24);
+}
+
+.travelpay-premium-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.travelpay-premium-action-button.ant-btn,
+.travelpay-premium-profile-button.ant-btn {
+  height: 42px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color: #f8fbff;
+  font-weight: 800;
+  box-shadow: 0 12px 30px rgba(4, 10, 18, 0.14);
+  transition:
+    transform .3s cubic-bezier(.4,0,.2,1),
+    box-shadow .3s cubic-bezier(.4,0,.2,1),
+    background .3s cubic-bezier(.4,0,.2,1),
+    border-color .3s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+
+.travelpay-premium-action-button.ant-btn:hover,
+.travelpay-premium-profile-button.ant-btn:hover {
+  transform: translate3d(0, -2px, 0);
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.16);
+}
+
+.travelpay-premium-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .3s cubic-bezier(.4,0,.2,1), filter .3s cubic-bezier(.4,0,.2,1);
+}
+
+.travelpay-premium-lang-button.ant-btn:hover {
+  background: rgba(255,255,255,0.11);
+  box-shadow:
+    0 12px 28px rgba(6, 12, 22, 0.18),
+    0 0 0 1px rgba(252,163,17,0.10);
+}
+
+.travelpay-premium-lang-button.ant-btn:hover .travelpay-premium-lang-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 14px rgba(252,163,17,0.22));
+}
+
+.travelpay-premium-theme-button.ant-btn {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(252,163,17,0.38);
+  background: linear-gradient(135deg, rgba(252,163,17,0.98), rgba(255,210,122,0.96));
+  color: #0b1320;
+  box-shadow: 0 14px 32px rgba(252,163,17,0.24);
+  transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s cubic-bezier(.4,0,.2,1), filter .3s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+
+.travelpay-premium-theme-button.ant-btn:hover {
+  transform: scale(1.08) rotate(15deg);
+  box-shadow:
+    0 20px 40px rgba(252,163,17,0.30),
+    0 0 20px rgba(252,163,17,0.22);
+}
+
+.travelpay-premium-theme-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.travelpay-premium-profile-button.ant-btn {
+  padding-inline: 10px 14px;
+}
+
+.travelpay-premium-profile-button .ant-avatar {
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.travelpay-premium-profile-button.ant-btn:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 18px 38px rgba(4, 10, 18, 0.20),
+    0 0 20px rgba(252,163,17,0.16);
+  border-color: rgba(252,163,17,0.18);
+}
+
+.travelpay-premium-profile-name {
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f8fbff !important;
+  font-weight: 800;
+}
+
+.travelpay-premium-cta-button.ant-btn {
+  height: 42px;
+  border: none;
+  border-radius: 16px;
+  padding-inline: 18px;
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2b7bb9, #173b61);
+  box-shadow: 0 16px 34px rgba(23,59,97,0.30);
+  transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s cubic-bezier(.4,0,.2,1), filter .3s cubic-bezier(.4,0,.2,1);
+}
+
+.travelpay-premium-cta-button.ant-btn:hover {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 20px 38px rgba(23,59,97,0.34);
+  filter: saturate(1.08);
+}
+
+.travelpay-premium-mobile-button.ant-btn {
+  display: none;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color: #f8fbff;
+  box-shadow: 0 12px 28px rgba(4, 10, 18, 0.14);
+}
+
+.travelpay-premium-mobile-button.ant-btn:hover {
+  background: rgba(255,255,255,0.10);
+  transform: translate3d(0, -2px, 0);
+}
+
+@media (max-width: 1080px) {
+  .travelpay-premium-header-inner {
+    gap: 12px;
+    padding: 0 14px 0 18px;
+  }
+
+  .travelpay-premium-nav,
+  .travelpay-premium-actions {
+    display: none;
+  }
+
+  .travelpay-premium-mobile-button.ant-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+  }
+
+  .travelpay-premium-brand-button.ant-btn {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-layout-shell {
+    padding-top: 74px;
+  }
+
+  .travelpay-premium-header-shell.ant-layout-header {
+    width: calc(100% - 16px);
+    top: 10px;
+    --tp-header-height: 76px;
+  }
+
+  .travelpay-premium-header-shell.ant-layout-header.is-scrolled {
+    --tp-header-height: 62px;
+    --tp-header-scale: 0.985;
+  }
+
+  .travelpay-premium-header-surface {
+    border-radius: 22px;
+  }
+
+  .travelpay-premium-header-shell.ant-layout-header.is-scrolled .travelpay-premium-header-surface {
+    border-radius: 18px;
+  }
+
+  .travelpay-premium-header-inner {
+    padding: 0 12px 0 16px;
+  }
+
+  .travelpay-premium-brand-title {
+    font-size: 20px;
+  }
+}
+
+/* TravelPay Stays premium refresh */
+body.travelpay-stays-page-active .travelpay-premium-header-shell.ant-layout-header {
+  --tp-header-height: 70px;
+  top: 10px;
+  width: min(calc(100% - 28px), 1220px);
+}
+
+body.travelpay-stays-page-active .travelpay-premium-header-shell.ant-layout-header.is-scrolled {
+  --tp-header-height: 56px;
+  --tp-header-scale: 0.978;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-header-inner {
+  gap: 10px;
+  padding: 0 12px 0 16px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-brand-button.ant-btn {
+  min-width: 146px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-brand-title {
+  font-size: 18px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-brand-subtitle {
+  font-size: 10px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-nav {
+  gap: 4px;
+  padding: 6px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-nav-item {
+  min-height: 34px;
+  padding: 0 13px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-nav-label {
+  font-size: 12.5px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-action-button.ant-btn,
+body.travelpay-stays-page-active .travelpay-premium-profile-button.ant-btn,
+body.travelpay-stays-page-active .travelpay-premium-theme-button.ant-btn {
+  height: 36px;
+  border-radius: 13px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-theme-button.ant-btn {
+  width: 36px;
+  min-width: 36px;
+}
+
+body.travelpay-stays-page-active .travelpay-premium-profile-button .ant-avatar {
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.stays-page {
+  --stays-background-primary: #f5f9ff;
+  --stays-background-secondary: #edf4fb;
+  --stays-surface: rgba(255, 255, 255, 0.84);
+  --stays-surface-strong: rgba(255, 255, 255, 0.94);
+  --stays-surface-muted: rgba(23, 59, 97, 0.055);
+  --stays-border: rgba(23, 59, 97, 0.10);
+  --stays-border-strong: rgba(255, 255, 255, 0.70);
+  --stays-text-primary: #173b61;
+  --stays-text-secondary: rgba(23, 59, 97, 0.68);
+  --stays-accent: #d6a23a;
+  --stays-accent-strong: #ffe08a;
+  --stays-accent-soft: rgba(214, 162, 58, 0.14);
+  --stays-shadow: 0 26px 78px rgba(23, 59, 97, 0.13);
+  --stays-hero-text: #f7fbff;
+  --stays-hero-muted: rgba(236, 242, 250, 0.96);
+  --stays-hero-panel:
+    linear-gradient(
+      135deg,
+      rgba(18, 24, 36, 0.86),
+      rgba(24, 32, 46, 0.58)
+    );
+  --stays-hero-glass: rgba(20, 24, 34, 0.58);
+  --stays-hero-icon: rgba(214, 162, 58, 0.18);
+  --stays-hero-icon-text: #f5d06f;
+}
+
+body[data-theme="dark"] .stays-page,
+body.dark .stays-page {
+  --stays-background-primary: #07111e;
+  --stays-background-secondary: #0b1828;
+  --stays-surface: rgba(10, 19, 32, 0.88);
+  --stays-surface-strong: rgba(12, 23, 38, 0.96);
+  --stays-surface-muted: rgba(255, 255, 255, 0.07);
+  --stays-border: rgba(255, 255, 255, 0.12);
+  --stays-border-strong: rgba(255, 210, 122, 0.14);
+  --stays-text-primary: #f7fbff;
+  --stays-text-secondary: rgba(226, 238, 255, 0.72);
+  --stays-accent: #d6a23a;
+  --stays-accent-strong: #ffe08a;
+  --stays-accent-soft: rgba(214, 162, 58, 0.18);
+  --stays-shadow: 0 28px 82px rgba(0, 0, 0, 0.40);
+  --stays-hero-text: #f8fbff;
+  --stays-hero-muted: rgba(234, 242, 255, 0.80);
+  --stays-hero-panel:
+    linear-gradient(
+      135deg,
+      rgba(15, 20, 30, 0.82),
+      rgba(15, 20, 30, 0.50)
+    );
+  --stays-hero-glass: rgba(20, 24, 34, 0.58);
+  --stays-hero-icon: rgba(214, 162, 58, 0.18);
+  --stays-hero-icon-text: #f5d06f;
+}
+
+.stays-page {
+  background:
+    radial-gradient(circle at 14% 10%, rgba(43, 184, 197, 0.14), transparent 28%),
+    radial-gradient(circle at 86% 8%, rgba(252, 163, 17, 0.12), transparent 25%),
+    linear-gradient(180deg, var(--stays-background-primary) 0%, var(--stays-background-secondary) 42%, var(--stays-background-primary) 100%);
+  color: var(--stays-text-primary);
+}
+
+body.travelpay-stays-page-active .public-layout-shell {
+  padding-top: 66px;
+}
+
+.stays-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 700px;
+  margin-top: -44px;
+  padding: 118px clamp(18px, 3.8vw, 52px) 88px;
+}
+
+.stays-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(5, 8, 14, 0.92) 0%,
+      rgba(5, 8, 14, 0.72) 38%,
+      rgba(5, 8, 14, 0.28) 68%,
+      rgba(5, 8, 14, 0.12) 100%
+    );
+}
+
+.stays-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  transform: scale(1.02);
+  background: url("../public/images/stays-hero-candidate-6.jpg") center center/cover no-repeat;
+  filter: saturate(1.02) contrast(1.04) brightness(0.88);
+}
+
+.stays-hero__layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.86fr);
+  gap: clamp(22px, 3vw, 38px);
+  align-items: stretch;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.stays-hero__ambient-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 999px;
+  filter: blur(16px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stays-hero__ambient-glow--gold {
+  inset: auto 10% 10% auto;
+  background: radial-gradient(circle, rgba(214, 162, 58, 0.26) 0%, rgba(214, 162, 58, 0.08) 34%, transparent 72%);
+}
+
+.stays-hero__ambient-glow--blue {
+  inset: 10% auto auto 48%;
+  background: radial-gradient(circle, rgba(107, 154, 214, 0.16) 0%, rgba(107, 154, 214, 0.05) 34%, transparent 72%);
+}
+
+.stays-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 58% 42%, transparent 34%, rgba(2, 6, 16, 0.28) 100%);
+}
+
+.stays-hero__content {
+  width: min(100%, 720px);
+  min-height: 540px;
+  padding: clamp(22px, 2.4vw, 34px);
+  border-radius: 34px;
+  background: var(--stays-hero-panel);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow:
+    0 40px 90px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  animation: staysFadeUp .72s cubic-bezier(.22,1,.36,1);
+}
+
+.stays-hero__headline {
+  position: relative;
+}
+
+.stays-hero h1.ant-typography {
+  max-width: 620px;
+  margin: 14px 0 14px;
+  color: var(--stays-hero-text);
+  font-size: clamp(44px, 4.4vw, 68px);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+  text-shadow: 0 18px 50px rgba(4, 10, 18, 0.24);
+  animation: staysFadeUp .76s cubic-bezier(.22,1,.36,1);
+}
+
+.stays-hero h1.ant-typography span {
+  background: linear-gradient(135deg, var(--stays-accent-strong), var(--stays-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.stays-hero__sparkle {
+  position: absolute;
+  top: 20px;
+  right: min(23%, 170px);
+  color: var(--stays-accent-strong);
+  font-size: clamp(22px, 1.8vw, 30px);
+  text-shadow: 0 0 24px rgba(214, 162, 58, 0.42);
+}
+
+.stays-hero__line {
+  width: 74px;
+  height: 3px;
+  margin: 8px 0 18px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--stays-accent-strong), rgba(245, 208, 111, 0.08));
+}
+
+.stays-hero p.ant-typography {
+  max-width: 560px;
+  margin-bottom: 0;
+  color: var(--stays-hero-muted) !important;
+  font-size: clamp(15px, 1vw, 17px);
+  line-height: 1.52;
+  animation: staysFadeUp .84s cubic-bezier(.22,1,.36,1);
+}
+
+.stays-hero__actions {
+  margin-top: 28px;
+  animation: staysFadeUp .92s cubic-bezier(.22,1,.36,1);
+}
+
+.stays-hero__visual {
+  position: relative;
+  min-height: 620px;
+  border-radius: 34px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 40px 90px rgba(0,0,0,.45);
+  transform: translateY(0);
+  transition: transform 500ms cubic-bezier(.2,.8,.2,1), box-shadow 500ms cubic-bezier(.2,.8,.2,1);
+}
+
+.stays-hero__visual:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 48px 100px rgba(0,0,0,.50);
+}
+
+.stays-hero__visual-image {
+  position: absolute;
+  inset: 0;
+  background: url("../public/images/stays-hero-candidate-6.jpg") 72% center/cover no-repeat;
+  transform: scale(1);
+  transition: transform 500ms cubic-bezier(.2,.8,.2,1);
+}
+
+.stays-hero__visual:hover .stays-hero__visual-image {
+  transform: scale(1.04);
+}
+
+.stays-hero__visual-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 14, 0.15) 0%,
+      rgba(5, 8, 14, 0.35) 45%,
+      rgba(5, 8, 14, 0.85) 100%
+    );
+  transition: background 500ms cubic-bezier(.2,.8,.2,1);
+}
+
+.stays-hero__visual:hover .stays-hero__visual-overlay {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 8, 14, 0.22) 0%,
+      rgba(5, 8, 14, 0.44) 45%,
+      rgba(5, 8, 14, 0.90) 100%
+    );
+}
+
+.stays-hero__visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 72% 78%, rgba(255, 208, 111, 0.22) 0%, rgba(255, 208, 111, 0.08) 16%, transparent 40%),
+    linear-gradient(180deg, rgba(4,9,16,0.10) 0%, rgba(4,9,16,0.04) 34%, rgba(4,9,16,0) 100%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.stays-hero__visual-glow {
+  position: absolute;
+  right: 18%;
+  bottom: 18%;
+  width: 170px;
+  height: 170px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(214, 162, 58, 0.38) 0%, rgba(214, 162, 58, 0.12) 36%, transparent 70%);
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.stays-hero__visual-line {
+  position: absolute;
+  right: 28px;
+  top: 96px;
+  width: 84px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 224, 138, 0), rgba(255, 224, 138, 0.92), rgba(214, 162, 58, 0));
+  opacity: 0.9;
+}
+
+.stays-hero__visual-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 24%),
+    linear-gradient(130deg, transparent 42%, rgba(255,255,255,0.08) 54%, transparent 68%);
+  opacity: 0.46;
+  pointer-events: none;
+}
+
+
+.stays-hero__actions .ant-btn,
+.stays-hero__primary.ant-btn,
+.stays-hero__secondary.ant-btn {
+  height: 52px;
+  padding-inline: 22px;
+  border-radius: 18px;
+  font-weight: 800;
+  transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s cubic-bezier(.4,0,.2,1), background .3s cubic-bezier(.4,0,.2,1), border-color .3s cubic-bezier(.4,0,.2,1);
+}
+
+.stays-hero__actions .ant-btn:hover {
+  transform: translate3d(0, -2px, 0);
+}
+
+.stays-hero__primary.ant-btn {
+  background: linear-gradient(135deg, #6d5efc 0%, var(--stays-accent) 100%);
+  border: none;
+  color: var(--stays-hero-text);
+  box-shadow: 0 18px 44px rgba(109, 94, 252, 0.24), 0 18px 44px rgba(214, 162, 58, 0.16);
+}
+
+.stays-hero__secondary.ant-btn {
+  border-color: rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.05);
+  color: var(--stays-hero-text);
+  box-shadow: 0 16px 36px rgba(4,10,18,0.18);
+}
+
+.stays-hero__secondary.ant-btn:hover {
+  border-color: rgba(255,255,255,0.20);
+  background: rgba(255,255,255,0.12);
+  color: var(--stays-hero-text);
+}
+
+.stays-hero__primary.ant-btn:hover {
+  color: var(--stays-hero-text) !important;
+  box-shadow: 0 24px 56px rgba(109, 94, 252, 0.28), 0 24px 56px rgba(214, 162, 58, 0.22);
+}
+
+.stays-kicker.ant-tag {
+  padding: 7px 13px;
+  background: var(--stays-accent-soft);
+  border-color: rgba(214, 162, 58, 0.30);
+  color: var(--stays-accent);
+}
+
+@keyframes staysFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stays-search-shell {
+  margin-top: -56px;
+}
+
+.stays-search-card.ant-card,
+.stay-card.ant-card,
+.stay-detail-shell.ant-card,
+.stay-booking-card.ant-card,
+.stay-info-card.ant-card {
+  background: var(--stays-surface) !important;
+  border-color: var(--stays-border-strong) !important;
+  box-shadow: var(--stays-shadow) !important;
+}
+
+.stays-search-card.ant-card {
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.stays-search-card .ant-typography,
+.stays-search-card .ant-typography.ant-typography-secondary,
+.stays-search-card .ant-select-selection-placeholder,
+.stays-search-card .ant-picker-input > input::placeholder,
+.stays-search-card .ant-input::placeholder,
+.stays-search-card .ant-input-number-input::placeholder {
+  color: var(--stays-text-secondary) !important;
+}
+
+.stays-search-card .ant-input,
+.stays-search-card .ant-input-number,
+.stays-search-card .ant-select-selector,
+.stays-search-card .ant-picker {
+  min-height: 50px;
+  background: var(--stays-surface-strong) !important;
+  border: 1px solid var(--stays-border) !important;
+  color: var(--stays-text-primary) !important;
+  box-shadow: none !important;
+}
+
+.stays-search-card .ant-input-number-input,
+.stays-search-card .ant-picker input,
+.stays-search-card .ant-select-selection-item,
+.stays-search-card .ant-input-prefix,
+.stays-search-card .ant-select-arrow,
+.stays-search-card .ant-picker-suffix {
+  color: var(--stays-text-primary) !important;
+}
+
+.stays-amenities-row .ant-btn {
+  min-height: 40px;
+  border-color: var(--stays-border);
+  background: var(--stays-surface-strong);
+  color: var(--stays-text-primary);
+}
+
+.stays-section-head h2.ant-typography,
+.stay-card h3.ant-typography {
+  color: var(--stays-text-primary);
+}
+
+.stays-section-head p.ant-typography,
+.stay-card p.ant-typography,
+.stay-card__footer span,
+.stay-card__footer .ant-typography,
+.stay-card__top > span {
+  color: var(--stays-text-secondary);
+}
+
+.stay-card__meta div,
+.stay-info-grid div {
+  background: var(--stays-surface-muted);
+  color: var(--stays-text-primary);
+  border: 1px solid var(--stays-border);
+}
+
+.stay-card__footer {
+  border-top-color: var(--stays-border);
+}
+
+.stay-card__amenities .ant-tag,
+.stay-card__top .ant-tag,
+.stays-page .ant-tag {
+  border-color: var(--stays-border);
+}
+
+.stay-card__type.ant-tag {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.16);
+}
+
+.stays-page .ant-empty-description,
+.stays-page .ant-empty-normal {
+  color: var(--stays-text-secondary);
+}
+
+body[data-theme="dark"] .stays-page .ant-empty-description,
+body.dark .stays-page .ant-empty-description {
+  color: var(--stays-text-secondary) !important;
+}
+
+body[data-theme="dark"] .stays-featured-card.ant-card,
+body.dark .stays-featured-card.ant-card {
+  background:
+    linear-gradient(145deg, rgba(10, 22, 38, 0.98), rgba(8, 16, 29, 0.94) 56%, rgba(9, 24, 39, 0.98)) !important;
+  border-color: var(--stays-border-strong) !important;
+}
+
+body[data-theme="dark"] .stays-page .ant-btn:not(.ant-btn-primary),
+body.dark .stays-page .ant-btn:not(.ant-btn-primary) {
+  background: var(--stays-surface-strong);
+  border-color: var(--stays-border);
+  color: var(--stays-text-primary);
+}
+
+body.travelpay-stays-page-active .ant-select-dropdown,
+body.travelpay-stays-page-active .ant-picker-dropdown .ant-picker-panel-container {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 59, 97, 0.10);
+  box-shadow: 0 22px 56px rgba(23, 59, 97, 0.16);
+}
+
+body[data-theme="dark"].travelpay-stays-page-active .ant-select-dropdown,
+body.dark.travelpay-stays-page-active .ant-select-dropdown,
+body[data-theme="dark"].travelpay-stays-page-active .ant-picker-dropdown .ant-picker-panel-container,
+body.dark.travelpay-stays-page-active .ant-picker-dropdown .ant-picker-panel-container {
+  background: rgba(10, 19, 32, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.36);
+}
+
+body[data-theme="dark"].travelpay-stays-page-active .ant-select-item,
+body.dark.travelpay-stays-page-active .ant-select-item,
+body[data-theme="dark"].travelpay-stays-page-active .ant-picker-cell-inner,
+body.dark.travelpay-stays-page-active .ant-picker-cell-inner,
+body[data-theme="dark"].travelpay-stays-page-active .ant-picker-header,
+body.dark.travelpay-stays-page-active .ant-picker-header,
+body[data-theme="dark"].travelpay-stays-page-active .ant-picker-content th,
+body.dark.travelpay-stays-page-active .ant-picker-content th {
+  color: rgba(226, 238, 255, 0.88) !important;
+}
+
+@media (max-width: 992px) {
+  body.travelpay-stays-page-active .travelpay-premium-nav,
+  body.travelpay-stays-page-active .travelpay-premium-actions {
+    display: none;
+  }
+
+  body.travelpay-stays-page-active .public-layout-shell {
+    padding-top: 60px;
+  }
+
+  .stays-hero {
+    min-height: 640px;
+    margin-top: -34px;
+    padding: 110px 20px 76px;
+  }
+
+  .stays-hero__layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .stays-hero__content {
+    width: min(100%, 760px);
+    min-height: auto;
+  }
+
+  .stays-hero__visual {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 640px) {
+  body.travelpay-stays-page-active .travelpay-premium-header-shell.ant-layout-header {
+    --tp-header-height: 62px;
+    top: 8px;
+  }
+
+  body.travelpay-stays-page-active .travelpay-premium-header-shell.ant-layout-header.is-scrolled {
+    --tp-header-height: 50px;
+  }
+
+  body.travelpay-stays-page-active .public-layout-shell {
+    padding-top: 54px;
+  }
+
+  .stays-hero {
+    min-height: 540px;
+    margin-top: -28px;
+    padding: 94px 16px 68px;
+  }
+
+  .stays-hero__content {
+    width: 100%;
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .stays-hero__visual {
+    min-height: 420px;
+  }
+
+  .stays-hero h1.ant-typography {
+    font-size: clamp(42px, 11vw, 62px);
+    line-height: 0.95;
+  }
+
+  .stays-hero p.ant-typography {
+    font-size: 15px;
+  }
+
+  .stays-hero__stat {
+    min-width: calc(50% - 8px);
+  }
+
+  .stays-hero__sparkle {
+    top: 6px;
+    right: 6px;
+  }
+
+  .stays-hero h1.ant-typography {
+    font-size: clamp(38px, 11vw, 56px);
+    line-height: 0.96;
+  }
+
+  .stays-hero p.ant-typography {
+    font-size: 15px;
+    line-height: 1.42;
+  }
+
+  .stays-search-shell {
+    margin-top: -42px;
+  }
+
+  .stays-hero__actions,
+  .stays-hero__actions .ant-space-item,
+  .stays-hero__actions .ant-btn {
+    width: 100%;
+  }
+
+}

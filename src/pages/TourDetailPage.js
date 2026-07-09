@@ -145,7 +145,7 @@ const TourDetailPage = () => {
         />
         <div style={styles.heroOverlay} />
 
-        <div style={styles.heroShell}>
+        <div className="tour-detail-hero-shell" style={styles.heroShell}>
           <motion.div
             initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
@@ -166,7 +166,7 @@ const TourDetailPage = () => {
               <Tag style={styles.glassTag}><TeamOutlined /> {'\u041c\u0438\u043d\u0438-\u0433\u0440\u0443\u043f\u043f\u0430'}</Tag>
             </Space>
 
-            <div style={styles.heroActions}>
+            <div className="tour-detail-hero-actions" style={styles.heroActions}>
               <Button type="primary" size="large" onClick={handleBook} style={styles.bookButton}>
                 {'\u0417\u0430\u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0442\u0443\u0440'}
               </Button>
@@ -180,6 +180,7 @@ const TourDetailPage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.55 }}
+            className="tour-detail-hero-card-shell"
             style={styles.heroCardShell}
           >
             <Card style={styles.heroInfoCard}>
@@ -204,7 +205,7 @@ const TourDetailPage = () => {
       </section>
 
       <section style={styles.content}>
-        <div style={styles.contentShell}>
+        <div className="tour-detail-content-shell" style={styles.contentShell}>
           <Row gutter={[24, 24]}>
             <Col xs={24} lg={16}>
               <Card style={styles.panel}>
@@ -257,7 +258,7 @@ const TourDetailPage = () => {
                 <Tag style={styles.softTag}><CameraOutlined /> {'\u0413\u0430\u043b\u0435\u0440\u0435\u044f'}</Tag>
                 <Title level={2} style={styles.sectionTitle}>{'\u0410\u0442\u043c\u043e\u0441\u0444\u0435\u0440\u0430 \u0438 \u043b\u043e\u043a\u0430\u0446\u0438\u0438'}</Title>
 
-                <div style={styles.galleryGrid}>
+                <div className="tour-detail-gallery-grid" style={styles.galleryGrid}>
                   {gallery.slice(0, 3).map((image, index) => (
                     <div key={`${image}-${index}`} style={styles.galleryTile}>
                       <img src={image || TOUR_IMAGE_FALLBACK} alt={`${currentTour.title}-${index + 1}`} onError={withTourFallback} style={styles.galleryImage} />
@@ -268,7 +269,7 @@ const TourDetailPage = () => {
             </Col>
 
             <Col xs={24} lg={8}>
-              <div style={styles.sidebar}>
+              <div className="tour-detail-sidebar" style={styles.sidebar}>
                 <Card style={styles.ctaCard}>
                   <Space direction="vertical" size={16} style={{ width: '100%' }}>
                     <div>
@@ -303,7 +304,7 @@ const TourDetailPage = () => {
             </Col>
           </Row>
 
-          <Card style={styles.bottomBanner}>
+          <Card className="tour-detail-bottom-banner" style={styles.bottomBanner}>
             <Row gutter={[24, 24]} align="middle" justify="space-between">
               <Col xs={24} lg={15}>
                 <div style={styles.bottomBannerCopy}>
