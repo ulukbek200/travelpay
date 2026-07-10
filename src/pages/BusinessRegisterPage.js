@@ -37,13 +37,71 @@ const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
 const BUSINESS_SUBSCRIPTION_PRICE = 14900;
+const MAX_LOGO_FILE_SIZE = 350 * 1024;
+const MAX_REQUIRED_FILE_SIZE = 1200 * 1024;
+const MAX_TOTAL_UPLOAD_SIZE = 3.2 * 1024 * 1024;
 
-const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+const isImageFile = (file) => String(file?.type || '').startsWith('image/');
+
+const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
   reader.onload = () => resolve(reader.result);
   reader.onerror = reject;
   reader.readAsDataURL(file);
 });
+
+const compressImageToDataUrl = (file, { maxWidth = 1600, maxHeight = 1600, quality = 0.82 } = {}) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+      const width = Math.max(1, Math.round(image.width * ratio));
+      const height = Math.max(1, Math.round(image.height * ratio));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+
+      if (!context) {
+        resolve(reader.result);
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    image.onerror = () => reject(new Error('Не удалось обработать изображение.'));
+    image.src = reader.result;
+  };
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
+const fileToDataUrl = async (file, options = {}) => {
+  if (!file) return '';
+
+  if (!isImageFile(file) || options.compress === false) {
+    return readFileAsDataUrl(file);
+  }
+
+  return compressImageToDataUrl(file, options);
+};
+
+const getDataUrlSize = (dataUrl) => {
+  if (!dataUrl || typeof dataUrl !== 'string') return 0;
+  const base64 = dataUrl.split(',')[1] || '';
+  return Math.ceil((base64.length * 3) / 4);
+};
+
+const createUploadGuard = (maxSize, label) => (file) => {
+  if (file.size > maxSize) {
+    message.error(`${label}: файл слишком большой. Загрузите файл меньше ${Math.round((maxSize / 1024 / 1024) * 10) / 10} МБ.`);
+    return Upload.LIST_IGNORE;
+  }
+
+  return false;
+};
 
 const BusinessRegisterPage = () => {
   const navigate = useNavigate();
@@ -59,9 +117,16 @@ const BusinessRegisterPage = () => {
       const receiptFile = values.receipt?.[0]?.originFileObj;
       const documents = values.documents || [];
 
-      const logo = logoFile ? await fileToDataUrl(logoFile) : '';
-      const passportImage = passportFile ? await fileToDataUrl(passportFile) : '';
-      const receiptImage = receiptFile ? await fileToDataUrl(receiptFile) : '';
+      const logo = logoFile ? await fileToDataUrl(logoFile, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 }) : '';
+      const passportImage = passportFile ? await fileToDataUrl(passportFile, { maxWidth: 1800, maxHeight: 1800, quality: 0.82 }) : '';
+      const receiptImage = receiptFile ? await fileToDataUrl(receiptFile, { maxWidth: 1800, maxHeight: 1800, quality: 0.82 }) : '';
+      const totalUploadSize = getDataUrlSize(logo) + getDataUrlSize(passportImage) + getDataUrlSize(receiptImage);
+
+      if (totalUploadSize > MAX_TOTAL_UPLOAD_SIZE) {
+        message.error('Файлы слишком тяжёлые для отправки. Уменьшите размер паспорта, чека или логотипа.');
+        setLoading(false);
+        return;
+      }
 
       await api.post('/business/register', {
         companyName: values.companyName.trim(),
@@ -90,7 +155,11 @@ const BusinessRegisterPage = () => {
       message.success('Заявка компании отправлена супер-админу.');
       form.resetFields();
     } catch (error) {
-      message.error(getApiErrorMessage(error, 'Не удалось отправить заявку компании.'));
+      if (error?.response?.status === 413) {
+        message.error('Файлы слишком большие для загрузки. Сожмите паспорт и чек и попробуйте снова.');
+      } else {
+        message.error(getApiErrorMessage(error, 'Не удалось отправить заявку компании.'));
+      }
     } finally {
       setLoading(false);
     }
@@ -245,7 +314,7 @@ const BusinessRegisterPage = () => {
                       valuePropName="fileList"
                       getValueFromEvent={(event) => event?.fileList || []}
                     >
-                      <Upload listType="picture" beforeUpload={() => false} maxCount={1}>
+                      <Upload listType="picture" beforeUpload={createUploadGuard(MAX_LOGO_FILE_SIZE, 'Логотип')} maxCount={1}>
                         <Button icon={<CameraOutlined />}>Загрузить логотип</Button>
                       </Upload>
                     </Form.Item>
@@ -272,7 +341,7 @@ const BusinessRegisterPage = () => {
                       getValueFromEvent={(event) => event?.fileList || []}
                       rules={[{ required: true, message: 'Загрузите паспорт владельца' }]}
                     >
-                      <Upload beforeUpload={() => false} maxCount={1}>
+                      <Upload beforeUpload={createUploadGuard(MAX_REQUIRED_FILE_SIZE, 'Паспорт')} maxCount={1}>
                         <Button icon={<SafetyCertificateOutlined />}>Загрузить паспорт</Button>
                       </Upload>
                     </Form.Item>
@@ -286,7 +355,7 @@ const BusinessRegisterPage = () => {
                       getValueFromEvent={(event) => event?.fileList || []}
                       rules={[{ required: true, message: 'Загрузите чек оплаты' }]}
                     >
-                      <Upload beforeUpload={() => false} maxCount={1}>
+                      <Upload beforeUpload={createUploadGuard(MAX_REQUIRED_FILE_SIZE, 'Чек')} maxCount={1}>
                         <Button icon={<WalletOutlined />}>Загрузить чек</Button>
                       </Upload>
                     </Form.Item>
