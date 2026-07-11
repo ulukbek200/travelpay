@@ -18,8 +18,9 @@ const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
 const SCROLL_THRESHOLD = 72;
-const HIDE_THRESHOLD = 132;
-const DELTA_THRESHOLD = 6;
+const TOP_THRESHOLD = 12;
+const HIDE_THRESHOLD = 16;
+const HEADER_STATE_STORAGE_KEY = 'travelpay_header_state_v2';
 
 const BRAND_BLUE = '#173B61';
 
@@ -38,6 +39,23 @@ const springTransition = {
   mass: 0.7,
 };
 
+const getInitialHeaderState = () => {
+  if (typeof window === 'undefined') {
+    return { scrolled: false, hidden: false, atTop: true };
+  }
+
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(HEADER_STATE_STORAGE_KEY) || '{}');
+    return {
+      scrolled: Boolean(parsed.scrolled),
+      hidden: false,
+      atTop: parsed.atTop !== undefined ? Boolean(parsed.atTop) : true,
+    };
+  } catch (error) {
+    return { scrolled: false, hidden: false, atTop: true };
+  }
+};
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,14 +63,18 @@ const Header = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('travelpay_theme') || 'light');
   const [language, setLanguage] = useState(() => localStorage.getItem('travelpay_language') || 'RU');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [headerState, setHeaderState] = useState({ scrolled: false, hidden: false });
+  const [headerState, setHeaderState] = useState(getInitialHeaderState);
 
   const lastScrollYRef = useRef(0);
   const frameRef = useRef(null);
   const headerStateRef = useRef(headerState);
+  const isHomePage = location.pathname === '/';
 
   useEffect(() => {
     headerStateRef.current = headerState;
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(HEADER_STATE_STORAGE_KEY, JSON.stringify(headerState));
+    }
   }, [headerState]);
 
   useEffect(() => {
@@ -73,29 +95,59 @@ const Header = () => {
   }, [theme]);
 
   useEffect(() => {
+    document.body.classList.toggle('travelpay-home-route', isHomePage);
+    document.body.classList.toggle('travelpay-inner-route', !isHomePage);
+
+    return () => {
+      document.body.classList.remove('travelpay-home-route');
+      document.body.classList.remove('travelpay-inner-route');
+    };
+  }, [isHomePage]);
+
+  const applyHeaderState = useCallback((nextState) => {
+    const prev = headerStateRef.current;
+    if (
+      prev.scrolled === nextState.scrolled
+      && prev.hidden === nextState.hidden
+      && prev.atTop === nextState.atTop
+    ) {
+      return;
+    }
+
+    headerStateRef.current = nextState;
+    setHeaderState(nextState);
+  }, []);
+
+  const resolveHeaderState = useCallback((scrollY) => {
+    const previousY = lastScrollYRef.current;
+    const nextScrolled = scrollY > SCROLL_THRESHOLD;
+    const atTop = scrollY <= TOP_THRESHOLD;
+    const isScrollingDown = scrollY > previousY + 1;
+    const isScrollingUp = scrollY < previousY - 1;
+    let hidden = headerStateRef.current.hidden;
+
+    if (atTop || mobileMenuOpen) {
+      hidden = false;
+    } else if (scrollY > HIDE_THRESHOLD && isScrollingDown) {
+      hidden = true;
+    } else if (isScrollingUp) {
+      hidden = false;
+    }
+
+    return {
+      scrolled: nextScrolled,
+      hidden,
+      atTop,
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     const updateHeaderState = () => {
       const nextY = window.scrollY || 0;
-      const delta = nextY - lastScrollYRef.current;
-
-      const nextScrolled = nextY > SCROLL_THRESHOLD;
-      let nextHidden = headerStateRef.current.hidden;
-
-      if (nextY <= 12) {
-        nextHidden = false;
-      } else if (delta > DELTA_THRESHOLD && nextY > HIDE_THRESHOLD) {
-        nextHidden = true;
-      } else if (delta < -DELTA_THRESHOLD) {
-        nextHidden = false;
-      }
+      const nextState = resolveHeaderState(nextY);
 
       lastScrollYRef.current = nextY;
-
-      const prev = headerStateRef.current;
-      if (prev.scrolled !== nextScrolled || prev.hidden !== nextHidden) {
-        const nextState = { scrolled: nextScrolled, hidden: nextHidden };
-        headerStateRef.current = nextState;
-        setHeaderState(nextState);
-      }
+      applyHeaderState(nextState);
     };
 
     const handleScroll = () => {
@@ -106,6 +158,7 @@ const Header = () => {
       });
     };
 
+    lastScrollYRef.current = window.scrollY || 0;
     updateHeaderState();
     window.addEventListener('scroll', handleScroll, { passive: true });
 
@@ -115,7 +168,27 @@ const Header = () => {
         window.cancelAnimationFrame(frameRef.current);
       }
     };
-  }, []);
+  }, [applyHeaderState, resolveHeaderState]);
+
+  useEffect(() => {
+    const nextY = window.scrollY || 0;
+    const nextState = resolveHeaderState(nextY);
+
+    lastScrollYRef.current = nextY;
+    applyHeaderState(nextState);
+  }, [applyHeaderState, location.pathname, resolveHeaderState]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    applyHeaderState({
+      scrolled: (window.scrollY || 0) > SCROLL_THRESHOLD,
+      hidden: false,
+      atTop: (window.scrollY || 0) <= TOP_THRESHOLD,
+    });
+
+    return undefined;
+  }, [applyHeaderState, mobileMenuOpen]);
 
   const selectedKey = useMemo(() => {
     if (location.pathname === '/') return '/';
@@ -194,7 +267,9 @@ const Header = () => {
 
   const shellClassName = [
     'travelpay-premium-header-shell',
-    headerState.scrolled ? 'is-scrolled' : 'is-top',
+    isHomePage ? 'is-home-page' : 'is-inner-page',
+    headerState.scrolled ? 'is-scrolled' : 'is-resting',
+    headerState.atTop ? 'is-at-top' : 'is-away-from-top',
     headerState.hidden ? 'is-hidden' : 'is-visible',
     mobileMenuOpen ? 'is-drawer-open' : '',
   ].filter(Boolean).join(' ');
@@ -204,8 +279,11 @@ const Header = () => {
       <div style={styles.drawerTop}>
         <Button type="text" onClick={() => navigate('/')} style={styles.drawerBrandButton}>
           <span style={styles.brandCopy}>
-            <span style={styles.drawerBrandTitle}>TravelPay</span>
-            <span style={styles.drawerBrandSubtitle}>Premium travel platform</span>
+            <span style={styles.brandTopRow}>
+              <img src="/travelpay-logo.svg" alt="Barsbek Travel" style={styles.brandLogo} />
+              <span style={styles.drawerBrandTitle}>TravelPay</span>
+            </span>
+            <span style={styles.drawerBrandSubtitle}>by barsbektravel</span>
           </span>
         </Button>
       </div>
@@ -304,8 +382,11 @@ const Header = () => {
             style={styles.logoButton}
           >
             <span className="travelpay-premium-brand-copy" style={styles.brandCopy}>
-              <span className="travelpay-premium-brand-title">TravelPay</span>
-              <span className="travelpay-premium-brand-subtitle">by Barsbek Travel</span>
+              <span style={styles.brandTopRow}>
+                <img src="/travelpay-logo.svg" alt="Barsbek Travel" style={styles.brandLogo} />
+                <span className="travelpay-premium-brand-title">TravelPay</span>
+              </span>
+              <span className="travelpay-premium-brand-subtitle">by barsbektravel</span>
             </span>
           </Button>
 
@@ -436,6 +517,18 @@ const styles = {
     minWidth: 0,
     gap: 2,
   },
+  brandTopRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
+  brandLogo: {
+    width: 30,
+    height: 30,
+    objectFit: 'contain',
+    flexShrink: 0,
+    filter: 'drop-shadow(0 8px 14px rgba(24, 88, 255, 0.22))',
+  },
   languageLabel: {
     color: BRAND_BLUE,
     fontWeight: 700,
@@ -470,15 +563,18 @@ const styles = {
     color: '#F8FBFF',
   },
   drawerBrandTitle: {
-    fontSize: 22,
+    fontSize: 24,
     lineHeight: 1,
     fontWeight: 900,
     color: '#F8FBFF',
+    letterSpacing: '-0.04em',
   },
   drawerBrandSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 1.2,
-    fontWeight: 700,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'lowercase',
     color: 'rgba(226,238,255,0.72)',
   },
   drawerSection: {

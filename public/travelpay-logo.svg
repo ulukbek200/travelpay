@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tpTop" x1="82" y1="84" x2="405" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35C3FF"/>
+      <stop offset="0.55" stop-color="#2E7BFF"/>
+      <stop offset="1" stop-color="#4D52FF"/>
+    </linearGradient>
+    <linearGradient id="tpBottom" x1="231" y1="214" x2="440" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#32B8FF"/>
+      <stop offset="0.52" stop-color="#286BFF"/>
+      <stop offset="1" stop-color="#8A35FF"/>
+    </linearGradient>
+    <filter id="shadow" x="18" y="26" width="468" height="446" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#091120" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path d="M74 96C74 74.9086 91.9086 57 113 57H393C414.091 57 432 74.9086 432 96C432 117.091 414.091 135 393 135H285V300.5C285 311.818 279.945 322.546 271.222 329.77L216.493 375.089C191.842 395.504 154 377.968 154 345.965V135H113C91.9086 135 74 117.091 74 96Z" fill="url(#tpTop)"/>
+    <path d="M234.694 200.581C249.95 184.815 276.605 195.619 276.605 217.559V229.113C276.605 249.013 292.74 265.148 312.64 265.148H385.482C422.668 265.148 452.815 295.294 452.815 332.48C452.815 350.332 445.726 367.452 433.11 380.067L290.428 522V401.019H374.259C393.668 401.019 409.403 385.284 409.403 365.875C409.403 346.466 393.668 330.731 374.259 330.731H305.717C268.531 330.731 238.385 300.585 238.385 263.399V255.373C238.385 251.488 236.852 247.761 234.12 245.017L212.266 223.062L234.694 200.581Z" fill="url(#tpBottom)"/>
+  </g>
+</svg>
