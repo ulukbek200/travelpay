@@ -37,9 +37,11 @@ const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
 const BUSINESS_SUBSCRIPTION_PRICE = 14900;
-const MAX_LOGO_FILE_SIZE = 350 * 1024;
-const MAX_REQUIRED_FILE_SIZE = 1200 * 1024;
-const MAX_TOTAL_UPLOAD_SIZE = 3.2 * 1024 * 1024;
+const MAX_LOGO_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_REQUIRED_FILE_SIZE = 12 * 1024 * 1024;
+const MAX_DOCUMENT_FILE_SIZE = 15 * 1024 * 1024;
+const MAX_DOCUMENTS_COUNT = 8;
+const MAX_TOTAL_UPLOAD_SIZE = 40 * 1024 * 1024;
 
 const isImageFile = (file) => String(file?.type || '').startsWith('image/');
 
@@ -120,7 +122,23 @@ const BusinessRegisterPage = () => {
       const logo = logoFile ? await fileToDataUrl(logoFile, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 }) : '';
       const passportImage = passportFile ? await fileToDataUrl(passportFile, { maxWidth: 1800, maxHeight: 1800, quality: 0.82 }) : '';
       const receiptImage = receiptFile ? await fileToDataUrl(receiptFile, { maxWidth: 1800, maxHeight: 1800, quality: 0.82 }) : '';
-      const totalUploadSize = getDataUrlSize(logo) + getDataUrlSize(passportImage) + getDataUrlSize(receiptImage);
+      const documentUploads = await Promise.all(
+        documents.slice(0, MAX_DOCUMENTS_COUNT).map(async (item) => {
+          const file = item.originFileObj;
+          const dataUrl = file ? await fileToDataUrl(file, { maxWidth: 2000, maxHeight: 2000, quality: 0.82 }) : '';
+
+          return {
+            name: item.name || file?.name || '',
+            type: item.type || file?.type || '',
+            size: getDataUrlSize(dataUrl) || item.size || file?.size || 0,
+            dataUrl,
+          };
+        }),
+      );
+      const totalUploadSize = getDataUrlSize(logo)
+        + getDataUrlSize(passportImage)
+        + getDataUrlSize(receiptImage)
+        + documentUploads.reduce((sum, item) => sum + (item.size || getDataUrlSize(item.dataUrl)), 0);
 
       if (totalUploadSize > MAX_TOTAL_UPLOAD_SIZE) {
         message.error('Файлы слишком тяжёлые для отправки. Уменьшите размер паспорта, чека или логотипа.');
@@ -139,7 +157,7 @@ const BusinessRegisterPage = () => {
         instagramUrl: values.instagramUrl.trim(),
         description: values.description.trim(),
         logo,
-        documents: documents.map((item) => item.name).filter(Boolean),
+        documents: documentUploads.filter((item) => item.name || item.dataUrl),
         passportImage,
         passportName: values.passport?.[0]?.name || '',
         passportType: values.passport?.[0]?.type || '',
@@ -327,7 +345,11 @@ const BusinessRegisterPage = () => {
                       valuePropName="fileList"
                       getValueFromEvent={(event) => event?.fileList || []}
                     >
-                      <Upload beforeUpload={() => false} multiple>
+                      <Upload
+                        beforeUpload={createUploadGuard(MAX_DOCUMENT_FILE_SIZE, 'Р”РѕРєСѓРјРµРЅС‚')}
+                        maxCount={MAX_DOCUMENTS_COUNT}
+                        multiple
+                      >
                         <Button icon={<FileProtectOutlined />}>Прикрепить документы</Button>
                       </Upload>
                     </Form.Item>

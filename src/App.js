@@ -34,6 +34,12 @@ import VisaPaymentPage from './pages/VisaPaymentPage';
 import FavoritesPage from './pages/FavoritesPage';
 import SavingsPlanPage from './pages/SavingsPlanPage';
 import StaffPortalPage from './pages/StaffPortalPage';
+import AboutPage from './pages/AboutPage';
+import AccountSavingsPage from './pages/AccountSavingsPage';
+import AdminFinancePage from './pages/AdminFinancePage';
+import BusinessManagersPage from './pages/BusinessManagersPage';
+import BusinessPaymentsPage from './pages/BusinessPaymentsPage';
+import BusinessPaymentSettingsPage from './pages/BusinessPaymentSettingsPage';
 import { readCurrentUser, subscribeToCurrentUser } from './utils/currentUser';
 
 function AppContent({ favorites, setFavorites }) {
@@ -59,6 +65,7 @@ function AppContent({ favorites, setFavorites }) {
     '/admin/reports',
     '/admin/topups',
     '/admin/savings',
+    '/admin/finance',
     '/admin/companies',
     '/admin/settings',
     '/business',
@@ -71,6 +78,10 @@ function AppContent({ favorites, setFavorites }) {
     '/business/bookings',
     '/business/clients',
     '/business/reports',
+    '/business/payment-settings',
+    '/business/managers',
+    '/business/payments',
+    '/account/savings',
     '/VisaPaymentPage',
   ];
 
@@ -85,6 +96,7 @@ function AppContent({ favorites, setFavorites }) {
       <div className={hideLayout ? undefined : 'public-layout-shell'}>
         <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/staff" element={<StaffPortalPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -97,29 +109,68 @@ function AppContent({ favorites, setFavorites }) {
         <Route
           path="/tours"
           element={
-            <ActualToursPage
-              favorites={favorites}
-              setFavorites={setFavorites}
-            />
+            <ProtectedRoute>
+              <ActualToursPage
+                favorites={favorites}
+                setFavorites={setFavorites}
+              />
+            </ProtectedRoute>
           }
         />
 
-        <Route path="/tours/:id" element={<TourDetailPage />} />
-        <Route path="/stays" element={<StaysPage />} />
-        <Route path="/stays/:id" element={<StayDetailPage />} />
+        <Route
+          path="/tours/:id"
+          element={(
+            <ProtectedRoute>
+              <TourDetailPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/stays"
+          element={(
+            <ProtectedRoute>
+              <StaysPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/stays/:id"
+          element={(
+            <ProtectedRoute>
+              <StayDetailPage />
+            </ProtectedRoute>
+          )}
+        />
 
         <Route
           path="/favorites"
           element={
-            <FavoritesPage
-              favorites={favorites}
-              setFavorites={setFavorites}
-            />
+            <ProtectedRoute>
+              <FavoritesPage
+                favorites={favorites}
+                setFavorites={setFavorites}
+              />
+            </ProtectedRoute>
           }
         />
 
-        <Route path="/booking" element={<TourBookingPage />} />
-        <Route path="/tour-booking" element={<TourBookingPage />} />
+        <Route
+          path="/booking"
+          element={(
+            <ProtectedRoute>
+              <TourBookingPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/tour-booking"
+          element={(
+            <ProtectedRoute>
+              <TourBookingPage />
+            </ProtectedRoute>
+          )}
+        />
 
         <Route
           path="/admin"
@@ -245,8 +296,22 @@ function AppContent({ favorites, setFavorites }) {
           />
         ))}
 
-        <Route path="/AgreePage" element={<AgreementsPage />} />
-        <Route path="/VisaPaymentPage" element={<VisaPaymentPage />} />
+        <Route
+          path="/AgreePage"
+          element={(
+            <ProtectedRoute>
+              <AgreementsPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/VisaPaymentPage"
+          element={(
+            <ProtectedRoute>
+              <VisaPaymentPage />
+            </ProtectedRoute>
+          )}
+        />
         <Route
           path="/savings"
           element={(
@@ -260,6 +325,47 @@ function AppContent({ favorites, setFavorites }) {
           element={(
             <ProtectedRoute>
               <SavingsPlanPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/account/savings"
+          element={(
+            <ProtectedRoute>
+              <AccountSavingsPage />
+            </ProtectedRoute>
+          )}
+        />
+
+        <Route
+          path="/business/payment-settings"
+          element={(
+            <ProtectedRoute requireBusiness>
+              <BusinessPaymentSettingsPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/business/managers"
+          element={(
+            <ProtectedRoute requireBusiness>
+              <BusinessManagersPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/business/payments"
+          element={(
+            <ProtectedRoute requireBusiness>
+              <BusinessPaymentsPage />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/admin/finance"
+          element={(
+            <ProtectedRoute requireTravelPayAdmin>
+              <AdminFinancePage />
             </ProtectedRoute>
           )}
         />

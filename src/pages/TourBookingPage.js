@@ -32,6 +32,7 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import api from '../api';
+import PaymentTopUpModal from '../components/payments/PaymentTopUpModal';
 import { readCurrentUser } from '../utils/currentUser';
 import { TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
 import { normalizeUser, syncCurrentUser } from '../utils/user';
@@ -70,6 +71,9 @@ const TourBookingPage = () => {
   const [extraBedSelected, setExtraBedSelected] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [payingWithSavings, setPayingWithSavings] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [topUpModalOpen, setTopUpModalOpen] = useState(false);
+  const [requiredTopUpAmount, setRequiredTopUpAmount] = useState(0);
   const currentUser = normalizeUser(readCurrentUser());
 
   useEffect(() => {
@@ -94,6 +98,27 @@ const TourBookingPage = () => {
     return () => { active = false; };
   }, [form, tour?.id]);
 
+  useEffect(() => {
+    if (!currentUser?.id) return undefined;
+
+    let active = true;
+    api.get('/wallet/me')
+      .then((response) => {
+        if (!active) return;
+        setWallet(response.data.wallet);
+        if (response.data.user) {
+          syncCurrentUser({ ...response.data.user, isLoggedIn: true });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setWallet(null);
+        }
+      });
+
+    return () => { active = false; };
+  }, [currentUser?.id]);
+
   const pricePerPerson = Number(String(tour?.price || 0).replace(/[^0-9]/g, '')) || 0;
   const baseTotal = useMemo(() => pricePerPerson * people, [pricePerPerson, people]);
   const accommodations = useMemo(
@@ -114,8 +139,9 @@ const TourBookingPage = () => {
     ? Number(selectedAccommodation.extraBedPrice || 0)
     : 0;
   const total = baseTotal + accommodationTotal + extraBedTotal;
-  const savingsAmount = Number(currentUser?.savings?.currentAmount || 0);
+  const savingsAmount = Number(wallet?.availableBalance ?? currentUser?.savings?.currentAmount ?? 0);
   const canPayWithSavings = savingsAmount >= total;
+  const shortageAmount = Math.max(total - savingsAmount, 0);
 
   if (!tour) {
     return (
@@ -202,6 +228,12 @@ const TourBookingPage = () => {
     try {
       await form.validateFields();
     } catch (error) {
+      if (error.response?.data?.code === 'INSUFFICIENT_WALLET_FUNDS') {
+        setRequiredTopUpAmount(Number(error.response.data.shortage || shortageAmount || total));
+        setTopUpModalOpen(true);
+        message.error('Недостаточно средств. Пополните накопительный баланс.');
+        return;
+      }
       return;
     }
 
@@ -210,6 +242,8 @@ const TourBookingPage = () => {
 
     if (!canPayWithSavings) {
       message.error('Недостаточно средств');
+      setRequiredTopUpAmount(shortageAmount);
+      setTopUpModalOpen(true);
       return;
     }
 
@@ -227,7 +261,7 @@ const TourBookingPage = () => {
         transport: formValues.transport,
         guide: formValues.guide,
         comment: formValues.comment || '',
-        paymentMethod: 'savings',
+        paymentMethod: 'wallet',
         accommodation: selectedAccommodation,
         extraBedSelected,
       });
@@ -236,6 +270,12 @@ const TourBookingPage = () => {
       message.success('Тур успешно оплачен из накоплений.');
       navigate('/profile');
     } catch (error) {
+      if (error.response?.data?.code === 'INSUFFICIENT_WALLET_FUNDS') {
+        setRequiredTopUpAmount(Number(error.response.data.shortage || shortageAmount || total));
+        setTopUpModalOpen(true);
+        message.error('Недостаточно средств. Пополните накопительный баланс.');
+        return;
+      }
       message.error(error.response?.data?.message || 'Не удалось оплатить тур из накоплений.');
     } finally {
       setPayingWithSavings(false);
@@ -245,6 +285,7 @@ const TourBookingPage = () => {
   return (
     <main className="booking-page" style={styles.page}>
       <Button type="text" className="booking-page-logo" style={styles.logo} onClick={() => navigate('/')}>
+        <img src="/travelpay-logo.svg" alt="TravelPay" />
         <span>TravelPay</span>
         <small>by Barsbek Travel</small>
       </Button>
@@ -573,6 +614,26 @@ const TourBookingPage = () => {
           ))}
         </motion.div>
       </section>
+
+      <PaymentTopUpModal
+        amount={requiredTopUpAmount || shortageAmount}
+        businessId={tour.companyId}
+        onCancel={() => setTopUpModalOpen(false)}
+        onCreated={() => {
+          setTopUpModalOpen(false);
+          api.get('/wallet/me')
+            .then((response) => {
+              setWallet(response.data.wallet);
+              if (response.data.user) {
+                syncCurrentUser({ ...response.data.user, isLoggedIn: true });
+              }
+            })
+            .catch(() => undefined);
+        }}
+        open={topUpModalOpen}
+        requiredAmount={requiredTopUpAmount || shortageAmount}
+        serviceContext={{ tourId: tour.id }}
+      />
     </main>
   );
 };

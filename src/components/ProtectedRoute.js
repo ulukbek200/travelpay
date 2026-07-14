@@ -1,9 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { hasActiveSession, hasBusinessSession, readCurrentUser } from '../utils/currentUser';
 import { canAccessAdminPanel, canAccessBusinessPanel, canAccessTravelPayAdmin, getAdminLandingPath } from '../utils/user';
 
 const ProtectedRoute = ({ children, requireAdmin = false, requireBusiness = false, requireTravelPayAdmin = false }) => {
+  const location = useLocation();
   const user = readCurrentUser();
   const isAuthenticated = hasActiveSession(user);
   const hasBusinessAccess = hasBusinessSession(user);
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireBusiness = fals
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   if (requireAdmin && !canAccessAdminPanel(user)) {

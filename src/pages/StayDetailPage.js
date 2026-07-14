@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   App,
   Badge,
   Button,
@@ -44,6 +45,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
 import CompanyBadge from '../components/CompanyBadge';
+import PaymentTopUpModal from '../components/payments/PaymentTopUpModal';
 import {
   fallbackStays,
   formatStayPrice,
@@ -52,6 +54,7 @@ import {
   withStayFallback,
 } from '../utils/stays';
 import { readCurrentUser } from '../utils/currentUser';
+import { syncCurrentUser } from '../utils/user';
 
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -180,6 +183,9 @@ const StayDetailPage = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingStep, setBookingStep] = useState(0);
   const [receiptFiles, setReceiptFiles] = useState([]);
+  const [wallet, setWallet] = useState(null);
+  const [topUpModalOpen, setTopUpModalOpen] = useState(false);
+  const [requiredTopUpAmount, setRequiredTopUpAmount] = useState(0);
   const [guests, setGuests] = useState(2);
   const [nights, setNights] = useState(2);
   const [selectedExtras, setSelectedExtras] = useState({});
@@ -202,6 +208,27 @@ const StayDetailPage = () => {
 
     loadStays();
   }, []);
+
+  useEffect(() => {
+    if (!currentUser?.id) return undefined;
+
+    let active = true;
+    api.get('/wallet/me')
+      .then((response) => {
+        if (!active) return;
+        setWallet(response.data.wallet);
+        if (response.data.user) {
+          syncCurrentUser({ ...response.data.user, isLoggedIn: true });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setWallet(null);
+        }
+      });
+
+    return () => { active = false; };
+  }, [currentUser?.id]);
 
   const stay = useMemo(() => stays.find((item) => String(item.id) === String(id)), [id, stays]);
   const activeExtraServices = useMemo(
@@ -347,8 +374,11 @@ const StayDetailPage = () => {
   }).filter((item) => item.quantity > 0 || item.total > 0);
   const extrasTotal = extrasSummary.reduce((sum, item) => sum + item.total, 0);
   const totalPreview = baseTotal + extrasTotal;
-  const prepaymentPercent = Math.min(Math.max(Number(stay.prepaymentPercent || 30), 10), 100);
-  const prepaymentAmount = Math.round((totalPreview * prepaymentPercent) / 100);
+  const prepaymentPercent = 100;
+  const prepaymentAmount = totalPreview;
+  const walletAvailable = Number(wallet?.availableBalance ?? currentUser?.savings?.currentAmount ?? 0);
+  const canPayFromWallet = walletAvailable >= totalPreview;
+  const shortageAmount = Math.max(totalPreview - walletAvailable, 0);
   const selectedDateLabel = selectedAvailability
     ? selectedAvailability.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     : 'выберите дату';
@@ -382,7 +412,6 @@ const StayDetailPage = () => {
   const closeBookingModal = () => {
     setBookingOpen(false);
     setBookingStep(0);
-    setReceiptFiles([]);
     setBookingContactPreview({});
   };
 
@@ -403,7 +432,8 @@ const StayDetailPage = () => {
     setReceiptFiles(nextFiles);
   };
 
-  const submitStayBooking = async () => {
+  // eslint-disable-next-line no-unused-vars
+  const submitLegacyStayBooking = async () => {
     if (!selectedAvailability?.available) {
       message.warning('На выбранную дату свободных домиков нет.');
       return;
@@ -487,7 +517,8 @@ const StayDetailPage = () => {
     }
   };
 
-  const goToNextBookingStep = async () => {
+  // eslint-disable-next-line no-unused-vars
+  const goToNextBookingStepLegacy = async () => {
     if (bookingStep === 0) {
       if (!selectedAvailability?.available) {
         message.warning('Выберите доступную дату.');
@@ -508,6 +539,145 @@ const StayDetailPage = () => {
       try {
         await bookingForm.validateFields();
       } catch (error) {
+        return;
+      }
+    }
+
+    setBookingStep((current) => Math.min(current + 1, BOOKING_STEPS.length - 1));
+  };
+
+  const submitStayBooking = async () => {
+    if (!selectedAvailability?.available) {
+      message.warning('На выбранную дату свободных домиков нет.');
+      return;
+    }
+
+    if (bookedTimeSet.has(selectedTime)) {
+      message.error('Это время уже занято. Выберите другой слот.');
+      return;
+    }
+
+    if (!currentUser?.id) {
+      navigate('/login');
+      return;
+    }
+
+    if (!canPayFromWallet) {
+      setRequiredTopUpAmount(shortageAmount || totalPreview);
+      setTopUpModalOpen(true);
+      message.error('Недостаточно средств. Пополните накопительный баланс.');
+      return;
+    }
+
+    try {
+      const values = await bookingForm.validateFields();
+      const safeValues = {
+        clientName: values.clientName || bookingContactPreview.clientName || '',
+        clientPhone: values.clientPhone || bookingContactPreview.clientPhone || '',
+        clientEmail: values.clientEmail || bookingContactPreview.clientEmail || '',
+        comment: values.comment || bookingContactPreview.comment || '',
+      };
+
+      setBookingSubmitting(true);
+      const response = await api.post('/stay-bookings', {
+        stayId: stay.id,
+        companyId: stay.companyId,
+        companyName: stay.companyName,
+        stayTitle: stay.title,
+        location: stay.location,
+        clientName: safeValues.clientName,
+        clientPhone: safeValues.clientPhone,
+        clientEmail: safeValues.clientEmail,
+        comment: safeValues.comment,
+        guests,
+        nights,
+        extras: extrasSummary.map((item) => ({
+          serviceId: item.serviceId,
+          quantity: item.quantity,
+          selected: item.quantity > 0,
+          selectedOptionId: item.selectedOptionId,
+        })),
+        checkInDate: selectedAvailability.date.toISOString(),
+        checkOutDate: checkOutDate?.toISOString(),
+        checkInTime: selectedTime,
+        startTime: selectedTime,
+        endTime: addMinutesToTime(selectedTime, SLOT_DURATION_MINUTES),
+        amount: totalPreview,
+        baseAmount: baseTotal,
+        extrasAmount: extrasTotal,
+        paymentMethod: 'wallet',
+        prepaymentPercent: 100,
+        prepaymentAmount: totalPreview,
+        prepaymentRequired: false,
+      });
+
+      if (response.data?.user) {
+        syncCurrentUser({ ...response.data.user, isLoggedIn: true });
+      }
+
+      closeBookingModal();
+      message.success('Бронь создана. Средства зарезервированы на накопительном балансе.');
+
+      const [availabilityResponse, bookingsResponse, walletResponse] = await Promise.all([
+        api.get('/stay-bookings/availability', {
+          params: { stayId: stay.id, month: availabilityMonthKey },
+        }),
+        api.get('/stay-bookings', {
+          params: { stayId: stay.id },
+        }),
+        api.get('/wallet/me').catch(() => ({ data: null })),
+      ]);
+
+      setAvailabilityRecords(Array.isArray(availabilityResponse.data) ? availabilityResponse.data : []);
+      setStayBookings(Array.isArray(bookingsResponse.data) ? bookingsResponse.data : []);
+      if (walletResponse.data?.wallet) {
+        setWallet(walletResponse.data.wallet);
+      }
+    } catch (error) {
+      if (error?.response?.data?.code === 'INSUFFICIENT_WALLET_FUNDS') {
+        setRequiredTopUpAmount(Number(error.response.data.shortage || shortageAmount || totalPreview));
+        setTopUpModalOpen(true);
+        message.error('Недостаточно средств. Пополните накопительный баланс.');
+        return;
+      }
+
+      const fallback = error?.response?.status === 409
+        ? 'На выбранные даты свободных домиков уже нет.'
+        : 'Не удалось создать бронь. Проверьте данные и попробуйте еще раз.';
+      message.error(error?.response?.data?.message || fallback);
+    } finally {
+      setBookingSubmitting(false);
+    }
+  };
+
+  const goToNextBookingStep = async () => {
+    if (bookingStep === 0) {
+      if (!selectedAvailability?.available) {
+        message.warning('Выберите доступную дату.');
+        return;
+      }
+      if (bookedTimeSet.has(selectedTime)) {
+        message.warning('Этот слот уже занят. Выберите другое время.');
+        return;
+      }
+    }
+
+    if (bookingStep === 3) {
+      if (!currentUser?.id) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        await bookingForm.validateFields();
+      } catch (error) {
+        return;
+      }
+
+      if (!canPayFromWallet) {
+        setRequiredTopUpAmount(shortageAmount || totalPreview);
+        setTopUpModalOpen(true);
+        message.error('Недостаточно средств. Пополните накопительный баланс.');
         return;
       }
     }
@@ -649,6 +819,34 @@ const StayDetailPage = () => {
               <Tag color="gold" icon={<InfoCircleOutlined />}>{prepaymentPercent}% предоплата</Tag>
             </Tooltip>
           </div>
+          <Alert
+            showIcon
+            type={canPayFromWallet ? 'success' : 'warning'}
+            message={canPayFromWallet ? 'Накопительного баланса хватает для бронирования' : 'Недостаточно средств на накопительном балансе'}
+            description={canPayFromWallet
+              ? 'После подтверждения TravelPay зарезервирует сумму бронирования до решения компании.'
+              : 'Пополните баланс по QR или через менеджера, затем вернитесь к бронированию.'}
+            style={{ marginBottom: 16 }}
+          />
+          <div className="stay-booking-summary stay-booking-summary--panel" style={{ marginBottom: 16 }}>
+            <div><span>Доступно</span><strong>{formatStayPrice(walletAvailable)}</strong></div>
+            <div><span>Стоимость брони</span><strong>{formatStayPrice(totalPreview)}</strong></div>
+            <div><span>Необходимо пополнить</span><strong>{formatStayPrice(shortageAmount)}</strong></div>
+          </div>
+          {!canPayFromWallet && (
+            <Button
+              type="primary"
+              onClick={() => {
+                setRequiredTopUpAmount(shortageAmount || totalPreview);
+                setTopUpModalOpen(true);
+              }}
+              style={{ marginBottom: 16 }}
+            >
+              Пополнить баланс
+            </Button>
+          )}
+          {false && (
+          <>
           <Space align={isMobile ? 'start' : 'center'} size={16} orientation={isMobile ? 'vertical' : 'horizontal'} className="stay-prepay-card__inner">
             <Image width={118} height={118} src={PAYMENT_QR_URL} alt="QR для предоплаты" preview={false} className="stay-prepay-card__qr" />
             <div className="stay-prepay-card__copy">
@@ -668,6 +866,8 @@ const StayDetailPage = () => {
             <p className="ant-upload-text">Загрузите чек оплаты</p>
             <p className="ant-upload-hint">JPG, PNG или PDF до 5 MB</p>
           </Upload.Dragger>
+          </>
+          )}
           <div className="stay-booking-form">
             <Row gutter={12}>
               <Col xs={24} md={12}>
@@ -1027,6 +1227,25 @@ const StayDetailPage = () => {
           </Form>
         </div>
       </Modal>
+      <PaymentTopUpModal
+        amount={requiredTopUpAmount || shortageAmount}
+        businessId={stay.companyId}
+        onCancel={() => setTopUpModalOpen(false)}
+        onCreated={() => {
+          setTopUpModalOpen(false);
+          api.get('/wallet/me')
+            .then((response) => {
+              setWallet(response.data.wallet);
+              if (response.data.user) {
+                syncCurrentUser({ ...response.data.user, isLoggedIn: true });
+              }
+            })
+            .catch(() => undefined);
+        }}
+        open={topUpModalOpen}
+        requiredAmount={requiredTopUpAmount || shortageAmount}
+        serviceContext={{ accommodationId: stay.id }}
+      />
     </main>
   );
 };

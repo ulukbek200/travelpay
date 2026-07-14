@@ -17,9 +17,10 @@ import { clearCurrentUser, readCurrentUser, subscribeToCurrentUser } from '../ut
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
 
-const SCROLL_THRESHOLD = 72;
-const TOP_THRESHOLD = 12;
-const HIDE_THRESHOLD = 16;
+const SCROLL_THRESHOLD = 70;
+const TOP_THRESHOLD = 20;
+const HIDE_THRESHOLD = 100;
+const SCROLL_DELTA_THRESHOLD = 8;
 const HEADER_STATE_STORAGE_KEY = 'travelpay_header_state_v2';
 
 const BRAND_BLUE = '#173B61';
@@ -29,6 +30,7 @@ const navItems = [
   { key: '/tours', label: 'Туры' },
   { key: '/stays', label: 'Домики' },
   { key: '/favorites', label: 'Избранное' },
+  { key: '/about', label: 'О нас' },
   { key: 'partnership', label: 'Партнёрство' },
 ];
 
@@ -122,8 +124,8 @@ const Header = () => {
     const previousY = lastScrollYRef.current;
     const nextScrolled = scrollY > SCROLL_THRESHOLD;
     const atTop = scrollY <= TOP_THRESHOLD;
-    const isScrollingDown = scrollY > previousY + 1;
-    const isScrollingUp = scrollY < previousY - 1;
+    const isScrollingDown = scrollY > previousY + SCROLL_DELTA_THRESHOLD;
+    const isScrollingUp = scrollY < previousY - SCROLL_DELTA_THRESHOLD;
     let hidden = headerStateRef.current.hidden;
 
     if (atTop || mobileMenuOpen) {
@@ -195,6 +197,7 @@ const Header = () => {
     if (location.pathname.startsWith('/tours')) return '/tours';
     if (location.pathname.startsWith('/stays')) return '/stays';
     if (location.pathname.startsWith('/favorites')) return '/favorites';
+    if (location.pathname.startsWith('/about')) return '/about';
     return '';
   }, [location.pathname]);
 
@@ -542,7 +545,7 @@ const styles = {
     background: 'transparent',
   },
   drawerSurface: {
-    background: 'linear-gradient(180deg, rgba(9,16,29,0.98), rgba(7,13,24,0.98))',
+    background: 'rgba(6, 12, 22, 0.46)',
   },
   drawerBody: {
     minHeight: '100%',
@@ -550,7 +553,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 18,
-    background: 'linear-gradient(180deg, rgba(8,15,28,0.98), rgba(6,11,20,0.98))',
+    background: 'linear-gradient(180deg, rgba(8,15,28,0.82), rgba(6,11,20,0.9))',
   },
   drawerTop: {
     display: 'flex',

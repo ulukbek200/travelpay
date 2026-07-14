@@ -80,8 +80,8 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   }
 
   .auth-logo-tag {
-    height: 32px;
-    padding: 0 14px;
+    height: 40px;
+    padding: 0 14px 0 10px;
     border-radius: 999px;
     border: none;
     background: linear-gradient(135deg, #1677ff, #00b4d8);
@@ -89,7 +89,15 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     font-weight: 800;
     display: inline-flex;
     align-items: center;
+    gap: 10px;
     margin-bottom: 14px;
+  }
+
+  .auth-logo-tag img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 10px rgba(11, 19, 32, 0.22));
   }
 
   .auth-eyebrow {
@@ -324,7 +332,10 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
         >
           <Card className="auth-card">
             <div className="auth-card-head">
-              <Tag className="auth-logo-tag">TravelPay</Tag>
+              <Tag className="auth-logo-tag">
+                <img src="/travelpay-logo.svg" alt="TravelPay" />
+                <span>TravelPay</span>
+              </Tag>
               <Text className="auth-eyebrow">{eyebrow}</Text>
               <Title level={2}>{title}</Title>
               <Text type="secondary">{subtitle}</Text>

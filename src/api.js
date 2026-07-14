@@ -45,6 +45,11 @@ const shouldResetSession = (error) => {
     '/users/',
     '/api/admin/',
     '/api/topup/my-requests',
+    '/wallet/',
+    '/payment-requests',
+    '/business/payment-settings',
+    '/business/managers',
+    '/admin/finance',
     '/tour-bookings',
     '/stay-bookings',
   ].some((prefix) => requestUrl.startsWith(prefix));

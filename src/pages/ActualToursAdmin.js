@@ -2518,7 +2518,9 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const sidebar = (
     <div className="tp-admin-sidebar-shell">
       <div className={`tp-admin-brand ${collapsed ? 'tp-admin-brand--collapsed' : ''}`}>
-        <div className="tp-admin-brand__mark">TP</div>
+        <div className="tp-admin-brand__mark">
+          <img src="/travelpay-logo.svg" alt="TravelPay" className="tp-admin-brand__mark-image" />
+        </div>
         {!collapsed && (
           <div className="tp-admin-brand__copy">
             <div className="tp-admin-brand__title">{businessMode ? 'TravelPay Business' : 'TravelPay'}</div>
