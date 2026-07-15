@@ -203,7 +203,7 @@ const BusinessLoginPage = () => {
     if (companyState.status === 'subscription_required' || companyState.status === 'rejected') {
       const isRejected = companyState.status === 'rejected';
       return (
-        <Space direction="vertical" size={18} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={18} style={{ width: '100%' }}>
           <Alert
             type={isRejected ? 'warning' : 'info'}
             showIcon
@@ -212,7 +212,7 @@ const BusinessLoginPage = () => {
           />
 
           <Card size="small" style={{ borderRadius: 16 }}>
-            <Space direction="vertical" size={10} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={10} style={{ width: '100%' }}>
               <Text strong>Подписка TravelPay Business</Text>
               <Text>14 900 сом за 30 дней доступа</Text>
               <Text type="secondary">
@@ -337,7 +337,7 @@ const BusinessLoginPage = () => {
 
             <div className="business-form-pane" style={styles.formPane}>
               {companyState ? renderCompanyState() : (
-                <Space direction="vertical" size={18} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={18} style={{ width: '100%' }}>
                   <div>
                     <Text type="secondary"><BankOutlined /> Business account</Text>
                     <Title level={3} style={{ margin: '8px 0 0' }}>Войти в кабинет</Title>

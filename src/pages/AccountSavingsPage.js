@@ -184,7 +184,7 @@ const AccountSavingsPage = () => {
         </Card>
 
         <Card className="tp-wallet-security-card">
-          <Space direction="vertical" size={8}>
+          <Space orientation="vertical" size={8}>
             <Title level={4}>Безопасность баланса</Title>
             <Text>Пользователь не может вручную изменить баланс.</Text>
             <Text>Баланс пополняется только после подтверждения менеджером или бизнес-аккаунтом.</Text>

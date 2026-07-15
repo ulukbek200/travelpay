@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import { App as AntApp, ConfigProvider, theme as antdTheme } from 'antd';
 import {
   BrowserRouter as Router,
@@ -10,82 +10,96 @@ import {
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
-import TravelBotWidget from "./components/TravelBotWidget";
 
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 
 import HomePage from './pages/HomePage';
-import RegisterPage from './pages/RegisterPage';
-import LoginPage from './pages/LoginPage';
-import AdminLoginPage from './pages/AdminLoginPage';
-import ProfilePage from './pages/ProfilePage';
-import ActualToursPage from './pages/ActualToursPage';
-import TourDetailPage from './pages/TourDetailPage';
-import StaysPage from './pages/StaysPage';
-import StayDetailPage from './pages/StayDetailPage';
-import ActualToursAdmin from './pages/ActualToursAdmin';
-import BusinessLandingPage from './pages/BusinessLandingPage';
-import BusinessLoginPage from './pages/BusinessLoginPage';
-import BusinessRegisterPage from './pages/BusinessRegisterPage';
-import TourBookingPage from './pages/TourBookingPage';
-import AgreementsPage from './pages/AgreementsPage';
-import VisaPaymentPage from './pages/VisaPaymentPage';
-import FavoritesPage from './pages/FavoritesPage';
-import SavingsPlanPage from './pages/SavingsPlanPage';
-import StaffPortalPage from './pages/StaffPortalPage';
-import AboutPage from './pages/AboutPage';
-import AccountSavingsPage from './pages/AccountSavingsPage';
-import AdminFinancePage from './pages/AdminFinancePage';
-import BusinessManagersPage from './pages/BusinessManagersPage';
-import BusinessPaymentsPage from './pages/BusinessPaymentsPage';
-import BusinessPaymentSettingsPage from './pages/BusinessPaymentSettingsPage';
 import { readCurrentUser, subscribeToCurrentUser } from './utils/currentUser';
+
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const AccountSavingsPage = lazy(() => import('./pages/AccountSavingsPage'));
+const ActualToursAdmin = lazy(() => import('./pages/ActualToursAdmin'));
+const ActualToursPage = lazy(() => import('./pages/ActualToursPage'));
+const AdminFinancePage = lazy(() => import('./pages/AdminFinancePage'));
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
+const AgreementsPage = lazy(() => import('./pages/AgreementsPage'));
+const BusinessLandingPage = lazy(() => import('./pages/BusinessLandingPage'));
+const BusinessLoginPage = lazy(() => import('./pages/BusinessLoginPage'));
+const BusinessManagersPage = lazy(() => import('./pages/BusinessManagersPage'));
+const BusinessPaymentSettingsPage = lazy(() => import('./pages/BusinessPaymentSettingsPage'));
+const BusinessPaymentsPage = lazy(() => import('./pages/BusinessPaymentsPage'));
+const BusinessRegisterPage = lazy(() => import('./pages/BusinessRegisterPage'));
+const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const SavingsPlanPage = lazy(() => import('./pages/SavingsPlanPage'));
+const StaffPortalPage = lazy(() => import('./pages/StaffPortalPage'));
+const StayDetailPage = lazy(() => import('./pages/StayDetailPage'));
+const StaysPage = lazy(() => import('./pages/StaysPage'));
+const TourBookingPage = lazy(() => import('./pages/TourBookingPage'));
+const TourDetailPage = lazy(() => import('./pages/TourDetailPage'));
+const TravelBotWidget = lazy(() => import('./components/TravelBotWidget'));
+const VisaPaymentPage = lazy(() => import('./pages/VisaPaymentPage'));
+
+const HIDE_LAYOUT_PATHS = new Set([
+  '/login',
+  '/staff',
+  '/admin/login',
+  '/register',
+  '/booking',
+  '/profile',
+  '/savings',
+  '/savings-plan',
+  '/admin',
+  '/admin/home',
+  '/admin/tours',
+  '/admin/accommodations',
+  '/admin/bookings',
+  '/admin/users',
+  '/admin/clients',
+  '/admin/stats',
+  '/admin/reports',
+  '/admin/topups',
+  '/admin/savings',
+  '/admin/finance',
+  '/admin/companies',
+  '/admin/settings',
+  '/business',
+  '/travelpay-business',
+  '/business/login',
+  '/business/register',
+  '/business/dashboard',
+  '/business/tours',
+  '/business/accommodations',
+  '/business/bookings',
+  '/business/clients',
+  '/business/reports',
+  '/business/payment-settings',
+  '/business/managers',
+  '/business/payments',
+  '/account/savings',
+  '/VisaPaymentPage',
+]);
+
+const BUSINESS_ADMIN_PATHS = [
+  '/business/dashboard',
+  '/business/tours',
+  '/business/accommodations',
+  '/business/bookings',
+  '/business/clients',
+  '/business/reports',
+];
+
+function RouteFallback() {
+  return <div className="route-fallback" aria-hidden="true" />;
+}
 
 function AppContent({ favorites, setFavorites }) {
   const location = useLocation();
 
-  const hideLayoutPaths = [
-    '/login',
-    '/staff',
-    '/admin/login',
-    '/register',
-    '/booking',
-    '/profile',
-    '/savings',
-    '/savings-plan',
-    '/admin',
-    '/admin/home',
-    '/admin/tours',
-    '/admin/accommodations',
-    '/admin/bookings',
-    '/admin/users',
-    '/admin/clients',
-    '/admin/stats',
-    '/admin/reports',
-    '/admin/topups',
-    '/admin/savings',
-    '/admin/finance',
-    '/admin/companies',
-    '/admin/settings',
-    '/business',
-    '/travelpay-business',
-    '/business/login',
-    '/business/register',
-    '/business/dashboard',
-    '/business/tours',
-    '/business/accommodations',
-    '/business/bookings',
-    '/business/clients',
-    '/business/reports',
-    '/business/payment-settings',
-    '/business/managers',
-    '/business/payments',
-    '/account/savings',
-    '/VisaPaymentPage',
-  ];
-
-  const hideLayout = hideLayoutPaths.includes(location.pathname);
+  const hideLayout = HIDE_LAYOUT_PATHS.has(location.pathname);
 
   return (
     <>
@@ -94,6 +108,7 @@ function AppContent({ favorites, setFavorites }) {
 
       {/* ROUTES */}
       <div className={hideLayout ? undefined : 'public-layout-shell'}>
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
@@ -277,14 +292,7 @@ function AppContent({ favorites, setFavorites }) {
           }
         />
 
-        {[
-          '/business/dashboard',
-          '/business/tours',
-          '/business/accommodations',
-          '/business/bookings',
-          '/business/clients',
-          '/business/reports',
-        ].map((path) => (
+        {BUSINESS_ADMIN_PATHS.map((path) => (
           <Route
             key={path}
             path={path}
@@ -379,10 +387,15 @@ function AppContent({ favorites, setFavorites }) {
             }
           />
         </Routes>
+        </Suspense>
       </div>
 
       {/* 🔥 AI CHAT WIDGET (ГЛОБАЛЬНО НА ВСЁМ САЙТЕ) */}
-      {location.pathname === '/' && <TravelBotWidget />}
+      {location.pathname === '/' && (
+        <Suspense fallback={null}>
+          <TravelBotWidget />
+        </Suspense>
+      )}
     </>
   );
 }
@@ -406,23 +419,24 @@ const travelPayThemeTokens = {
 
 function AppShell({ favorites, setFavorites }) {
   const { theme } = useTheme();
+  const configTheme = useMemo(() => (theme === 'dark'
+    ? {
+        algorithm: antdTheme.darkAlgorithm,
+        token: travelPayThemeTokens,
+        components: {
+          Button: { borderRadius: 18, controlHeight: 42 },
+          Card: { borderRadiusLG: 22 },
+          Modal: { borderRadiusLG: 22 },
+          Drawer: { borderRadiusLG: 22 },
+          Table: { headerBg: 'rgba(255,255,255,0.07)', rowHoverBg: 'rgba(91,108,255,0.12)' },
+          Segmented: { itemSelectedBg: 'rgba(91,108,255,0.22)' },
+        },
+      }
+    : undefined), [theme]);
 
   return (
     <ConfigProvider
-      theme={theme === 'dark'
-        ? {
-            algorithm: antdTheme.darkAlgorithm,
-            token: travelPayThemeTokens,
-            components: {
-              Button: { borderRadius: 18, controlHeight: 42 },
-              Card: { borderRadiusLG: 22 },
-              Modal: { borderRadiusLG: 22 },
-              Drawer: { borderRadiusLG: 22 },
-              Table: { headerBg: 'rgba(255,255,255,0.07)', rowHoverBg: 'rgba(91,108,255,0.12)' },
-              Segmented: { itemSelectedBg: 'rgba(91,108,255,0.22)' },
-            },
-          }
-        : undefined}
+      theme={configTheme}
     >
       <AntApp>
         <Router>

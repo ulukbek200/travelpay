@@ -140,6 +140,8 @@ const TourDetailPage = () => {
         <img
           src={currentTour.image || TOUR_IMAGE_FALLBACK}
           alt={currentTour.title}
+          fetchPriority="high"
+          decoding="async"
           onError={withTourFallback}
           style={styles.heroImage}
         />
@@ -213,7 +215,7 @@ const TourDetailPage = () => {
                 <Title level={2} style={styles.sectionTitle}>{'\u0427\u0442\u043e \u0432\u0430\u0441 \u0436\u0434\u0451\u0442 \u0432 \u044d\u0442\u043e\u0439 \u043f\u043e\u0435\u0437\u0434\u043a\u0435'}</Title>
                 <Paragraph style={styles.text}>{details.about}</Paragraph>
 
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                   {details.reasons.map((reason) => (
                     <div key={reason} style={styles.reasonRow}>
                       <RocketOutlined style={{ color: BRAND_GOLD, marginTop: 4 }} />
@@ -230,7 +232,7 @@ const TourDetailPage = () => {
                 <Timeline
                   items={itinerary.map((item) => ({
                     color: BRAND_GOLD,
-                    children: (
+                    content: (
                       <div>
                         <Title level={5} style={styles.timelineTitle}>{item.title}</Title>
                         <Text style={styles.text}>{item.description}</Text>
@@ -244,7 +246,7 @@ const TourDetailPage = () => {
                 <Tag style={styles.softTag}>{'\u0412 \u0441\u0442\u043e\u0438\u043c\u043e\u0441\u0442\u0438'}</Tag>
                 <Title level={2} style={styles.sectionTitle}>{'\u0427\u0442\u043e \u0443\u0436\u0435 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u043e'}</Title>
 
-                <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                   {details.included.map((item) => (
                     <div key={item} style={styles.includeRow}>
                       <CheckCircleOutlined style={{ color: '#16A34A', marginTop: 4 }} />
@@ -261,7 +263,7 @@ const TourDetailPage = () => {
                 <div className="tour-detail-gallery-grid" style={styles.galleryGrid}>
                   {gallery.slice(0, 3).map((image, index) => (
                     <div key={`${image}-${index}`} style={styles.galleryTile}>
-                      <img src={image || TOUR_IMAGE_FALLBACK} alt={`${currentTour.title}-${index + 1}`} onError={withTourFallback} style={styles.galleryImage} />
+                      <img src={image || TOUR_IMAGE_FALLBACK} alt={`${currentTour.title}-${index + 1}`} loading="lazy" decoding="async" onError={withTourFallback} style={styles.galleryImage} />
                     </div>
                   ))}
                 </div>
@@ -271,7 +273,7 @@ const TourDetailPage = () => {
             <Col xs={24} lg={8}>
               <div className="tour-detail-sidebar" style={styles.sidebar}>
                 <Card style={styles.ctaCard}>
-                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                     <div>
                       <Tag style={styles.softTag}><CompassOutlined /> {'\u0411\u0440\u043e\u043d\u044c \u043f\u043e \u0440\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u044e'}</Tag>
                       <Title level={3} style={styles.ctaTitle}>{'\u041a\u0430\u043a \u043f\u0440\u043e\u0439\u0434\u0451\u0442 \u0431\u0440\u043e\u043d\u044c'}</Title>
@@ -280,7 +282,7 @@ const TourDetailPage = () => {
                       </Paragraph>
                     </div>
 
-                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                       <div style={styles.reasonRow}>
                         <CalendarOutlined style={{ color: BRAND_GOLD, marginTop: 4 }} />
                         <Text style={styles.text}>{'\u0412\u044b\u0431\u043e\u0440 \u0438\u0437 \u0433\u043e\u0442\u043e\u0432\u044b\u0445 \u0434\u0430\u0442 \u0438 \u0432\u0440\u0435\u043c\u0435\u043d\u0438'}</Text>
@@ -322,7 +324,7 @@ const TourDetailPage = () => {
 
               <Col xs={24} lg={8}>
                 <Card style={styles.heroInfoCard}>
-                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                     <CompanyBadge
                       name={currentTour.companyName}
                       city={currentTour.companyCity || currentTour.location || DEFAULT_LOCATION}

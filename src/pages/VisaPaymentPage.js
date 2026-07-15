@@ -167,7 +167,7 @@ const VisaPaymentPage = () => {
 
           <Col xs={24} lg={14}>
             <Card style={styles.paymentCard}>
-              <Space direction="vertical" size={18} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={18} style={{ width: '100%' }}>
                 <div>
                   <Text style={styles.kicker}><SafetyCertificateOutlined /> Безопасная предоплата</Text>
                   <Title level={2} style={styles.title}>Оплатите по QR</Title>

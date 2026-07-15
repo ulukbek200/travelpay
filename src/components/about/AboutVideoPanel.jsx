@@ -21,7 +21,11 @@ const getVideoSources = (src) => {
 const AboutVideoPanel = ({ content }) => {
   const videoRef = useRef(null);
   const frameRef = useRef(null);
+  const progressFrameRef = useRef(null);
+  const nextProgressRef = useRef(0);
+  const autoPausedRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [isInView, setIsInView] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [hasVideoError, setHasVideoError] = useState(false);
@@ -31,7 +35,54 @@ const AboutVideoPanel = ({ content }) => {
     setHasVideoError(false);
     setIsPlaying(true);
     setIsMuted(true);
+    autoPausedRef.current = false;
   }, [content.video]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsInView(true);
+      return undefined;
+    }
+
+    const node = frameRef.current;
+    if (!node) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting),
+      { rootMargin: '240px 0px', threshold: 0.18 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || hasVideoError) {
+      return;
+    }
+
+    if (!isInView) {
+      if (!video.paused) {
+        autoPausedRef.current = true;
+        video.pause();
+      }
+      return;
+    }
+
+    if (isPlaying || autoPausedRef.current) {
+      autoPausedRef.current = false;
+      video.play().catch(() => setIsPlaying(false));
+    }
+  }, [hasVideoError, isInView, isPlaying, content.video]);
+
+  useEffect(() => () => {
+    if (progressFrameRef.current) {
+      window.cancelAnimationFrame(progressFrameRef.current);
+    }
+  }, []);
 
   const togglePlayback = async () => {
     const video = videoRef.current;
@@ -48,6 +99,7 @@ const AboutVideoPanel = ({ content }) => {
         setIsPlaying(false);
       }
     } else {
+      autoPausedRef.current = false;
       video.pause();
       setIsPlaying(false);
     }
@@ -72,7 +124,14 @@ const AboutVideoPanel = ({ content }) => {
       return;
     }
 
-    setProgress((video.currentTime / video.duration) * 100);
+    nextProgressRef.current = (video.currentTime / video.duration) * 100;
+
+    if (!progressFrameRef.current) {
+      progressFrameRef.current = window.requestAnimationFrame(() => {
+        progressFrameRef.current = null;
+        setProgress(nextProgressRef.current);
+      });
+    }
   };
 
   const handleSeek = (event) => {
@@ -100,7 +159,7 @@ const AboutVideoPanel = ({ content }) => {
       <div className="about-video-panel__frame" ref={frameRef}>
         {!hasVideoError && (
           <video
-            autoPlay
+            autoPlay={isInView}
             key={content.video}
             loop
             muted={isMuted}
@@ -133,6 +192,13 @@ const AboutVideoPanel = ({ content }) => {
           </div>
         )}
 
+        {!hasVideoError && (content.videoLabel || content.videoSubtitle) && (
+          <div className="about-video-panel__badge" aria-hidden="true">
+            {content.videoLabel && <span>{content.videoLabel}</span>}
+            {content.videoSubtitle && <strong>{content.videoSubtitle}</strong>}
+          </div>
+        )}
+
         {!hasVideoError && (
           <>
             <button
@@ -156,6 +222,7 @@ const AboutVideoPanel = ({ content }) => {
 
               <input
                 aria-label="Прогресс видео"
+                aria-valuetext={`${Math.round(progress)}%`}
                 className="about-video-panel__progress"
                 max="100"
                 min="0"

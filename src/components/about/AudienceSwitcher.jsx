@@ -38,7 +38,7 @@ const AudienceSwitcher = ({ activeAudience, audiences, onChange }) => {
 
   return (
     <div
-      className="about-audience-switcher"
+      className={`about-audience-switcher about-audience-switcher--${activeAudience}`}
       role="tablist"
       aria-label="Выберите сценарий использования TravelPay"
       onKeyDown={handleKeyDown}

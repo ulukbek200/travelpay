@@ -504,7 +504,7 @@ const TourBookingPage = () => {
                                 className={`booking-accommodation-card ${isSelected ? 'booking-accommodation-card--selected' : ''}`}
                                 cover={<img src={image} alt={item.name} onError={withTourFallback} />}
                               >
-                                <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                                <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                                   <Space wrap>
                                     {index === 0 && <Tag color="gold">Популярный</Tag>}
                                     {isVip && <Tag color="purple">VIP</Tag>}
@@ -564,7 +564,7 @@ const TourBookingPage = () => {
                   )}
 
                   <div className="booking-summary-card" style={styles.summaryCard}>
-                    <Space direction="vertical" size={4}>
+                    <Space orientation="vertical" size={4}>
                       <Text style={styles.summaryLabel}>Итоговая стоимость</Text>
                       <Title level={2} style={styles.total}>{formatPrice(total)}</Title>
                       <div className="booking-price-breakdown">

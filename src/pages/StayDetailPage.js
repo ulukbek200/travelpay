@@ -942,11 +942,11 @@ const StayDetailPage = () => {
       <section className="stay-detail-layout">
         <div className="stay-gallery">
           <div className="stay-gallery__main">
-            <img src={gallery[0]} alt={stay.title} onError={withStayFallback} />
+            <img src={gallery[0]} alt={stay.title} fetchPriority="high" decoding="async" onError={withStayFallback} />
           </div>
           <div className="stay-gallery__thumbs">
             {(gallery.length > 1 ? gallery : [gallery[0], gallery[0], gallery[0]]).slice(0, 3).map((image, index) => (
-              <img key={`${image}-${index}`} src={image} alt={`${stay.title} ${index + 1}`} onError={withStayFallback} />
+              <img key={`${image}-${index}`} src={image} alt={`${stay.title} ${index + 1}`} loading="lazy" decoding="async" onError={withStayFallback} />
             ))}
           </div>
         </div>

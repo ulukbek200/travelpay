@@ -509,7 +509,7 @@ const SavingsPlanPage = () => {
             </Card>
 
             <Card title="Пополнить баланс" className="savings-fintech-card savings-fintech-topup-card" loading={loading}>
-              <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                 <Statistic
                   title="Текущий накопительный баланс"
                   value={savingsMetrics.currentAmount}
@@ -556,7 +556,7 @@ const SavingsPlanPage = () => {
           </Col>
 
           <Col xs={24} xl={15}>
-            <Space direction="vertical" size={18} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={18} style={{ width: '100%' }}>
               <Card title="Моя цель" className="savings-fintech-card" loading={loading}>
                 {savingsMetrics.hasPlan ? (
                   <>
@@ -631,7 +631,7 @@ const SavingsPlanPage = () => {
 
                 <Col xs={24} lg={10}>
                   <Card title="Контроль цели" className="savings-fintech-card" loading={loading}>
-                    <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                       <Alert
                         type={savingsMetrics.hasPlan ? 'info' : 'warning'}
                         showIcon
@@ -691,7 +691,7 @@ const SavingsPlanPage = () => {
         }}
         className="savings-fintech-payment-modal"
       >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
           <Alert
             type="info"
             showIcon

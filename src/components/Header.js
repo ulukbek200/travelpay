@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Avatar, Button, Drawer, Dropdown, Layout, Segmented, Space, Typography } from 'antd';
 import {
   DownOutlined,
@@ -10,9 +10,10 @@ import {
   SunOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { LayoutGroup, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clearCurrentUser, readCurrentUser, subscribeToCurrentUser } from '../utils/currentUser';
+import { preloadRoute } from '../utils/routePreload';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -33,13 +34,6 @@ const navItems = [
   { key: '/about', label: 'О нас' },
   { key: 'partnership', label: 'Партнёрство' },
 ];
-
-const springTransition = {
-  type: 'spring',
-  stiffness: 380,
-  damping: 30,
-  mass: 0.7,
-};
 
 const getInitialHeaderState = () => {
   if (typeof window === 'undefined') {
@@ -208,29 +202,48 @@ const Header = () => {
   }, []);
 
   const goToPartnership = useCallback(() => {
-    setMobileMenuOpen(false);
+    if (mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
 
     if (location.pathname !== '/') {
-      navigate('/');
+      startTransition(() => navigate('/'));
       window.setTimeout(() => {
         document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 120);
       return;
     }
 
-    document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [location.pathname, navigate]);
+    window.requestAnimationFrame(() => {
+      document.getElementById('partnership')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [location.pathname, mobileMenuOpen, navigate]);
 
   const handleNavigate = useCallback((key) => {
-    setMobileMenuOpen(false);
-
     if (key === 'partnership') {
       goToPartnership();
       return;
     }
 
-    navigate(key);
-  }, [goToPartnership, navigate]);
+    if (location.pathname === key) {
+      if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+      return;
+    }
+
+    preloadRoute(key);
+
+    if (mobileMenuOpen) {
+      setMobileMenuOpen(false);
+      window.requestAnimationFrame(() => {
+        startTransition(() => navigate(key));
+      });
+      return;
+    }
+
+    startTransition(() => navigate(key));
+  }, [goToPartnership, location.pathname, mobileMenuOpen, navigate]);
 
   const handleLogout = useCallback(() => {
     clearCurrentUser();
@@ -300,6 +313,8 @@ const Header = () => {
               block
               type={isSelected ? 'primary' : 'default'}
               onClick={() => handleNavigate(item.key)}
+              onFocus={() => preloadRoute(item.key)}
+              onMouseEnter={() => preloadRoute(item.key)}
               className="travelpay-drawer-nav-button"
               style={isSelected ? styles.drawerPrimaryNav : styles.drawerNavButton}
             >
@@ -336,6 +351,7 @@ const Header = () => {
               type="primary"
               icon={<UserOutlined />}
               onClick={() => handleNavigate('/profile')}
+              onFocus={() => preloadRoute('/profile')}
               style={styles.drawerPrimaryButton}
             >
               Профиль
@@ -355,6 +371,7 @@ const Header = () => {
               block
               icon={<LoginOutlined />}
               onClick={() => handleNavigate('/login')}
+              onFocus={() => preloadRoute('/login')}
               style={styles.drawerUtilityButton}
             >
               Войти
@@ -363,6 +380,7 @@ const Header = () => {
               block
               type="primary"
               onClick={() => handleNavigate('/tours')}
+              onFocus={() => preloadRoute('/tours')}
               style={styles.drawerPrimaryButton}
             >
               Выбрать тур
@@ -393,31 +411,27 @@ const Header = () => {
             </span>
           </Button>
 
-          <LayoutGroup id="travelpay-header-nav">
-            <nav className="travelpay-premium-nav" aria-label="Primary">
-              {navItems.map((item) => {
-                const isActive = selectedKey === item.key;
+          <nav className="travelpay-premium-nav" aria-label="Primary">
+            {navItems.map((item) => {
+              const isActive = selectedKey === item.key;
 
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => handleNavigate(item.key)}
-                    className={`travelpay-premium-nav-item${isActive ? ' is-active' : ''}`}
-                  >
-                    {isActive ? (
-                      <motion.span
-                        layoutId="travelpay-active-pill"
-                        transition={springTransition}
-                        className="travelpay-premium-nav-pill"
-                      />
-                    ) : null}
-                    <span className="travelpay-premium-nav-label">{item.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </LayoutGroup>
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleNavigate(item.key)}
+                  onFocus={() => preloadRoute(item.key)}
+                  onMouseEnter={() => preloadRoute(item.key)}
+                  className={`travelpay-premium-nav-item${isActive ? ' is-active' : ''}`}
+                >
+                  {isActive ? (
+                    <span className="travelpay-premium-nav-pill" />
+                  ) : null}
+                  <span className="travelpay-premium-nav-label">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
           <div className="travelpay-premium-actions">
             <Dropdown menu={languageMenu} trigger={['click']} placement="bottomRight">

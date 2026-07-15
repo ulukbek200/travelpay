@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRightOutlined, ClockCircleOutlined, CompassOutlined, CustomerServiceOutlined, DownOutlined, EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SafetyCertificateOutlined, StarFilled, TeamOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import { Button, Card, Collapse, Col, Input, Row, Segmented, Space, Tag, Typography } from 'antd';
-import { geoCentroid, geoMercator, geoPath } from 'd3-geo';
 import { motion } from 'framer-motion';
+import { FiArrowDown, FiBriefcase, FiCheckCircle, FiCreditCard, FiGlobe, FiMail, FiMap, FiMessageCircle, FiShield, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import api, { getAssetUrl } from '../api';
 import kyrgyzstanRegionsUrl from '../data/kyrgyzstan-regions.geojson';
 import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
 
@@ -152,6 +153,39 @@ const heroExperienceCopy = {
   },
 };
 
+const heroTrustCopy = {
+  RU: {
+    title: 'Почему выбирают TravelPay',
+    tourKicker: 'Рекомендуем сегодня',
+    items: [
+      { key: 'verified', label: 'Проверенные туркомпании' },
+      { key: 'fast', label: 'Быстрое бронирование' },
+      { key: 'wallet', label: 'Накопительная система' },
+      { key: 'ai', label: 'AI Concierge' },
+    ],
+  },
+  EN: {
+    title: 'Why travelers choose TravelPay',
+    tourKicker: 'Recommended today',
+    items: [
+      { key: 'verified', label: 'Verified operators' },
+      { key: 'fast', label: 'Fast booking' },
+      { key: 'wallet', label: 'Savings system' },
+      { key: 'ai', label: 'AI Concierge' },
+    ],
+  },
+  KG: {
+    title: 'Эмне үчүн TravelPay',
+    tourKicker: 'Бүгүн сунуштайбыз',
+    items: [
+      { key: 'verified', label: 'Текшерилген компаниялар' },
+      { key: 'fast', label: 'Тез брондоо' },
+      { key: 'wallet', label: 'Топтоо системасы' },
+      { key: 'ai', label: 'AI Concierge' },
+    ],
+  },
+};
+
 const heroPopularTours = [
   {
     key: 'kel-suu',
@@ -297,6 +331,81 @@ const extraGallerySpots = [
   },
 ];
 
+const fallbackGalleryCards = [...KYRGYZSTAN_TOUR_SPOTS, ...extraGallerySpots].map((spot, index) => ({
+  ...spot,
+  accent: index % 2 === 0 ? 'gold' : 'blue',
+}));
+
+const parseTourPrice = (value, fallback = 0) => Number(String(value || fallback).replace(/[^0-9]/g, '')) || fallback;
+
+const resolveHomeTourImage = (tour, fallbackImage) => {
+  const gallery = Array.isArray(tour?.gallery) ? tour.gallery.filter(Boolean) : [];
+  const rawImage = String(tour?.image || tour?.coverImage || gallery[0] || fallbackImage || TOUR_IMAGE_FALLBACK);
+
+  if (/^https?:\/\//i.test(rawImage) || rawImage.startsWith('data:') || rawImage.startsWith('/images/')) {
+    return rawImage;
+  }
+
+  if (rawImage.startsWith('/uploads/') || rawImage.startsWith('uploads/')) {
+    return getAssetUrl(rawImage);
+  }
+
+  return rawImage;
+};
+
+const getHomeTourStartLabel = (tour) => {
+  const slots = Array.isArray(tour?.departureSlots) ? tour.departureSlots : [];
+  const now = Date.now();
+  const nextSlot = slots
+    .filter((slot) => slot?.active !== false && slot?.startAt && new Date(slot.startAt).getTime() >= now)
+    .sort((left, right) => new Date(left.startAt) - new Date(right.startAt))[0];
+  const dateValue = nextSlot?.startAt || tour?.startDate || tour?.date;
+
+  if (!dateValue) {
+    return '';
+  }
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(date);
+};
+
+const isPublicHomeTour = (tour) => {
+  const status = String(tour?.status || tour?.calendarStatus || '').toLowerCase();
+  return Boolean(tour?.title)
+    && tour?.active !== false
+    && !['inactive', 'archived', 'draft', 'cancelled', 'canceled'].includes(status);
+};
+
+const normalizeHomeGalleryTour = (tour, index = 0) => {
+  const fallback = fallbackGalleryCards[index % fallbackGalleryCards.length] || {};
+  const durationSource = tour?.duration || fallback.duration || '';
+  const durationDays = Number(String(tour?.durationDays || durationSource).match(/\d+/)?.[0]) || '';
+  const price = parseTourPrice(tour?.price, fallback.price);
+  const rating = Number(tour?.rating || fallback.rating || 4.8);
+
+  return {
+    ...fallback,
+    ...tour,
+    key: String(tour?.id || tour?.slug || tour?.title || fallback.key || `home-tour-${index}`),
+    id: tour?.id || fallback.id,
+    title: tour?.title || fallback.title,
+    location: tour?.location || tour?.city || fallback.location || 'Кыргызстан',
+    city: tour?.city || tour?.location || fallback.location || 'Кыргызстан',
+    description: tour?.description || fallback.description || '',
+    duration: durationSource || (durationDays ? `${durationDays} дня` : fallback.duration || ''),
+    price,
+    rating: Number.isFinite(rating) ? rating : 4.8,
+    image: resolveHomeTourImage(tour, fallback.image),
+    startLabel: getHomeTourStartLabel(tour),
+    accent: index % 2 === 0 ? 'gold' : 'blue',
+    isActualTour: true,
+  };
+};
+
 const whyTravelPay = [
   ['Local Expertise', 'Маршруты по реальным локациям Кыргызстана с локальным контекстом.', <CompassOutlined />],
   ['Premium Support', 'KG, RU, EN коммуникация до, во время и после поездки.', <CustomerServiceOutlined />],
@@ -327,6 +436,111 @@ const socialLinks = [
   { key: 'phone', label: '+996 555 123 456', href: 'tel:+996555123456', icon: <PhoneOutlined /> },
 ];
 
+const partnershipBenefits = [
+  { icon: <FiShield />, text: 'Проверенные заявки' },
+  { icon: <FiTrendingUp />, text: 'Рост продаж' },
+  { icon: <FiGlobe />, text: 'Клиенты со всего Кыргызстана' },
+  { icon: <FiCreditCard />, text: 'Безопасные платежи' },
+];
+
+const partnershipStats = [
+  { value: 150, suffix: '+', label: 'туров' },
+  { value: 25, suffix: '+', label: 'туркомпаний' },
+  { value: 5000, suffix: '+', label: 'клиентов' },
+  { value: 4.9, suffix: '★', label: 'рейтинг', decimals: 1 },
+];
+
+const partnershipSteps = [
+  'Зарегистрируйте компанию',
+  'Добавьте туры',
+  'Получайте заявки',
+  'Развивайте продажи',
+];
+
+const partnerFormTrust = ['Ответ в течение 24 часов', 'Бесплатное подключение', 'Персональный менеджер'];
+
+const partnerFloatingCards = [
+  { icon: <FiTrendingUp />, text: '+42 новых бронирования', position: 'top' },
+  { icon: <FiStar />, text: '4.9 рейтинг компаний', position: 'left' },
+  { icon: <FiMap />, text: '150 опубликованных туров', position: 'right' },
+];
+
+const partnerLogos = ['Barsbek Travel', 'Doc Medical', 'TravelPay Business', 'Nomad Routes', 'Kyrgyz Peaks', 'Silk Road Hub'];
+
+const CountUpStat = ({ stat }) => {
+  const statRef = useRef(null);
+  const rafRef = useRef(null);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const node = statRef.current;
+
+    if (!node || typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setHasStarted(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduceMotion) {
+      setDisplayValue(stat.value);
+      return undefined;
+    }
+
+    const start = window.performance.now();
+    const duration = 1200;
+
+    const animate = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(stat.value * eased);
+
+      if (progress < 1) {
+        rafRef.current = window.requestAnimationFrame(animate);
+      }
+    };
+
+    rafRef.current = window.requestAnimationFrame(animate);
+
+    return () => {
+      if (rafRef.current) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [hasStarted, stat.value]);
+
+  const value = stat.decimals
+    ? displayValue.toFixed(stat.decimals)
+    : Math.round(displayValue).toLocaleString('ru-RU');
+
+  return (
+    <article className="home-partner-stat" ref={statRef}>
+      <strong>{value}{stat.suffix}</strong>
+      <span>{stat.label}</span>
+    </article>
+  );
+};
+
 const motionCard = {
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
@@ -344,11 +558,15 @@ const HomePage = () => {
   const [isHeroTourPaused, setIsHeroTourPaused] = useState(false);
   const [isHeroTourSwitching, setIsHeroTourSwitching] = useState(false);
   const [regionsGeoJson, setRegionsGeoJson] = useState(null);
+  const [shouldLoadMap, setShouldLoadMap] = useState(false);
+  const [d3Geo, setD3Geo] = useState(null);
   const [activeRegionId, setActiveRegionId] = useState('issyk-kul');
   const [hoveredRegionId, setHoveredRegionId] = useState(null);
   const [mapPopup, setMapPopup] = useState(null);
   const [mapZoom, setMapZoom] = useState(1);
+  const [actualGalleryTours, setActualGalleryTours] = useState([]);
   const heroVideoRef = useRef(null);
+  const mapSectionRef = useRef(null);
   const mapStageRef = useRef(null);
   const heroTourSwitchTimeoutRef = useRef(null);
   const heroTourRevealTimeoutRef = useRef(null);
@@ -394,11 +612,26 @@ const HomePage = () => {
       return undefined;
     }
 
-    const syncHeroScrollState = () => {
-      document.body.classList.toggle('is-hero-scrolled', window.scrollY > 12);
+    let ticking = false;
+    let lastScrolledState = null;
+
+    const applyHeroScrollState = () => {
+      ticking = false;
+      const nextScrolledState = window.scrollY > 12;
+      if (nextScrolledState !== lastScrolledState) {
+        document.body.classList.toggle('is-hero-scrolled', nextScrolledState);
+        lastScrolledState = nextScrolledState;
+      }
     };
 
-    syncHeroScrollState();
+    const syncHeroScrollState = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(applyHeroScrollState);
+      }
+    };
+
+    applyHeroScrollState();
     window.addEventListener('scroll', syncHeroScrollState, { passive: true });
     return () => {
       window.removeEventListener('scroll', syncHeroScrollState);
@@ -407,12 +640,48 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+    if (shouldLoadMap) {
+      return undefined;
+    }
+
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setShouldLoadMap(true);
+      return undefined;
+    }
+
+    const node = mapSectionRef.current;
+    if (!node) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadMap(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '900px 0px' },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldLoadMap]);
+
+  useEffect(() => {
+    if (!shouldLoadMap) {
+      return undefined;
+    }
+
     let isMounted = true;
 
-    fetch(kyrgyzstanRegionsUrl)
-      .then((response) => response.json())
-      .then((data) => {
+    Promise.all([
+      import('d3-geo'),
+      fetch(kyrgyzstanRegionsUrl).then((response) => response.json()),
+    ])
+      .then(([module, data]) => {
         if (isMounted) {
+          setD3Geo(module);
           setRegionsGeoJson(data);
         }
       })
@@ -424,6 +693,57 @@ const HomePage = () => {
 
     return () => {
       isMounted = false;
+    };
+  }, [shouldLoadMap]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadActualTours = () => {
+      api.get('/tours')
+        .then((response) => {
+          if (!isMounted) {
+            return;
+          }
+
+          const source = Array.isArray(response.data) ? response.data : [];
+          const normalizedTours = source
+            .filter(isPublicHomeTour)
+            .map(normalizeHomeGalleryTour)
+            .sort((left, right) => {
+              const leftTime = left.startDate ? new Date(left.startDate).getTime() : Infinity;
+              const rightTime = right.startDate ? new Date(right.startDate).getTime() : Infinity;
+              const leftDate = Number.isFinite(leftTime) ? leftTime : Infinity;
+              const rightDate = Number.isFinite(rightTime) ? rightTime : Infinity;
+
+              if (leftDate !== rightDate) {
+                return leftDate - rightDate;
+              }
+
+              return Number(right.rating || 0) - Number(left.rating || 0);
+            })
+            .slice(0, 6);
+
+          setActualGalleryTours(normalizedTours);
+        })
+        .catch(() => {
+          if (isMounted) {
+            setActualGalleryTours([]);
+          }
+        });
+    };
+
+    const idleId = typeof window !== 'undefined' && 'requestIdleCallback' in window
+      ? window.requestIdleCallback(loadActualTours, { timeout: 1800 })
+      : setTimeout(loadActualTours, 700);
+
+    return () => {
+      isMounted = false;
+      if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId);
+      }
     };
   }, []);
 
@@ -474,6 +794,7 @@ const HomePage = () => {
   const t = copy[language] || copy.RU;
   const mapSection = premiumMapSectionCopy[language] || premiumMapSectionCopy.RU;
   const heroExperience = heroExperienceCopy[language] || heroExperienceCopy.EN;
+  const heroTrust = heroTrustCopy[language] || heroTrustCopy.EN;
   const activeHeroTour = heroPopularTours[activeHeroTourIndex] || heroPopularTours[0];
   const getHeroTourText = (value) => (typeof value === 'string' ? value : value?.[language] || value?.EN || '');
   const isValidRegionsGeoJson = useMemo(
@@ -486,22 +807,22 @@ const HomePage = () => {
   );
   const regionFeatures = useMemo(() => (isValidRegionsGeoJson ? regionsGeoJson.features : []), [isValidRegionsGeoJson, regionsGeoJson]);
   const mapProjection = useMemo(() => {
-    if (!isValidRegionsGeoJson || !regionFeatures.length) {
+    if (!d3Geo || !isValidRegionsGeoJson || !regionFeatures.length) {
       return null;
     }
 
-    return geoMercator().fitExtent(
+    return d3Geo.geoMercator().fitExtent(
       [[36, 64], [KYRGYZSTAN_MAP_VIEWBOX.width - 36, KYRGYZSTAN_MAP_VIEWBOX.height - 64]],
       regionsGeoJson,
     );
-  }, [isValidRegionsGeoJson, regionFeatures.length, regionsGeoJson]);
-  const mapPath = useMemo(() => (mapProjection ? geoPath(mapProjection) : null), [mapProjection]);
+  }, [d3Geo, isValidRegionsGeoJson, regionFeatures.length, regionsGeoJson]);
+  const mapPath = useMemo(() => (d3Geo && mapProjection ? d3Geo.geoPath(mapProjection) : null), [d3Geo, mapProjection]);
   const projectedRegions = useMemo(
     () =>
       mapPath && mapProjection
         ? regionFeatures.map((feature) => {
           const properties = feature.properties || {};
-          const centroid = geoCentroid(feature);
+          const centroid = d3Geo.geoCentroid(feature);
           const [labelX, labelY] = mapProjection(centroid) || mapPath.centroid(feature);
           const [offsetX = 0, offsetY = 0] = properties.labelOffset || [];
 
@@ -518,7 +839,7 @@ const HomePage = () => {
           };
         })
         : [],
-    [mapPath, mapProjection, regionFeatures],
+    [d3Geo, mapPath, mapProjection, regionFeatures],
   );
   const projectedDestinations = useMemo(
     () =>
@@ -577,12 +898,8 @@ const HomePage = () => {
   const kyrgyzstanRoutePath = 'M92 112 C116 120 132 118 154 118 C174 118 188 112 208 108 C228 106 238 146 246 188 C224 202 190 212 168 222 C146 214 142 198 136 184 C124 164 104 130 92 112 C82 146 80 190 78 232 C110 230 140 226 168 222 C214 206 286 160 350 126';
   void kyrgyzstanRoutePath;
   const galleryCards = useMemo(
-    () =>
-      [...KYRGYZSTAN_TOUR_SPOTS, ...extraGallerySpots].map((spot, index) => ({
-        ...spot,
-        accent: index % 2 === 0 ? 'gold' : 'blue',
-      })),
-    [],
+    () => (actualGalleryTours.length ? actualGalleryTours : fallbackGalleryCards),
+    [actualGalleryTours],
   );
 
   const handlePartnerInput = (key) => (event) => {
@@ -592,6 +909,15 @@ const HomePage = () => {
   const handlePartnerSubmit = (event) => {
     event.preventDefault();
     setPartnerForm({ name: '', company: '', email: '', message: '' });
+  };
+
+  const handleGalleryTourOpen = (tour) => {
+    if (tour?.isActualTour && tour.id) {
+      navigate(`/tours/${tour.id}`, { state: { tour, tours: actualGalleryTours } });
+      return;
+    }
+
+    navigate('/tours');
   };
 
   const handleRegionSelect = (regionId) => {
@@ -640,7 +966,7 @@ const HomePage = () => {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             poster="/images/hero-poster.jpg"
             aria-hidden="true"
             onLoadedData={() => setHeroVideoLoaded(true)}
@@ -677,6 +1003,22 @@ const HomePage = () => {
                   </article>
                 ))}
               </div>
+              <section className="home-hero-trust" aria-labelledby="home-hero-trust-title">
+                <div className="home-hero-trust__head">
+                  <span>TravelPay</span>
+                  <strong id="home-hero-trust-title">{heroTrust.title}</strong>
+                </div>
+                <div className="home-hero-trust__grid">
+                  {heroTrust.items.map((item, index) => (
+                    <article className="home-hero-trust-card" key={item.key} style={{ '--hero-trust-delay': `${0.78 + index * 0.08}s` }}>
+                      <span className={`home-hero-trust-card__icon home-hero-trust-card__icon--${item.key}`} aria-hidden="true">
+                        {item.key === 'verified' ? <SafetyCertificateOutlined /> : item.key === 'fast' ? <ClockCircleOutlined /> : item.key === 'wallet' ? <GlobalOutlined /> : <CustomerServiceOutlined />}
+                      </span>
+                      <strong>{item.label}</strong>
+                    </article>
+                  ))}
+                </div>
+              </section>
             </motion.div>
             <aside
               className="home-hero-featured-tour hero-reveal hero-reveal--tour"
@@ -686,6 +1028,7 @@ const HomePage = () => {
               onFocus={() => setIsHeroTourPaused(true)}
               onBlur={() => setIsHeroTourPaused(false)}
             >
+              <div className="home-hero-featured-tour__kicker">{heroTrust.tourKicker}</div>
               <div className="home-hero-featured-tour__float">
                 <div className={`home-hero-featured-tour__surface${isHeroTourSwitching ? ' is-switching' : ''}`}>
                   <span className="home-hero-featured-tour__icon" aria-hidden="true"><CompassOutlined /></span>
@@ -744,7 +1087,7 @@ const HomePage = () => {
               <motion.article key={spot.key} {...motionCard} transition={{ delay: index * 0.04 }} className="home-tour-card-shell">
                 <Card className="home-tour-media-card" style={styles.showcaseCard} styles={{ body: { padding: 0 } }}>
                   <div style={styles.showcaseImageWrap}>
-                    <img src={spot.image} alt={spot.title} onError={withTourFallback} style={styles.showcaseImage} />
+                    <img src={spot.image} alt={spot.title} loading="lazy" decoding="async" onError={withTourFallback} style={styles.showcaseImage} />
                     <div style={styles.showcaseOverlay} />
                     <div style={styles.showcaseTopMeta}>
                       <Tag color="gold">{spot.rating}</Tag>
@@ -809,13 +1152,13 @@ const HomePage = () => {
           <div className="home-gallery-grid">
             {galleryCards.map((spot, index) => (
               <motion.article key={`${spot.key}-gallery`} {...motionCard} transition={{ delay: index * 0.04 }} className="home-gallery-card">
-                <Card hoverable className="home-gallery-tour-card" style={styles.galleryCard} styles={{ body: { padding: 0 } }} onClick={() => navigate('/tours')}>
+                <Card hoverable className="home-gallery-tour-card" style={styles.galleryCard} styles={{ body: { padding: 0 } }} onClick={() => handleGalleryTourOpen(spot)}>
                   <div style={styles.galleryImageWrap}>
-                    <img src={spot.image} alt={spot.title} onError={withTourFallback} style={styles.galleryImage} />
+                    <img src={spot.image} alt={spot.title} loading="lazy" decoding="async" onError={withTourFallback} style={styles.galleryImage} />
                     <div style={styles.galleryShade} />
                     <div style={styles.galleryMetaTop}>
-                      <Tag color="gold">{spot.rating}</Tag>
-                      <Tag color="processing">{spot.duration}</Tag>
+                      <Tag color={spot.isActualTour ? 'green' : 'gold'}>{spot.isActualTour ? 'Действующий' : spot.rating}</Tag>
+                      <Tag color="processing">{spot.startLabel || spot.duration}</Tag>
                     </div>
                     <div style={styles.galleryMetaBottom}>
                       <Title level={4} style={styles.galleryTitle}>{spot.title}</Title>
@@ -881,18 +1224,38 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section id="partnership" className="home-section" style={styles.partnerSection}>
+      <section id="partnership" className="home-section home-partnership-section" style={styles.partnerSection}>
+        <div className="home-partner-bg-lines" aria-hidden="true" />
         <div className="home-shell home-partner-grid" style={styles.partnerGrid}>
-          <motion.div {...motionCard} style={styles.partnerCopy}>
-            <Tag style={styles.darkTag}>TravelPay B2B</Tag>
+          <motion.div {...motionCard} className="home-partner-copy" style={styles.partnerCopy}>
+            <div className="home-partner-badge" aria-label="TravelPay B2B онлайн">
+              <span>TravelPay B2B</span>
+              <span className="home-partner-badge__online">Онлайн</span>
+            </div>
             <Title level={2} style={styles.darkTitle}>{t.partnerTitle}</Title>
             <Paragraph style={styles.darkText}>{t.partnerText}</Paragraph>
-            <Space wrap size={12} style={styles.partnerActions}>
+
+            <div className="home-partner-benefits" aria-label="Преимущества партнёрства">
+              {partnershipBenefits.map((benefit, index) => (
+                <article className="home-partner-benefit" key={benefit.text} style={{ '--partner-delay': `${index * 70}ms` }}>
+                  <span>{benefit.icon}</span>
+                  <strong>{benefit.text}</strong>
+                </article>
+              ))}
+            </div>
+
+            <div className="home-partner-stats" aria-label="Статистика TravelPay Business">
+              {partnershipStats.map((stat) => (
+                <CountUpStat key={stat.label} stat={stat} />
+              ))}
+            </div>
+
+            <Space wrap size={12} className="home-partner-actions" style={styles.partnerActions}>
               <Button
                 type="primary"
                 size="large"
                 icon={<ArrowRightOutlined />}
-                className="travelpay-primary-button"
+                className="travelpay-primary-button home-partner-primary-button"
                 style={styles.partnerBusinessButton}
                 onClick={() => navigate('/business')}
               >
@@ -900,32 +1263,74 @@ const HomePage = () => {
               </Button>
               <Button
                 size="large"
-                className="travelpay-secondary-button"
+                className="travelpay-secondary-button home-partner-ghost-button"
                 style={styles.partnerBusinessGhost}
                 onClick={() => navigate('/business/register')}
               >
                 {t.partnerRegisterCompany}
               </Button>
             </Space>
+
+            <div className="home-partner-flow" aria-label="Как работает партнёрство">
+              <span>Как это работает</span>
+              <div>
+                {partnershipSteps.map((step, index) => (
+                  <article className="home-partner-flow-step" key={step} style={{ '--partner-delay': `${index * 70}ms` }}>
+                    <strong>{String(index + 1).padStart(2, '0')}</strong>
+                    <p>{step}</p>
+                    {index < partnershipSteps.length - 1 && <FiArrowDown aria-hidden="true" />}
+                  </article>
+                ))}
+              </div>
+            </div>
           </motion.div>
 
-          <motion.div {...motionCard}>
-            <Card style={styles.partnerCard}>
-              <form onSubmit={handlePartnerSubmit} style={styles.partnerForm}>
-                <Input value={partnerForm.name} onChange={handlePartnerInput('name')} placeholder={t.partnerName} size="large" />
-                <Input value={partnerForm.company} onChange={handlePartnerInput('company')} placeholder={t.partnerCompany} size="large" />
-                <Input value={partnerForm.email} onChange={handlePartnerInput('email')} placeholder={t.partnerEmail} size="large" />
-                <TextArea value={partnerForm.message} onChange={handlePartnerInput('message')} rows={4} placeholder={t.partnerMessage} />
-                <Button htmlType="submit" type="primary" size="large" className="travelpay-primary-button" style={styles.partnerButton}>
+          <motion.div {...motionCard} className="home-partner-form-shell">
+            {partnerFloatingCards.map((card) => (
+              <div className={`home-partner-floating-card home-partner-floating-card--${card.position}`} key={card.text} aria-hidden="true">
+                <span>{card.icon}</span>
+                <strong>{card.text}</strong>
+              </div>
+            ))}
+
+            <Card className="home-partner-form-card" style={styles.partnerCard}>
+              <div className="home-partner-form-head">
+                <span>Оставьте заявку</span>
+                <p>Наш менеджер свяжется с вами в течение рабочего дня.</p>
+              </div>
+
+              <form onSubmit={handlePartnerSubmit} className="home-partner-form" style={styles.partnerForm}>
+                <Input value={partnerForm.name} onChange={handlePartnerInput('name')} placeholder={t.partnerName} size="large" prefix={<FiUser aria-hidden="true" />} />
+                <Input value={partnerForm.company} onChange={handlePartnerInput('company')} placeholder={t.partnerCompany} size="large" prefix={<FiBriefcase aria-hidden="true" />} />
+                <Input value={partnerForm.email} onChange={handlePartnerInput('email')} placeholder={t.partnerEmail} size="large" prefix={<FiMail aria-hidden="true" />} />
+                <label className="home-partner-message-field">
+                  <FiMessageCircle aria-hidden="true" />
+                  <TextArea value={partnerForm.message} onChange={handlePartnerInput('message')} rows={4} placeholder={t.partnerMessage} />
+                </label>
+                <Button htmlType="submit" type="primary" size="large" className="travelpay-primary-button home-partner-submit-button" style={styles.partnerButton}>
                   {t.partnerSubmit}
                 </Button>
+                <div className="home-partner-form-trust" aria-label="Условия подключения">
+                  {partnerFormTrust.map((item) => (
+                    <span key={item}><FiCheckCircle aria-hidden="true" /> {item}</span>
+                  ))}
+                </div>
               </form>
             </Card>
           </motion.div>
         </div>
+
+        <div className="home-shell home-partner-logos" aria-label="Нам доверяют">
+          <span>Нам доверяют</span>
+          <div>
+            {partnerLogos.map((logo) => (
+              <strong key={logo}>{logo}</strong>
+            ))}
+          </div>
+        </div>
       </section>
 
-      <section className="home-map-section" style={styles.mapSection}>
+      <section className="home-map-section" ref={mapSectionRef} style={styles.mapSection}>
         <div className="home-map-section__backdrop" aria-hidden="true" />
         <div className="home-shell home-map-section__inner">
           <motion.div {...motionCard} className="home-map-section__copy">
@@ -934,7 +1339,7 @@ const HomePage = () => {
             <Paragraph className="home-map-section__text" style={styles.darkText}>{mapSection.text}</Paragraph>
             {activeRegion ? (
               <article className="home-map-active-card" aria-live="polite">
-                <img src={activeRegion.properties.image} alt="" />
+                <img src={activeRegion.properties.image} alt="" loading="lazy" decoding="async" />
                 <div>
                   <span>{mapSection.activeRegion}</span>
                   <strong>{getRegionName(activeRegion)}</strong>
@@ -1495,43 +1900,49 @@ const styles = {
     lineHeight: 1.65,
   },
   partnerSection: {
-    padding: '84px 24px',
-    background: 'linear-gradient(135deg, #071523, #10233A 60%, #173B61)',
+    position: 'relative',
+    overflow: 'hidden',
+    padding: '104px 24px 88px',
+    background: 'linear-gradient(135deg, #061523 0%, #0b2036 54%, #102f4f 100%)',
   },
   partnerGrid: {
+    position: 'relative',
+    zIndex: 1,
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: 24,
+    gridTemplateColumns: 'minmax(0, 0.45fr) minmax(420px, 0.55fr)',
+    gap: 48,
     alignItems: 'start',
   },
   partnerCopy: {
     alignSelf: 'center',
   },
   partnerActions: {
-    marginTop: 24,
+    marginTop: 28,
   },
   partnerBusinessButton: {
-    minHeight: 48,
-    borderRadius: 16,
+    minHeight: 54,
+    borderRadius: 18,
   },
   partnerBusinessGhost: {
-    minHeight: 48,
-    borderRadius: 16,
-    background: 'rgba(255,255,255,0.08)',
+    minHeight: 54,
+    borderRadius: 18,
+    background: 'rgba(255,255,255,0.1)',
     color: '#ffffff',
-    borderColor: 'rgba(255,255,255,0.32)',
+    borderColor: 'rgba(255,255,255,0.26)',
   },
   partnerCard: {
-    borderRadius: 24,
-    background: 'rgba(255,255,255,0.96)',
-    boxShadow: '0 24px 72px rgba(0,0,0,0.24)',
+    borderRadius: 28,
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.35)',
+    backdropFilter: 'blur(20px)',
   },
   partnerForm: {
     display: 'grid',
-    gap: 12,
+    gap: 14,
   },
   partnerButton: {
-    height: 48,
+    height: 54,
     borderRadius: 16,
   },
   mapSection: {

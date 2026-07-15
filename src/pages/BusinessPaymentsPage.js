@@ -154,7 +154,7 @@ const BusinessPaymentsPage = () => {
         width={860}
       >
         {reviewing ? (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <Descriptions bordered column={1} size="small">
               <Descriptions.Item label="Сумма">{formatSom(reviewing.amount)}</Descriptions.Item>
               <Descriptions.Item label="Способ">{paymentMethodMeta[reviewing.paymentMethod]?.label || reviewing.paymentMethod}</Descriptions.Item>

@@ -266,7 +266,7 @@ const StaysPage = () => {
                 >
                   <Card className="stay-card" hoverable onClick={() => navigate(`/stays/${stay.id}`)}>
                     <div className="stay-card__media">
-                      <img src={stay.images?.[0]} alt={stay.title} onError={withStayFallback} />
+                      <img src={stay.images?.[0]} alt={stay.title} loading="lazy" decoding="async" onError={withStayFallback} />
                       <Tag className="stay-card__type">{getStayTypeLabel(stay.type)}</Tag>
                       <div className="stay-card__rating">
                         <Rate disabled allowHalf value={stay.rating} />

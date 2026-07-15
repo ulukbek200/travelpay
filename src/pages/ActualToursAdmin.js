@@ -561,7 +561,7 @@ const renderStayBookingExtras = (booking) => {
 
   return (
     <Card size="small" className="tp-admin-inline-card" title="Дополнительные услуги">
-      <Space direction="vertical" size={10} style={{ width: '100%' }}>
+      <Space orientation="vertical" size={10} style={{ width: '100%' }}>
         {extras.length ? extras.map((extra) => (
           <div key={`${extra.serviceId}-${extra.selectedOptionId || extra.quantity || 1}`} className="tp-admin-calendar-client-row">
             <div>
@@ -656,7 +656,7 @@ const renderStayBookingExtrasPreview = (booking) => {
   const preview = extras.slice(0, 2);
   const hiddenCount = extras.length - preview.length;
   const tooltipContent = (
-    <Space direction="vertical" size={6}>
+    <Space orientation="vertical" size={6}>
       {extras.map((extra) => (
         <div key={`tooltip-${extra.serviceId}-${extra.selectedOptionId || extra.quantity || 1}`}>
           <strong>{getStayBookingExtraLabel(extra)}</strong>{' '}
@@ -2023,7 +2023,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           width: 620,
           okText: 'Закрыть',
           content: (
-            <Space direction="vertical" size={10} style={{ width: '100%', marginTop: 12 }}>
+            <Space orientation="vertical" size={10} style={{ width: '100%', marginTop: 12 }}>
               <div><Text type="secondary">Клиент</Text><br /><strong>{booking.clientName || '—'}</strong></div>
               <div><Text type="secondary">Тур</Text><br /><strong>{booking.tourTitle || '—'}</strong></div>
               <div><Text type="secondary">Дата и время</Text><br /><strong>{formatDateTime(booking.bookingDate)}</strong></div>
@@ -2334,7 +2334,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       dataIndex: 'tourTitle',
       width: 240,
       render: (value, record) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <span>{value}</span>
           {record.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
         </Space>
@@ -2375,7 +2375,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       dataIndex: 'tourTitle',
       width: 240,
       render: (value, record) => (
-        <Space direction="vertical" size={2}>
+        <Space orientation="vertical" size={2}>
           <span>{value}</span>
           {record.type === 'stay_booking' && <Tag color="cyan">Домик</Tag>}
         </Space>
@@ -2574,7 +2574,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       extra={<Badge count={userNotifications.length} showZero />}
     >
       {userNotifications.length ? (
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
           {userNotifications.slice(0, 6).map((item) => (
             <div key={item.id || `${item.type}-${item.createdAt}`} className="tp-admin-booking-card">
               <div className="tp-admin-booking-card__top">
@@ -2605,7 +2605,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   );
 
   const renderDashboard = () => (
-    <Space direction="vertical" size={18} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
       {businessMode && currentBusinessSubscriptionRequest && (
         <Card className="tp-admin-card" styles={{ body: { padding: 20 } }}>
           <div className="tp-admin-section-head">
@@ -2649,7 +2649,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </Col>
             <Col xs={24} xl={10}>
               <Card size="small" className="tp-admin-inline-card" title="Решение супер-админа">
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                   <div>
                     <Text type="secondary">Состояние подписки</Text>
                     <div>
@@ -2744,7 +2744,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         </Col>
         <Col xs={24} xl={8}>
           <Card className="tp-admin-card" title="Финансовое состояние">
-            <Space direction="vertical" size={14} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={14} style={{ width: '100%' }}>
               <div>
                 <div className="tp-admin-progress-head">
                   <Text>Оплачено</Text>
@@ -2793,7 +2793,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         </Col>
         <Col xs={24} xl={10}>
           <Card className="tp-admin-card" title="Сводка компании">
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={16} style={{ width: '100%' }}>
               <div className="tp-admin-company-card">
                 <Avatar size={52} src={sessionUser?.avatar} icon={<UserOutlined />} />
                 <div>
@@ -2815,7 +2815,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   );
 
   const renderCatalog = () => (
-    <Space direction="vertical" size={18} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
       <Card className="tp-admin-card">
         <div className="tp-admin-section-head">
           <div>
@@ -3124,7 +3124,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const renderBookingsModern = () => (
     <Row gutter={[0, 0]} className="tp-admin-bookings-shell tp-admin-bookings-shell--salon">
       <Col xs={24} xl={5}>
-        <Space direction="vertical" size={18} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={18} style={{ width: '100%' }}>
           <Card className="tp-admin-card tp-admin-sticky-card tp-admin-bookings-nav tp-admin-bookings-nav--flat" styles={{ body: { padding: 24 } }}>
             <div className="tp-admin-section-head tp-admin-section-head--tight">
               <div>
@@ -3379,7 +3379,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   );
 
   const renderSavings = () => (
-    <Space direction="vertical" size={18} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           {renderStatCard({ title: 'На проверке', value: pendingTopups.length, color: '#f59e0b' })}
@@ -3406,7 +3406,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   );
 
   const renderReports = () => (
-    <Space direction="vertical" size={18} style={{ width: '100%' }}>
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={12}>
           <Card className="tp-admin-card" title="Платежи">
@@ -3522,7 +3522,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         render: (_, record) => {
           const meta = getSubscriptionHealthMeta(record);
           return (
-            <Space direction="vertical" size={4}>
+            <Space orientation="vertical" size={4}>
               <Tag color={meta.color}>{meta.label}</Tag>
               <Text type="secondary">{record.subscriptionExpiresAt ? `До ${formatDate(record.subscriptionExpiresAt)}` : 'Дата не назначена'}</Text>
             </Space>
@@ -3581,7 +3581,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           {onboardingStats.map((item) => (
             <Col xs={12} xl={6} key={item.label}>
               <Card size="small" className="tp-admin-inline-card">
-                <Space direction="vertical" size={4}>
+                <Space orientation="vertical" size={4}>
                   <Text type="secondary">{item.label}</Text>
                   <div>
                     <Tag color={item.color}>{item.value}</Tag>
@@ -3817,7 +3817,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           <Layout className="tp-admin-main">
             <Content className="tp-admin-content">
               <Card className="tp-admin-card">
-                <Space direction="vertical" size={18} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={18} style={{ width: '100%' }}>
                   <Result
                     status={isRejected ? 'warning' : 'info'}
                     title={isRejected
@@ -3863,7 +3863,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                       </Col>
                       <Col xs={24} xl={10}>
                         <Card size="small" className="tp-admin-inline-card" title="Комментарий супер-админа">
-                          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                          <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                             <div>
                               <Text type="secondary">Комментарий</Text>
                               <div><strong>{currentBusinessSubscriptionRequest.adminComment || currentCompany.rejectionReason || 'Комментарий появится после решения супер-админа.'}</strong></div>
@@ -4005,7 +4005,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         extra={companyCenterCompany ? <Tag color="blue">{companyCenterCompany.name}</Tag> : null}
       >
         {companyCenterCompany && (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <Card size="small" className="tp-admin-inline-card" title="Профиль компании">
               <Row gutter={[12, 12]}>
                 <Col xs={24} md={12}>
@@ -4045,7 +4045,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
             <Card size="small" className="tp-admin-inline-card" title="История подач компании">
               {companyCenterRequests.length ? (
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                   {companyCenterRequests.map((request) => {
                     const reviewerName = request.reviewedBy
                       ? (usersById.get(Number(request.reviewedBy))?.name || '')
@@ -4092,7 +4092,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                             </div>
                           </Col>
                           <Col xs={24} xl={11}>
-                            <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                            <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                               <div>
                                 <Text type="secondary">Instagram</Text>
                                 <div>
@@ -4181,7 +4181,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         extra={calendarDrawerItem?.companyName ? <Tag color="blue">{calendarDrawerItem.companyName}</Tag> : null}
       >
         {calendarDrawerItem && (
-          <Space direction="vertical" size={18} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={18} style={{ width: '100%' }}>
             <div className="tp-admin-calendar-detail">
               <Title level={4} style={{ marginBottom: 8 }}>{calendarDrawerItem.title || calendarDrawerItem.tourTitle}</Title>
               <Space wrap>
@@ -4236,7 +4236,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
             {['stay_booking', 'tour_booking'].includes(calendarDrawerItem.type) && calendarDrawerItem.paymentReceiptUrl && (
               <Card size="small" className="tp-admin-inline-card" title="Чек предоплаты">
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                   {calendarDrawerItem.paymentReceiptUrl.startsWith('data:image/') ? (
                     <Image
                       src={calendarDrawerItem.paymentReceiptUrl}
@@ -4292,7 +4292,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             )}
 
             <Card size="small" className="tp-admin-inline-card" title="Клиенты / брони">
-              <Space direction="vertical" size={10} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                 {(calendarDrawerItem.clients?.length
                   ? calendarDrawerItem.clients
                   : (calendarDrawerItem.clientName ? [calendarDrawerItem] : [])
@@ -4428,7 +4428,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </div>
             <Form.List name="departureSlots">
               {(fields, { add, remove }) => (
-                <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                   {fields.map(({ key, name, ...restField }, index) => (
                     <Card
                       key={key}
@@ -4537,7 +4537,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
               <Form.List name="accommodations">
                 {(fields, { add, remove }) => (
-                  <Space direction="vertical" size={14} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={14} style={{ width: '100%' }}>
                     {fields.map(({ key, name, ...restField }, index) => (
                       <Card
                         key={key}
@@ -4679,7 +4679,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         width={820}
       >
         {companyRequestReviewItem && (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <Card size="small" className="tp-admin-inline-card" title="Заявка компании">
               <Row gutter={[12, 12]}>
                 <Col xs={24} md={12}>
@@ -5106,7 +5106,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           {editingStayServices.length ? (
             <>
               <Divider orientation="left">Дополнительные услуги</Divider>
-              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                 {editingStayServices.map((service) => {
                   const selection = stayBookingEditorExtras[service.id] || {};
                   return (
@@ -5169,7 +5169,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
           <Divider orientation="left">Итог</Divider>
           <Card size="small" className="tp-admin-inline-card">
-            <Space direction="vertical" size={10} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={10} style={{ width: '100%' }}>
               <div className="tp-admin-calendar-client-row">
                 <div>
                   <strong>Проживание</strong>

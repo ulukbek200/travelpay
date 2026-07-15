@@ -437,7 +437,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                       onClick={() => openTour(tour)}
                     >
                       <div style={{ ...styles.imageWrap, ...(isMobile ? styles.imageWrapMobile : {}) }}>
-                        <img src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} onError={withTourFallback} style={styles.image} />
+                        <img src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} loading="lazy" decoding="async" onError={withTourFallback} style={styles.image} />
                         <div style={styles.imageShade} />
                         <div style={{ ...styles.promoBadge, background: tour.promoColor }}>
                           {tour.promoBadge}

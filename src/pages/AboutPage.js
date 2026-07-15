@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import {
   ArrowRightOutlined,
   BankOutlined,
@@ -9,10 +9,18 @@ import {
 } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import AudienceComparison from '../components/about/AudienceComparison';
-import AudienceSwitcher from '../components/about/AudienceSwitcher';
-import AboutVideoPanel from '../components/about/AboutVideoPanel';
-import HowItWorksSteps from '../components/about/HowItWorksSteps';
+
+const AudienceComparison = lazy(() => import('../components/about/AudienceComparison'));
+const AudienceSwitcher = lazy(() => import('../components/about/AudienceSwitcher'));
+const AboutVideoPanel = lazy(() => import('../components/about/AboutVideoPanel'));
+const HowItWorksSteps = lazy(() => import('../components/about/HowItWorksSteps'));
+
+const ABOUT_HERO_IMAGE_SRC = '/images/about/about-hero-1280.jpg';
+const ABOUT_HERO_IMAGE_SRCSET = [
+  '/images/about/about-hero-768.jpg 768w',
+  '/images/about/about-hero-1280.jpg 1280w',
+  '/images/about/about-hero-1920.jpg 1920w',
+].join(', ');
 
 const audienceContent = {
   travelers: {
@@ -28,6 +36,9 @@ const audienceContent = {
       'Видео для путешественников: выбор тура, просмотр маршрута, бронирование, избранное, AI Concierge и личный кабинет.',
     fallbackTitle: 'Видео для путешественников',
     fallbackText: 'Пока видео загружается, TravelPay показывает poster без пустого экрана.',
+    videoLabel: 'Видео для путешественников',
+    videoSubtitle: 'Выбор тура, бронирование и личный кабинет',
+    trustChips: ['150+ туров', 'Проверенные компании', 'Онлайн-бронирование', 'AI Concierge'],
     steps: [
       {
         title: 'Найдите подходящий тур',
@@ -48,6 +59,7 @@ const audienceContent = {
     ],
     actions: [
       { label: 'Перейти к турам', to: '/tours', icon: <ArrowRightOutlined /> },
+      { label: 'Открыть AI Concierge', event: 'open-ai-concierge', icon: <CompassOutlined />, secondary: true },
     ],
   },
   business: {
@@ -57,12 +69,15 @@ const audienceContent = {
     title: 'Управляйте туристическим бизнесом в одном сервисе',
     description:
       'TravelPay помогает туркомпаниям публиковать туры, управлять бронированиями, размещением, клиентами и расписанием через единую бизнес-панель.',
-    video: '/videos/travelpay-business.mp4',
+    video: '/videos/travelpay-business.mov',
     poster: '/images/about/business-video-poster.jpg',
     caption:
       'Видео для туркомпаний: создание компании, публикация туров, загрузка фото, календарь бронирований, заявки и аналитика.',
     fallbackTitle: 'Видео для туркомпаний',
     fallbackText: 'Слот готов под отдельное бизнес-видео. После добавления файла оно автоматически появится здесь.',
+    videoLabel: 'Видео для туркомпаний',
+    videoSubtitle: 'Публикация туров, заявки и управление бизнесом',
+    trustChips: ['Календарь заявок', 'CRM-панель', 'Аналитика', 'Размещение туров'],
     steps: [
       {
         title: 'Зарегистрируйте туркомпанию',
@@ -112,10 +127,31 @@ const AboutPage = () => {
   const [activeAudience, setActiveAudience] = useState('travelers');
   const activeContent = audienceContent[activeAudience];
 
+  const handleAudienceAction = (action) => {
+    if (action.event === 'open-ai-concierge') {
+      window.dispatchEvent(new Event('open-ai-concierge'));
+      return;
+    }
+
+    navigate(action.to);
+  };
+
   return (
     <main className="about-page about-page--product">
       <section className="about-hero about-hero--product">
-        <div className="about-hero__bg" />
+        <img
+          className="about-hero__bg"
+          src={ABOUT_HERO_IMAGE_SRC}
+          srcSet={ABOUT_HERO_IMAGE_SRCSET}
+          sizes="100vw"
+          width={1920}
+          height={1551}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+        />
         <div className="about-hero__shade" />
         <div className="about-shell about-hero__layout about-hero__layout--product">
           <div className="about-hero__copy">
@@ -157,7 +193,8 @@ const AboutPage = () => {
         </div>
       </section>
 
-      <section className="about-section about-audience" aria-labelledby="about-audience-title">
+      <Suspense fallback={null}>
+        <section className="about-section about-audience" aria-labelledby="about-audience-title">
         <div className="about-shell">
           <div className="about-audience__head">
             <span className="about-kicker">Как пользоваться TravelPay</span>
@@ -198,8 +235,8 @@ const AboutPage = () => {
                 <Button
                   className={action.secondary ? 'about-button about-button--glass' : 'about-button about-button--primary'}
                   icon={action.icon}
-                  key={action.to}
-                  onClick={() => navigate(action.to)}
+                  key={action.to || action.event}
+                  onClick={() => handleAudienceAction(action)}
                   size="large"
                   type={action.secondary ? 'default' : 'primary'}
                 >
@@ -207,11 +244,18 @@ const AboutPage = () => {
                 </Button>
               ))}
             </div>
+
+            <div className="about-audience-panel__trust" aria-label="Преимущества TravelPay">
+              {activeContent.trustChips.map((chip) => (
+                <span key={chip}>{chip}</span>
+              ))}
+            </div>
           </div>
         </div>
-      </section>
+        </section>
 
-      <AudienceComparison cards={comparisonCards} />
+        <AudienceComparison cards={comparisonCards} />
+      </Suspense>
 
       <section className="about-section about-final-cta">
         <div className="about-shell about-final-cta__inner">

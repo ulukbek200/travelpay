@@ -212,7 +212,7 @@ const BusinessRegisterPage = () => {
       <Content style={styles.content}>
         <Row gutter={[24, 24]} align="top">
           <Col xs={24} lg={8}>
-            <Space direction="vertical" size={18} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={18} style={{ width: '100%' }}>
               <Button type="link" onClick={() => navigate('/business')} style={{ padding: 0 }}>
                 Назад в TravelPay Business
               </Button>
@@ -391,7 +391,7 @@ const BusinessRegisterPage = () => {
 
                   <Col xs={24}>
                     <Card size="small" style={styles.contractCard}>
-                      <Space direction="vertical" size={10} style={{ width: '100%' }}>
+                      <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                         <Text strong>Договор TravelPay Business</Text>
                         <Text type="secondary">
                           Подписка оформляется на 30 дней. Доступ в кабинет открывается только после подтверждения супер-админом.

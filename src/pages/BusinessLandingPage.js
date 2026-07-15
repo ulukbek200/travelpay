@@ -42,19 +42,19 @@ const BusinessLandingPage = () => {
             </Space>
           </div>
           <Card className="business-surface-card" style={styles.heroCard} styles={{ body: { padding: 24 } }}>
-            <Space direction="vertical" size={18} style={{ width: '100%' }}>
+            <Space orientation="vertical" size={18} style={{ width: '100%' }}>
               <div>
                 <Text type="secondary">Статус публикации</Text>
                 <Title level={3} style={{ margin: '4px 0 0' }}>Только подтверждённые компании</Title>
               </div>
               <Steps
-                direction="vertical"
+                orientation="vertical"
                 size="small"
                 current={1}
                 items={[
-                  { title: 'Заявка', description: 'Компания отправляет данные и документы.' },
-                  { title: 'Проверка TravelPay', description: 'Админ подтверждает или отклоняет заявку.' },
-                  { title: 'Публикация туров', description: 'Активная компания управляет своими турами.' },
+                  { title: 'Заявка', content: 'Компания отправляет данные и документы.' },
+                  { title: 'Проверка TravelPay', content: 'Админ подтверждает или отклоняет заявку.' },
+                  { title: 'Публикация туров', content: 'Активная компания управляет своими турами.' },
                 ]}
               />
             </Space>

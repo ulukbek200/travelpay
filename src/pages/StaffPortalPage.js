@@ -34,7 +34,7 @@ const StaffPortalPage = () => {
     <Layout style={styles.page}>
       <div style={styles.overlay} />
       <Content style={styles.content}>
-        <Space direction="vertical" size={20} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={20} style={{ width: '100%' }}>
           <div style={{ textAlign: 'center' }}>
             <Tag color="blue" style={{ padding: '6px 14px', borderRadius: 999 }}>TravelPay Staff Portal</Tag>
             <Title style={styles.title}>Отдельный вход для команды TravelPay</Title>
@@ -47,7 +47,7 @@ const StaffPortalPage = () => {
             {cards.map((item) => (
               <Col xs={24} md={12} key={item.key}>
                 <Card style={styles.card}>
-                  <Space direction="vertical" size={16} style={{ width: '100%' }}>
+                  <Space orientation="vertical" size={16} style={{ width: '100%' }}>
                     <div style={{ ...styles.iconWrap, background: `${item.accent}18`, color: item.accent }}>
                       {item.icon}
                     </div>
