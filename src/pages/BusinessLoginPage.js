@@ -84,7 +84,7 @@ const BusinessLoginPage = () => {
       console.log('COMPANY ID:', companyId);
       console.log('ROLE:', role);
 
-      if (!token || !companyId) {
+      if (!responseUser?.id || !companyId) {
         clearCurrentUser();
         message.error('Не удалось завершить вход в TravelPay Business.');
         return;
@@ -98,7 +98,6 @@ const BusinessLoginPage = () => {
 
       const user = syncCurrentUser({
         ...responseUser,
-        authToken: token,
         companyId: Number(companyId) || responseUser?.companyId,
         role,
         isLoggedIn: true,
@@ -106,7 +105,6 @@ const BusinessLoginPage = () => {
 
       saveCurrentUser(user);
       saveBusinessSession({
-        token,
         user: responseUser,
         company: response.data?.company || null,
         companyId,

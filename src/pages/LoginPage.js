@@ -64,15 +64,14 @@ const LoginPage = () => {
       console.log('COMPANY ID:', companyId);
       console.log('ROLE:', role);
 
-      if (!token) {
+      if (!responseUser?.id) {
         clearCurrentUser();
         message.error('Не удалось завершить вход. Сервер не выдал токен.');
         return;
       }
 
-      const user = syncCurrentUser({ ...responseUser, authToken: token, isLoggedIn: true });
+      const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
       saveAuthSession({
-        token,
         user,
         role,
         companyId,
@@ -86,7 +85,6 @@ const LoginPage = () => {
         }
 
         saveBusinessSession({
-          token,
           user,
           companyId,
           role,

@@ -79,29 +79,17 @@ const RegisterPage = () => {
 
       let {
         responseUser,
-        token,
         companyId,
         role,
       } = extractAuthPayload(registerResponse.data);
 
-      if (!token) {
-        const loginResponse = await api.post('/auth/login', { email, password });
-        ({
-          responseUser,
-          token,
-          companyId,
-          role,
-        } = extractAuthPayload(loginResponse.data));
-      }
-
-      if (!token) {
+      if (!responseUser?.id) {
         message.error('Аккаунт создан, но сервер не выдал токен. Перезапустите backend и войдите снова.');
         return;
       }
 
-      const user = syncCurrentUser({ ...responseUser, authToken: token, isLoggedIn: true });
+      const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
       saveAuthSession({
-        token,
         user,
         role,
         companyId,

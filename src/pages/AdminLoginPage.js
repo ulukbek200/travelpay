@@ -78,7 +78,7 @@ const AdminLoginPage = () => {
       console.log('ADMIN COMPANY ID:', companyId);
       console.log('ADMIN RESPONSE HEADERS:', response.headers);
 
-      if (!token) {
+      if (!responseUser?.id) {
         clearCurrentUser();
         message.error('Не удалось завершить вход администратора. Сервер не выдал токен.');
         return;
@@ -90,17 +90,15 @@ const AdminLoginPage = () => {
         return;
       }
 
-      const user = syncCurrentUser({ ...responseUser, authToken: token, isLoggedIn: true });
+      const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
 
       saveAuthSession({
-        token,
         user,
         role,
         companyId,
       });
 
       saveBusinessSession({
-        token,
         user,
         companyId,
         role,

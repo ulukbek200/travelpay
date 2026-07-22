@@ -137,7 +137,6 @@ export const normalizeUser = (user) => {
 
   return {
     ...user,
-    authToken: user.authToken || '',
     role: normalizeRole(user.role),
     companyId: Number(user.companyId) || 1,
     favorites: ensureArray(user.favorites),
@@ -171,20 +170,13 @@ export const getAdminLandingPath = (user) => {
 };
 
 export const syncCurrentUser = (user) => {
-  const previousUser = normalizeUser(readCurrentUser());
   const normalizedUser = normalizeUser(user);
 
   if (normalizedUser) {
-    saveCurrentUser({
-      ...normalizedUser,
-      authToken: normalizedUser.authToken || previousUser?.authToken || '',
-    });
+    saveCurrentUser(normalizedUser);
   }
 
-  return normalizedUser ? {
-    ...normalizedUser,
-    authToken: normalizedUser.authToken || previousUser?.authToken || '',
-  } : normalizedUser;
+  return normalizedUser;
 };
 
 export const updateUserById = async (userId, updates, method = 'put') => {

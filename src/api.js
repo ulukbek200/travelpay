@@ -1,11 +1,5 @@
 import axios from 'axios';
-import {
-  clearCurrentUser,
-  persistAuthRedirectError,
-  readAuthToken,
-  readCurrentUser,
-  readStoredRole,
-} from './utils/currentUser';
+import { clearCurrentUser, persistAuthRedirectError, readCurrentUser, readStoredRole } from './utils/currentUser';
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL ||
@@ -15,21 +9,7 @@ const API_BASE_URL =
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-});
-
-api.interceptors.request.use((config) => {
-  try {
-    const currentUser = readCurrentUser();
-    const token = readAuthToken() || currentUser?.authToken || '';
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  } catch (error) {
-    // ignore local auth read errors
-  }
-
-  return config;
+  withCredentials: true,
 });
 
 const shouldResetSession = (error) => {
@@ -61,7 +41,7 @@ api.interceptors.response.use(
     const currentUser = readCurrentUser();
     const currentRole = String(readStoredRole() || currentUser?.role || '').toLowerCase();
 
-    if ((currentUser?.isLoggedIn || readAuthToken()) && shouldResetSession(error)) {
+    if (currentUser?.isLoggedIn && shouldResetSession(error)) {
       if (error?.response?.status === 403 && String(error?.config?.url || '').startsWith('/companies/')) {
         persistAuthRedirectError('У вас нет доступа к этой компании');
       }
