@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
+import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import {
   agreementRules,
   confirmPasswordRules,
@@ -106,6 +107,12 @@ const RegisterPage = () => {
       setLoading(false);
     }
   };
+  const handleGoogleSuccess = (responseUser) => {
+    const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
+    saveAuthSession({ user, role: user.role, companyId: user.companyId });
+    message.success('Аккаунт Google подключён');
+    navigate('/profile');
+  };
 
   return (
     <AuthLayout
@@ -147,6 +154,7 @@ const RegisterPage = () => {
           Зарегистрироваться
         </Button>
       </Form>
+      <GoogleSignInButton onSuccess={handleGoogleSuccess} onError={(error) => message.error(getApiErrorMessage(error, 'Не удалось зарегистрироваться через Google.'))} />
 
       <Divider plain>или зарегистрироваться через</Divider>
 

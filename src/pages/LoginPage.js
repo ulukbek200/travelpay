@@ -9,6 +9,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
 import AuthLayout from '../components/auth/AuthLayout';
+import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import { emailRules, loginPasswordRules } from '../components/auth/authValidation';
 import { getApiErrorMessage } from '../utils/apiErrors';
 import { clearCurrentUser, saveAuthSession, saveBusinessSession } from '../utils/currentUser';
@@ -121,6 +122,12 @@ const LoginPage = () => {
   };
 
   const handleSubmit = (values) => login(values);
+  const handleGoogleSuccess = (responseUser) => {
+    const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
+    saveAuthSession({ user, role: user.role, companyId: user.companyId });
+    message.success('Вход через Google выполнен');
+    navigate(getAdminLandingPath(user));
+  };
 
   return (
     <AuthLayout
@@ -159,6 +166,7 @@ const LoginPage = () => {
           Войти
         </Button>
       </Form>
+      <GoogleSignInButton onSuccess={handleGoogleSuccess} onError={(error) => message.error(getApiErrorMessage(error, 'Не удалось войти через Google.'))} />
 
       <Divider plain>или войти через</Divider>
 
