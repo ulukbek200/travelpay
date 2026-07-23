@@ -12,7 +12,12 @@ import { syncCurrentUser } from '../utils/user';
 const { Paragraph, Text } = Typography;
 
 const extractAdminAuthPayload = (payload, headers = {}) => {
-  const responseUser = payload?.user || payload || null;
+  const rawUser = payload?.user || payload || null;
+  const responseUser = rawUser ? { ...rawUser } : null;
+  if (responseUser) {
+    delete responseUser.authToken;
+    delete responseUser.token;
+  }
   const headerAuthorization = String(
     headers?.authorization
     || headers?.Authorization
@@ -96,6 +101,7 @@ const AdminLoginPage = () => {
         user,
         role,
         companyId,
+        token,
       });
 
       saveBusinessSession({

@@ -29,8 +29,8 @@ import api from '../api';
 import {
   clearCurrentUser,
   consumeAuthRedirectError,
+  saveAuthSession,
   saveBusinessSession,
-  saveCurrentUser,
 } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
 import { getApiErrorMessage } from '../utils/apiErrors';
@@ -76,7 +76,7 @@ const BusinessLoginPage = () => {
       console.log('LOGIN RESPONSE:', response.data);
 
       const responseUser = response.data?.user || null;
-      const token = String(response.data?.token || responseUser?.authToken || '').trim();
+      const token = String(response.data?.authToken || response.data?.token || responseUser?.authToken || '').trim();
       const companyId = String(responseUser?.companyId || response.data?.company?.id || '').trim();
       const role = String(responseUser?.role || '').trim().toLowerCase();
 
@@ -103,7 +103,7 @@ const BusinessLoginPage = () => {
         isLoggedIn: true,
       });
 
-      saveCurrentUser(user);
+      saveAuthSession({ user, role, companyId, token });
       saveBusinessSession({
         user: responseUser,
         company: response.data?.company || null,

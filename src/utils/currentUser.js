@@ -5,6 +5,7 @@ const BUSINESS_COMPANY_KEY = 'businessCompany';
 const COMPANY_ID_KEY = 'companyId';
 const ROLE_KEY = 'role';
 const AUTH_REDIRECT_ERROR_KEY = 'travelpay-auth-error';
+const AUTH_SESSION_TOKEN_KEY = 'travelpay-session-token';
 
 const readJson = (key) => {
   try {
@@ -24,7 +25,15 @@ export const saveCurrentUser = (user) => {
   window.dispatchEvent(new CustomEvent(CURRENT_USER_EVENT, { detail: user }));
 };
 
-export const readAuthToken = () => '';
+// Some mobile browsers block cross-site cookies. Keep the fallback token only for
+// the lifetime of the current browser tab; the httpOnly cookie remains primary.
+export const readAuthToken = () => {
+  try {
+    return sessionStorage.getItem(AUTH_SESSION_TOKEN_KEY) || '';
+  } catch (error) {
+    return '';
+  }
+};
 export const readBusinessUser = () => readJson(BUSINESS_USER_KEY);
 export const readBusinessCompany = () => readJson(BUSINESS_COMPANY_KEY);
 export const readStoredCompanyId = () => localStorage.getItem(COMPANY_ID_KEY) || '';
@@ -37,7 +46,7 @@ export const saveBusinessSession = ({ user, company, companyId, role }) => {
   if (role) localStorage.setItem(ROLE_KEY, String(role));
 };
 
-export const saveAuthSession = ({ user, role, companyId, company }) => {
+export const saveAuthSession = ({ user, role, companyId, company, token }) => {
 
   if (user) {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
@@ -55,6 +64,14 @@ export const saveAuthSession = ({ user, role, companyId, company }) => {
   if (company) {
     localStorage.setItem(BUSINESS_COMPANY_KEY, JSON.stringify(company));
   }
+
+  if (token) {
+    try {
+      sessionStorage.setItem(AUTH_SESSION_TOKEN_KEY, String(token));
+    } catch (error) {
+      // The secure cookie still provides authentication when sessionStorage is unavailable.
+    }
+  }
 };
 
 export const clearBusinessSession = () => {
@@ -68,6 +85,11 @@ export const clearBusinessSession = () => {
 export const clearCurrentUser = () => {
   localStorage.removeItem(CURRENT_USER_KEY);
   clearBusinessSession();
+  try {
+    sessionStorage.removeItem(AUTH_SESSION_TOKEN_KEY);
+  } catch (error) {
+    // Nothing to clear when browser storage is unavailable.
+  }
   window.dispatchEvent(new CustomEvent(CURRENT_USER_EVENT, { detail: null }));
 };
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { clearCurrentUser, persistAuthRedirectError, readCurrentUser, readStoredRole } from './utils/currentUser';
+import { clearCurrentUser, persistAuthRedirectError, readAuthToken, readCurrentUser, readStoredRole } from './utils/currentUser';
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL ||
@@ -10,6 +10,15 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
   withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = readAuthToken();
+  if (token && !config.headers?.Authorization) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 const shouldResetSession = (error) => {

@@ -28,7 +28,12 @@ import { syncCurrentUser } from '../utils/user';
 const { Text } = Typography;
 
 const extractAuthPayload = (payload) => {
-  const responseUser = payload?.user || payload || null;
+  const rawUser = payload?.user || payload || null;
+  const responseUser = rawUser ? { ...rawUser } : null;
+  if (responseUser) {
+    delete responseUser.authToken;
+    delete responseUser.token;
+  }
   const token = String(
     payload?.authToken
     || payload?.token
@@ -80,6 +85,7 @@ const RegisterPage = () => {
 
       let {
         responseUser,
+        token,
         companyId,
         role,
       } = extractAuthPayload(registerResponse.data);
@@ -94,6 +100,7 @@ const RegisterPage = () => {
         user,
         role,
         companyId,
+        token,
       });
 
       message.success('Аккаунт успешно создан');
@@ -107,9 +114,10 @@ const RegisterPage = () => {
       setLoading(false);
     }
   };
-  const handleGoogleSuccess = (responseUser) => {
+  const handleGoogleSuccess = (payload) => {
+    const { responseUser, token, companyId, role } = extractAuthPayload(payload);
     const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
-    saveAuthSession({ user, role: user.role, companyId: user.companyId });
+    saveAuthSession({ user, role: role || user.role, companyId: companyId || user.companyId, token });
     message.success('Аккаунт Google подключён');
     navigate('/profile');
   };

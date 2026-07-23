@@ -18,7 +18,12 @@ import { canAccessBusinessPanel, getAdminLandingPath, syncCurrentUser } from '..
 const { Text } = Typography;
 
 const extractAuthPayload = (payload) => {
-  const responseUser = payload?.user || payload || null;
+  const rawUser = payload?.user || payload || null;
+  const responseUser = rawUser ? { ...rawUser } : null;
+  if (responseUser) {
+    delete responseUser.authToken;
+    delete responseUser.token;
+  }
   const token = String(
     payload?.authToken
     || payload?.token
@@ -76,6 +81,7 @@ const LoginPage = () => {
         user,
         role,
         companyId,
+        token,
       });
 
       if (businessAccount) {
@@ -122,9 +128,10 @@ const LoginPage = () => {
   };
 
   const handleSubmit = (values) => login(values);
-  const handleGoogleSuccess = (responseUser) => {
+  const handleGoogleSuccess = (payload) => {
+    const { responseUser, token, companyId, role } = extractAuthPayload(payload);
     const user = syncCurrentUser({ ...responseUser, isLoggedIn: true });
-    saveAuthSession({ user, role: user.role, companyId: user.companyId });
+    saveAuthSession({ user, role: role || user.role, companyId: companyId || user.companyId, token });
     message.success('Вход через Google выполнен');
     navigate(getAdminLandingPath(user));
   };
