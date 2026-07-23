@@ -3,7 +3,7 @@ import api from '../../api';
 
 // Google OAuth client IDs are public identifiers. Keeping this fallback avoids a stale
 // frontend build using an incorrectly entered hosting environment variable.
-const GOOGLE_CLIENT_ID = '555757441096-frf5103re3iq3239u1vn8dpvfnvg0m17.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '555757441096-0gldl5g39cvjeeuda1hjh1hkm3oeojd9.apps.googleusercontent.com';
 
 export default function GoogleSignInButton({ onSuccess, onError }) {
   const containerRef = useRef(null);
