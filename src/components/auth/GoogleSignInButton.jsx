@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import api from '../../api';
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+// Google OAuth client IDs are public identifiers. Keeping this fallback avoids a stale
+// frontend build using an incorrectly entered hosting environment variable.
+const GOOGLE_CLIENT_ID = '555757441096-frf5103re3iq3239u1vn8dpvfnvg0m17.apps.googleusercontent.com';
 
 export default function GoogleSignInButton({ onSuccess, onError }) {
   const containerRef = useRef(null);
