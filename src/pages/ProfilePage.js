@@ -345,7 +345,7 @@ const ProfilePage = () => {
       <Content style={styles.content}>
         <div className="travelpay-dashboard-container">
           <Space orientation="vertical" size={20} style={{ width: '100%' }}>
-            <div style={styles.topBar}>
+            <div className="profile-topbar" style={styles.topBar}>
               <div style={{ minWidth: 0 }}>
                 {!isDesktop && (
                   <Button icon={<MenuOutlined />} onClick={() => setMenuOpen(true)} style={styles.mobileMenuButton}>

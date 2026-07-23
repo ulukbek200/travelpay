@@ -33,5 +33,5 @@ export default function GoogleSignInButton({ onSuccess, onError }) {
   }, [onSuccess, onError]);
 
   if (!GOOGLE_CLIENT_ID) return null;
-  return <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }} />;
+  return <div ref={containerRef} className="auth-google-button" />;
 }

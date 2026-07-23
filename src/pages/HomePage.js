@@ -412,6 +412,12 @@ const whyTravelPay = [
   ['Safe Planning', 'Понятные CTA, прозрачная стоимость и аккуратный booking flow.', <SafetyCertificateOutlined />],
 ];
 
+const whyTravelPayTitles = {
+  RU: ['\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u043a\u0441\u043f\u0435\u0440\u0442\u0438\u0437\u0430', '\u0417\u0430\u0431\u043e\u0442\u0430 \u043e\u0442 \u043d\u0430\u0447\u0430\u043b\u0430 \u0434\u043e \u043a\u043e\u043d\u0446\u0430', '\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0435 \u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435'],
+  EN: ['Local expertise', 'Premium support', 'Safe planning'],
+  KG: ['\u0416\u0435\u0440\u0433\u0438\u043b\u0438\u043a\u0442\u04af\u04af \u0442\u0430\u0436\u0440\u044b\u0439\u0431\u0430', '\u0411\u0430\u0448\u0442\u0430\u043d \u0430\u044f\u0433\u044b\u043d\u0430 \u0447\u0435\u0439\u0438\u043d \u043a\u043e\u043b\u0434\u043e\u043e', '\u041a\u043e\u043e\u043f\u0441\u0443\u0437 \u043f\u043b\u0430\u043d\u0434\u043e\u043e'],
+};
+
 const faqItems = {
   RU: [
     { key: '1', label: 'Какие локации доступны сейчас?', children: 'Ала-Арча, Иссык-Куль, Сон-Куль, Каракол, Джети-Огуз и Арсланбоб уже оформлены как приоритетные направления.' },
@@ -1201,20 +1207,20 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="home-section" style={styles.section}>
+      <section className="home-section home-why-section" style={styles.section}>
         <div className="home-shell" style={styles.sectionInner}>
-          <motion.div {...motionCard} style={styles.sectionHeader}>
+          <motion.div {...motionCard} className="home-why-heading" style={styles.sectionHeader}>
             <Tag style={styles.sectionTag}>{t.whyTitle}</Tag>
             <Title level={2} style={styles.sectionTitle}>{t.whyTitle}</Title>
           </motion.div>
 
-          <Row gutter={[18, 18]}>
+          <Row gutter={[18, 18]} className="home-why-grid">
             {whyTravelPay.map(([title, text, icon], index) => (
               <Col xs={24} md={8} key={title}>
                 <motion.div {...motionCard} transition={{ delay: index * 0.06 }}>
-                  <Card style={styles.whyCard}>
+                  <Card className="home-why-card" style={styles.whyCard}>
                     <div style={styles.whyIcon}>{icon}</div>
-                    <Title level={4} style={styles.whyTitle}>{title}</Title>
+                    <Title level={4} className="home-why-card__title" style={styles.whyTitle}>{whyTravelPayTitles[language]?.[index] || title}</Title>
                     <Paragraph style={styles.whyText}>{text}</Paragraph>
                   </Card>
                 </motion.div>

@@ -20,6 +20,7 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     display: grid;
     place-items: center;
     padding: 88px 18px 32px;
+    isolation: isolate;
   }
 
   .auth-bg-image {
@@ -35,8 +36,37 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   .auth-overlay {
     position: fixed;
     inset: 0;
-    background: linear-gradient(180deg, rgba(7, 17, 35, 0.68), rgba(7, 17, 35, 0.84));
-    backdrop-filter: blur(3px);
+    background:
+      radial-gradient(circle at 16% 16%, rgba(37, 180, 220, 0.30), transparent 26%),
+      radial-gradient(circle at 86% 84%, rgba(252, 163, 17, 0.23), transparent 28%),
+      linear-gradient(135deg, rgba(5, 19, 38, 0.76), rgba(8, 28, 47, 0.82));
+    backdrop-filter: blur(5px);
+  }
+
+  .auth-scene-orb {
+    position: fixed;
+    z-index: 1;
+    border-radius: 999px;
+    pointer-events: none;
+    filter: blur(1px);
+  }
+
+  .auth-scene-orb--one {
+    width: 220px;
+    height: 220px;
+    top: 16%;
+    left: -92px;
+    background: rgba(63, 193, 231, 0.18);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .auth-scene-orb--two {
+    width: 170px;
+    height: 170px;
+    right: -44px;
+    bottom: 8%;
+    background: rgba(252, 163, 17, 0.16);
+    border: 1px solid rgba(255,255,255,0.16);
   }
 
   .auth-back {
@@ -57,34 +87,34 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   .auth-center-shell {
     position: relative;
     z-index: 5;
-    width: min(100%, 430px);
+    width: min(100%, 450px);
     margin: 0 auto;
   }
 
   .auth-card {
-    border-radius: 22px !important;
+    border-radius: 26px !important;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.18) !important;
-    background: rgba(255,255,255,0.94) !important;
+    background: rgba(255,255,255,0.96) !important;
     backdrop-filter: blur(20px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.24);
+    box-shadow: 0 28px 80px rgba(0,0,0,0.32), 0 2px 0 rgba(255,255,255,0.34) inset;
   }
 
   .auth-card .ant-card-body {
-    padding: 28px !important;
+    padding: 32px !important;
   }
 
   .auth-card-head {
     text-align: center;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
   }
 
   .auth-logo-tag {
-    height: 40px;
+    height: 42px;
     padding: 0 14px 0 10px;
     border-radius: 999px;
     border: none;
-    background: linear-gradient(135deg, #1677ff, #00b4d8);
+    background: linear-gradient(135deg, #0d4e91, #1677ff 58%, #16b6c4);
     color: white;
     font-weight: 800;
     display: inline-flex;
@@ -106,7 +136,7 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     color: #1677ff;
     font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
@@ -131,6 +161,13 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   .auth-form .ant-input {
     min-height: 48px;
     border-radius: 12px;
+    border-color: rgba(15, 75, 125, 0.16);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  .auth-form .ant-input-affix-wrapper:hover,
+  .auth-form .ant-input:hover {
+    border-color: rgba(22, 119, 255, 0.58);
   }
 
   .auth-form-row,
@@ -147,9 +184,55 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     border-radius: 12px !important;
     font-weight: 800;
     font-size: 15px;
-    background: linear-gradient(135deg, #1677ff, #00b4d8) !important;
+    background: linear-gradient(135deg, #0758a5, #1677ff 56%, #17b8c6) !important;
     border: none !important;
-    box-shadow: 0 12px 24px rgba(22,119,255,0.28);
+    box-shadow: 0 14px 28px rgba(10, 92, 174, 0.30);
+    transition: transform .2s ease, box-shadow .2s ease !important;
+  }
+
+  .auth-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 32px rgba(10, 92, 174, 0.38) !important;
+  }
+
+  .auth-divider {
+    margin: 22px 0 12px !important;
+    color: #6b7280 !important;
+    font-size: 12px !important;
+  }
+
+  .auth-google-button {
+    display: flex;
+    justify-content: center;
+    min-height: 40px;
+    margin-top: 22px;
+    padding-top: 20px;
+    position: relative;
+  }
+
+  .auth-google-button::before {
+    content: 'GOOGLE SIGN-IN';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    color: #6b7280;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  .auth-card .ant-divider {
+    display: none;
+  }
+
+  .auth-google-note {
+    display: block;
+    margin-top: 10px;
+    color: #7b8798;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.45;
   }
 
   .auth-socials {
@@ -161,6 +244,10 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
   .auth-socials .ant-btn {
     width: 100%;
     border-radius: 12px !important;
+  }
+
+  .auth-socials {
+    display: none !important;
   }
 
   body[data-theme="dark"] .auth-overlay {
@@ -295,7 +382,7 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
     }
 
     .auth-form-row,
-    .auth-footer {
+  .auth-footer {
       align-items: flex-start;
       flex-direction: column;
       gap: 8px;
@@ -310,11 +397,21 @@ const AuthLayout = ({ eyebrow, title, subtitle, children }) => {
       grid-template-columns: 1fr;
     }
   }
+
+  .auth-footer {
+    width: 100%;
+    justify-content: center;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(15, 75, 125, 0.10);
+  }
 `}</style>
       <main className="auth-page">
         <div className="auth-bg-image" aria-hidden="true" />
 
         <div className="auth-overlay" />
+        <div className="auth-scene-orb auth-scene-orb--one" aria-hidden="true" />
+        <div className="auth-scene-orb auth-scene-orb--two" aria-hidden="true" />
 
         <Button
           className="auth-back"

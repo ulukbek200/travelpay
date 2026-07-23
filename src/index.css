@@ -9927,6 +9927,29 @@ body[data-theme="dark"] .stays-search-card .ant-picker {
   font-weight: 700;
 }
 
+.savings-fintech-back.ant-btn {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+  height: 44px;
+  padding-inline: 16px;
+  border-radius: 12px;
+  color: #e7f8ff !important;
+  background: rgba(8, 50, 75, 0.42) !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.20);
+  backdrop-filter: blur(14px);
+  font-weight: 750;
+}
+
+.savings-fintech-back.ant-btn:hover,
+.savings-fintech-back.ant-btn:focus {
+  color: #fff !important;
+  background: rgba(18, 121, 150, 0.76) !important;
+  border-color: rgba(255, 255, 255, 0.44) !important;
+}
+
 .savings-fintech-logout.ant-btn:hover,
 .savings-fintech-logout.ant-btn:focus {
   color: #fff !important;
@@ -10254,6 +10277,14 @@ body[data-theme="dark"] .stays-search-card .ant-picker {
 }
 
 @media (max-width: 768px) {
+  .savings-fintech-back.ant-btn {
+    top: 12px;
+    left: 12px;
+    height: 40px;
+    padding-inline: 12px;
+    border-radius: 13px;
+  }
+
   .savings-fintech-logout.ant-btn {
     top: 14px;
     right: 14px;
@@ -16045,6 +16076,1089 @@ body.is-hero-scrolled .home-hero-scroll-indicator {
   }
 }
 
+/* Savings daylight palette */
+.savings-fintech-page {
+  color: #153b61 !important;
+  background:
+    radial-gradient(circle at 10% 14%, rgba(28, 174, 190, 0.19), transparent 27%),
+    radial-gradient(circle at 90% 8%, rgba(252, 182, 46, 0.20), transparent 25%),
+    linear-gradient(180deg, #effaff 0%, #f8fcff 46%, #edf7ff 100%) !important;
+}
+
+.savings-fintech-page .savings-fintech-card.ant-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(22, 90, 135, 0.10) !important;
+  box-shadow: 0 16px 40px rgba(22, 90, 135, 0.10) !important;
+}
+
+.savings-fintech-page .savings-fintech-goal-card.ant-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 214, 103, 0.62), transparent 38%),
+    linear-gradient(135deg, #0f7397 0%, #1caebe 54%, #238ed5 100%) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
+  box-shadow: 0 22px 48px rgba(19, 136, 165, 0.24) !important;
+}
+
+.savings-fintech-page .savings-fintech-card .ant-card-head {
+  border-bottom-color: rgba(22, 90, 135, 0.10) !important;
+}
+
+.savings-fintech-page .savings-fintech-card .ant-card-head-title,
+.savings-fintech-page .savings-fintech-card .ant-card-body,
+.savings-fintech-page .savings-fintech-card .ant-typography,
+.savings-fintech-page .savings-fintech-card .ant-statistic-title,
+.savings-fintech-page .savings-fintech-card .ant-statistic-content,
+.savings-fintech-page .savings-fintech-card .ant-empty-description {
+  color: #153b61 !important;
+}
+
+.savings-fintech-page .savings-fintech-goal-card .ant-typography,
+.savings-fintech-page .savings-fintech-goal-card .savings-fintech-muted {
+  color: #ffffff !important;
+}
+
+.savings-fintech-page .savings-fintech-muted {
+  color: #66809a !important;
+}
+
+.savings-fintech-page .savings-fintech-form .ant-form-item-label > label {
+  color: #315a78 !important;
+}
+
+.savings-fintech-page .savings-fintech-form .ant-input-number,
+.savings-fintech-page .savings-fintech-form .ant-select-selector,
+.savings-fintech-page .savings-fintech-form .ant-picker,
+.savings-fintech-page .savings-fintech-topup-card .ant-input-number {
+  background: #f6fbff !important;
+  border-color: rgba(22, 90, 135, 0.16) !important;
+}
+
+.savings-fintech-page .savings-fintech-form .ant-input-number-input,
+.savings-fintech-page .savings-fintech-topup-card .ant-input-number-input,
+.savings-fintech-page .savings-fintech-form .ant-select-selection-item,
+.savings-fintech-page .savings-fintech-form .ant-picker-input > input {
+  color: #153b61 !important;
+}
+
+.savings-fintech-page .savings-fintech-preset-grid .ant-btn,
+.savings-fintech-page .savings-fintech-quick-grid .ant-btn {
+  color: #216082 !important;
+  background: #f2fbff !important;
+  border-color: rgba(28, 174, 190, 0.22) !important;
+}
+
+.savings-fintech-page .savings-fintech-preset-grid .ant-btn:hover,
+.savings-fintech-page .savings-fintech-quick-grid .ant-btn:hover {
+  color: #0d587a !important;
+  background: rgba(28, 174, 190, 0.12) !important;
+  border-color: rgba(28, 174, 190, 0.42) !important;
+}
+
+.savings-fintech-page .ant-btn-primary {
+  background: linear-gradient(135deg, #0b8da5, #1cb4c0 52%, #2b8bd7) !important;
+  box-shadow: 0 12px 26px rgba(23, 151, 177, 0.26) !important;
+}
+
+.savings-fintech-page .savings-fintech-stat-grid .ant-statistic {
+  background: linear-gradient(145deg, #f8fdff, #edf8ff) !important;
+  border-color: rgba(22, 90, 135, 0.08) !important;
+}
+
+.savings-fintech-page .savings-fintech-progress-block {
+  border-top-color: rgba(22, 90, 135, 0.10);
+}
+
+.savings-fintech-page .savings-fintech-table .ant-table-thead > tr > th {
+  color: #315a78 !important;
+  background: #eff8ff !important;
+  border-bottom-color: rgba(22, 90, 135, 0.10) !important;
+}
+
+.savings-fintech-page .savings-fintech-table .ant-table-tbody > tr > td {
+  color: #183e5d !important;
+  background: rgba(255, 255, 255, 0.66) !important;
+  border-bottom-color: rgba(22, 90, 135, 0.08) !important;
+}
+
+.savings-fintech-page .savings-fintech-table .ant-table-tbody > tr:hover > td {
+  background: #eefbff !important;
+}
+
+.savings-fintech-page .savings-fintech-qr-shell {
+  background: linear-gradient(135deg, #effbff, #f9fdff) !important;
+  border-color: rgba(28, 174, 190, 0.24);
+}
+
+.savings-fintech-page .savings-fintech-qr-shell .ant-typography {
+  color: #183e5d !important;
+}
+
+/* Savings — compact financial dashboard */
+.savings-fintech-page .savings-fintech-goal-card.ant-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.18), transparent 35%),
+    linear-gradient(145deg, rgba(13, 36, 63, 0.96), rgba(18, 68, 104, 0.90)) !important;
+}
+
+.savings-fintech-page .savings-fintech-card.ant-card {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.savings-fintech-page .savings-fintech-card.ant-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.26) !important;
+  box-shadow: 0 22px 50px rgba(2, 6, 23, 0.34) !important;
+}
+
+.savings-fintech-page .savings-fintech-stat-grid .ant-statistic {
+  position: relative;
+  overflow: hidden;
+}
+
+.savings-fintech-page .savings-fintech-stat-grid .ant-statistic::after {
+  content: '';
+  position: absolute;
+  top: -24px;
+  right: -20px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.10);
+}
+
+.savings-fintech-page .savings-fintech-stat-grid .ant-col:nth-child(2) .ant-statistic::after,
+.savings-fintech-page .savings-fintech-stat-grid .ant-col:nth-child(5) .ant-statistic::after {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.savings-fintech-page .savings-fintech-topup-card .ant-statistic-content {
+  color: #fbbf24 !important;
+  font-weight: 900;
+}
+
+@media (max-width: 767px) {
+  .savings-fintech-page {
+    padding-bottom: 24px;
+  }
+
+  .savings-fintech-logout.ant-btn {
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 0;
+    border-radius: 13px;
+  }
+
+  .savings-fintech-logout.ant-btn .anticon {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .savings-fintech-hero {
+    gap: 16px;
+    padding: 88px 14px 26px !important;
+    background-position: 58% center !important;
+  }
+
+  .savings-fintech-hero__content {
+    max-width: 32ch;
+  }
+
+  .savings-fintech-eyebrow.ant-tag {
+    margin-bottom: 10px;
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+
+  .savings-fintech-hero__title.ant-typography {
+    margin-bottom: 10px !important;
+    font-size: 31px !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.04em;
+  }
+
+  .savings-fintech-hero__text.ant-typography {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .savings-fintech-goal-card.ant-card {
+    max-width: none;
+    border-radius: 18px !important;
+  }
+
+  .savings-fintech-goal-card .ant-card-body {
+    padding: 16px !important;
+  }
+
+  .savings-fintech-goal-card__top {
+    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .savings-fintech-goal-card__top h2.ant-typography {
+    font-size: 25px !important;
+    line-height: 1.05 !important;
+  }
+
+  .savings-fintech-goal-card__top .ant-progress {
+    flex: 0 0 auto;
+  }
+
+  .savings-fintech-goal-card__top .ant-progress-circle {
+    width: 76px !important;
+    height: 76px !important;
+  }
+
+  .savings-fintech-timer {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 14px;
+  }
+
+  .savings-fintech-timer .ant-tag,
+  .savings-fintech-status.ant-tag {
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 6px 5px;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .savings-fintech-status.ant-tag {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .savings-fintech-container {
+    width: min(100% - 24px, 680px);
+    padding-top: 12px;
+  }
+
+  .savings-fintech-card.ant-card {
+    border-radius: 18px !important;
+  }
+
+  .savings-fintech-card .ant-card-head {
+    min-height: 54px;
+    padding: 0 16px !important;
+  }
+
+  .savings-fintech-card .ant-card-body {
+    padding: 16px !important;
+  }
+
+  .savings-fintech-form .ant-form-item {
+    margin-bottom: 14px;
+  }
+
+  .savings-fintech-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 14px;
+  }
+
+  .savings-fintech-preset-grid .ant-btn {
+    height: 40px;
+    font-size: 12px;
+  }
+
+  .savings-fintech-stat-grid {
+    row-gap: 10px !important;
+  }
+
+  .savings-fintech-stat-grid .ant-statistic {
+    min-height: 82px;
+    padding: 11px;
+    border-radius: 13px;
+  }
+
+  .savings-fintech-stat-grid .ant-statistic-title {
+    font-size: 11px;
+  }
+
+  .savings-fintech-stat-grid .ant-statistic-content {
+    font-size: 18px;
+    line-height: 1.1;
+  }
+
+  .savings-fintech-progress-block {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .savings-fintech-chart {
+    height: 210px;
+  }
+
+  .savings-fintech-qr-shell {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .savings-fintech-qr {
+    width: min(100%, 176px);
+  }
+
+  .savings-fintech-table {
+    margin-inline: -2px;
+    border-radius: 13px;
+    overflow: hidden;
+  }
+
+  .savings-fintech-table .ant-table-thead > tr > th,
+  .savings-fintech-table .ant-table-tbody > tr > td {
+    padding: 10px !important;
+    font-size: 12px;
+  }
+}
+
+/* Profile — calmer personal workspace */
+.travelpay-profile-page {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(27, 137, 179, 0.13), transparent 27%),
+    radial-gradient(circle at 92% 12%, rgba(252, 163, 17, 0.12), transparent 24%),
+    linear-gradient(180deg, #eef6fc 0%, #f8fbff 46%, #eef5fb 100%) !important;
+}
+
+.travelpay-profile-page .travelpay-dashboard-container {
+  max-width: 1280px;
+  padding: 28px 24px 52px;
+}
+
+.travelpay-profile-page .profile-topbar {
+  align-items: center !important;
+  padding: 24px 26px;
+  border: 1px solid rgba(23, 62, 97, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.80);
+  box-shadow: 0 16px 42px rgba(23, 62, 97, 0.07);
+  backdrop-filter: blur(18px);
+}
+
+.travelpay-profile-page .profile-topbar .ant-switch {
+  min-width: 54px;
+}
+
+.travelpay-profile-page .ant-card {
+  border: 1px solid rgba(23, 62, 97, 0.08) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 14px 36px rgba(23, 62, 97, 0.07) !important;
+}
+
+.travelpay-profile-page .ant-card-head {
+  min-height: 58px;
+  padding: 0 20px !important;
+  border-bottom-color: rgba(23, 62, 97, 0.08) !important;
+}
+
+.travelpay-profile-page .ant-card-head-title {
+  color: #153b61;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.travelpay-profile-page .ant-card-body {
+  padding: 20px !important;
+}
+
+.travelpay-profile-page .travelpay-stats-grid {
+  gap: 12px;
+}
+
+.travelpay-profile-page .travelpay-stat-card.ant-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 128px;
+}
+
+.travelpay-profile-page .travelpay-stat-card.ant-card::after {
+  content: '';
+  position: absolute;
+  right: -24px;
+  bottom: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.09);
+}
+
+.travelpay-profile-page .travelpay-stat-card:nth-child(2)::after {
+  background: rgba(20, 184, 166, 0.12);
+}
+
+.travelpay-profile-page .travelpay-stat-card:nth-child(3)::after {
+  background: rgba(252, 163, 17, 0.14);
+}
+
+.travelpay-profile-page .travelpay-stat-card .ant-statistic-title {
+  color: #6a7f95;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.travelpay-profile-page .travelpay-stat-card .ant-statistic-content {
+  color: #153b61;
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.travelpay-profile-page .profile-tour-booking-card {
+  padding: 2px;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(252, 163, 17, 0.16), transparent 30%),
+    linear-gradient(135deg, #ffffff, #f5faff) !important;
+}
+
+.travelpay-profile-page .profile-tour-booking-card__item {
+  padding: 10px 12px;
+  border: 1px solid rgba(23, 62, 97, 0.06);
+  background: rgba(245, 250, 255, 0.84);
+}
+
+.travelpay-profile-page .profile-tour-booking-card__footer {
+  padding-top: 12px;
+  border-top: 1px solid rgba(23, 62, 97, 0.08);
+}
+
+.travelpay-profile-page .ant-progress-inner {
+  background: #eaf1f8 !important;
+}
+
+.travelpay-profile-page .ant-btn-primary {
+  border: 0 !important;
+  background: linear-gradient(135deg, #115a9b, #1677ff 58%, #19aeb9) !important;
+  box-shadow: 0 10px 22px rgba(22, 119, 255, 0.22) !important;
+}
+
+@media (max-width: 767px) {
+  .travelpay-profile-page .travelpay-dashboard-container {
+    padding: 14px 12px 34px !important;
+  }
+
+  .travelpay-profile-page .profile-topbar {
+    align-items: flex-start !important;
+    padding: 16px;
+    border-radius: 19px;
+  }
+
+  .travelpay-profile-page .profile-topbar .ant-space {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .travelpay-profile-page .profile-topbar h1.ant-typography {
+    margin: 7px 0 6px !important;
+    font-size: 29px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em;
+  }
+
+  .travelpay-profile-page .profile-topbar p.ant-typography {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .travelpay-profile-page .ant-card {
+    border-radius: 18px !important;
+  }
+
+  .travelpay-profile-page .ant-card-head {
+    min-height: 52px;
+    padding: 0 16px !important;
+  }
+
+  .travelpay-profile-page .ant-card-body {
+    padding: 16px !important;
+  }
+
+  .travelpay-profile-page .travelpay-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .travelpay-profile-page .travelpay-stat-card.ant-card {
+    min-height: 108px;
+  }
+
+  .travelpay-profile-page .travelpay-stat-card .ant-card-body {
+    padding: 14px !important;
+  }
+
+  .travelpay-profile-page .travelpay-stat-card .ant-statistic-content {
+    font-size: 23px;
+  }
+
+  .travelpay-profile-page .profile-tour-booking-card__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+
+  .travelpay-profile-page .profile-tour-booking-card__item {
+    min-width: 0;
+    padding: 9px;
+    font-size: 12px;
+  }
+}
+
+/* Why TravelPay — concise trust section */
+.home-page .home-why-section {
+  position: relative;
+  overflow: hidden;
+  padding: 76px 24px !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(43, 184, 197, 0.11), transparent 24%),
+    radial-gradient(circle at 88% 82%, rgba(252, 163, 17, 0.11), transparent 25%),
+    linear-gradient(180deg, #f5f9fd 0%, #edf5fb 100%);
+}
+
+.home-page .home-why-heading {
+  max-width: 760px;
+  margin: 0 auto 34px !important;
+  text-align: center;
+}
+
+.home-page .home-why-heading .ant-tag {
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #1d4f7b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.home-page .home-why-heading h2.ant-typography {
+  margin: 0 !important;
+  color: #11385f;
+  font-size: clamp(34px, 4.4vw, 56px) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.045em;
+}
+
+.home-page .home-why-grid {
+  align-items: stretch;
+}
+
+.home-page .home-why-card.ant-card {
+  height: 100%;
+  min-height: 230px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(31, 78, 119, 0.08) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  box-shadow: 0 16px 38px rgba(31, 78, 119, 0.08) !important;
+}
+
+.home-page .home-why-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #1c97aa, #2563eb);
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+
+.home-page .home-why-card:hover::before {
+  opacity: 1;
+}
+
+.home-page .home-why-card .ant-card-body {
+  height: 100%;
+  padding: 26px !important;
+}
+
+.home-page .home-why-card__title.ant-typography {
+  margin: 0 0 10px !important;
+  color: #11385f;
+  font-size: 23px !important;
+  line-height: 1.14 !important;
+  letter-spacing: -0.025em;
+}
+
+.home-page .home-why-card .ant-typography:not(.home-why-card__title) {
+  margin: 0 !important;
+  color: #61758d;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.home-page .home-why-card > .ant-card-body > div:first-child {
+  width: 46px !important;
+  height: 46px !important;
+  margin-bottom: 22px !important;
+  border-radius: 15px !important;
+  font-size: 20px !important;
+  box-shadow: 0 10px 22px rgba(28, 151, 170, 0.20);
+}
+
+@media (max-width: 767px) {
+  .home-page .home-why-section {
+    padding: 54px 16px !important;
+  }
+
+  .home-page .home-why-heading {
+    margin-bottom: 22px !important;
+    text-align: left;
+  }
+
+  .home-page .home-why-heading h2.ant-typography {
+    font-size: 32px !important;
+    line-height: 1.07 !important;
+  }
+
+  .home-page .home-why-card.ant-card {
+    min-height: 0;
+    border-radius: 18px !important;
+  }
+
+  .home-page .home-why-card .ant-card-body {
+    padding: 20px !important;
+  }
+
+  .home-page .home-why-card > .ant-card-body > div:first-child {
+    margin-bottom: 16px !important;
+  }
+}
+
+/* On phones the promotional banner repeats the hero message; go straight to tours. */
+@media (max-width: 767px) {
+  .premium-tour-page-shell #travelpay-hot-tours {
+    display: none !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-overlap {
+    margin-top: -18px !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-overlap > .tours-section:not(#travelpay-hot-tours) {
+    padding-top: 10px !important;
+  }
+}
+
+/* Premium tours — mobile-first composition */
+@media (max-width: 767px) {
+  .premium-tour-page-shell {
+    padding-bottom: 48px !important;
+    background:
+      radial-gradient(circle at 100% 8%, rgba(252, 163, 17, 0.13), transparent 28%),
+      linear-gradient(180deg, #edf5fd 0%, #f8fbff 48%, #edf5fc 100%) !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-hero {
+    min-height: auto !important;
+    margin-top: -70px !important;
+    padding: 148px 14px 76px !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-hero__overlay {
+    background:
+      linear-gradient(180deg, rgba(4, 14, 27, 0.70) 0%, rgba(4, 14, 27, 0.58) 44%, rgba(4, 14, 27, 0.88) 100%) !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-hero > div[style*="z-index"] {
+    width: 100% !important;
+    padding: 0 !important;
+    text-align: left !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-hero .ant-tag {
+    padding: 6px 10px !important;
+    margin-bottom: 12px !important;
+    font-size: 11px !important;
+    letter-spacing: 0.02em;
+  }
+
+  .premium-tour-page-shell .premium-tours-hero h1.ant-typography {
+    max-width: 10ch;
+    margin-bottom: 12px !important;
+    font-size: clamp(34px, 9.2vw, 39px) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-hero p.ant-typography {
+    max-width: 34ch;
+    margin: 0 0 22px !important;
+    color: rgba(255, 255, 255, 0.86) !important;
+    font-size: 14px !important;
+    line-height: 1.52 !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-cta-stack.ant-space {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 9px !important;
+    width: 100%;
+    margin-top: 0 !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-cta-stack .ant-space-item,
+  .premium-tour-page-shell .premium-tour-cta-stack .ant-btn {
+    width: 100%;
+  }
+
+  .premium-tour-page-shell .premium-tour-cta-stack .ant-btn {
+    height: 48px !important;
+    border-radius: 15px !important;
+  }
+
+  .premium-tour-page-shell .premium-tours-overlap {
+    margin-top: -34px !important;
+  }
+
+  .premium-tour-page-shell .tours-section,
+  .premium-tour-page-shell .tours-container {
+    width: min(100% - 24px, 680px) !important;
+  }
+
+  .premium-tour-page-shell .hot-tour-marquee {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .premium-tour-page-shell .hot-tour-marquee > div {
+    min-width: 0;
+    padding: 11px 9px !important;
+    border-radius: 15px !important;
+  }
+
+  .premium-tour-page-shell .hot-tour-marquee > div > span:first-child {
+    font-size: 18px !important;
+  }
+
+  .premium-tour-page-shell .hot-tour-marquee > div > span:last-child {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  .premium-tour-page-shell .hot-tour-marquee + .ant-btn,
+  .premium-tour-page-shell #travelpay-hot-tours .ant-btn-primary {
+    width: 100% !important;
+    height: 46px !important;
+    margin-top: 2px !important;
+    border-radius: 15px !important;
+  }
+
+  .premium-tour-page-shell .tour-catalog-head {
+    gap: 14px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .premium-tour-page-shell .tour-catalog-head h2.ant-typography {
+    margin: 9px 0 8px !important;
+    font-size: 28px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.035em;
+  }
+
+  .premium-tour-page-shell .tour-catalog-head p.ant-typography {
+    margin-bottom: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+
+  .premium-tour-page-shell .tour-catalog-head .ant-select,
+  .premium-tour-page-shell .tour-catalog-head .ant-btn {
+    width: 100% !important;
+  }
+
+  .premium-tour-page-shell .tour-catalog-head .ant-select-selector,
+  .premium-tour-page-shell .tour-catalog-head .ant-btn {
+    min-height: 46px !important;
+    border-radius: 15px !important;
+  }
+
+  .premium-tour-page-shell .tours-grid {
+    gap: 16px !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card {
+    border-radius: 20px !important;
+    box-shadow: 0 14px 34px rgba(23, 59, 97, 0.12) !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card [style*="height: 210px"] {
+    height: 222px !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card .tour-card-reveal {
+    display: none !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card .ant-card-body > div:last-child {
+    gap: 11px !important;
+  }
+
+  .premium-tour-page-shell .tour-card-meta-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .premium-tour-page-shell .tour-card-meta-grid > div {
+    min-width: 0;
+    padding: 9px !important;
+    border-radius: 13px !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card .tour-card-actions {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card .tour-card-actions .tour-card-favorite {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card .tour-card-actions .travelpay-secondary-button {
+    min-height: 44px !important;
+  }
+
+  .premium-tour-page-shell .premium-tour-card .tour-card-actions .travelpay-primary-button {
+    grid-column: 1 / -1;
+    min-height: 46px !important;
+  }
+}
+
+/* TravelPay Admin — focused mobile workspace */
+@media (max-width: 640px) {
+  .tp-admin-page {
+    background:
+      radial-gradient(circle at 8% 0%, rgba(37, 99, 235, 0.14), transparent 34%),
+      linear-gradient(180deg, #edf4ff 0%, #f8fbff 38%, #eef6ff 100%);
+  }
+
+  .tp-admin-header.ant-layout-header {
+    position: sticky;
+    top: 8px;
+    min-height: 62px;
+    margin: 8px 10px 0;
+    padding: 9px 10px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    border-radius: 18px;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.10);
+  }
+
+  .tp-admin-header__left,
+  .tp-admin-header__right {
+    width: auto;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tp-admin-header__left {
+    flex: 1 1 auto;
+  }
+
+  .tp-admin-header__center {
+    display: none;
+  }
+
+  .tp-admin-header__menu.ant-btn,
+  .tp-admin-header__right > .ant-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 13px;
+  }
+
+  .tp-admin-header__branch .tp-admin-section-label {
+    display: none;
+  }
+
+  .tp-admin-header__branch strong {
+    display: block;
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 14px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tp-admin-theme-toggle {
+    width: 40px !important;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 13px;
+  }
+
+  .tp-admin-theme-toggle span,
+  .tp-admin-profile-chip > div {
+    display: none;
+  }
+
+  .tp-admin-profile-chip {
+    padding: 2px;
+    border: 0;
+    background: transparent;
+  }
+
+  .tp-admin-profile-chip .ant-avatar {
+    width: 38px;
+    height: 38px;
+    line-height: 38px;
+    border: 2px solid rgba(37, 99, 235, 0.16);
+  }
+
+  .tp-admin-content.ant-layout-content {
+    padding: 14px 10px 38px;
+  }
+
+  .tp-admin-content.ant-layout-content::before {
+    width: 170px;
+    height: 170px;
+    filter: blur(42px);
+  }
+
+  .tp-admin-drawer .ant-drawer-content-wrapper {
+    width: min(88vw, 332px) !important;
+  }
+
+  .tp-admin-drawer .ant-drawer-body {
+    padding: 10px;
+    background: #f4f8ff;
+  }
+
+  .tp-admin-sidebar-shell {
+    height: calc(100dvh - 20px);
+    position: relative;
+    top: 0;
+    gap: 12px;
+    padding: 14px 10px;
+    border-radius: 22px;
+  }
+
+  .tp-admin-brand {
+    gap: 10px;
+    padding: 4px 6px 12px;
+  }
+
+  .tp-admin-brand__mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  .tp-admin-brand__mark-image {
+    width: 30px;
+    height: 30px;
+  }
+
+  .tp-admin-brand__title {
+    font-size: 21px;
+  }
+
+  .tp-admin-menu.ant-menu .ant-menu-item {
+    height: 48px;
+    margin-bottom: 5px !important;
+    line-height: 48px;
+    border-radius: 14px;
+  }
+
+  .tp-admin-section-head {
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .tp-admin-section-head h1,
+  .tp-admin-section-head h2 {
+    font-size: 25px !important;
+    line-height: 1.12 !important;
+    letter-spacing: -0.03em;
+  }
+
+  .tp-admin-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+
+  .tp-admin-toolbar .tp-admin-search,
+  .tp-admin-toolbar .ant-input-affix-wrapper,
+  .tp-admin-toolbar .ant-select,
+  .tp-admin-toolbar .ant-picker,
+  .tp-admin-toolbar .ant-btn-primary {
+    grid-column: 1 / -1;
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .tp-admin-card.ant-card,
+  .tp-admin-stat-card.ant-card,
+  .tp-admin-inline-card.ant-card {
+    border-radius: 18px !important;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .tp-admin-card .ant-card-body,
+  .tp-admin-stat-card .ant-card-body,
+  .tp-admin-inline-card .ant-card-body {
+    padding: 14px !important;
+  }
+
+  .tp-admin-sticky-card {
+    position: static;
+  }
+
+  .tp-admin-booking-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .tp-admin-booking-card__top,
+  .tp-admin-booking-card__meta,
+  .tp-admin-stat-card__head,
+  .tp-admin-progress-head {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tp-admin-page .ant-table-wrapper {
+    margin-inline: -2px;
+  }
+
+  .tp-admin-page .ant-table-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tp-admin-page .ant-table-thead > tr > th,
+  .tp-admin-page .ant-table-tbody > tr > td {
+    padding: 11px 10px !important;
+    white-space: nowrap;
+  }
+
+  .tp-admin-tabs .ant-tabs-nav {
+    margin-bottom: 12px;
+  }
+
+  .tp-admin-tabs .ant-tabs-nav-list {
+    min-width: max-content;
+  }
+}
+
 /* Mobile hero cleanup: compact premium layout without horizontal clutter */
 @media (max-width: 767px) {
   .home-page .home-hero-section {
@@ -16519,6 +17633,98 @@ body.is-hero-scrolled .home-hero-scroll-indicator {
 
   .home-page .home-hero-scroll-indicator {
     transform: translate3d(-50%, 0, 0) !important;
+  }
+}
+
+/* Final mobile hero pass: keep the opening message clear and below the fixed header. */
+@media (max-width: 767px) {
+  .home-page .home-hero-section {
+    min-height: auto !important;
+    padding: 154px 16px 46px !important;
+  }
+
+  .home-page .home-hero-layout {
+    gap: 22px !important;
+  }
+
+  .home-page .home-hero-title.ant-typography,
+  .home-page .home-hero-section h1.ant-typography {
+    max-width: 13ch;
+    margin: 0 0 14px !important;
+    font-size: clamp(31px, 8.5vw, 36px) !important;
+    line-height: 1.04 !important;
+    letter-spacing: -0.038em !important;
+    text-wrap: balance;
+  }
+
+  .home-page .home-hero-text.ant-typography,
+  .home-page .home-hero-section p.ant-typography {
+    max-width: 35ch;
+    margin-bottom: 20px !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+
+  .home-page .home-hero-actions.ant-space {
+    gap: 9px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .home-page .home-hero-actions .ant-btn {
+    height: 48px !important;
+    border-radius: 15px !important;
+  }
+
+  .home-page .home-hero-benefits {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+
+  .home-page .home-hero-benefit-card,
+  .home-page .home-hero-benefit-card:nth-child(3) {
+    min-height: 86px !important;
+    display: flex !important;
+    grid-column: auto !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 5px !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .home-page .home-hero-benefit-icon {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+  }
+
+  .home-page .home-hero-benefit-card strong {
+    font-size: 18px !important;
+  }
+
+  .home-page .home-hero-benefit-card > span:last-child,
+  .home-page .home-hero-benefit-card:nth-child(3) > span:last-child {
+    font-size: 10px !important;
+    line-height: 1.16 !important;
+  }
+
+  .home-page .home-hero-trust,
+  .home-page .home-hero-featured-tour {
+    display: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .home-page .home-hero-section {
+    padding: 144px 14px 38px !important;
+  }
+
+  .home-page .home-hero-title.ant-typography,
+  .home-page .home-hero-section h1.ant-typography {
+    font-size: 30px !important;
   }
 }
 

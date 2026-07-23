@@ -23,6 +23,7 @@ import {
   message,
 } from 'antd';
 import {
+  ArrowLeftOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -397,6 +398,13 @@ const SavingsPlanPage = () => {
 
   return (
     <main className="savings-fintech-page">
+      <Button
+        icon={<ArrowLeftOutlined />}
+        className="savings-fintech-back"
+        onClick={() => navigate('/profile')}
+      >
+        В профиль
+      </Button>
       <Button
         danger
         icon={<LogoutOutlined />}
