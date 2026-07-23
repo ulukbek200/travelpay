@@ -11538,6 +11538,25 @@ body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
   gap: 10px;
 }
 
+/* Keep the compact calendar controls usable inside the narrow CRM sidebar.
+   Ant Design Select defaults to its content width, which made the month picker
+   collapse to a tiny chevron on larger screens. */
+.tp-admin-mini-calendar-header__controls .ant-select {
+  width: 100% !important;
+  min-width: 0;
+}
+
+.tp-admin-mini-calendar-header__controls .ant-select-selector {
+  min-width: 0 !important;
+}
+
+.tp-admin-mini-calendar-header .ant-btn {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 12px;
+  font-weight: 750;
+}
+
 .tp-admin-mini-calendar .ant-picker-calendar-header {
   display: none;
 }
@@ -11870,6 +11889,7 @@ body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
 .tp-admin-week-board__header {
   display: grid;
   grid-template-columns: 74px minmax(0, 1fr);
+  min-width: 0;
   border-bottom: 1px solid rgba(15, 23, 42, 0.1);
 }
 
@@ -11881,6 +11901,7 @@ body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
 .tp-admin-week-board__days {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 0;
 }
 
 .tp-admin-week-board__day-tab {
@@ -11938,6 +11959,7 @@ body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
 .tp-admin-week-board__body {
   display: grid;
   grid-template-columns: 74px minmax(0, 1fr);
+  min-width: 0;
   max-height: 780px;
   overflow: auto;
 }
@@ -11958,7 +11980,8 @@ body.dark .tp-admin-menu.ant-menu .ant-menu-item-selected {
 
 .tp-admin-week-board__grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 0;
 }
 
 .tp-admin-day-board .tp-admin-week-board__days,
