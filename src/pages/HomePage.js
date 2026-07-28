@@ -437,9 +437,9 @@ const faqItems = {
 };
 
 const socialLinks = [
-  { key: 'whatsapp', label: 'WhatsApp', href: 'https://wa.me/996555123456', icon: <WhatsAppOutlined /> },
-  { key: 'email', label: 'Email', href: 'mailto:hello@travelpay.kg', icon: <MailOutlined /> },
-  { key: 'phone', label: '+996 555 123 456', href: 'tel:+996555123456', icon: <PhoneOutlined /> },
+  { key: 'whatsapp', label: 'WhatsApp', href: 'https://wa.me/996990909109', icon: <WhatsAppOutlined /> },
+  { key: 'email', label: 'Email', href: 'mailto:ulukbekmonolov07@gmail.com', icon: <MailOutlined /> },
+  { key: 'phone', label: '+996 990 909 109', href: 'tel:+996990909109', icon: <PhoneOutlined /> },
 ];
 
 const partnershipBenefits = [

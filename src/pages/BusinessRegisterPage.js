@@ -36,7 +36,7 @@ import { getApiErrorMessage } from '../utils/apiErrors';
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
-const BUSINESS_SUBSCRIPTION_PRICE = 14900;
+const BUSINESS_SUBSCRIPTION_PRICE = 4500;
 const MAX_LOGO_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_REQUIRED_FILE_SIZE = 12 * 1024 * 1024;
 const MAX_DOCUMENT_FILE_SIZE = 15 * 1024 * 1024;
@@ -420,7 +420,7 @@ const BusinessRegisterPage = () => {
                       valuePropName="checked"
                       rules={[{ validator: (_, value) => (value ? Promise.resolve() : Promise.reject(new Error('Нужно принять договор и стоимость подписки'))) }]}
                     >
-                      <Checkbox>Я принимаю договор и стоимость подписки: 14 900 сом за 30 дней</Checkbox>
+                      <Checkbox>Я принимаю договор и стоимость подписки: {BUSINESS_SUBSCRIPTION_PRICE.toLocaleString('ru-RU')} сом за 30 дней</Checkbox>
                     </Form.Item>
                   </Col>
                 </Row>

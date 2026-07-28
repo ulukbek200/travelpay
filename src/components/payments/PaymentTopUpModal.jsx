@@ -34,7 +34,7 @@ const { Dragger } = Upload;
 const DEFAULT_PAYMENT_DETAILS = {
   bankName: 'MBANK',
   recipientName: 'TravelPay Partner',
-  phoneNumber: '+996 700 000 000',
+  phoneNumber: '+996 990 909 109',
   qrCodeUrl: '/images/payment-qr.png',
   paymentPurpose: 'Пополнение TravelPay',
   instruction: 'Отсканируйте QR в приложении банка и загрузите чек.',
@@ -117,8 +117,8 @@ const PaymentTopUpModal = ({
     || {
       firstName: 'TravelPay',
       lastName: 'Manager',
-      phone: '+996 700 000 000',
-      whatsapp: '+996 700 000 000',
+      phone: '+996 990 909 109',
+      whatsapp: '+996 990 909 109',
       telegram: '',
       workingHours: '09:00–18:00',
     }
