@@ -74,16 +74,10 @@ const BusinessLoginPage = () => {
         password: values.password,
       });
 
-      console.log('LOGIN RESPONSE:', response.data);
-
       const responseUser = response.data?.user || null;
       const token = String(response.data?.authToken || response.data?.token || responseUser?.authToken || '').trim();
       const companyId = String(responseUser?.companyId || response.data?.company?.id || '').trim();
       const role = String(responseUser?.role || '').trim().toLowerCase();
-
-      console.log('TOKEN:', token);
-      console.log('COMPANY ID:', companyId);
-      console.log('ROLE:', role);
 
       if (!responseUser?.id || !companyId) {
         clearCurrentUser();

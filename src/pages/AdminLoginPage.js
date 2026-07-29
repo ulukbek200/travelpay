@@ -69,19 +69,12 @@ const AdminLoginPage = () => {
         password: values.password.trim(),
       });
 
-      console.log('ADMIN LOGIN RESPONSE:', response.data);
-
       const {
         responseUser,
         token,
         role,
         companyId,
       } = extractAdminAuthPayload(response.data, response.headers);
-
-      console.log('ADMIN TOKEN:', token);
-      console.log('ADMIN ROLE:', role);
-      console.log('ADMIN COMPANY ID:', companyId);
-      console.log('ADMIN RESPONSE HEADERS:', response.headers);
 
       if (!responseUser?.id) {
         clearCurrentUser();

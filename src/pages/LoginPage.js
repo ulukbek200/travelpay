@@ -65,11 +65,6 @@ const LoginPage = () => {
       } = extractAuthPayload(response.data);
       const businessAccount = canAccessBusinessPanel(responseUser);
 
-      console.log('LOGIN RESPONSE:', response.data);
-      console.log('TOKEN:', token);
-      console.log('COMPANY ID:', companyId);
-      console.log('ROLE:', role);
-
       if (!responseUser?.id) {
         clearCurrentUser();
         message.error('Не удалось завершить вход. Сервер не выдал токен.');

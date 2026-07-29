@@ -4608,6 +4608,114 @@ body.dark .tp-admin-finance-metric small {
   }
 }
 
+/* Media-first tour feed with a clean, quiet catalogue background. */
+.premium-tour-page-shell .tours-instagram-section {
+  position: relative;
+  padding: clamp(22px, 4vw, 48px) !important;
+  overflow: visible !important;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.premium-tour-page-shell .tours-instagram-section::before {
+  display: none;
+}
+
+.premium-tour-page-shell .tours-instagram-section .tour-catalog-head,
+.premium-tour-page-shell .tours-instagram-section .ant-typography,
+.premium-tour-page-shell .tours-instagram-section .tour-card-title,
+.premium-tour-page-shell .tours-instagram-section .tour-price {
+  color: #112f54 !important;
+}
+
+.premium-tour-page-shell .tours-instagram-section .ant-typography-secondary,
+.premium-tour-page-shell .tours-instagram-section .tour-card-text,
+.premium-tour-page-shell .tours-instagram-section .tour-card-meta,
+.premium-tour-page-shell .tours-instagram-section .tour-card-meta * {
+  color: #6f8096 !important;
+}
+
+.premium-tour-page-shell .tours-instagram-section .ant-select-selector,
+.premium-tour-page-shell .tours-instagram-section .ant-btn:not(.ant-btn-primary) {
+  color: #183b63 !important;
+  border-color: #dce7f2 !important;
+  background: #ffffff !important;
+  backdrop-filter: none;
+}
+
+.premium-tour-page-shell .tours-grid.tours-instagram-feed {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: clamp(16px, 2vw, 26px) !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .premium-tour-card {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #e0e9f2 !important;
+  border-radius: 24px !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 32px rgba(31, 69, 108, 0.11) !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .premium-tour-card:hover {
+  border-color: #8fb7e0 !important;
+  box-shadow: 0 20px 38px rgba(31, 69, 108, 0.16) !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .premium-tour-card .ant-card-body {
+  background: transparent !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .premium-tour-card img {
+  aspect-ratio: 4 / 3;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .premium-tour-card [style*="padding: 22px"] {
+  background: #ffffff !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .tour-card-meta-grid > div {
+  border-color: #e6edf5 !important;
+  background: #f7faff !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .verifiedPill {
+  color: #1677c5 !important;
+  background: #eaf5ff !important;
+}
+
+.premium-tour-page-shell .tours-instagram-feed .tour-card-favorite.ant-btn {
+  color: #183b63 !important;
+  border-color: #d7e4f0 !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+}
+
+@media (max-width: 1023px) {
+  .premium-tour-page-shell .tours-grid.tours-instagram-feed {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .premium-tour-page-shell .tours-instagram-section {
+    width: min(100% - 20px, 1200px) !important;
+    padding: 18px 14px !important;
+    border-radius: 24px;
+  }
+
+  .premium-tour-page-shell .tours-grid.tours-instagram-feed {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .premium-tour-page-shell .tours-instagram-feed .premium-tour-card {
+    border-radius: 20px !important;
+  }
+}
+
 @media (max-width: 600px) {
   .tour-filters-shell,
   .tours-section,
@@ -17657,6 +17765,17 @@ body.is-hero-scrolled .home-hero-scroll-indicator {
   .home-page .home-hero-scroll-indicator {
     transform: translate3d(-50%, 0, 0) !important;
   }
+}
+
+/* Hidden bot trap: real visitors never interact with this registration field. */
+.auth-honeypot {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
 }
 
 /* Final mobile hero pass: keep the opening message clear and below the fixed header. */

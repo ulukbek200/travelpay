@@ -30,6 +30,7 @@ const BusinessManagersPage = lazy(() => import('./pages/BusinessManagersPage'));
 const BusinessPaymentSettingsPage = lazy(() => import('./pages/BusinessPaymentSettingsPage'));
 const BusinessPaymentsPage = lazy(() => import('./pages/BusinessPaymentsPage'));
 const BusinessRegisterPage = lazy(() => import('./pages/BusinessRegisterPage'));
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
@@ -48,6 +49,7 @@ const HIDE_LAYOUT_PATHS = new Set([
   '/staff',
   '/admin/login',
   '/register',
+  '/verify-email',
   '/booking',
   '/profile',
   '/savings',
@@ -114,6 +116,7 @@ function AppContent({ favorites, setFavorites }) {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/staff" element={<StaffPortalPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<EmailVerificationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/business" element={<BusinessLandingPage />} />

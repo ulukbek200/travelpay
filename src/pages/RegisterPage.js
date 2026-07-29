@@ -63,7 +63,7 @@ const RegisterPage = () => {
     try {
       const email = values.email.trim().toLowerCase();
       const password = values.password.trim();
-      const existing = await api.get('/users', { params: { email } });
+      const existing = { data: [] };
 
       if (existing.data.length > 0) {
         message.error('Пользователь с таким email уже существует.');
@@ -75,6 +75,7 @@ const RegisterPage = () => {
         email,
         phone: values.phone,
         password,
+        website: values.website || '',
         balance: 0,
         role: 'user',
         avatar: 'https://www.w3schools.com/howto/img_avatar.png',
@@ -82,6 +83,14 @@ const RegisterPage = () => {
         favorites: [],
         savings: DEFAULT_SAVINGS,
       });
+
+      if (registerResponse.data?.verificationRequired) {
+      const pendingEmail = registerResponse.data?.email || email;
+      window.sessionStorage.setItem('travelpay_pending_verification_email', pendingEmail);
+      message.success('Код подтверждения отправлен на email.');
+      navigate('/verify-email', { state: { email: pendingEmail } });
+      return;
+      }
 
       let {
         responseUser,
@@ -139,6 +148,10 @@ const RegisterPage = () => {
 
         <Form.Item name="phone" label="Телефон" rules={phoneRules}>
           <Input size="large" prefix={<PhoneOutlined />} placeholder="+996 555 123 456" />
+        </Form.Item>
+
+        <Form.Item name="website" className="auth-honeypot" aria-hidden="true">
+          <Input tabIndex={-1} autoComplete="off" />
         </Form.Item>
 
         <Form.Item name="password" label="Пароль" rules={passwordRules}>

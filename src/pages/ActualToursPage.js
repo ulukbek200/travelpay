@@ -378,7 +378,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
           </motion.div>
         </section>
 
-        <section className="tours-section tours-container" style={styles.catalog}>
+        <section className="tours-section tours-container tours-instagram-section" style={styles.catalog}>
           <div className="tour-catalog-head" style={styles.catalogHead}>
             <div>
               <Tag style={styles.softTag}><ThunderboltOutlined /> Все туры</Tag>
@@ -415,7 +415,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
           ) : visibleTours.length === 0 ? (
             <Empty description="Туры пока не найдены. Попробуйте вернуться чуть позже." style={styles.empty} />
           ) : (
-            <div id="travelpay-tour-grid" className="tours-grid" style={{ ...styles.toursGrid, ...(isTablet ? styles.toursGridTablet : {}), ...(isMobile ? styles.toursGridMobile : {}) }}>
+            <div id="travelpay-tour-grid" className="tours-grid tours-instagram-feed" style={{ ...styles.toursGrid, ...(isTablet ? styles.toursGridTablet : {}), ...(isMobile ? styles.toursGridMobile : {}) }}>
               {visibleTours.map((tour, index) => {
                 const isHot = featuredTours.some((featured) => featured.id === tour.id);
 
