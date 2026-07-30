@@ -416,26 +416,69 @@ const travelPayThemeTokens = {
   colorTextSecondary: 'rgba(255,255,255,0.65)',
   colorBorder: 'rgba(255,255,255,0.10)',
   colorBorderSecondary: 'rgba(255,255,255,0.08)',
-  borderRadius: 18,
+  borderRadius: 16,
+  borderRadiusSM: 12,
+  borderRadiusLG: 22,
+  controlHeight: 44,
+  controlHeightLG: 50,
+  controlHeightSM: 36,
   boxShadow: '0 20px 60px rgba(0,0,0,0.28)',
+};
+
+const travelPayLightThemeTokens = {
+  colorPrimary: '#3d62e8',
+  colorInfo: '#3d62e8',
+  colorSuccess: '#169b70',
+  colorWarning: '#d98a16',
+  colorError: '#dc4f62',
+  colorBgBase: '#f6f8fc',
+  colorBgContainer: '#ffffff',
+  colorBgElevated: '#ffffff',
+  colorText: '#17233d',
+  colorTextSecondary: '#68758b',
+  colorBorder: '#dfe5ef',
+  colorBorderSecondary: '#e9edf4',
+  borderRadius: 16,
+  borderRadiusSM: 12,
+  borderRadiusLG: 22,
+  controlHeight: 44,
+  controlHeightLG: 50,
+  controlHeightSM: 36,
+  boxShadow: '0 20px 60px rgba(25, 43, 75, 0.12)',
+};
+
+const travelPayComponents = {
+  Button: { borderRadius: 14, controlHeight: 44, controlHeightLG: 50, controlHeightSM: 36, fontWeight: 700 },
+  Card: { borderRadiusLG: 22 },
+  Modal: { borderRadiusLG: 22 },
+  Drawer: { borderRadiusLG: 22 },
+  Input: { activeBorderColor: '#3d62e8', hoverBorderColor: '#6f88ee' },
+  Select: { optionSelectedBg: 'rgba(61, 98, 232, 0.10)' },
+  Dropdown: { borderRadiusLG: 16 },
+  Notification: { borderRadiusLG: 18 },
+  Message: { contentBg: '#ffffff' },
+  Table: { headerBg: 'rgba(61, 98, 232, 0.055)', rowHoverBg: 'rgba(61, 98, 232, 0.06)' },
+  Segmented: { itemSelectedBg: 'rgba(61, 98, 232, 0.12)' },
 };
 
 function AppShell({ favorites, setFavorites }) {
   const { theme } = useTheme();
-  const configTheme = useMemo(() => (theme === 'dark'
-    ? {
+  const configTheme = useMemo(() => ({
+      ...(theme === 'dark'
+        ? {
         algorithm: antdTheme.darkAlgorithm,
         token: travelPayThemeTokens,
-        components: {
-          Button: { borderRadius: 18, controlHeight: 42 },
-          Card: { borderRadiusLG: 22 },
-          Modal: { borderRadiusLG: 22 },
-          Drawer: { borderRadiusLG: 22 },
+        }
+        : { token: travelPayLightThemeTokens }),
+      components: {
+        ...travelPayComponents,
+        ...(theme === 'dark' ? {
           Table: { headerBg: 'rgba(255,255,255,0.07)', rowHoverBg: 'rgba(91,108,255,0.12)' },
           Segmented: { itemSelectedBg: 'rgba(91,108,255,0.22)' },
-        },
-      }
-    : undefined), [theme]);
+          Message: { contentBg: '#242932' },
+        } : {}),
+      },
+    }), [theme]);
 
   return (
     <ConfigProvider

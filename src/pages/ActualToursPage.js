@@ -24,9 +24,10 @@ import {
 import { motion } from 'framer-motion';
 import api from '../api';
 import CompanyBadge from '../components/CompanyBadge';
+import AppImage from '../components/AppImage';
 import { readCurrentUser } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
-import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
+import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -437,7 +438,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                       onClick={() => openTour(tour)}
                     >
                       <div style={{ ...styles.imageWrap, ...(isMobile ? styles.imageWrapMobile : {}) }}>
-                        <img src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} loading="lazy" decoding="async" onError={withTourFallback} style={styles.image} />
+                        <AppImage src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} aspectRatio="16 / 10" imgStyle={styles.image} />
                         <div style={styles.imageShade} />
                         <div style={{ ...styles.promoBadge, background: tour.promoColor }}>
                           {tour.promoBadge}

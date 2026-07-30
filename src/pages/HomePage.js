@@ -5,8 +5,9 @@ import { motion } from 'framer-motion';
 import { FiArrowDown, FiBriefcase, FiCheckCircle, FiCreditCard, FiGlobe, FiMail, FiMap, FiMessageCircle, FiShield, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import api, { getAssetUrl } from '../api';
+import AppImage from '../components/AppImage';
 import kyrgyzstanRegionsUrl from '../data/kyrgyzstan-regions.geojson';
-import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
+import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
@@ -471,7 +472,37 @@ const partnerFloatingCards = [
   { icon: <FiMap />, text: '150 опубликованных туров', position: 'right' },
 ];
 
-const partnerLogos = ['Barsbek Travel', 'Doc Medical', 'TravelPay Business', 'Nomad Routes', 'Kyrgyz Peaks', 'Silk Road Hub'];
+const createPartnerLogo = (initials, color, accent) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 88" role="img"><rect width="240" height="88" rx="22" fill="${color}"/><circle cx="42" cy="44" r="23" fill="${accent}" opacity=".94"/><path d="M33 51l9-18 9 18-9-5z" fill="white"/><text x="78" y="53" fill="white" font-family="Arial, sans-serif" font-size="25" font-weight="700" letter-spacing=".3">${initials}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
+const partnerLogos = [
+  { name: 'Barsbek Travel', initials: 'Barsbek', src: createPartnerLogo('Barsbek', '#15395c', '#35bfc9') },
+  { name: 'Nomad Routes', initials: 'Nomad', src: createPartnerLogo('Nomad', '#63493b', '#efb765') },
+  { name: 'Kyrgyz Peaks', initials: 'Peaks', src: createPartnerLogo('Peaks', '#254a40', '#68c89c') },
+  { name: 'Silk Road Hub', initials: 'Silk Road', src: createPartnerLogo('Silk Road', '#493b71', '#a78bfa') },
+  { name: 'Ala-Too Guide', initials: 'Ala-Too', src: createPartnerLogo('Ala-Too', '#294a73', '#80b9ff') },
+  { name: 'Jeti Travel', initials: 'Jeti', src: createPartnerLogo('Jeti', '#75433e', '#ff9d79') },
+];
+
+const PartnerLogo = ({ logo, decorative = false }) => (
+  <article className="home-trusted-marquee__item" aria-hidden={decorative || undefined}>
+    <div className="home-trusted-marquee__media">
+      <img
+        src={logo.src}
+        alt={decorative ? '' : `${logo.name} — партнёр TravelPay`}
+        loading="lazy"
+        decoding="async"
+        onError={(event) => {
+          event.currentTarget.classList.add('is-broken');
+        }}
+      />
+      <span className="home-trusted-marquee__fallback" aria-hidden="true">{logo.initials.slice(0, 2)}</span>
+    </div>
+    <span className="home-trusted-marquee__name">{logo.name}</span>
+  </article>
+);
 
 const CountUpStat = ({ stat }) => {
   const statRef = useRef(null);
@@ -1093,7 +1124,7 @@ const HomePage = () => {
               <motion.article key={spot.key} {...motionCard} transition={{ delay: index * 0.04 }} className="home-tour-card-shell">
                 <Card className="home-tour-media-card" style={styles.showcaseCard} styles={{ body: { padding: 0 } }}>
                   <div style={styles.showcaseImageWrap}>
-                    <img src={spot.image} alt={spot.title} loading="lazy" decoding="async" onError={withTourFallback} style={styles.showcaseImage} />
+                    <AppImage src={spot.image} alt={spot.title} aspectRatio="auto" style={{ height: '100%' }} imgStyle={styles.showcaseImage} />
                     <div style={styles.showcaseOverlay} />
                     <div style={styles.showcaseTopMeta}>
                       <Tag color="gold">{spot.rating}</Tag>
@@ -1160,7 +1191,7 @@ const HomePage = () => {
               <motion.article key={`${spot.key}-gallery`} {...motionCard} transition={{ delay: index * 0.04 }} className="home-gallery-card">
                 <Card hoverable className="home-gallery-tour-card" style={styles.galleryCard} styles={{ body: { padding: 0 } }} onClick={() => handleGalleryTourOpen(spot)}>
                   <div style={styles.galleryImageWrap}>
-                    <img src={spot.image} alt={spot.title} loading="lazy" decoding="async" onError={withTourFallback} style={styles.galleryImage} />
+                    <AppImage src={spot.image} alt={spot.title} aspectRatio="auto" style={{ height: '100%' }} imgStyle={styles.galleryImage} />
                     <div style={styles.galleryShade} />
                     <div style={styles.galleryMetaTop}>
                       <Tag color={spot.isActualTour ? 'green' : 'gold'}>{spot.isActualTour ? 'Действующий' : spot.rating}</Tag>
@@ -1328,10 +1359,20 @@ const HomePage = () => {
 
         <div className="home-shell home-partner-logos" aria-label="Нам доверяют">
           <span>Нам доверяют</span>
-          <div>
-            {partnerLogos.map((logo) => (
-              <strong key={logo}>{logo}</strong>
-            ))}
+          <div className="home-trusted-marquee__heading">
+            <span className="home-trusted-marquee__eyebrow">Партнёры TravelPay</span>
+            <h3>Нам доверяют</h3>
+            <p>Компании, которые развивают путешествия по Кыргызстану вместе с нами.</p>
+          </div>
+          <div className="home-trusted-marquee__viewport" tabIndex="0" aria-label="Список партнёров TravelPay. Наведите курсор, чтобы остановить прокрутку.">
+            <div className="home-trusted-marquee__track">
+              <div className="home-trusted-marquee__set">
+                {partnerLogos.map((logo) => <PartnerLogo key={logo.name} logo={logo} />)}
+              </div>
+              <div className="home-trusted-marquee__set" aria-hidden="true">
+                {partnerLogos.map((logo) => <PartnerLogo key={`duplicate-${logo.name}`} logo={logo} decorative />)}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1345,7 +1386,7 @@ const HomePage = () => {
             <Paragraph className="home-map-section__text" style={styles.darkText}>{mapSection.text}</Paragraph>
             {activeRegion ? (
               <article className="home-map-active-card" aria-live="polite">
-                <img src={activeRegion.properties.image} alt="" loading="lazy" decoding="async" />
+                <AppImage src={activeRegion.properties.image} alt="" aspectRatio="16 / 9" imgClassName="home-map-active-card__image" />
                 <div>
                   <span>{mapSection.activeRegion}</span>
                   <strong>{getRegionName(activeRegion)}</strong>

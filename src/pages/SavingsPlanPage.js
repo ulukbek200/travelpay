@@ -40,6 +40,7 @@ import dayjs from 'dayjs';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import AppImage from '../components/AppImage';
 import { clearCurrentUser, hasActiveSession, readCurrentUser } from '../utils/currentUser';
 import {
   buildSavingsChartData,
@@ -536,7 +537,7 @@ const SavingsPlanPage = () => {
                 />
 
                 <div className="savings-fintech-qr-shell">
-                  <img src={PAYMENT_QR_URL} alt="QR-код для оплаты TravelPay" className="savings-fintech-qr" />
+                  <AppImage src={PAYMENT_QR_URL} alt="QR-код для оплаты TravelPay" className="savings-fintech-qr" aspectRatio="1 / 1" fit="contain" />
                   <div>
                     <Text strong>Оплатите через мобильный банк</Text>
                     <Paragraph className="savings-fintech-muted">

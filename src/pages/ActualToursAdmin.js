@@ -65,6 +65,7 @@ import {
 import dayjs from 'dayjs';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
+import AppImage from '../components/AppImage';
 import { clearCurrentUser, readCurrentUser } from '../utils/currentUser';
 import { normalizeUser } from '../utils/user';
 
@@ -2210,13 +2211,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       dataIndex: 'image',
       width: 90,
       render: (image, record) => (
-        <Image
-          width={64}
-          height={48}
+        <AppImage
           src={image}
           alt={record.title}
           className="tp-admin-table-image"
-          preview={false}
+          aspectRatio="4 / 3"
         />
       ),
     },
@@ -2266,13 +2265,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       dataIndex: 'images',
       width: 90,
       render: (images, record) => (
-        <Image
-          width={64}
-          height={48}
+        <AppImage
           src={images?.[0]}
           alt={record.title || record.name}
           className="tp-admin-table-image"
-          preview={false}
+          aspectRatio="4 / 3"
         />
       ),
     },

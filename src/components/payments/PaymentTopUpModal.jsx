@@ -27,6 +27,7 @@ import {
   SendOutlined,
 } from '@ant-design/icons';
 import api from '../../api';
+import AppImage from '../AppImage';
 import { formatSom, isValidReceiptFile, receiptToDataUrl } from '../../utils/payments';
 
 const { Dragger } = Upload;
@@ -275,7 +276,7 @@ const PaymentTopUpModal = ({
           ) : (
             <div className="tp-manager-payment-card">
               <div className="tp-manager-payment-card__avatar">
-                {primaryManager.photoUrl ? <img src={primaryManager.photoUrl} alt={details.managerName} /> : <CustomerServiceOutlined />}
+                {primaryManager.photoUrl ? <AppImage src={primaryManager.photoUrl} alt={details.managerName} aspectRatio="1 / 1" /> : <CustomerServiceOutlined />}
               </div>
               <div>
                 <h3>{details.managerName || 'TravelPay Manager'}</h3>

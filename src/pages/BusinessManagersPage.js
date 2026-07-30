@@ -3,6 +3,7 @@ import { Button, Card, Col, Form, Input, Modal, Row, Space, Switch, Table, Tag, 
 import { ArrowLeftOutlined, CustomerServiceOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import AppImage from '../components/AppImage';
 
 const { Title, Paragraph } = Typography;
 
@@ -75,7 +76,7 @@ const BusinessManagersPage = () => {
       render: (_, record) => (
         <Space>
           <div className="tp-manager-avatar">
-            {record.photoUrl ? <img src={record.photoUrl} alt={record.firstName} /> : <CustomerServiceOutlined />}
+            {record.photoUrl ? <AppImage src={record.photoUrl} alt={record.firstName} aspectRatio="1 / 1" /> : <CustomerServiceOutlined />}
           </div>
           <div>
             <strong>{[record.firstName, record.lastName].filter(Boolean).join(' ') || 'Без имени'}</strong>

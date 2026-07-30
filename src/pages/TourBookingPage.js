@@ -33,8 +33,9 @@ import {
 import { motion } from 'framer-motion';
 import api from '../api';
 import PaymentTopUpModal from '../components/payments/PaymentTopUpModal';
+import AppImage from '../components/AppImage';
 import { readCurrentUser } from '../utils/currentUser';
-import { TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
+import { TOUR_IMAGE_FALLBACK } from '../utils/tourMedia';
 import { normalizeUser, syncCurrentUser } from '../utils/user';
 
 const { Title, Paragraph, Text } = Typography;
@@ -315,12 +316,7 @@ const TourBookingPage = () => {
             >
               <Card className="booking-tour-card" style={styles.tourCard} styles={{ body: { padding: 0 } }}>
                 <div style={styles.imageWrap}>
-                  <img
-                    src={tour.image || TOUR_IMAGE_FALLBACK}
-                    alt={tour.title}
-                    onError={withTourFallback}
-                    style={styles.tourImage}
-                  />
+                  <AppImage src={tour.image || TOUR_IMAGE_FALLBACK} alt={tour.title} aspectRatio="4 / 3" imgStyle={styles.tourImage} />
                   <div style={styles.imageGradient} />
                   <Tag style={styles.locationTag}>
                     <EnvironmentOutlined /> {tour.location || tour.country || 'Кыргызстан'}
@@ -502,7 +498,7 @@ const TourBookingPage = () => {
                                 key={item.id}
                                 hoverable
                                 className={`booking-accommodation-card ${isSelected ? 'booking-accommodation-card--selected' : ''}`}
-                                cover={<img src={image} alt={item.name} onError={withTourFallback} />}
+                                cover={<AppImage src={image} alt={item.name} aspectRatio="4 / 3" />}
                               >
                                 <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                                   <Space wrap>

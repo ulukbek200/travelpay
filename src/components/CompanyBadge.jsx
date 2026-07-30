@@ -5,6 +5,7 @@ import {
   CheckCircleFilled,
   EnvironmentOutlined,
 } from '@ant-design/icons';
+import AppImage from './AppImage';
 import './CompanyBadge.css';
 
 const getInitials = (value) =>
@@ -30,12 +31,11 @@ const CompanyBadge = ({
   return (
     <div className={`company-badge company-badge--${size} company-badge--${variant} ${className}`.trim()}>
       <Avatar
-        src={companyLogo || undefined}
         size={size === 'compact' ? 34 : 40}
         icon={!companyLogo ? <BankOutlined /> : undefined}
         className="company-badge__avatar"
       >
-        {!companyLogo ? getInitials(safeName) : null}
+        {companyLogo ? <AppImage src={companyLogo} alt={`${safeName} logo`} aspectRatio="1 / 1" /> : getInitials(safeName)}
       </Avatar>
       <div className="company-badge__content">
         <div className="company-badge__title-row">

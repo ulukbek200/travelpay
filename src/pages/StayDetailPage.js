@@ -44,6 +44,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api';
+import AppImage from '../components/AppImage';
 import CompanyBadge from '../components/CompanyBadge';
 import PaymentTopUpModal from '../components/payments/PaymentTopUpModal';
 import {
@@ -51,7 +52,6 @@ import {
   formatStayPrice,
   getStayTypeLabel,
   normalizeStay,
-  withStayFallback,
 } from '../utils/stays';
 import { readCurrentUser } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
@@ -942,11 +942,11 @@ const StayDetailPage = () => {
       <section className="stay-detail-layout">
         <div className="stay-gallery">
           <div className="stay-gallery__main">
-            <img src={gallery[0]} alt={stay.title} fetchPriority="high" decoding="async" onError={withStayFallback} />
+            <AppImage src={gallery[0]} alt={stay.title} priority aspectRatio="16 / 10" />
           </div>
           <div className="stay-gallery__thumbs">
             {(gallery.length > 1 ? gallery : [gallery[0], gallery[0], gallery[0]]).slice(0, 3).map((image, index) => (
-              <img key={`${image}-${index}`} src={image} alt={`${stay.title} ${index + 1}`} loading="lazy" decoding="async" onError={withStayFallback} />
+              <AppImage key={`${image}-${index}`} src={image} alt={`${stay.title} ${index + 1}`} aspectRatio="4 / 3" />
             ))}
           </div>
         </div>

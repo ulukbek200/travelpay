@@ -33,6 +33,11 @@
   color: #fff;
 }
 
+.company-badge__avatar .tp-image {
+  width: 100%;
+  height: 100%;
+}
+
 .company-badge__content {
   min-width: 0;
   display: flex;

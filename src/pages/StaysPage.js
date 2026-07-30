@@ -25,6 +25,7 @@ import {
   TeamOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
+import AppImage from '../components/AppImage';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -36,7 +37,6 @@ import {
   formatStayPrice,
   getStayTypeLabel,
   normalizeStay,
-  withStayFallback,
 } from '../utils/stays';
 
 const { Title, Paragraph, Text } = Typography;
@@ -266,7 +266,7 @@ const StaysPage = () => {
                 >
                   <Card className="stay-card" hoverable onClick={() => navigate(`/stays/${stay.id}`)}>
                     <div className="stay-card__media">
-                      <img src={stay.images?.[0]} alt={stay.title} loading="lazy" decoding="async" onError={withStayFallback} />
+                      <AppImage src={stay.images?.[0]} alt={stay.title} aspectRatio="16 / 10" />
                       <Tag className="stay-card__type">{getStayTypeLabel(stay.type)}</Tag>
                       <div className="stay-card__rating">
                         <Rate disabled allowHalf value={stay.rating} />

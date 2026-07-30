@@ -27,8 +27,9 @@ import {
 import { motion } from 'framer-motion';
 import api from '../api';
 import CompanyBadge from '../components/CompanyBadge';
+import AppImage from '../components/AppImage';
 import { normalizeTour } from './ActualToursPage';
-import { TOUR_IMAGE_FALLBACK, withTourFallback } from '../utils/tourMedia';
+import { TOUR_IMAGE_FALLBACK } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -137,13 +138,13 @@ const TourDetailPage = () => {
   return (
     <main className="tour-detail-page" style={styles.page}>
       <section style={styles.hero}>
-        <img
+        <AppImage
           src={currentTour.image || TOUR_IMAGE_FALLBACK}
           alt={currentTour.title}
-          fetchPriority="high"
-          decoding="async"
-          onError={withTourFallback}
-          style={styles.heroImage}
+          priority
+          aspectRatio="auto"
+          className="tour-detail-hero-image"
+          imgStyle={styles.heroImage}
         />
         <div style={styles.heroOverlay} />
 
@@ -263,7 +264,7 @@ const TourDetailPage = () => {
                 <div className="tour-detail-gallery-grid" style={styles.galleryGrid}>
                   {gallery.slice(0, 3).map((image, index) => (
                     <div key={`${image}-${index}`} style={styles.galleryTile}>
-                      <img src={image || TOUR_IMAGE_FALLBACK} alt={`${currentTour.title}-${index + 1}`} loading="lazy" decoding="async" onError={withTourFallback} style={styles.galleryImage} />
+                      <AppImage src={image || TOUR_IMAGE_FALLBACK} alt={`${currentTour.title}-${index + 1}`} aspectRatio="4 / 3" imgStyle={styles.galleryImage} />
                     </div>
                   ))}
                 </div>

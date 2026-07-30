@@ -4,6 +4,7 @@ import { CalendarOutlined, DeleteOutlined, EnvironmentOutlined, EyeOutlined, Sho
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import AppImage from '../components/AppImage';
 import { readCurrentUser } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
 
@@ -108,7 +109,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
                   className="favorite-tour-card"
                   hoverable
                   style={styles.card}
-                  cover={<img src={tour.image} alt={tour.title} style={styles.image} />}
+                  cover={<AppImage src={tour.image} alt={tour.title} aspectRatio="16 / 10" imgStyle={styles.image} />}
                   actions={[
                     <Button type="link" icon={<EyeOutlined />} onClick={() => setSelectedTour(tour)}>
                       Детали
@@ -156,7 +157,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
       >
         {selectedTour && (
           <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-            <img className="favorite-tour-modal-image" src={selectedTour.image} alt={selectedTour.title} style={styles.modalImage} />
+            <AppImage className="favorite-tour-modal-image" src={selectedTour.image} alt={selectedTour.title} aspectRatio="16 / 9" imgStyle={styles.modalImage} />
             <Space className="favorite-tour-modal-tags" wrap>
               <Tag className="favorite-tour-modal-tag" icon={<EnvironmentOutlined />} color="blue">{selectedTour.location || 'Кыргызстан'}</Tag>
               <Tag className="favorite-tour-modal-tag" icon={<CalendarOutlined />} color="gold">{selectedTour.duration || 'Срок уточняется'}</Tag>
