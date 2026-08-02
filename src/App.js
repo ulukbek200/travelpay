@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useMemo, useState } from 'react';
-import { App as AntApp, ConfigProvider, theme as antdTheme } from 'antd';
+import { App as AntApp, ConfigProvider, Result, Button, Spin, theme as antdTheme } from 'antd';
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,9 +7,13 @@ import {
   useLocation
 } from 'react-router-dom';
 
-import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
+import AdminLayout from './layouts/AdminLayout';
+import BusinessLayout from './layouts/BusinessLayout';
+import PublicLayout from './layouts/PublicLayout';
+import UserLayout from './layouts/UserLayout';
 
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
@@ -30,10 +34,12 @@ const BusinessManagersPage = lazy(() => import('./pages/BusinessManagersPage'));
 const BusinessPaymentSettingsPage = lazy(() => import('./pages/BusinessPaymentSettingsPage'));
 const BusinessPaymentsPage = lazy(() => import('./pages/BusinessPaymentsPage'));
 const BusinessRegisterPage = lazy(() => import('./pages/BusinessRegisterPage'));
+const CompanyPage = lazy(() => import('./pages/CompanyPage'));
 const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const PricesPage = lazy(() => import('./pages/PricesPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const SavingsPlanPage = lazy(() => import('./pages/SavingsPlanPage'));
 const StaffPortalPage = lazy(() => import('./pages/StaffPortalPage'));
@@ -43,47 +49,6 @@ const TourBookingPage = lazy(() => import('./pages/TourBookingPage'));
 const TourDetailPage = lazy(() => import('./pages/TourDetailPage'));
 const TravelBotWidget = lazy(() => import('./components/TravelBotWidget'));
 const VisaPaymentPage = lazy(() => import('./pages/VisaPaymentPage'));
-
-const HIDE_LAYOUT_PATHS = new Set([
-  '/login',
-  '/staff',
-  '/admin/login',
-  '/register',
-  '/verify-email',
-  '/booking',
-  '/profile',
-  '/savings',
-  '/savings-plan',
-  '/admin',
-  '/admin/home',
-  '/admin/tours',
-  '/admin/accommodations',
-  '/admin/bookings',
-  '/admin/users',
-  '/admin/clients',
-  '/admin/stats',
-  '/admin/reports',
-  '/admin/topups',
-  '/admin/savings',
-  '/admin/finance',
-  '/admin/companies',
-  '/admin/settings',
-  '/business',
-  '/travelpay-business',
-  '/business/login',
-  '/business/register',
-  '/business/dashboard',
-  '/business/tours',
-  '/business/accommodations',
-  '/business/bookings',
-  '/business/clients',
-  '/business/reports',
-  '/business/payment-settings',
-  '/business/managers',
-  '/business/payments',
-  '/account/savings',
-  '/VisaPaymentPage',
-]);
 
 const BUSINESS_ADMIN_PATHS = [
   '/business/dashboard',
@@ -95,21 +60,26 @@ const BUSINESS_ADMIN_PATHS = [
 ];
 
 function RouteFallback() {
-  return <div className="route-fallback" aria-hidden="true" />;
+  return <div className="route-fallback" role="status" aria-label="Загрузка страницы"><Spin size="large" /></div>;
+}
+
+function NotFoundPage() {
+  return <Result status="404" title="Страница не найдена" subTitle="Проверьте адрес или вернитесь на главную." extra={<Button type="primary" href="/">На главную</Button>} />;
 }
 
 function AppContent({ favorites, setFavorites }) {
   const location = useLocation();
-
-  const hideLayout = HIDE_LAYOUT_PATHS.has(location.pathname);
+  const pathname = location.pathname;
+  const isAdminArea = pathname === '/admin' || pathname.startsWith('/admin/');
+  const isBusinessArea = pathname === '/business' || pathname.startsWith('/business/') || pathname === '/travelpay-business' || pathname === '/prices';
+  const isUserArea = ['/profile', '/favorites', '/booking', '/tour-booking', '/savings', '/savings-plan', '/account/savings', '/AgreePage', '/VisaPaymentPage'].includes(pathname);
+  const isStandalonePublicPage = ['/login', '/register', '/verify-email', '/staff'].includes(pathname);
+  const AppAreaLayout = isAdminArea ? AdminLayout : isBusinessArea ? BusinessLayout : isUserArea ? UserLayout : PublicLayout;
 
   return (
     <>
-      {/* HEADER */}
-      {!hideLayout && <Header />}
-
-      {/* ROUTES */}
-      <div className={hideLayout ? undefined : 'public-layout-shell'}>
+      <AppAreaLayout withHeader={!isStandalonePublicPage}>
+        <RouteErrorBoundary locationKey={pathname}>
         <Suspense fallback={<RouteFallback />}>
         <Routes>
         <Route path="/" element={<HomePage />} />
@@ -121,8 +91,10 @@ function AppContent({ favorites, setFavorites }) {
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/business" element={<BusinessLandingPage />} />
         <Route path="/travelpay-business" element={<BusinessLandingPage />} />
+        <Route path="/prices" element={<PricesPage />} />
         <Route path="/business/register" element={<BusinessRegisterPage />} />
         <Route path="/business/login" element={<BusinessLoginPage />} />
+        <Route path="/companies/:id" element={<CompanyPage />} />
 
         <Route
           path="/tours"
@@ -230,6 +202,8 @@ function AppContent({ favorites, setFavorites }) {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin/calendar" element={<ProtectedRoute requireTravelPayAdmin><ActualToursAdmin /></ProtectedRoute>} />
+        <Route path="/admin/payments" element={<ProtectedRoute requireTravelPayAdmin><ActualToursAdmin /></ProtectedRoute>} />
         <Route
           path="/admin/users"
           element={
@@ -389,9 +363,11 @@ function AppContent({ favorites, setFavorites }) {
               </ProtectedRoute>
             }
           />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </Suspense>
-      </div>
+        </RouteErrorBoundary>
+      </AppAreaLayout>
 
       {/* 🔥 AI CHAT WIDGET (ГЛОБАЛЬНО НА ВСЁМ САЙТЕ) */}
       {location.pathname === '/' && (

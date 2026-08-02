@@ -465,6 +465,7 @@ const ActualToursPage = ({ favorites = [], setFavorites }) => {
                         </div>
 
                         <CompanyBadge
+                          companyId={tour.companyId}
                           companyName={tour.companyName}
                           companyLogo={tour.companyLogo}
                           companyCity={tour.companyCity}

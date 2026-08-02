@@ -934,7 +934,7 @@ const StayDetailPage = () => {
         <Title>{stay.title}</Title>
         <Space wrap size={12}>
           <Tag><EnvironmentOutlined /> {stay.location}</Tag>
-          <CompanyBadge companyName={stay.companyName} companyLogo={stay.companyLogo} companyCity={stay.companyCity} companyVerified={stay.companyVerified} variant="plain" />
+          <CompanyBadge companyId={stay.companyId} companyName={stay.companyName} companyLogo={stay.companyLogo} companyCity={stay.companyCity} companyVerified={stay.companyVerified} variant="plain" />
           <Tag><Rate disabled allowHalf value={stay.rating} /> {stay.rating}</Tag>
         </Space>
       </section>

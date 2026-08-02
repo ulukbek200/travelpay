@@ -283,6 +283,7 @@ const StaysPage = () => {
                         <span>{stay.availableCount} свободно</span>
                       </div>
                       <CompanyBadge
+                        companyId={stay.companyId}
                         companyName={stay.companyName}
                         companyLogo={stay.companyLogo}
                         companyCity={stay.companyCity}

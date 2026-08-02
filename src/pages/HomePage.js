@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRightOutlined, ClockCircleOutlined, CompassOutlined, CustomerServiceOutlined, DownOutlined, EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SafetyCertificateOutlined, StarFilled, TeamOutlined, WhatsAppOutlined } from '@ant-design/icons';
+import { AimOutlined, ArrowRightOutlined, ClockCircleOutlined, CompassOutlined, CustomerServiceOutlined, DownOutlined, EnvironmentOutlined, GlobalOutlined, LoadingOutlined, MailOutlined, PhoneOutlined, ReloadOutlined, SafetyCertificateOutlined, StarFilled, TeamOutlined, WhatsAppOutlined } from '@ant-design/icons';
 import { Button, Card, Collapse, Col, Input, Row, Segmented, Space, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import { FiArrowDown, FiBriefcase, FiCheckCircle, FiCreditCard, FiGlobe, FiMail, FiMap, FiMessageCircle, FiShield, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
@@ -285,6 +285,15 @@ const kyrgyzstanMapDestinations = [
   { key: 'kel-suu', label: 'Кель-Суу', coordinates: [76.58, 40.62] },
   { key: 'osh', label: 'Ош', coordinates: [72.79, 40.52] },
 ];
+
+const getDestinationKeyForItem = (item, index) => {
+  const haystack = `${item?.title || ''} ${item?.location || ''} ${item?.city || ''} ${item?.route || ''}`.toLowerCase();
+  if (/(karakol|jeti|jety|ysyk|issyk|isyk)/.test(haystack)) return 'karakol';
+  if (/(son|naryn|kel-suu|kel suu)/.test(haystack)) return haystack.includes('kel') ? 'kel-suu' : 'son-kul';
+  if (/(osh|arslan|jalal)/.test(haystack)) return 'osh';
+  if (/(ala|chuy|bishkek)/.test(haystack)) return 'bishkek';
+  return kyrgyzstanMapDestinations[index % kyrgyzstanMapDestinations.length].key;
+};
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -596,12 +605,19 @@ const HomePage = () => {
   const [isHeroTourSwitching, setIsHeroTourSwitching] = useState(false);
   const [regionsGeoJson, setRegionsGeoJson] = useState(null);
   const [shouldLoadMap, setShouldLoadMap] = useState(false);
+  const [mapLoadState, setMapLoadState] = useState('idle');
+  const [mapLayoutVersion, setMapLayoutVersion] = useState(0);
   const [d3Geo, setD3Geo] = useState(null);
   const [activeRegionId, setActiveRegionId] = useState('issyk-kul');
   const [hoveredRegionId, setHoveredRegionId] = useState(null);
   const [mapPopup, setMapPopup] = useState(null);
+  const [selectedMapMarkerId, setSelectedMapMarkerId] = useState(null);
+  const [userMapPoint, setUserMapPoint] = useState(null);
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
+  const [mapLocationMessage, setMapLocationMessage] = useState('');
   const [mapZoom, setMapZoom] = useState(1);
   const [actualGalleryTours, setActualGalleryTours] = useState([]);
+  const [mapStays, setMapStays] = useState([]);
   const heroVideoRef = useRef(null);
   const mapSectionRef = useRef(null);
   const mapStageRef = useRef(null);
@@ -706,11 +722,20 @@ const HomePage = () => {
   }, [shouldLoadMap]);
 
   useEffect(() => {
+    const node = mapStageRef.current;
+    if (!node || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => setMapLayoutVersion((version) => version + 1));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldLoadMap]);
+
+  useEffect(() => {
     if (!shouldLoadMap) {
       return undefined;
     }
 
     let isMounted = true;
+    setMapLoadState('loading');
 
     Promise.all([
       import('d3-geo'),
@@ -720,11 +745,13 @@ const HomePage = () => {
         if (isMounted) {
           setD3Geo(module);
           setRegionsGeoJson(data);
+          setMapLoadState('ready');
         }
       })
       .catch(() => {
         if (isMounted) {
           setRegionsGeoJson({ type: 'FeatureCollection', features: [] });
+          setMapLoadState('error');
         }
       });
 
@@ -737,8 +764,8 @@ const HomePage = () => {
     let isMounted = true;
 
     const loadActualTours = () => {
-      api.get('/tours')
-        .then((response) => {
+      Promise.all([api.get('/tours'), api.get('/accommodations').catch(() => ({ data: [] }))])
+        .then(([response, staysResponse]) => {
           if (!isMounted) {
             return;
           }
@@ -762,10 +789,21 @@ const HomePage = () => {
             .slice(0, 6);
 
           setActualGalleryTours(normalizedTours);
+          setMapStays((Array.isArray(staysResponse.data) ? staysResponse.data : [])
+            .filter((stay) => stay?.isActive !== false)
+            .map((stay) => ({
+              ...stay,
+              id: stay.id,
+              title: stay.title || stay.name || 'Домик',
+              image: stay.image || stay.images?.[0] || TOUR_IMAGE_FALLBACK,
+              location: stay.location || stay.city || 'Кыргызстан',
+              kind: 'stay',
+            })));
         })
         .catch(() => {
           if (isMounted) {
             setActualGalleryTours([]);
+            setMapStays([]);
           }
         });
     };
@@ -898,10 +936,37 @@ const HomePage = () => {
       .filter((destination) => destination.key !== 'bishkek')
       .map((destination) => ({ from: start, to: destination }));
   }, [projectedDestinations]);
+  const projectedTourMarkers = useMemo(() => {
+    if (!projectedDestinations.length) return [];
+    const tours = actualGalleryTours.length ? actualGalleryTours.map((tour) => ({ ...tour, kind: 'tour' })) : fallbackGalleryCards.map((tour) => ({ ...tour, kind: 'tour' }));
+    const source = [...tours, ...mapStays];
+    const groups = new Map();
+
+    source.forEach((tour, index) => {
+      const destinationKey = getDestinationKeyForItem(tour, index);
+      const destination = projectedDestinations.find((item) => item.key === destinationKey) || projectedDestinations[index % projectedDestinations.length];
+      if (!destination) return;
+      const current = groups.get(destination.key) || { ...destination, id: destination.key, tours: [] };
+      current.tours.push(tour);
+      groups.set(destination.key, current);
+    });
+
+    return Array.from(groups.values()).map((marker) => ({
+      ...marker,
+      tour: marker.tours[0],
+      count: marker.tours.length,
+    }));
+  }, [actualGalleryTours, mapStays, projectedDestinations]);
   const activeRegion = projectedRegions.find((region) => region.id === activeRegionId) || projectedRegions[0];
   const visibleRegionId = hoveredRegionId || activeRegion?.id;
   const visibleRegion = projectedRegions.find((region) => region.id === visibleRegionId) || activeRegion;
   const popupRegion = mapPopup ? projectedRegions.find((region) => region.id === mapPopup.regionId) : null;
+  const selectedMapMarker = projectedTourMarkers.find((marker) => marker.id === selectedMapMarkerId) || projectedTourMarkers[0] || null;
+  const projectedUserLocation = useMemo(() => {
+    if (!userMapPoint || !mapProjection) return null;
+    const [x, y] = mapProjection([userMapPoint.longitude, userMapPoint.latitude]) || [];
+    return Number.isFinite(x) && Number.isFinite(y) ? { ...userMapPoint, x, y } : null;
+  }, [mapProjection, userMapPoint]);
   const getRegionName = (region) => {
     const properties = region?.properties || {};
     return language === 'EN' ? properties.nameEn : language === 'KG' ? properties.nameKg : properties.nameRu;
@@ -949,6 +1014,10 @@ const HomePage = () => {
   };
 
   const handleGalleryTourOpen = (tour) => {
+    if (tour?.kind === 'stay' && tour.id) {
+      navigate(`/stays/${tour.id}`, { state: { stay: tour } });
+      return;
+    }
     if (tour?.isActualTour && tour.id) {
       navigate(`/tours/${tour.id}`, { state: { tour, tours: actualGalleryTours } });
       return;
@@ -985,6 +1054,46 @@ const HomePage = () => {
     if (region?.properties?.route) {
       navigate(region.properties.route);
     }
+  };
+
+  const handleMapMarkerSelect = (marker) => {
+    if (!marker) return;
+    setSelectedMapMarkerId(marker.id);
+    const region = projectedRegions.find((item) => {
+      const text = `${item.properties?.nameEn || ''} ${item.properties?.nameRu || ''} ${item.properties?.slug || ''}`.toLowerCase();
+      return text.includes(marker.key === 'karakol' ? 'issyk' : marker.key === 'son-kul' || marker.key === 'kel-suu' ? 'naryn' : marker.key === 'osh' ? 'osh' : 'chuy');
+    });
+    if (region) setActiveRegionId(region.id);
+  };
+
+  const handleLocateUser = () => {
+    if (!navigator.geolocation) {
+      setMapLocationMessage('Геолокация не поддерживается этим браузером.');
+      return;
+    }
+
+    setIsLocatingUser(true);
+    setMapLocationMessage('Определяем ваше местоположение…');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserMapPoint({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+        setMapLocationMessage('Ваше местоположение показано на карте.');
+        setMapZoom(1.25);
+        setIsLocatingUser(false);
+      },
+      () => {
+        setMapLocationMessage('Не удалось получить геолокацию. Разрешите доступ в браузере и повторите.');
+        setIsLocatingUser(false);
+      },
+      { enableHighAccuracy: false, timeout: 9000, maximumAge: 300000 },
+    );
+  };
+
+  const resetMapView = () => {
+    setConstrainedMapZoom(1);
+    setMapPopup(null);
+    setSelectedMapMarkerId(null);
+    setMapLocationMessage('');
   };
 
   const setConstrainedMapZoom = (nextZoom) => {
@@ -1422,14 +1531,20 @@ const HomePage = () => {
             </div>
           </motion.div>
 
-          <motion.div {...motionCard} transition={{ duration: 0.7 }} className="home-map-stage" ref={mapStageRef}>
+          <motion.div {...motionCard} transition={{ duration: 0.7 }} className="home-map-stage" ref={mapStageRef} data-map-layout={mapLayoutVersion}>
             <div className="home-map-stage__glow home-map-stage__glow--left" aria-hidden="true" />
             <div className="home-map-stage__glow home-map-stage__glow--right" aria-hidden="true" />
-            <div className="home-map-controls" aria-label="Map zoom controls">
+            <div className="home-map-controls" aria-label="Map controls">
+              <button type="button" aria-label="Определить моё местоположение" title="Моё местоположение" onClick={handleLocateUser} disabled={isLocatingUser}>
+                {isLocatingUser ? <LoadingOutlined /> : <AimOutlined />}
+              </button>
               <button type="button" aria-label={mapSection.zoomIn} onClick={() => setConstrainedMapZoom((zoom) => zoom + 0.18)}>+</button>
               <button type="button" aria-label={mapSection.zoomOut} onClick={() => setConstrainedMapZoom((zoom) => zoom - 0.18)}>-</button>
-              <button type="button" onClick={() => setConstrainedMapZoom(1)}>{mapSection.reset}</button>
+              <button type="button" aria-label={mapSection.reset} title={mapSection.reset} onClick={resetMapView}><ReloadOutlined /></button>
             </div>
+            {mapLoadState === 'loading' ? (
+              <div className="home-map-state" role="status"><LoadingOutlined spin /> <span>Загружаем карту и маршруты…</span></div>
+            ) : null}
             {regionsGeoJson && !isValidRegionsGeoJson ? (
               <div className="home-map-error" role="status">
                 Не удалось загрузить геоданные карты Кыргызстана
@@ -1541,8 +1656,52 @@ const HomePage = () => {
                     <circle className="home-kyrgyzstan-map__destination-dot" r="5" filter="url(#kg-soft-glow)" />
                   </g>
                 ))}
+
+                {projectedTourMarkers.map((marker) => {
+                  const isSelected = marker.id === selectedMapMarker?.id;
+                  return (
+                    <g
+                      key={`tour-marker-${marker.id}`}
+                      className={`home-kyrgyzstan-map__tour-marker${isSelected ? ' is-selected' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${marker.count} туров: ${marker.tour?.title || marker.label}`}
+                      transform={`translate(${marker.x} ${marker.y})`}
+                      onClick={() => handleMapMarkerSelect(marker)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          handleMapMarkerSelect(marker);
+                        }
+                      }}
+                    >
+                      <circle className="home-kyrgyzstan-map__tour-marker-ring" r="17" />
+                      <circle className="home-kyrgyzstan-map__tour-marker-pin" r="11" />
+                      <text className="home-kyrgyzstan-map__tour-marker-count" y="4">{marker.count}</text>
+                    </g>
+                  );
+                })}
+
+                {projectedUserLocation ? (
+                  <g className="home-kyrgyzstan-map__user-marker" transform={`translate(${projectedUserLocation.x} ${projectedUserLocation.y})`}>
+                    <circle r="20" className="home-kyrgyzstan-map__user-marker-pulse" />
+                    <circle r="7" className="home-kyrgyzstan-map__user-marker-dot" />
+                  </g>
+                ) : null}
               </g>
             </svg>
+            {mapLocationMessage ? <div className="home-map-location-message" role="status">{mapLocationMessage}</div> : null}
+            {selectedMapMarker ? (
+              <article className="home-map-tour-card" aria-live="polite">
+                <AppImage src={selectedMapMarker.tour?.image} alt="" aspectRatio="1 / 1" imgClassName="home-map-tour-card__image" />
+                <div>
+                  <span>{selectedMapMarker.count > 1 ? `${selectedMapMarker.count} тура в этом направлении` : 'Тур на карте'}</span>
+                  <strong>{selectedMapMarker.tour?.title || selectedMapMarker.label}</strong>
+                  <p><EnvironmentOutlined /> {selectedMapMarker.tour?.location || selectedMapMarker.label}</p>
+                </div>
+                <button type="button" onClick={() => handleGalleryTourOpen(selectedMapMarker.tour)} aria-label="Открыть тур"><ArrowRightOutlined /></button>
+              </article>
+            ) : null}
             {popupRegion ? (
               <motion.div
                 className="home-map-popup"

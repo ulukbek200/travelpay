@@ -93,6 +93,9 @@
   box-shadow: 0 22px 50px rgba(15, 23, 42, 0.16);
 }
 
+.company-badge--link { cursor: pointer; }
+.company-badge--link:focus-visible { outline: 3px solid rgba(61, 98, 232, .45); outline-offset: 3px; }
+
 body[data-theme="dark"] .company-badge,
 body.dark .company-badge {
   color: #fff;

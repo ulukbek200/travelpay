@@ -1,5 +1,6 @@
 import React from 'react';
 import { Avatar, Tooltip } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
   BankOutlined,
   CheckCircleFilled,
@@ -21,15 +22,33 @@ const CompanyBadge = ({
   companyLogo,
   companyCity,
   companyVerified,
+  companyId,
   size = 'default',
   variant = 'glass',
   className = '',
 }) => {
+  const navigate = useNavigate();
   const safeName = companyName || 'TravelPay Partner';
   const safeCity = companyCity || 'TravelPay Business';
 
   return (
-    <div className={`company-badge company-badge--${size} company-badge--${variant} ${className}`.trim()}>
+    <div
+      className={`company-badge company-badge--${size} company-badge--${variant} ${companyId ? 'company-badge--link' : ''} ${className}`.trim()}
+      role={companyId ? 'link' : undefined}
+      tabIndex={companyId ? 0 : undefined}
+      onClick={(event) => {
+        if (!companyId) return;
+        event.stopPropagation();
+        navigate(`/companies/${companyId}`);
+      }}
+      onKeyDown={(event) => {
+        if (companyId && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          event.stopPropagation();
+          navigate(`/companies/${companyId}`);
+        }
+      }}
+    >
       <Avatar
         size={size === 'compact' ? 34 : 40}
         icon={!companyLogo ? <BankOutlined /> : undefined}

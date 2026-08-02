@@ -7,12 +7,11 @@ import {
   Card,
   Col,
   Divider,
-  Drawer,
   Empty,
   Form,
-  Grid,
   Input,
   Layout,
+  Modal,
   Popconfirm,
   Progress,
   Row,
@@ -32,16 +31,14 @@ import {
   ClockCircleOutlined,
   CompassOutlined,
   CrownOutlined,
+  EditOutlined,
   FireOutlined,
   GiftOutlined,
   HeartOutlined,
-  HomeOutlined,
-  LogoutOutlined,
   MenuOutlined,
   NotificationOutlined,
   PictureOutlined,
   SafetyCertificateOutlined,
-  TeamOutlined,
   TrophyOutlined,
   UserOutlined,
   WalletOutlined,
@@ -49,13 +46,13 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import AppImage from '../components/AppImage';
 import { clearCurrentUser, hasActiveSession, readCurrentUser } from '../utils/currentUser';
 import { formatSavingsStatus, getSavingsMetrics, getSavingsStatusColor } from '../utils/savings';
-import { canAccessAdminPanel, getAdminLandingPath, getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
+import { getUserLevel, normalizeUser, syncCurrentUser } from '../utils/user';
 
-const { Sider, Content } = Layout;
+const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
-const { useBreakpoint } = Grid;
 
 const BRAND_BLUE = '#17325c';
 const BRAND_GOLD = '#fca311';
@@ -117,16 +114,22 @@ const canCancelTourBooking = (booking) => {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const screens = useBreakpoint();
-  const isDesktop = !!screens.lg;
   const [form] = Form.useForm();
+  const [profileEditForm] = Form.useForm();
+  const [achievementForm] = Form.useForm();
+  const [reviewForm] = Form.useForm();
   const [user, setUser] = useState(null);
   const [tourBookings, setTourBookings] = useState([]);
   const [tourBookingsLoading, setTourBookingsLoading] = useState(true);
   const [cancellingBookingId, setCancellingBookingId] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(DEFAULT_AVATAR);
   const [theme, setTheme] = useState(() => localStorage.getItem('dashboard_theme') || 'dark');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
+  const [achievementsEditOpen, setAchievementsEditOpen] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [tripStatusFilter, setTripStatusFilter] = useState('all');
+  const [tripDateFilter, setTripDateFilter] = useState('');
+  const [reviewTrip, setReviewTrip] = useState(null);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
@@ -161,6 +164,7 @@ const ProfilePage = () => {
         setTourBookings(bookingsResponse.data || []);
         setAvatarPreview(nextUser?.avatar || DEFAULT_AVATAR);
         form.setFieldsValue(nextUser);
+        profileEditForm.setFieldsValue(nextUser);
       } catch (error) {
         navigate('/login');
       } finally {
@@ -169,7 +173,7 @@ const ProfilePage = () => {
     };
 
     loadUser();
-  }, [form, navigate]);
+  }, [form, navigate, profileEditForm]);
 
   const savingsMetrics = useMemo(() => getSavingsMetrics(user?.savings), [user?.savings]);
   const level = useMemo(
@@ -185,6 +189,39 @@ const ProfilePage = () => {
     () => tourBookings.filter((item) => !['completed', 'cancelled', 'rejected'].includes(item.status)),
     [tourBookings],
   );
+  const profileTrips = useMemo(() => {
+    const byId = new Map();
+    [...tourBookings, ...(user?.travelHistory || [])].forEach((item, index) => {
+      const id = item?.id || `trip-${index}`;
+      byId.set(String(id), { ...item, id });
+    });
+    return Array.from(byId.values()).sort((a, b) => new Date(b.travelDate || b.date || 0) - new Date(a.travelDate || a.date || 0));
+  }, [tourBookings, user?.travelHistory]);
+  const filteredTrips = useMemo(() => profileTrips.filter((trip) => {
+    const status = String(trip.status || '').toLowerCase();
+    const tripTime = new Date(trip.travelDate || trip.date || trip.purchasedAt || 0).getTime();
+    const category = ['cancelled', 'rejected'].includes(status) ? 'cancelled' : (status === 'completed' || (tripTime && tripTime < Date.now()) ? 'completed' : 'upcoming');
+    const matchesStatus = tripStatusFilter === 'all' || tripStatusFilter === category;
+    const matchesDate = !tripDateFilter || String(trip.travelDate || trip.date || '').slice(0, 10) === tripDateFilter;
+    return matchesStatus && matchesDate;
+  }), [profileTrips, tripStatusFilter, tripDateFilter]);
+  const achievementOverview = useMemo(() => {
+    const completedTrips = profileTrips.filter((trip) => {
+      const date = new Date(trip.travelDate || trip.date || 0).getTime();
+      return String(trip.status || '').toLowerCase() === 'completed' || (date && date < Date.now() && !['cancelled', 'rejected'].includes(String(trip.status || '').toLowerCase()));
+    });
+    const regions = Array.from(new Set(completedTrips.map((trip) => String(trip.location || trip.region || '').trim()).filter(Boolean)));
+    const reviews = user?.travelReviews || [];
+    const bonuses = Number(user?.referral?.bonusAmount || 0);
+    const favoriteDirections = Array.from(new Set((user?.favorites || []).map((tour) => String(tour.location || '').trim()).filter(Boolean))).slice(0, 3);
+    const badges = [
+      { label: 'Первый маршрут', done: completedTrips.length >= 1, detail: '1 завершённая поездка' },
+      { label: 'Исследователь', done: regions.length >= 3, detail: '3 посещённых региона' },
+      { label: 'Голос путешественника', done: reviews.length >= 1, detail: 'первый отзыв' },
+      { label: 'Планировщик', done: savingsMetrics.currentAmount >= 10000, detail: '10 000 сом накоплений' },
+    ];
+    return { completedTrips, regions, reviews, bonuses, favoriteDirections, badges };
+  }, [profileTrips, user?.travelReviews, user?.referral?.bonusAmount, user?.favorites, savingsMetrics.currentAmount]);
   const favoriteItems = (user?.favorites || []).slice(0, 4);
 
   const historyColumns = [
@@ -248,6 +285,73 @@ const ProfilePage = () => {
     }
   };
 
+  const openProfileEditor = () => {
+    profileEditForm.setFieldsValue(user || {});
+    setProfileEditOpen(true);
+  };
+
+  const saveProfileEditor = async (values) => {
+    if (!user?.id || profileSaving) return;
+    setProfileSaving(true);
+    try {
+      const response = await api.put(`/users/${user.id}`, { ...user, ...values, isLoggedIn: true });
+      const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
+      setUser(nextUser);
+      form.setFieldsValue(nextUser);
+      profileEditForm.setFieldsValue(nextUser);
+      setProfileEditOpen(false);
+      message.success('Данные профиля сохранены.');
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Не удалось сохранить профиль. Попробуйте ещё раз.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const openAchievementsEditor = () => {
+    achievementForm.setFieldsValue({ achievements: (user?.achievements || []).map((title) => ({ title })) });
+    setAchievementsEditOpen(true);
+  };
+
+  const saveAchievements = async ({ achievements = [] }) => {
+    if (!user?.id || profileSaving) return;
+    const nextAchievements = achievements.map((item) => String(item?.title || '').trim()).filter(Boolean);
+    setProfileSaving(true);
+    try {
+      const response = await api.put(`/users/${user.id}`, { ...user, achievements: nextAchievements, isLoggedIn: true });
+      const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
+      setUser(nextUser);
+      form.setFieldsValue(nextUser);
+      setAchievementsEditOpen(false);
+      message.success('Список достижений обновлён.');
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Не удалось обновить достижения.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const saveTripReview = async (values) => {
+    if (!user?.id || !reviewTrip || profileSaving) return;
+    setProfileSaving(true);
+    try {
+      const travelReviews = [
+        ...(user.travelReviews || []).filter((item) => String(item.tripId) !== String(reviewTrip.id)),
+        { id: `review-${Date.now()}`, tripId: reviewTrip.id, tourTitle: reviewTrip.tourTitle || reviewTrip.title || 'Поездка', rating: Number(values.rating || 5), text: String(values.text || '').trim(), createdAt: new Date().toISOString() },
+      ];
+      const response = await api.put(`/users/${user.id}`, { ...user, travelReviews, isLoggedIn: true });
+      const nextUser = syncCurrentUser({ ...normalizeUser(response.data), isLoggedIn: true });
+      setUser(nextUser);
+      setReviewTrip(null);
+      reviewForm.resetFields();
+      message.success('Спасибо! Ваш отзыв сохранён.');
+    } catch (error) {
+      message.error(error?.response?.data?.message || 'Не удалось сохранить отзыв.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   const handleCancelTourBooking = async (booking) => {
     if (!user?.id) return;
 
@@ -282,18 +386,7 @@ const ProfilePage = () => {
     }
   };
 
-  const handleLogout = () => {
-    clearCurrentUser();
-    setMenuOpen(false);
-    navigate('/');
-  };
-
-  const handleNavigate = (path) => {
-    setMenuOpen(false);
-    navigate(path);
-  };
-
-  const sidebarContent = (
+  /* Page-local navigation was replaced by the persistent UserSidebar layout.
     <div style={styles.sidebarInner} className="travelpay-profile-sidebar travelpay-profile-sidebar-card">
       <Space orientation="vertical" size={10} style={{ width: '100%' }}>
         <div style={styles.sidebarUser}>
@@ -318,37 +411,19 @@ const ProfilePage = () => {
     </div>
   );
 
+  */
   return (
     <Layout
       style={styles.page(theme === 'dark')}
       className={`travelpay-profile-page ${theme === 'dark' ? 'travelpay-profile-page--dark' : 'travelpay-profile-page--light'}`}
     >
-      {isDesktop && (
-        <Sider width={260} style={styles.sider(theme === 'dark')} className="travelpay-profile-sider">
-          {sidebarContent}
-        </Sider>
-      )}
-
-      {!isDesktop && (
-        <Drawer
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          placement="left"
-          size={290}
-          className="travelpay-dashboard-drawer"
-          styles={{ body: styles.drawerBody }}
-        >
-          {sidebarContent}
-        </Drawer>
-      )}
-
       <Content style={styles.content}>
         <div className="travelpay-dashboard-container">
           <Space orientation="vertical" size={20} style={{ width: '100%' }}>
             <div className="profile-topbar" style={styles.topBar}>
               <div style={{ minWidth: 0 }}>
-                {!isDesktop && (
-                  <Button icon={<MenuOutlined />} onClick={() => setMenuOpen(true)} style={styles.mobileMenuButton}>
+                {false && (
+                  <Button icon={<MenuOutlined />} disabled style={styles.mobileMenuButton}>
                     Меню
                   </Button>
                 )}
@@ -394,6 +469,8 @@ const ProfilePage = () => {
                       <Tag color={getSavingsStatusColor(savingsMetrics.status)}>{formatSavingsStatus(savingsMetrics.status)}</Tag>
                       <Tag icon={<CrownOutlined />} color="gold" style={{ fontWeight: 800 }}>{level}</Tag>
                       <Progress percent={savingsMetrics.progressPercent} strokeColor={{ '0%': TURQUOISE, '100%': BRAND_GOLD }} />
+                      <Button block icon={<EditOutlined />} onClick={openProfileEditor}>Редактировать профиль</Button>
+                      <Button type="text" block icon={<TrophyOutlined />} onClick={openAchievementsEditor}>Редактировать достижения</Button>
                       <Button type="primary" block onClick={() => navigate('/savings')} style={styles.primaryButton}>
                         Открыть накопления
                       </Button>
@@ -461,18 +538,75 @@ const ProfilePage = () => {
                   </Card>
 
                   <Card title="Достижения" style={styles.glassCard}>
-                    <Row gutter={[12, 12]}>
-                      {(user?.achievements || []).map((achievement) => (
-                        <Col xs={24} md={12} key={achievement}>
-                          <Card size="small" style={styles.achievementCard}>
-                            <Space>
-                              <TrophyOutlined style={{ color: BRAND_GOLD }} />
-                              <Text strong>{achievement}</Text>
+                    <div className="profile-achievement-stats">
+                      <div><strong>{achievementOverview.completedTrips.length}</strong><span>завершённых поездок</span></div>
+                      <div><strong>{achievementOverview.regions.length}</strong><span>посещённых регионов</span></div>
+                      <div><strong>{achievementOverview.reviews.length}</strong><span>отзывов</span></div>
+                      <div><strong>{formatMoney(achievementOverview.bonuses)}</strong><span>накопленных бонусов</span></div>
+                    </div>
+                    <div className="profile-achievement-progress">
+                      <div><Text strong>Активность</Text><Text type="secondary">{achievementOverview.badges.filter((badge) => badge.done).length} из {achievementOverview.badges.length} значков</Text></div>
+                      <Progress percent={Math.round((achievementOverview.badges.filter((badge) => badge.done).length / achievementOverview.badges.length) * 100)} showInfo={false} strokeColor={{ '0%': BRAND_BLUE, '100%': TURQUOISE }} />
+                    </div>
+                    <div className="profile-achievement-badges">
+                      {achievementOverview.badges.map((badge) => <div key={badge.label} className={`profile-achievement-badge${badge.done ? ' is-earned' : ''}`}>
+                        <TrophyOutlined />
+                        <div><Text strong>{badge.label}</Text><Text type="secondary">{badge.done ? 'Получено' : `Цель: ${badge.detail}`}</Text></div>
+                      </div>)}
+                    </div>
+                    {(achievementOverview.favoriteDirections.length > 0 || achievementOverview.regions.length > 0) && <div className="profile-achievement-places">
+                      {achievementOverview.regions.length > 0 && <div><Text type="secondary">Посещённые регионы</Text><Space wrap>{achievementOverview.regions.slice(0, 5).map((region) => <Tag key={region}>{region}</Tag>)}</Space></div>}
+                      {achievementOverview.favoriteDirections.length > 0 && <div><Text type="secondary">Любимые направления</Text><Space wrap>{achievementOverview.favoriteDirections.map((region) => <Tag color="blue" key={region}>{region}</Tag>)}</Space></div>}
+                    </div>}
+                  </Card>
+
+                  <Card
+                    title="Мои поездки"
+                    extra={<Tag color="processing">{filteredTrips.length}</Tag>}
+                    style={styles.glassCard}
+                  >
+                    <div className="profile-trips-toolbar">
+                      <Select
+                        value={tripStatusFilter}
+                        onChange={setTripStatusFilter}
+                        options={[
+                          { value: 'all', label: 'Все статусы' },
+                          { value: 'upcoming', label: 'Предстоящие' },
+                          { value: 'completed', label: 'Завершённые' },
+                          { value: 'cancelled', label: 'Отменённые' },
+                        ]}
+                        style={{ minWidth: 170 }}
+                      />
+                      <Input type="date" value={tripDateFilter} onChange={(event) => setTripDateFilter(event.target.value)} aria-label="Дата поездки" />
+                      {(tripStatusFilter !== 'all' || tripDateFilter) && <Button type="link" onClick={() => { setTripStatusFilter('all'); setTripDateFilter(''); }}>Сбросить</Button>}
+                    </div>
+                    <div className="profile-trips-list">
+                      {filteredTrips.length ? filteredTrips.map((trip) => {
+                        const meta = getTourBookingMeta(trip);
+                        const status = String(trip.status || '').toLowerCase();
+                        const tripTime = new Date(trip.travelDate || trip.date || trip.purchasedAt || 0).getTime();
+                        const isCompleted = status === 'completed' || (tripTime && tripTime < Date.now() && !['cancelled', 'rejected'].includes(status));
+                        const existingReview = (user?.travelReviews || []).find((item) => String(item.tripId) === String(trip.id));
+                        return <Card key={`profile-trip-${trip.id}`} size="small" className="profile-trip-card">
+                          <AppImage className="profile-trip-card__image" src={trip.image} alt={trip.tourTitle || trip.title || 'Поездка'} aspectRatio="4 / 3" />
+                          <div className="profile-trip-card__body">
+                            <div className="profile-trip-card__head">
+                              <div><Text strong>{trip.tourTitle || trip.title || 'Поездка'}</Text><Text type="secondary">{trip.companyName || trip.organizer || 'TravelPay'}</Text></div>
+                              <Tag color={meta.color}>{meta.label}</Tag>
+                            </div>
+                            <div className="profile-trip-card__meta">
+                              <span><CalendarOutlined /> {formatDateTime(trip.travelDate || trip.date)}</span>
+                              <span><WalletOutlined /> {trip.paymentStatus === 'paid' || trip.status === 'confirmed' ? 'Оплата подтверждена' : 'Оплата ожидается'}</span>
+                            </div>
+                            <Space wrap>
+                              <Button size="small" onClick={() => navigate(trip.tourId ? `/tours/${trip.tourId}` : '/tours')}>Детали</Button>
+                              {isCompleted && <Button size="small" type="primary" onClick={() => navigate(trip.tourId ? `/tours/${trip.tourId}` : '/tours')}>Повторить</Button>}
+                              {isCompleted && <Button size="small" icon={<EditOutlined />} onClick={() => { reviewForm.setFieldsValue(existingReview || { rating: 5, text: '' }); setReviewTrip(trip); }}>{existingReview ? 'Изменить отзыв' : 'Оставить отзыв'}</Button>}
                             </Space>
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
+                          </div>
+                        </Card>;
+                      }) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="По выбранным фильтрам поездок нет" />}
+                    </div>
                   </Card>
 
                   <Card title="История путешествий" style={styles.glassCard}>
@@ -655,6 +789,68 @@ const ProfilePage = () => {
           </Space>
         </div>
       </Content>
+      <Modal
+        title="Редактировать профиль"
+        open={profileEditOpen}
+        onCancel={() => !profileSaving && setProfileEditOpen(false)}
+        okText="Сохранить"
+        cancelText="Отмена"
+        okButtonProps={{ loading: profileSaving }}
+        cancelButtonProps={{ disabled: profileSaving }}
+        onOk={() => profileEditForm.submit()}
+      >
+        <Form form={profileEditForm} layout="vertical" onFinish={saveProfileEditor}>
+          <Form.Item name="name" label="Имя" rules={[{ required: true, message: 'Укажите имя.' }]}><Input autoComplete="name" /></Form.Item>
+          <Form.Item name="phone" label="Телефон"><Input autoComplete="tel" /></Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Проверьте email.' }]}><Input autoComplete="email" /></Form.Item>
+          <Form.Item name="country" label="Страна"><Input /></Form.Item>
+          <Form.Item name="preferredLanguage" label="Язык"><Select options={['KG', 'RU', 'EN'].map((value) => ({ value, label: value }))} /></Form.Item>
+          <Form.Item name="travelPreferences" label="Предпочтения"><Input.TextArea rows={3} maxLength={500} showCount /></Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Редактировать достижения"
+        open={achievementsEditOpen}
+        onCancel={() => !profileSaving && setAchievementsEditOpen(false)}
+        okText="Сохранить"
+        cancelText="Отмена"
+        okButtonProps={{ loading: profileSaving }}
+        cancelButtonProps={{ disabled: profileSaving }}
+        onOk={() => achievementForm.submit()}
+      >
+        <Form form={achievementForm} layout="vertical" onFinish={saveAchievements}>
+          <Form.List name="achievements">
+            {(fields, { add, remove }) => <Space direction="vertical" style={{ width: '100%' }}>
+              {fields.map((field) => <Space key={field.key} align="baseline" style={{ display: 'flex' }}>
+                <Form.Item {...field} name={[field.name, 'title']} rules={[{ required: true, message: 'Введите название.' }]} style={{ flex: 1, marginBottom: 8 }}><Input placeholder="Например: Первая поездка" /></Form.Item>
+                <Button danger type="text" onClick={() => remove(field.name)}>Удалить</Button>
+              </Space>)}
+              <Button onClick={() => add({ title: '' })}>Добавить достижение</Button>
+            </Space>}
+          </Form.List>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={reviewTrip ? `Отзыв: ${reviewTrip.tourTitle || reviewTrip.title || 'поездка'}` : 'Отзыв о поездке'}
+        open={Boolean(reviewTrip)}
+        onCancel={() => !profileSaving && setReviewTrip(null)}
+        okText="Сохранить отзыв"
+        cancelText="Отмена"
+        okButtonProps={{ loading: profileSaving }}
+        cancelButtonProps={{ disabled: profileSaving }}
+        onOk={() => reviewForm.submit()}
+      >
+        <Form form={reviewForm} layout="vertical" onFinish={saveTripReview}>
+          <Form.Item name="rating" label="Оценка" rules={[{ required: true }]}>
+            <Select options={[5, 4, 3, 2, 1].map((value) => ({ value, label: `${value} из 5` }))} />
+          </Form.Item>
+          <Form.Item name="text" label="Ваш отзыв" rules={[{ required: true, message: 'Напишите хотя бы пару слов.' }]}>
+            <Input.TextArea rows={4} maxLength={800} showCount placeholder="Что вам понравилось в поездке?" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 };

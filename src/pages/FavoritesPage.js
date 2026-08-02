@@ -18,8 +18,11 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const [selectedTour, setSelectedTour] = useState(null);
+  const [savingId, setSavingId] = useState('');
+  const [clearing, setClearing] = useState(false);
 
   const handleRemove = async (tourToRemove) => {
+    if (!tourToRemove || savingId) return;
     const currentUser = readCurrentUser();
     const updated = favorites.filter((tour) => tour.id !== tourToRemove.id && tour.title !== tourToRemove.title);
 
@@ -30,17 +33,21 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
     }
 
     try {
+      setSavingId(String(tourToRemove.id || tourToRemove.title));
       const response = await api.put(`/users/${currentUser.id}/favorites`, { favorites: updated });
       setFavorites(response.data?.favorites || updated);
       syncCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
-      message.success('Tour removed from favorites');
+      message.success('Тур удалён из избранного.');
       if (selectedTour?.title === tourToRemove.title) setSelectedTour(null);
     } catch (error) {
-      message.error('Could not update favorites on the server');
+      message.error('Не удалось обновить избранное. Проверьте соединение и попробуйте ещё раз.');
+    } finally {
+      setSavingId('');
     }
   };
 
   const handleClearAll = async () => {
+    if (clearing) return;
     const currentUser = readCurrentUser();
 
     if (!currentUser?.id) {
@@ -49,12 +56,15 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
     }
 
     try {
+      setClearing(true);
       const response = await api.put(`/users/${currentUser.id}/favorites`, { favorites: [] });
       setFavorites(response.data?.favorites || []);
       syncCurrentUser({ ...currentUser, ...response.data, isLoggedIn: true });
-      message.success('Favorites cleared');
+      message.success('Избранное очищено.');
     } catch (error) {
-      message.error('Could not clear favorites on the server');
+      message.error('Не удалось очистить избранное. Попробуйте ещё раз.');
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -78,7 +88,14 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
         <div style={styles.toolbar}>
           <Title level={3} className="favorites-section-title" style={{ margin: 0, color: BRAND_BLUE }}>Моя подборка</Title>
           {favorites.length > 0 && (
-            <Button danger icon={<DeleteOutlined />} onClick={handleClearAll}>
+            <Button danger icon={<DeleteOutlined />} loading={clearing} onClick={() => Modal.confirm({
+              title: 'Очистить избранное?',
+              content: 'Все сохранённые туры будут удалены из вашего списка.',
+              okText: 'Очистить',
+              cancelText: 'Отмена',
+              okButtonProps: { danger: true },
+              onOk: handleClearAll,
+            })}>
               Очистить все
             </Button>
           )}
@@ -117,7 +134,14 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
                     <Button type="link" icon={<ShoppingOutlined />} onClick={() => navigate('/booking', { state: { tour } })}>
                       Бронь
                     </Button>,
-                    <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleRemove(tour)}>
+                    <Button type="link" danger icon={<DeleteOutlined />} loading={savingId === String(tour.id || tour.title)} onClick={() => Modal.confirm({
+                      title: 'Удалить из избранного?',
+                      content: `«${tour.title}» исчезнет только из вашего списка.`,
+                      okText: 'Удалить',
+                      cancelText: 'Отмена',
+                      okButtonProps: { danger: true },
+                      onOk: () => handleRemove(tour),
+                    })}>
                       Удалить
                     </Button>,
                   ]}
@@ -147,7 +171,7 @@ const FavoritesPage = ({ favorites, setFavorites }) => {
         title={<span className="favorite-tour-modal-title">{selectedTour?.title}</span>}
         onCancel={() => setSelectedTour(null)}
         footer={[
-          <Button key="remove" className="favorite-tour-modal-remove" danger onClick={() => handleRemove(selectedTour)}>
+          <Button key="remove" className="favorite-tour-modal-remove" danger loading={savingId === String(selectedTour?.id || selectedTour?.title || '')} onClick={() => handleRemove(selectedTour)}>
             Удалить
           </Button>,
           <Button key="book" className="favorite-tour-modal-book" type="primary" style={styles.primaryButton} onClick={() => navigate('/booking', { state: { tour: selectedTour } })}>

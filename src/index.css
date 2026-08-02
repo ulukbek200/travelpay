@@ -21725,7 +21725,30 @@ body[data-theme="dark"] .tp-admin-topbar, body.dark .tp-admin-topbar { --tp-admi
 .business-register-steps { overflow-x: auto; padding: 10px 4px 24px; }.business-register-steps .ant-steps { min-width: 680px; }.business-register-steps .ant-steps-item-title { font-size: 12px; font-weight: 700; }
 .business-register-card { border: 1px solid rgba(41, 68, 111, .11); box-shadow: 0 22px 64px rgba(28, 50, 87, .1); border-radius: 24px; }.business-register-card .ant-card-body { padding: clamp(22px, 4vw, 42px); }.business-register-card h2 { margin: 0 0 6px; font-size: clamp(24px, 4vw, 32px); letter-spacing: -.035em; }.business-register-card > .ant-card-body > p { margin: 0 0 26px; color: #68758b; font-size: 15px; }
 .business-register-actions { display: flex; justify-content: space-between; gap: 14px; margin-top: 22px; }.business-register-actions > div { display: flex; gap: 10px; }.business-register-actions .ant-btn { min-width: 126px; }.business-payment-list { display: grid; gap: 12px; margin-bottom: 14px; }.business-payment-list .ant-card { background: rgba(61, 98, 232, .035); }.business-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }.business-review-grid .ant-card:last-child { grid-column: span 2; }.business-agreement { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; line-height: 1.5; }.business-agreement input { margin-top: 4px; accent-color: #3d62e8; }.business-register-success { min-height: 70vh; display: grid; place-items: center; padding: 24px; }.business-register-success__next { display: inline-block; padding: 18px 22px; border-radius: 16px; background: rgba(22, 155, 112, .08); text-align: left; color: #196b52; line-height: 1.85; }
-body[data-theme="dark"] .business-register-page, body.dark .business-register-page { --tp-page-bg: #171d28; }.business-register-page__brand { color: #dce6ff; } body[data-theme="dark"] .business-register-intro p, body.dark .business-register-intro p, body[data-theme="dark"] .business-register-card > .ant-card-body > p, body.dark .business-register-card > .ant-card-body > p { color: rgba(239,244,255,.67); } body[data-theme="dark"] .business-payment-list .ant-card, body.dark .business-payment-list .ant-card { background: rgba(111,139,255,.09); } body[data-theme="dark"] .business-register-success__next, body.dark .business-register-success__next { color: #a9efd2; background: rgba(22,155,112,.15); }
+body[data-theme="dark"] .business-register-page,
+body.dark .business-register-page { --tp-page-bg: #171d28; }
+body[data-theme="dark"] main.business-register-page,
+body.dark main.business-register-page { background: radial-gradient(circle at 10% 0%, rgba(91, 124, 255, .18), transparent 31%), radial-gradient(circle at 91% 8%, rgba(41, 184, 160, .12), transparent 27%), var(--tp-page-bg) !important; color: #edf4ff; }
+body[data-theme="dark"] .business-register-page__brand,
+body.dark .business-register-page__brand { color: #dce6ff; }
+body[data-theme="dark"] .business-register-intro h1,
+body.dark .business-register-intro h1,
+body[data-theme="dark"] .business-register-card h2,
+body.dark .business-register-card h2,
+body[data-theme="dark"] .business-register-page .ant-form-item-label > label,
+body.dark .business-register-page .ant-form-item-label > label,
+body[data-theme="dark"] .business-register-page .ant-steps-item-title,
+body.dark .business-register-page .ant-steps-item-title { color: #edf4ff !important; }
+body[data-theme="dark"] .business-register-intro p,
+body.dark .business-register-intro p,
+body[data-theme="dark"] .business-register-card > .ant-card-body > p,
+body.dark .business-register-card > .ant-card-body > p { color: rgba(239,244,255,.72); }
+body[data-theme="dark"] .business-register-page .business-register-card.ant-card,
+body.dark .business-register-page .business-register-card.ant-card { background: #111f34 !important; border-color: rgba(180,205,240,.16) !important; }
+body[data-theme="dark"] .business-payment-list .ant-card,
+body.dark .business-payment-list .ant-card { background: rgba(111,139,255,.09); }
+body[data-theme="dark"] .business-register-success__next,
+body.dark .business-register-success__next { color: #a9efd2; background: rgba(22,155,112,.15); }
 @media (max-width: 640px) { .business-register-page { padding: 14px 14px 40px; }.business-register-page__header { margin-bottom: 22px; }.business-register-page__header .ant-btn { padding-inline: 6px; }.business-register-intro { text-align: left; }.business-register-intro h1 { font-size: 31px; }.business-register-steps { margin: 0 -14px; padding-left: 14px; }.business-register-card { border-radius: 20px; }.business-register-actions { position: sticky; bottom: 8px; z-index: 3; padding: 12px; margin-inline: -4px; background: color-mix(in srgb, var(--tp-page-bg, #f6f8fc) 88%, transparent); backdrop-filter: blur(14px); }.business-register-actions .ant-btn { min-width: 0; }.business-register-actions > div, .business-register-actions > div .ant-btn, .business-register-actions > .ant-btn { flex: 1; }.business-review-grid { grid-template-columns: 1fr; }.business-review-grid .ant-card:last-child { grid-column: auto; } }
 
 @media (max-width: 768px) {
@@ -22743,4 +22766,786 @@ body.dark .tp-admin-calendar-main .tp-admin-week-board__column {
   .tp-admin-calendar-main > .tp-admin-tabs--calendar-content > .ant-tabs-content-holder { overflow: visible; }
   .tp-admin-calendar-main .tp-admin-calendar-day-view { padding: 0 14px 92px; }
   .tp-admin-mobile-calendar-agenda__free { min-height: 44px; padding-inline: 12px; }
+}
+
+/*
+ * Admin dark-mode contrast layer.
+ *
+ * Older admin styles were added in several iterations and some light booking
+ * rules still won the cascade in dark mode.  Keep the final correction scoped
+ * to the admin workspace, so the public site keeps its own visual system.
+ */
+body:is([data-theme="dark"], .dark) {
+  --tp-admin-dark-canvas: #0b1320;
+  --tp-admin-dark-surface: #101b2b;
+  --tp-admin-dark-raised: #17263a;
+  --tp-admin-dark-hover: #1b2d45;
+  --tp-admin-dark-field: #0c1727;
+  --tp-admin-dark-border: rgba(196, 211, 232, 0.16);
+  --tp-admin-dark-border-strong: rgba(196, 211, 232, 0.26);
+  --tp-admin-dark-text: #f5f9ff;
+  --tp-admin-dark-muted: #aebed3;
+  --tp-admin-dark-subtle: #7f93ad;
+  --tp-admin-dark-focus: #79adff;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page {
+  background:
+    radial-gradient(circle at 7% 0%, rgba(58, 111, 235, 0.16), transparent 28%),
+    radial-gradient(circle at 97% 12%, rgba(21, 164, 145, 0.10), transparent 25%),
+    var(--tp-admin-dark-canvas) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-main.ant-layout,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-layout.ant-layout,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-sider.ant-layout-sider {
+  background: transparent !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-sidebar-shell,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-topbar {
+  background: rgba(16, 27, 43, 0.96) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-sidebar-shell {
+  background:
+    linear-gradient(180deg, rgba(24, 39, 60, 0.98), rgba(12, 22, 37, 0.98)) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-brand strong,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-brand__title,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-topbar__title strong,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-profile-chip strong,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-section-head strong,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-page-title,
+body:is([data-theme="dark"], .dark) .tp-admin-page h1,
+body:is([data-theme="dark"], .dark) .tp-admin-page h2,
+body:is([data-theme="dark"], .dark) .tp-admin-page h3,
+body:is([data-theme="dark"], .dark) .tp-admin-page h4,
+body:is([data-theme="dark"], .dark) .tp-admin-page h5,
+body:is([data-theme="dark"], .dark) .tp-admin-page h6,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-typography,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-card-head-title,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-statistic-content,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-descriptions-item-content {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-brand span,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-brand__subtitle,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-topbar__title .ant-typography,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-profile-chip__copy small,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-profile-chip span,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-typography-secondary,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-statistic-title,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-form-item-extra,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-empty-description,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-descriptions-item-label,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-breadcrumb,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-section-label {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu {
+  background: transparent !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu .ant-menu-item-group-title {
+  color: var(--tp-admin-dark-subtle) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu .ant-menu-item {
+  color: #cbd8e9 !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu .ant-menu-item .ant-menu-item-icon {
+  color: #9fb3cb !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu .ant-menu-item:hover {
+  background: rgba(104, 153, 255, 0.14) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu .ant-menu-item:hover .ant-menu-item-icon,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu .ant-menu-item-selected .ant-menu-item-icon {
+  color: #9bc1ff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu .ant-menu-item-selected {
+  background: linear-gradient(135deg, rgba(54, 115, 241, 0.36), rgba(89, 133, 238, 0.20)) !important;
+  box-shadow: inset 0 0 0 1px rgba(137, 181, 255, 0.32) !important;
+  color: #ffffff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-menu.ant-menu::-webkit-scrollbar-thumb {
+  background: rgba(174, 190, 211, 0.32);
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-content.ant-layout-content::before {
+  opacity: 0.42;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-card,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-booking-card,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-day,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-team-check,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-resource-check,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-agenda-card,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-client-row {
+  background: var(--tp-admin-dark-surface) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-card-head,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-card-head-wrapper {
+  background: transparent !important;
+  border-bottom-color: var(--tp-admin-dark-border) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-card:hover {
+  background: var(--tp-admin-dark-raised) !important;
+  border-color: var(--tp-admin-dark-border-strong) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
+  transform: none !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-divider,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-card-head,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-list-item,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-descriptions-bordered .ant-descriptions-view,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-descriptions-bordered .ant-descriptions-row > th,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-descriptions-bordered .ant-descriptions-row > td {
+  border-color: var(--tp-admin-dark-border) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-descriptions-bordered .ant-descriptions-item-label {
+  background: var(--tp-admin-dark-raised) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-page textarea.ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-affix-wrapper,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-number,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-select-selector,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-picker,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-mentions,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-upload-wrapper .ant-upload-drag,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-segmented {
+  background: var(--tp-admin-dark-field) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+  box-shadow: none !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-number-input,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-picker-input > input,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-select-selection-item,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-mentions textarea,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-upload-text,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-upload-hint {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input::placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-page textarea.ant-input::placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-select-selection-placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-picker-input > input::placeholder {
+  color: var(--tp-admin-dark-subtle) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-select-arrow,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-picker-suffix,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-prefix,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-suffix,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-password-icon {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input:focus,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-focused,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-input-affix-wrapper-focused,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-picker-focused,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-select-focused .ant-select-selector {
+  border-color: var(--tp-admin-dark-focus) !important;
+  box-shadow: 0 0 0 3px rgba(121, 173, 255, 0.18) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-form-item-label > label,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-form-item-label > label,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-form-item-label > label {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer textarea.ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-input-affix-wrapper,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-input-number,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-select-selector,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-picker,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-select-selector,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-picker,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-select-selector,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-picker {
+  background: var(--tp-admin-dark-field) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-input-number-input,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-select-selection-item,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-picker-input > input,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-select-selection-item,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-picker-input > input,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-select-selection-item,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-picker-input > input {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-input::placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-select-selection-placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-picker-input > input::placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-select-selection-placeholder,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-select-selection-placeholder {
+  color: var(--tp-admin-dark-subtle) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-checkbox-wrapper,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-radio-wrapper,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-checkbox-wrapper,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-radio-wrapper {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous),
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous),
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous) {
+  background: var(--tp-admin-dark-raised) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):hover,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):hover,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-btn:not(.ant-btn-primary):not(.ant-btn-dangerous):hover {
+  background: var(--tp-admin-dark-hover) !important;
+  border-color: rgba(121, 173, 255, 0.48) !important;
+  color: #ffffff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-btn[disabled],
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-btn[disabled]:hover {
+  background: rgba(174, 190, 211, 0.08) !important;
+  border-color: rgba(174, 190, 211, 0.12) !important;
+  color: rgba(174, 190, 211, 0.52) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-segmented-item-selected {
+  background: #315fae !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tabs-tab,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tabs-tab-btn {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #a9c7ff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tabs-nav::before {
+  border-bottom-color: var(--tp-admin-dark-border) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-wrapper .ant-table,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-container {
+  background: transparent !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-thead > tr > th {
+  background: var(--tp-admin-dark-raised) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: #dce9fa !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-tbody > tr > td {
+  background: var(--tp-admin-dark-surface) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-cell-fix-left,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-cell-fix-right,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-placeholder > td {
+  background: var(--tp-admin-dark-surface) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-filter-trigger,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-column-sorter,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-column-sorter-up.active,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-column-sorter-down.active {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-tbody > tr:hover > td,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-table-tbody > tr > td.ant-table-cell-row-hover {
+  background: var(--tp-admin-dark-hover) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-item,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-prev .ant-pagination-item-link,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-next .ant-pagination-item-link {
+  background: var(--tp-admin-dark-raised) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-item-active {
+  border-color: var(--tp-admin-dark-focus) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-item-active a {
+  color: #a9c7ff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-options-quick-jumper,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-pagination-total-text {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag {
+  border-color: rgba(174, 190, 211, 0.22) !important;
+  background: rgba(174, 190, 211, 0.10) !important;
+  color: #e4efff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-green,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-success {
+  border-color: rgba(74, 222, 128, 0.34) !important;
+  background: rgba(34, 197, 94, 0.16) !important;
+  color: #a7f3c2 !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-gold,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-orange,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-warning {
+  border-color: rgba(251, 191, 36, 0.36) !important;
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #fde68a !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-red,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-error,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-volcano {
+  border-color: rgba(251, 113, 133, 0.38) !important;
+  background: rgba(244, 63, 94, 0.16) !important;
+  color: #fecdd3 !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-blue,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-processing,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-geekblue {
+  border-color: rgba(96, 165, 250, 0.38) !important;
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: #bfdbfe !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-purple,
+body:is([data-theme="dark"], .dark) .tp-admin-page .ant-tag-magenta {
+  border-color: rgba(192, 132, 252, 0.34) !important;
+  background: rgba(168, 85, 247, 0.16) !important;
+  color: #e9d5ff !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-shell,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-shell--salon,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-nav--flat.ant-card {
+  background: var(--tp-admin-dark-surface) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-input-affix-wrapper,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-picker,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-select-selector,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-segmented,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-mini-calendar-header .ant-select-selector {
+  background: var(--tp-admin-dark-field) !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-input,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-picker-input > input,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-select-selection-item,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-bookings-card .ant-select-selection-placeholder {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-event__title,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-agenda-card__title,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-agenda-card__time,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-board__day-tab strong {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-event__time,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-event__meta,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-agenda-card__meta,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-board__day-tab span,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-board__hour {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-workspace {
+  --tp-calendar-surface: #101b2b;
+  --tp-calendar-subtle: #17263a;
+  --tp-calendar-border: rgba(196, 211, 232, 0.16);
+  --tp-calendar-grid: rgba(196, 211, 232, 0.12);
+  --tp-calendar-text: #f5f9ff;
+  --tp-calendar-muted: #aebed3;
+  --tp-calendar-primary: #6ea8ff;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__header,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__header-spacer,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__hours,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__day-tab,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__column,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-calendar-day-view,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-mobile-calendar-agenda,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-full-calendar {
+  background: var(--tp-calendar-surface) !important;
+  border-color: var(--tp-calendar-border) !important;
+  color: var(--tp-calendar-text) !important;
+  box-shadow: none !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__column {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 63px,
+      var(--tp-calendar-grid) 63px,
+      var(--tp-calendar-grid) 64px
+    ),
+    var(--tp-calendar-surface) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__column.is-today,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__day-tab.is-today {
+  background-color: rgba(75, 135, 255, 0.12) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar .tp-admin-mini-calendar .ant-picker-panel,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar .tp-admin-mini-calendar .ant-picker-body,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar .tp-admin-mini-calendar .ant-picker-content {
+  background: transparent !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar .tp-admin-mini-calendar .ant-picker-content th,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar .tp-admin-mini-calendar .ant-picker-cell-inner,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-week-board__day-tab strong,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-calendar-day-view__date {
+  color: var(--tp-calendar-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-sidebar .tp-admin-mini-calendar .ant-picker-cell:not(.ant-picker-cell-in-view) .ant-picker-cell-inner {
+  color: rgba(174, 190, 211, 0.46) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-calendar-day-event {
+  background: var(--tp-admin-dark-raised) !important;
+  border-color: rgba(110, 168, 255, 0.28) !important;
+  color: var(--tp-calendar-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-calendar-day-event__content small,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-calendar-main .tp-admin-calendar-day-event__time {
+  color: var(--tp-calendar-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-mobile-calendar-agenda__day,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-mobile-calendar-agenda__free,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-event__payment,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-event__more {
+  color: var(--tp-calendar-muted) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-mobile-calendar-agenda__day strong,
+body:is([data-theme="dark"], .dark) .tp-admin-page .tp-admin-week-event__more:hover {
+  color: var(--tp-calendar-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-drawer-content,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-drawer-content,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-drawer-content,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-drawer-content,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-drawer-content {
+  background: var(--tp-admin-dark-surface) !important;
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-drawer-header,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-drawer-footer,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-drawer-header,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-drawer-header,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-drawer-footer,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-drawer-header,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-drawer-header {
+  background: transparent !important;
+  border-color: var(--tp-admin-dark-border) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-drawer-title,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-drawer-title,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-drawer-title,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-filters-drawer .ant-drawer-title,
+body:is([data-theme="dark"], .dark) .tp-admin-calendar-create-drawer .ant-drawer-title,
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-drawer-close,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-drawer-close,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-drawer-close {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .tp-admin-form-drawer .ant-typography,
+body:is([data-theme="dark"], .dark) .tp-admin-drawer .ant-typography,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-list-item-meta-title,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-list-item-meta-title strong,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-list-item-meta-description,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-list-item,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-empty-description {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-typography-secondary,
+body:is([data-theme="dark"], .dark) .admin-notifications-drawer .ant-list-item-meta-description .ant-typography-secondary {
+  color: var(--tp-admin-dark-muted) !important;
+}
+
+/* Selects, pickers and profile/payment menus live in portals outside the page. */
+body:is([data-theme="dark"], .dark) .ant-select-dropdown,
+body:is([data-theme="dark"], .dark) .ant-picker-dropdown .ant-picker-panel,
+body:is([data-theme="dark"], .dark) .ant-dropdown-menu,
+body:is([data-theme="dark"], .dark) .ant-popover-inner {
+  background: #17263a !important;
+  border-color: var(--tp-admin-dark-border) !important;
+  color: var(--tp-admin-dark-text) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.30) !important;
+}
+
+body:is([data-theme="dark"], .dark) .ant-select-item,
+body:is([data-theme="dark"], .dark) .ant-select-item-option-content,
+body:is([data-theme="dark"], .dark) .ant-dropdown-menu-item,
+body:is([data-theme="dark"], .dark) .ant-dropdown-menu-submenu-title,
+body:is([data-theme="dark"], .dark) .ant-picker-header,
+body:is([data-theme="dark"], .dark) .ant-picker-header button,
+body:is([data-theme="dark"], .dark) .ant-picker-content th,
+body:is([data-theme="dark"], .dark) .ant-picker-cell-inner {
+  color: var(--tp-admin-dark-text) !important;
+}
+
+body:is([data-theme="dark"], .dark) .ant-select-item-option-active:not(.ant-select-item-option-disabled),
+body:is([data-theme="dark"], .dark) .ant-select-item-option-selected:not(.ant-select-item-option-disabled),
+body:is([data-theme="dark"], .dark) .ant-dropdown-menu-item:hover,
+body:is([data-theme="dark"], .dark) .ant-dropdown-menu-submenu-title:hover {
+  background: rgba(110, 168, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+/* Calendar search and list view share the same compact workspace language. */
+.tp-admin-calendar-toolbar__search {
+  width: min(240px, 34vw);
+}
+
+.tp-admin-calendar-list-view {
+  display: grid;
+  gap: 14px;
+  padding: 16px 20px 24px;
+  background: var(--tp-calendar-surface);
+}
+
+.tp-admin-calendar-list-empty {
+  padding: 44px 20px;
+  background: var(--tp-calendar-surface);
+}
+
+.tp-admin-calendar-list-group {
+  overflow: hidden;
+  border: 1px solid var(--tp-calendar-border);
+  border-radius: 12px;
+  background: var(--tp-calendar-surface);
+}
+
+.tp-admin-calendar-list-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--tp-calendar-border);
+  background: var(--tp-calendar-subtle);
+}
+
+.tp-admin-calendar-list-group__header strong {
+  min-width: 0;
+  color: var(--tp-calendar-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.tp-admin-calendar-list-group__header span {
+  flex: 0 0 auto;
+  color: var(--tp-calendar-muted);
+  font-size: 12px;
+}
+
+.tp-admin-calendar-list-group__entries {
+  display: grid;
+}
+
+.tp-admin-calendar-list-event {
+  display: grid;
+  grid-template-columns: 94px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 14px;
+  color: var(--tp-calendar-text);
+  font: inherit;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--tp-calendar-border);
+  border-left: 3px solid var(--tp-calendar-primary);
+  background: transparent;
+  cursor: pointer;
+  transition: background .16s ease, box-shadow .16s ease;
+}
+
+.tp-admin-calendar-list-event:last-child {
+  border-bottom: 0;
+}
+
+.tp-admin-calendar-list-event:hover,
+.tp-admin-calendar-list-event:focus-visible {
+  background: color-mix(in srgb, var(--tp-calendar-primary) 7%, transparent);
+  outline: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tp-calendar-primary) 24%, transparent);
+}
+
+.tp-admin-calendar-list-event.is-confirmed,
+.tp-admin-calendar-list-event.is-paid {
+  border-left-color: #16a34a;
+}
+
+.tp-admin-calendar-list-event.is-pending,
+.tp-admin-calendar-list-event.is-pending_payment {
+  border-left-color: #f59e0b;
+}
+
+.tp-admin-calendar-list-event.is-cancelled,
+.tp-admin-calendar-list-event.is-rejected {
+  border-left-color: #dc2626;
+}
+
+.tp-admin-calendar-list-event.is-completed {
+  border-left-color: #64748b;
+}
+
+.tp-admin-calendar-list-event__time {
+  color: var(--tp-calendar-muted);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tp-admin-calendar-list-event__content,
+.tp-admin-calendar-list-event__meta {
+  min-width: 0;
+}
+
+.tp-admin-calendar-list-event__content strong,
+.tp-admin-calendar-list-event__content small,
+.tp-admin-calendar-list-event__meta small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tp-admin-calendar-list-event__content strong {
+  color: var(--tp-calendar-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.tp-admin-calendar-list-event__content small,
+.tp-admin-calendar-list-event__meta small {
+  margin-top: 2px;
+  color: var(--tp-calendar-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tp-admin-calendar-list-event__meta {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+  max-width: 170px;
+}
+
+@media (max-width: 767px) {
+  .tp-admin-calendar-toolbar__search {
+    flex: 0 0 210px;
+    width: 210px;
+  }
+
+  .tp-admin-calendar-list-view {
+    gap: 12px;
+    padding: 12px 14px 92px;
+  }
+
+  .tp-admin-calendar-list-event {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 68px;
+    padding: 10px 12px;
+  }
+
+  .tp-admin-calendar-list-event__meta {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-items: initial;
+    justify-content: space-between;
+    max-width: none;
+  }
+
+  .tp-admin-calendar-list-event__meta small {
+    max-width: calc(100% - 106px);
+  }
 }

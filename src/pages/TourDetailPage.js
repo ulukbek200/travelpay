@@ -327,6 +327,7 @@ const TourDetailPage = () => {
                 <Card style={styles.heroInfoCard}>
                   <Space orientation="vertical" size={12} style={{ width: '100%' }}>
                     <CompanyBadge
+                      companyId={tour.companyId}
                       name={currentTour.companyName}
                       city={currentTour.companyCity || currentTour.location || DEFAULT_LOCATION}
                       logo={currentTour.companyLogo}

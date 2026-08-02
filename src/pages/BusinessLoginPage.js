@@ -34,12 +34,13 @@ import {
 } from '../utils/currentUser';
 import { syncCurrentUser } from '../utils/user';
 import { getApiErrorMessage } from '../utils/apiErrors';
+import { BUSINESS_MONTHLY_PLAN_ID, findCottagePlan, formatPlanPrice } from '../config/businessPricing';
 
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
 const ALLOWED_BUSINESS_ROLES = new Set(['business', 'company_admin', 'company_manager', 'admin', 'super_admin']);
-const BUSINESS_SUBSCRIPTION_PRICE = 4500;
+const BUSINESS_SUBSCRIPTION_PLAN = findCottagePlan(BUSINESS_MONTHLY_PLAN_ID);
 
 const fileToDataUrl = (file) => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -207,7 +208,7 @@ const BusinessLoginPage = () => {
           <Card size="small" style={{ borderRadius: 16 }}>
             <Space orientation="vertical" size={10} style={{ width: '100%' }}>
               <Text strong>Подписка TravelPay Business</Text>
-              <Text>{BUSINESS_SUBSCRIPTION_PRICE.toLocaleString('ru-RU')} сом за 30 дней доступа</Text>
+              <Text>{formatPlanPrice(BUSINESS_SUBSCRIPTION_PLAN)} за 30 дней доступа</Text>
               <Text type="secondary">
                 {isRejected
                   ? 'Для повторной проверки обновите документы компании: Instagram, паспорт владельца и новый чек оплаты.'

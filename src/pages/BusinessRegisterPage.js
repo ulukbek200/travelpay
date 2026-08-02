@@ -1,452 +1,117 @@
-import React, { useState } from 'react';
-import {
-  Alert,
-  Button,
-  Card,
-  Checkbox,
-  Col,
-  Form,
-  Input,
-  Layout,
-  Result,
-  Row,
-  Space,
-  Statistic,
-  Typography,
-  Upload,
-  message,
-} from 'antd';
-import {
-  BankOutlined,
-  CameraOutlined,
-  FileProtectOutlined,
-  InboxOutlined,
-  InstagramOutlined,
-  LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  SafetyCertificateOutlined,
-  UserOutlined,
-  WalletOutlined,
-} from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Result, message } from 'antd';
+import { useForm, FormProvider } from 'react-hook-form';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { getApiErrorMessage } from '../utils/apiErrors';
+import { BUSINESS_MONTHLY_PLAN_ID, findCottagePlan, isSelfServiceCottagePlan } from '../config/businessPricing';
+import RegistrationLayout from '../components/businessRegistration/RegistrationLayout';
+import { StepAccount, StepPersonal, StepCompany, StepContacts, StepPayments, StepDocuments, StepReview } from '../components/businessRegistration/RegistrationSteps';
 
-const { Content } = Layout;
-const { Title, Paragraph, Text } = Typography;
-
-const BUSINESS_SUBSCRIPTION_PRICE = 4500;
-const MAX_LOGO_FILE_SIZE = 5 * 1024 * 1024;
-const MAX_REQUIRED_FILE_SIZE = 12 * 1024 * 1024;
-const MAX_DOCUMENT_FILE_SIZE = 15 * 1024 * 1024;
-const MAX_DOCUMENTS_COUNT = 8;
+const DRAFT_KEY = 'travelpay-business-registration-draft-v2';
 const MAX_TOTAL_UPLOAD_SIZE = 40 * 1024 * 1024;
+const stepFields = [
+  ['email', 'password', 'confirmPassword'], ['firstName', 'lastName', 'countryCode', 'phone'],
+  ['logo', 'companyName', 'category', 'description', 'address', 'region', 'companyEmail'],
+  ['whatsapp', 'managerPhone', 'instagramUrl', 'workingHours'], ['paymentMethods'], ['passport', 'receipt'], ['agreement'],
+];
 
-const isImageFile = (file) => String(file?.type || '').startsWith('image/');
-
-const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = reject;
-  reader.readAsDataURL(file);
-});
-
-const compressImageToDataUrl = (file, { maxWidth = 1600, maxHeight = 1600, quality = 0.82 } = {}) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    const image = new Image();
-    image.onload = () => {
-      const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
-      const width = Math.max(1, Math.round(image.width * ratio));
-      const height = Math.max(1, Math.round(image.height * ratio));
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const context = canvas.getContext('2d');
-
-      if (!context) {
-        resolve(reader.result);
-        return;
-      }
-
-      context.drawImage(image, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    image.onerror = () => reject(new Error('Не удалось обработать изображение.'));
-    image.src = reader.result;
-  };
-  reader.onerror = reject;
-  reader.readAsDataURL(file);
-});
-
-const fileToDataUrl = async (file, options = {}) => {
-  if (!file) return '';
-
-  if (!isImageFile(file) || options.compress === false) {
-    return readFileAsDataUrl(file);
+const defaults = {
+  countryCode: '+996',
+  paymentMethods: [{ type: 'QR', recipient: '', account: '' }],
+  documents: [],
+  selectedPlanId: BUSINESS_MONTHLY_PLAN_ID,
+};
+const fileDataUrl = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+const fileSize = (dataUrl) => Math.ceil(((dataUrl || '').split(',')[1] || '').length * 3 / 4);
+const serializeDraft = (data) => Object.fromEntries(Object.entries(data).filter(([, value]) => !Array.isArray(value) || !value.some((item) => item?.originFileObj)));
+const normalizeSelectedPlanId = (value) => (isSelfServiceCottagePlan(value) ? value : BUSINESS_MONTHLY_PLAN_ID);
+const readDraft = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+    return { ...defaults, ...saved, selectedPlanId: normalizeSelectedPlanId(saved.selectedPlanId) };
+  } catch {
+    return defaults;
   }
-
-  return compressImageToDataUrl(file, options);
 };
 
-const getDataUrlSize = (dataUrl) => {
-  if (!dataUrl || typeof dataUrl !== 'string') return 0;
-  const base64 = dataUrl.split(',')[1] || '';
-  return Math.ceil((base64.length * 3) / 4);
-};
-
-const createUploadGuard = (maxSize, label) => (file) => {
-  if (file.size > maxSize) {
-    message.error(`${label}: файл слишком большой. Загрузите файл меньше ${Math.round((maxSize / 1024 / 1024) * 10) / 10} МБ.`);
-    return Upload.LIST_IGNORE;
-  }
-
-  return false;
-};
-
-const BusinessRegisterPage = () => {
+export default function BusinessRegisterPage() {
   const navigate = useNavigate();
-  const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
+  const [step, setStep] = useState(() => Number(localStorage.getItem(`${DRAFT_KEY}:step`)) || 0);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const requestedPlanId = searchParams.get('plan');
+  const requestedPlan = findCottagePlan(requestedPlanId);
+  const initialValues = useMemo(() => {
+    const draft = readDraft();
+    // The current server only supports Business monthly. Do not let an
+    // unsupported URL parameter misrepresent the subscription on the review.
+    if (isSelfServiceCottagePlan(requestedPlan)) {
+      return { ...draft, selectedPlanId: requestedPlan.id };
+    }
+    return { ...draft, selectedPlanId: normalizeSelectedPlanId(draft.selectedPlanId) };
+  }, [requestedPlan]);
+  const methods = useForm({ mode: 'onChange', defaultValues: initialValues });
+  const { trigger, getValues, watch, reset, setValue } = methods;
+  const values = watch();
 
-  const handleSubmit = async (values) => {
+  useEffect(() => {
+    if (isSelfServiceCottagePlan(requestedPlan) && getValues('selectedPlanId') !== requestedPlan.id) {
+      setValue('selectedPlanId', requestedPlan.id, { shouldDirty: false, shouldValidate: false });
+    }
+  }, [getValues, requestedPlan, setValue]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(serializeDraft(values)));
+      localStorage.setItem(`${DRAFT_KEY}:step`, String(step));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [values, step]);
+
+  const nextDisabled = (() => {
+    const value = getValues();
+    if (step === 0) return !value.email || !value.password || value.password !== value.confirmPassword || !/(?=.*[a-zA-Z])(?=.*\d).{8,}/.test(value.password || '');
+    if (step === 1) return !value.firstName || !value.lastName || !value.phone;
+    if (step === 2) return !value.companyName || !value.category || !value.description || !value.address || !value.region || !value.companyEmail;
+    if (step === 3) return !value.whatsapp || !value.managerPhone || !value.instagramUrl || !value.workingHours;
+    if (step === 4) return !value.paymentMethods?.length || value.paymentMethods.some((item) => !item.type || !item.recipient || !item.account);
+    if (step === 5) return !value.passport?.length || !value.receipt?.length;
+    return !value.agreement;
+  })();
+
+  const saveDraft = () => { localStorage.setItem(DRAFT_KEY, JSON.stringify(serializeDraft(getValues()))); localStorage.setItem(`${DRAFT_KEY}:step`, String(step)); message.success('Черновик сохранён в этом браузере.'); };
+  const next = async () => { const valid = await trigger(stepFields[step]); if (!valid) return; if (step < 6) setStep((value) => value + 1); else submit(); };
+
+  const submit = async () => {
+    if (loading || !(await trigger())) return;
     setLoading(true);
     try {
-      const logoFile = values.logo?.[0]?.originFileObj;
-      const passportFile = values.passport?.[0]?.originFileObj;
-      const receiptFile = values.receipt?.[0]?.originFileObj;
-      const documents = values.documents || [];
-
-      const logo = logoFile ? await fileToDataUrl(logoFile, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 }) : '';
-      const passportImage = passportFile ? await fileToDataUrl(passportFile, { maxWidth: 1800, maxHeight: 1800, quality: 0.82 }) : '';
-      const receiptImage = receiptFile ? await fileToDataUrl(receiptFile, { maxWidth: 1800, maxHeight: 1800, quality: 0.82 }) : '';
-      const documentUploads = await Promise.all(
-        documents.slice(0, MAX_DOCUMENTS_COUNT).map(async (item) => {
-          const file = item.originFileObj;
-          const dataUrl = file ? await fileToDataUrl(file, { maxWidth: 2000, maxHeight: 2000, quality: 0.82 }) : '';
-
-          return {
-            name: item.name || file?.name || '',
-            type: item.type || file?.type || '',
-            size: getDataUrlSize(dataUrl) || item.size || file?.size || 0,
-            dataUrl,
-          };
-        }),
-      );
-      const totalUploadSize = getDataUrlSize(logo)
-        + getDataUrlSize(passportImage)
-        + getDataUrlSize(receiptImage)
-        + documentUploads.reduce((sum, item) => sum + (item.size || getDataUrlSize(item.dataUrl)), 0);
-
-      if (totalUploadSize > MAX_TOTAL_UPLOAD_SIZE) {
-        message.error('Файлы слишком тяжёлые для отправки. Уменьшите размер паспорта, чека или логотипа.');
-        setLoading(false);
-        return;
-      }
-
+      const v = getValues();
+      const convert = async (entry) => {
+        const file = entry?.originFileObj; if (!file) return null;
+        const dataUrl = await fileDataUrl(file); return { name: file.name, type: file.type, size: fileSize(dataUrl), dataUrl };
+      };
+      const [profilePhoto, logo, passport, receipt, ...documents] = await Promise.all([v.profilePhoto?.[0], v.logo?.[0], v.passport?.[0], v.receipt?.[0], ...(v.documents || [])].map(convert));
+      const total = [profilePhoto, logo, passport, receipt, ...documents].filter(Boolean).reduce((sum, file) => sum + file.size, 0);
+      if (total > MAX_TOTAL_UPLOAD_SIZE) throw new Error('Размер файлов превышает 40 МБ. Уменьшите изображения или загрузите меньше документов.');
       await api.post('/business/register', {
-        companyName: values.companyName.trim(),
-        ownerName: values.ownerName.trim(),
-        phone: values.phone.trim(),
-        email: values.email.trim().toLowerCase(),
-        password: values.password,
-        city: values.city.trim(),
-        address: values.address.trim(),
-        instagramUrl: values.instagramUrl.trim(),
-        description: values.description.trim(),
-        logo,
-        documents: documentUploads.filter((item) => item.name || item.dataUrl),
-        passportImage,
-        passportName: values.passport?.[0]?.name || '',
-        passportType: values.passport?.[0]?.type || '',
-        receiptImage,
-        receiptName: values.receipt?.[0]?.name || '',
-        receiptType: values.receipt?.[0]?.type || '',
-        comment: values.comment?.trim() || '',
-        agreementAccepted: true,
-        contractAccepted: true,
+        companyName: v.companyName, companyEmail: v.companyEmail, ownerName: `${v.firstName} ${v.lastName}`.trim(), firstName: v.firstName, lastName: v.lastName,
+        phone: `${v.countryCode} ${v.phone}`.trim(), email: v.email, password: v.password, city: v.region, region: v.region,
+        address: v.address, instagramUrl: v.instagramUrl, facebookUrl: v.facebookUrl, website: v.website, category: v.category,
+        whatsapp: v.whatsapp, telegram: v.telegram, personalTelegram: v.personalTelegram, managerPhone: v.managerPhone, workingHours: v.workingHours,
+        description: v.description, logo: logo?.dataUrl || '', profilePhoto: profilePhoto?.dataUrl || '', documents: documents.filter(Boolean), passportImage: passport?.dataUrl || '', passportName: passport?.name || '', passportType: passport?.type || '', receiptImage: receipt?.dataUrl || '', receiptName: receipt?.name || '', receiptType: receipt?.type || '', paymentMethods: v.paymentMethods,
+        // Kept as optional metadata: the current API remains authoritative for
+        // the actual subscription and safely ignores unknown additional fields.
+        selectedPlanId: v.selectedPlanId || BUSINESS_MONTHLY_PLAN_ID,
+        agreementAccepted: true, contractAccepted: true,
       });
-
-      setSubmitted(true);
-      message.success('Заявка компании отправлена супер-админу.');
-      form.resetFields();
-    } catch (error) {
-      if (error?.response?.status === 413) {
-        message.error('Файлы слишком большие для загрузки. Сожмите паспорт и чек и попробуйте снова.');
-      } else {
-        message.error(getApiErrorMessage(error, 'Не удалось отправить заявку компании.'));
-      }
-    } finally {
-      setLoading(false);
-    }
+      localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(`${DRAFT_KEY}:step`); reset(defaults); setSubmitted(true);
+    } catch (error) { message.error(error?.message || getApiErrorMessage(error, 'Не удалось отправить заявку. Проверьте данные и попробуйте снова.')); } finally { setLoading(false); }
   };
 
-  if (submitted) {
-    return (
-      <Layout style={styles.page}>
-        <Content style={styles.narrow}>
-          <Card style={styles.card}>
-            <Result
-              status="success"
-              title="Заявка отправлена"
-              subTitle="Супер-админ получил договор, паспорт, Instagram и оплату подписки. После подтверждения вам откроется доступ в TravelPay Business."
-              extra={[
-                <Button key="login" type="primary" onClick={() => navigate('/business/login')}>
-                  Перейти ко входу
-                </Button>,
-                <Button key="home" onClick={() => navigate('/business')}>
-                  На страницу Business
-                </Button>,
-              ]}
-            />
-          </Card>
-        </Content>
-      </Layout>
-    );
-  }
-
-  return (
-    <Layout style={styles.page}>
-      <Content style={styles.content}>
-        <Row gutter={[24, 24]} align="top">
-          <Col xs={24} lg={8}>
-            <Space orientation="vertical" size={18} style={{ width: '100%' }}>
-              <Button type="link" onClick={() => navigate('/business')} style={{ padding: 0 }}>
-                Назад в TravelPay Business
-              </Button>
-
-              <div>
-                <Text type="secondary">Партнёрская регистрация</Text>
-                <Title style={styles.title}>Заявка на подключение тур-компании</Title>
-                <Paragraph style={styles.subtitle}>
-                  Компания сразу заполняет данные, принимает договор, прикрепляет паспорт владельца,
-                  Instagram и чек оплаты подписки. После этого заявка уходит супер-админу на подтверждение.
-                </Paragraph>
-              </div>
-
-              <Card style={styles.priceCard}>
-                <Statistic title="Подписка TravelPay Business" value={BUSINESS_SUBSCRIPTION_PRICE} suffix="сом / 30 дней" />
-                <Paragraph style={styles.priceText}>
-                  В стоимость входит кабинет компании, календарь, управление турами, домиками, клиентами и бронированиями.
-                </Paragraph>
-              </Card>
-
-              <Alert
-                type="info"
-                showIcon
-                message="Что проверяет супер-админ"
-                description="Данные компании, согласие с договором, паспорт владельца, Instagram и чек оплаты подписки."
-              />
-
-              <Alert
-                type="warning"
-                showIcon
-                message="Без полного пакета заявка не уйдёт"
-                description="Все поля ниже обязательны: паспорт, Instagram, чек оплаты и согласие с договором."
-              />
-            </Space>
-          </Col>
-
-          <Col xs={24} lg={16}>
-            <Card style={styles.card} styles={{ body: { padding: 24 } }}>
-              <Form form={form} layout="vertical" onFinish={handleSubmit}>
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="companyName" label="Название компании" rules={[{ required: true, message: 'Введите название компании' }]}>
-                      <Input size="large" prefix={<BankOutlined />} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="ownerName" label="Имя владельца" rules={[{ required: true, message: 'Введите имя владельца' }]}>
-                      <Input size="large" prefix={<UserOutlined />} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="phone" label="Телефон" rules={[{ required: true, message: 'Введите телефон' }]}>
-                      <Input size="large" prefix={<PhoneOutlined />} placeholder="+996 555 123 456" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Введите корректный email' }]}>
-                      <Input size="large" prefix={<MailOutlined />} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="password" label="Пароль" rules={[{ required: true, min: 4, message: 'Минимум 4 символа' }]}>
-                      <Input.Password size="large" prefix={<LockOutlined />} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="confirmPassword"
-                      label="Повтор пароля"
-                      dependencies={['password']}
-                      rules={[
-                        { required: true, message: 'Повторите пароль' },
-                        ({ getFieldValue }) => ({
-                          validator(_, value) {
-                            return !value || getFieldValue('password') === value
-                              ? Promise.resolve()
-                              : Promise.reject(new Error('Пароли не совпадают'));
-                          },
-                        }),
-                      ]}
-                    >
-                      <Input.Password size="large" prefix={<LockOutlined />} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="city" label="Город" rules={[{ required: true, message: 'Введите город' }]}>
-                      <Input size="large" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item name="address" label="Адрес офиса" rules={[{ required: true, message: 'Введите адрес офиса' }]}>
-                      <Input size="large" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24}>
-                    <Form.Item
-                      name="instagramUrl"
-                      label="Ссылка на Instagram"
-                      rules={[
-                        { required: true, message: 'Добавьте ссылку на Instagram' },
-                        { type: 'url', message: 'Введите полную ссылку на Instagram' },
-                      ]}
-                    >
-                      <Input size="large" prefix={<InstagramOutlined />} placeholder="https://instagram.com/your_company" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24}>
-                    <Form.Item name="description" label="Описание компании" rules={[{ required: true, message: 'Опишите компанию' }]}>
-                      <Input.TextArea rows={4} />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="logo"
-                      label="Логотип компании"
-                      valuePropName="fileList"
-                      getValueFromEvent={(event) => event?.fileList || []}
-                    >
-                      <Upload listType="picture" beforeUpload={createUploadGuard(MAX_LOGO_FILE_SIZE, 'Логотип')} maxCount={1}>
-                        <Button icon={<CameraOutlined />}>Загрузить логотип</Button>
-                      </Upload>
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="documents"
-                      label="Дополнительные документы"
-                      valuePropName="fileList"
-                      getValueFromEvent={(event) => event?.fileList || []}
-                    >
-                      <Upload
-                        beforeUpload={createUploadGuard(MAX_DOCUMENT_FILE_SIZE, 'Р”РѕРєСѓРјРµРЅС‚')}
-                        maxCount={MAX_DOCUMENTS_COUNT}
-                        multiple
-                      >
-                        <Button icon={<FileProtectOutlined />}>Прикрепить документы</Button>
-                      </Upload>
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="passport"
-                      label="Паспорт владельца"
-                      valuePropName="fileList"
-                      getValueFromEvent={(event) => event?.fileList || []}
-                      rules={[{ required: true, message: 'Загрузите паспорт владельца' }]}
-                    >
-                      <Upload beforeUpload={createUploadGuard(MAX_REQUIRED_FILE_SIZE, 'Паспорт')} maxCount={1}>
-                        <Button icon={<SafetyCertificateOutlined />}>Загрузить паспорт</Button>
-                      </Upload>
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="receipt"
-                      label="Чек оплаты подписки"
-                      valuePropName="fileList"
-                      getValueFromEvent={(event) => event?.fileList || []}
-                      rules={[{ required: true, message: 'Загрузите чек оплаты' }]}
-                    >
-                      <Upload beforeUpload={createUploadGuard(MAX_REQUIRED_FILE_SIZE, 'Чек')} maxCount={1}>
-                        <Button icon={<WalletOutlined />}>Загрузить чек</Button>
-                      </Upload>
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24}>
-                    <Form.Item name="comment" label="Комментарий к заявке">
-                      <Input.TextArea rows={3} placeholder="Например: реквизиты, ФИО владельца, удобный контакт для проверки" />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24}>
-                    <Card size="small" style={styles.contractCard}>
-                      <Space orientation="vertical" size={10} style={{ width: '100%' }}>
-                        <Text strong>Договор TravelPay Business</Text>
-                        <Text type="secondary">
-                          Подписка оформляется на 30 дней. Доступ в кабинет открывается только после подтверждения супер-админом.
-                        </Text>
-                        <Text type="secondary">
-                          Вместе с заявкой отправляются данные компании, паспорт владельца, Instagram и чек оплаты.
-                        </Text>
-                        <Button type="link" style={{ padding: 0 }} onClick={() => navigate('/AgreePage')}>
-                          Открыть страницу с договорами и условиями
-                        </Button>
-                      </Space>
-                    </Card>
-                  </Col>
-
-                  <Col xs={24}>
-                    <Form.Item
-                      name="agreement"
-                      valuePropName="checked"
-                      rules={[{ validator: (_, value) => (value ? Promise.resolve() : Promise.reject(new Error('Подтвердите согласие с условиями сервиса'))) }]}
-                    >
-                      <Checkbox>Я принимаю правила сервиса и обработку данных</Checkbox>
-                    </Form.Item>
-
-                    <Form.Item
-                      name="contract"
-                      valuePropName="checked"
-                      rules={[{ validator: (_, value) => (value ? Promise.resolve() : Promise.reject(new Error('Нужно принять договор и стоимость подписки'))) }]}
-                    >
-                      <Checkbox>Я принимаю договор и стоимость подписки: {BUSINESS_SUBSCRIPTION_PRICE.toLocaleString('ru-RU')} сом за 30 дней</Checkbox>
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Button type="primary" size="large" htmlType="submit" loading={loading} block icon={<InboxOutlined />}>
-                  Отправить заявку супер-админу
-                </Button>
-              </Form>
-            </Card>
-          </Col>
-        </Row>
-      </Content>
-    </Layout>
-  );
-};
-
-const styles = {
-  page: { minHeight: '100vh', background: '#f8fafc' },
-  content: { width: 'min(1180px, calc(100% - 32px))', margin: '0 auto', padding: '40px 0' },
-  narrow: { width: 'min(760px, calc(100% - 32px))', margin: '0 auto', padding: '64px 0' },
-  title: { marginTop: 8, color: '#111827' },
-  subtitle: { fontSize: 16, color: '#475569' },
-  card: { borderRadius: 8, border: '1px solid rgba(15, 23, 42, 0.08)' },
-  priceCard: { borderRadius: 16, border: '1px solid rgba(15, 23, 42, 0.08)' },
-  priceText: { margin: '12px 0 0', color: '#475569' },
-  contractCard: { background: '#f8fafc', borderRadius: 14 },
-};
-
-export default BusinessRegisterPage;
+  if (submitted) return <main className="business-register-success"><Result status="success" title="Компания успешно зарегистрирована!" subTitle="Заявка отправлена на проверку. После подтверждения откроется кабинет компании." extra={[<Button key="cabinet" type="primary" size="large" onClick={() => navigate('/business/login')}>Перейти в кабинет</Button>, <Button key="home" size="large" onClick={() => navigate('/business')}>К TravelPay Business</Button>]}><div className="business-register-success__next">✓ Добавить первый тур<br />✓ Добавить домики<br />✓ Настроить способы оплаты<br />✓ Пригласить сотрудников</div></Result></main>;
+  const CurrentStep = [StepAccount, StepPersonal, StepCompany, StepContacts, StepPayments, StepDocuments, StepReview][step];
+  return <FormProvider {...methods}><RegistrationLayout step={step} onBack={() => setStep((value) => Math.max(0, value - 1))} onNext={next} onCancel={() => navigate('/business')} onDraft={saveDraft} nextDisabled={nextDisabled} loading={loading} isFinal={step === 6}><CurrentStep /></RegistrationLayout></FormProvider>;
+}

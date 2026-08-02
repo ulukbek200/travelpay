@@ -933,7 +933,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [calendarDate, setCalendarDate] = useState(dayjs());
   const [bookingTab, setBookingTab] = useState(() => {
     const savedView = localStorage.getItem('travelpay.admin.calendar.view');
-    return ['day', 'three-day', 'week', 'month'].includes(savedView) ? savedView : 'week';
+    return ['day', 'three-day', 'week', 'month', 'list'].includes(savedView) ? savedView : 'day';
   });
   const [calendarResource, setCalendarResource] = useState('tours');
   const [weekManagerSelection, setWeekManagerSelection] = useState([]);
@@ -942,6 +942,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [calendarStatusFilter, setCalendarStatusFilter] = useState('all');
   const [calendarPaymentFilter, setCalendarPaymentFilter] = useState('all');
   const [calendarSearch, setCalendarSearch] = useState('');
+  const [calendarSearchInput, setCalendarSearchInput] = useState('');
   const [calendarFiltersDrawerOpen, setCalendarFiltersDrawerOpen] = useState(false);
   const [calendarDrawerItem, setCalendarDrawerItem] = useState(null);
   const [catalogMode, setCatalogMode] = useState(getCatalogMode(location.pathname));
@@ -1035,12 +1036,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const loadCalendarPeriod = useCallback(async () => {
     const start = bookingTab === 'month'
       ? calendarDate.startOf('month')
-      : bookingTab === 'week'
+      : bookingTab === 'week' || bookingTab === 'list'
         ? dayjs(startOfWeek(calendarDate.toDate())).startOf('day')
         : calendarDate.startOf('day');
     const end = bookingTab === 'month'
       ? calendarDate.endOf('month')
-      : bookingTab === 'week'
+      : bookingTab === 'week' || bookingTab === 'list'
         ? start.add(6, 'day').endOf('day')
         : bookingTab === 'three-day'
           ? start.add(2, 'day').endOf('day')
@@ -1120,6 +1121,14 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   }, [calendarResource]);
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setCalendarSearch(calendarSearchInput.trim());
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [calendarSearchInput]);
+
+  useEffect(() => {
     const tourId = Number(quickBookingObjectId);
     if (!quickBookingDrawerOpen || quickBookingResource !== 'tours' || !tourId) {
       setQuickBookingSlots([]);
@@ -1156,7 +1165,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     return () => {
       active = false;
     };
-  }, [quickBookingDrawerOpen, quickBookingObjectId, quickBookingResource]);
+  }, [quickBookingDrawerOpen, quickBookingForm, quickBookingObjectId, quickBookingResource]);
 
   const currentCompany = useMemo(() => {
     if (!companies.length) return null;
@@ -1285,9 +1294,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   }, [currentCompany?.name, stayBookings, tourBookings, users]);
 
   const managerOptions = useMemo(() => {
-    const unique = Array.from(new Set(bookingRows.map((item) => item.assignedTo).filter(Boolean)));
+    const unique = Array.from(new Set([
+      ...bookingRows.map((item) => item.assignedTo),
+      ...tours.map((tour) => tour.manager || tour.companyName),
+    ].filter(Boolean)));
     return unique.map((value) => ({ value, label: value }));
-  }, [bookingRows]);
+  }, [bookingRows, tours]);
 
   const companyOptions = useMemo(() => {
     const list = isSuperAdmin ? companies : (currentCompany ? [currentCompany] : companies);
@@ -1308,6 +1320,26 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const calendarObjectOptions = calendarResource === 'tours'
     ? calendarTourOptions
     : calendarAccommodationOptions;
+  const calendarStatusOptions = useMemo(() => {
+    const source = calendarResource === 'tours'
+      ? [
+        ...Object.entries(TOUR_CALENDAR_STATUS_META),
+        ...Object.entries(BOOKING_STATUS_META),
+      ]
+      : Object.entries(BOOKING_STATUS_META);
+
+    const optionsByValue = new Map(source);
+
+    return [
+      { value: 'all', label: 'Все статусы' },
+      ...Array.from(optionsByValue.entries()).map(([value, meta]) => ({ value, label: meta.label })),
+    ];
+  }, [calendarResource]);
+  const matchesCalendarManager = useCallback((entry) => {
+    if (!weekManagerSelection.length) return true;
+    const manager = entry.manager || entry.assignedTo || entry.companyName;
+    return weekManagerSelection.includes(manager);
+  }, [weekManagerSelection]);
   const quickBookingObjectOptions = useMemo(() => {
     const source = quickBookingResource === 'stays' ? accommodations : tours;
     return source
@@ -1330,7 +1362,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     const labels = [];
     const selectedCompany = companyOptions.find((item) => item.value === calendarCompanyFilter);
     const selectedTour = calendarObjectOptions.find((item) => item.value === calendarTourFilter);
-    const selectedStatus = BOOKING_STATUS_META[calendarStatusFilter];
+    const selectedStatus = BOOKING_STATUS_META[calendarStatusFilter]
+      || TOUR_CALENDAR_STATUS_META[calendarStatusFilter];
     const selectedPayment = {
       paid: 'Оплачено',
       reserved: 'Средства зарезервированы',
@@ -1459,12 +1492,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const calendarVisibleRange = useMemo(() => {
     const start = bookingTab === 'month'
       ? calendarDate.startOf('month')
-      : bookingTab === 'week'
+      : bookingTab === 'week' || bookingTab === 'list'
         ? dayjs(startOfWeek(calendarDate.toDate())).startOf('day')
         : calendarDate.startOf('day');
     const end = bookingTab === 'month'
       ? calendarDate.endOf('month')
-      : bookingTab === 'week'
+      : bookingTab === 'week' || bookingTab === 'list'
         ? start.add(6, 'day').endOf('day')
         : bookingTab === 'three-day'
           ? start.add(2, 'day').endOf('day')
@@ -1552,10 +1585,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     .filter((booking) => {
       const matchesCompanyFilter = calendarCompanyFilter === 'all' || String(booking.companyId) === calendarCompanyFilter;
       const matchesScope = isSuperAdmin || !currentCompany?.id || Number(booking.companyId) === Number(currentCompany.id);
-      return matchesScope && matchesCompanyFilter;
-    }), [calendarCompanyFilter, companiesById, currentCompany?.id, currentCompany?.name, filteredBookings, isSuperAdmin, sessionUser?.companyId, toursCalendarById]);
+      return matchesScope && matchesCompanyFilter && matchesCalendarManager(booking);
+    }), [calendarCompanyFilter, companiesById, currentCompany?.id, currentCompany?.name, filteredBookings, isSuperAdmin, matchesCalendarManager, sessionUser?.companyId, toursCalendarById]);
 
   const calendarEntries = useMemo(() => {
+    const normalizedCalendarSearch = calendarSearch.trim().toLowerCase();
     const matchesStatus = (entry) => {
       const bookingStatusMatches = calendarStatusFilter === 'all'
         || entry.status === calendarStatusFilter
@@ -1564,26 +1598,52 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         || entry.paymentStatus === calendarPaymentFilter;
       return bookingStatusMatches && paymentStatusMatches;
     };
+    const matchesSearch = (entry) => {
+      if (!normalizedCalendarSearch) return true;
+
+      const searchableText = [
+        entry.title,
+        entry.tourTitle,
+        entry.stayTitle,
+        entry.clientName,
+        entry.clientEmail,
+        entry.clientPhone,
+        entry.companyName,
+        entry.location,
+        entry.route,
+        entry.manager,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return searchableText.includes(normalizedCalendarSearch);
+    };
     if (calendarResource === 'stays') {
       return filteredBookingCalendarEntries.filter((entry) => (
         entry.type === 'stay_booking'
         && (calendarTourFilter === 'all' || String(entry.stayId) === calendarTourFilter)
         && matchesStatus(entry)
+        && matchesSearch(entry)
       ));
     }
 
     const visibleTours = tourCalendarEntries.filter((tour) => (
       (calendarCompanyFilter === 'all' || String(tour.companyId) === calendarCompanyFilter)
       && (calendarTourFilter === 'all' || String(tour.id) === calendarTourFilter)
+      && matchesCalendarManager(tour)
       && matchesStatus(tour)
+      && matchesSearch(tour)
     ));
     const visibleBookings = filteredBookingCalendarEntries.filter((entry) => (
       entry.type === 'tour_booking'
       && (calendarTourFilter === 'all' || String(entry.tourId) === calendarTourFilter)
+      && matchesCalendarManager(entry)
       && matchesStatus(entry)
+      && matchesSearch(entry)
     ));
     return [...visibleTours, ...visibleBookings];
-  }, [calendarCompanyFilter, calendarPaymentFilter, calendarResource, calendarStatusFilter, calendarTourFilter, filteredBookingCalendarEntries, tourCalendarEntries]);
+  }, [calendarCompanyFilter, calendarPaymentFilter, calendarResource, calendarSearch, calendarStatusFilter, calendarTourFilter, filteredBookingCalendarEntries, matchesCalendarManager, tourCalendarEntries]);
 
   const bookingsForSelectedDay = useMemo(() => {
     const current = calendarDate.toDate();
@@ -1632,6 +1692,22 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     return calendarEntriesByDate.get(selected.format('YYYY-MM-DD')) || [];
   }, [calendarDate, calendarEntriesByDate]);
 
+  const calendarListGroups = useMemo(() => (
+    Array.from(calendarEntriesByDate.entries())
+      .filter(([dateKey]) => {
+        const date = dayjs(dateKey);
+        return !date.isBefore(calendarVisibleRange.start, 'day')
+          && !date.isAfter(calendarVisibleRange.end, 'day');
+      })
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([dateKey, entries]) => ({
+        date: dayjs(dateKey),
+        entries: [...entries].sort((left, right) => (
+          dayjs(left.startDate).valueOf() - dayjs(right.startDate).valueOf()
+        )),
+      }))
+  ), [calendarEntriesByDate, calendarVisibleRange.end, calendarVisibleRange.start]);
+
   const selectedWeekCalendarEntries = useMemo(() => {
     const rangeStart = bookingTab === 'three-day'
       ? calendarDate.startOf('day')
@@ -1645,11 +1721,10 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     });
   }, [bookingTab, calendarDate, calendarEntries]);
 
-  const weekCalendarEntries = useMemo(() => selectedWeekCalendarEntries.filter((entry) => {
-    if (entry.type === 'tour') return true;
-    if (!weekManagerSelection.length) return true;
-    return weekManagerSelection.includes(entry.assignedTo);
-  }), [selectedWeekCalendarEntries, weekManagerSelection]);
+  const weekCalendarEntries = useMemo(
+    () => selectedWeekCalendarEntries,
+    [selectedWeekCalendarEntries],
+  );
 
   const weekCalendarDays = useMemo(() => (
     Array.from({ length: bookingTab === 'three-day' ? 3 : 7 }, (_, index) => {
@@ -3534,6 +3609,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     ...(!isDesktop && !isMobileViewport ? [{ label: '3 дня', value: 'three-day' }] : []),
     { label: 'Неделя', value: 'week' },
     { label: 'Месяц', value: 'month' },
+    { label: 'Список', value: 'list' },
   ];
 
   const calendarPeriodLabel = useMemo(() => {
@@ -3549,7 +3625,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   }, [bookingTab, calendarDate]);
 
   const shiftCalendarPeriod = useCallback((direction) => {
-    const amount = bookingTab === 'month' ? 1 : bookingTab === 'week' ? 7 : bookingTab === 'three-day' ? 3 : 1;
+    const amount = bookingTab === 'month' ? 1 : ['week', 'list'].includes(bookingTab) ? 7 : bookingTab === 'three-day' ? 3 : 1;
     const unit = bookingTab === 'month' ? 'month' : 'day';
     setCalendarDate((value) => value.add(direction * amount, unit));
   }, [bookingTab]);
@@ -3620,7 +3696,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       <Select
         value={calendarStatusFilter}
         onChange={setCalendarStatusFilter}
-        options={[{ value: 'all', label: 'Все статусы брони' }, ...Object.entries(BOOKING_STATUS_META).map(([value, meta]) => ({ value, label: meta.label }))]}
+        options={calendarStatusOptions}
         aria-label="Фильтр статусов бронирования"
       />
       <Select
@@ -3678,7 +3754,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                   className={`tp-admin-calendar-day-event is-${booking.status || 'new'}`}
                   onClick={() => openCalendarItemDetails(booking)}
                 >
-                  <span className="tp-admin-calendar-day-event__time">{booking.timeLabel || 'Время уточняется'}</span>
+                  <span className="tp-admin-calendar-day-event__time">{formatCalendarTimeRange(booking)}</span>
                   <span className="tp-admin-calendar-day-event__content">
                     <strong>{booking.title || booking.tourTitle}</strong>
                     <small>{booking.clientName || booking.companyName || 'TravelPay'}</small>
@@ -3700,6 +3776,69 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       </div>
     </div>
   );
+
+  const renderCalendarListView = () => {
+    if (!calendarListGroups.length) {
+      return (
+        <div className="tp-admin-calendar-list-empty">
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="За выбранный период бронирований нет"
+          >
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => openQuickBookingDrawer()}>
+              Добавить бронирование
+            </Button>
+          </Empty>
+        </div>
+      );
+    }
+
+    return (
+      <div className="tp-admin-calendar-list-view" aria-label="Список бронирований">
+        {calendarListGroups.map((group) => (
+          <section key={group.date.format('YYYY-MM-DD')} className="tp-admin-calendar-list-group">
+            <div className="tp-admin-calendar-list-group__header">
+              <strong>{group.date.locale('ru').format('dddd, D MMMM')}</strong>
+              <span>{group.entries.length} {group.entries.length === 1 ? 'событие' : group.entries.length < 5 ? 'события' : 'событий'}</span>
+            </div>
+            <div className="tp-admin-calendar-list-group__entries">
+              {group.entries.map((entry) => {
+                const tourStatus = TOUR_CALENDAR_STATUS_META[entry.status] || TOUR_CALENDAR_STATUS_META.scheduled;
+                const people = entry.people || entry.guests || entry.bookedSeats;
+                const peopleLabel = people
+                  ? entry.type === 'tour'
+                    ? `${entry.bookedSeats || 0}/${entry.totalSeats || 0} мест`
+                    : `${people} ${Number(people) === 1 ? 'место' : 'места'}`
+                  : '';
+
+                return (
+                  <button
+                    key={entry.key}
+                    type="button"
+                    className={`tp-admin-calendar-list-event is-${entry.status || 'new'}`}
+                    onClick={() => openCalendarItemDetails(entry)}
+                    aria-label={`Открыть детали: ${entry.title || entry.tourTitle || entry.stayTitle || 'бронирование'}`}
+                  >
+                    <time className="tp-admin-calendar-list-event__time">{formatCalendarTimeRange(entry)}</time>
+                    <span className="tp-admin-calendar-list-event__content">
+                      <strong>{entry.title || entry.tourTitle || entry.stayTitle || 'Бронирование'}</strong>
+                      <small>{entry.clientName ? `${entry.clientName} · ${entry.companyName || 'TravelPay'}` : (entry.companyName || 'TravelPay')}</small>
+                    </span>
+                    <span className="tp-admin-calendar-list-event__meta">
+                      {peopleLabel && <small>{peopleLabel}</small>}
+                      {entry.type === 'tour'
+                        ? <Tag color={tourStatus.color}>{tourStatus.label}</Tag>
+                        : renderBookingStatusChip(entry)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    );
+  };
 
   const renderBookingsModern = () => (
     <section className="tp-admin-calendar-page">
@@ -3761,6 +3900,14 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                 <span className="tp-admin-calendar-toolbar__period-label">{calendarPeriodLabel}</span>
               </div>
               <div className="tp-admin-calendar-toolbar__group tp-admin-calendar-toolbar__group--view">
+                <Input.Search
+                  allowClear
+                  value={calendarSearchInput}
+                  onChange={(event) => setCalendarSearchInput(event.target.value)}
+                  placeholder="Поиск по клиенту или объекту"
+                  className="tp-admin-calendar-toolbar__search"
+                  aria-label="Поиск по календарю"
+                />
                 <Segmented value={bookingTab} onChange={setBookingTab} options={calendarViewOptions} aria-label="Режим календаря" />
                 <Segmented
                   value={calendarResource}
@@ -3859,7 +4006,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                               className={`tp-admin-calendar-day-event is-${booking.status || 'new'}`}
                               onClick={() => openCalendarItemDetails(booking)}
                             >
-                              <span className="tp-admin-calendar-day-event__time">{booking.timeLabel || 'Время уточняется'}</span>
+                              <span className="tp-admin-calendar-day-event__time">{formatCalendarTimeRange(booking)}</span>
                               <span className="tp-admin-calendar-day-event__content">
                                 <strong>{booking.title || booking.tourTitle}</strong>
                                 <small>{booking.clientName || booking.companyName || 'TravelPay'}</small>
@@ -4062,6 +4209,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                     />
                   </>
                 ),
+              },
+              {
+                key: 'list',
+                label: 'Список',
+                children: renderCalendarListView(),
               },
             ]}
           />
