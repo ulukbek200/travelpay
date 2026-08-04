@@ -32,7 +32,7 @@ const navItems = [
   { key: '/stays', label: 'Домики' },
   { key: '/favorites', label: 'Избранное' },
   { key: '/about', label: 'О нас' },
-  { key: 'partnership', label: 'Партнёрство' },
+  { key: '/business', label: 'Партнёрство' },
 ];
 
 const getInitialHeaderState = () => {
@@ -192,6 +192,7 @@ const Header = () => {
     if (location.pathname.startsWith('/stays')) return '/stays';
     if (location.pathname.startsWith('/favorites')) return '/favorites';
     if (location.pathname.startsWith('/about')) return '/about';
+    if (location.pathname.startsWith('/business')) return '/business';
     return '';
   }, [location.pathname]);
 

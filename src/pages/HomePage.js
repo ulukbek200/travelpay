@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AimOutlined, ArrowRightOutlined, ClockCircleOutlined, CompassOutlined, CustomerServiceOutlined, DownOutlined, EnvironmentOutlined, GlobalOutlined, LoadingOutlined, MailOutlined, PhoneOutlined, ReloadOutlined, SafetyCertificateOutlined, StarFilled, TeamOutlined, WhatsAppOutlined } from '@ant-design/icons';
-import { Button, Card, Collapse, Col, Input, Row, Segmented, Space, Tag, Typography } from 'antd';
+import { Button, Card, Collapse, Col, Empty, Input, Row, Segmented, Skeleton, Space, Tag, Typography } from 'antd';
 import { motion } from 'framer-motion';
 import { FiArrowDown, FiBriefcase, FiCheckCircle, FiCreditCard, FiGlobe, FiMail, FiMap, FiMessageCircle, FiShield, FiStar, FiTrendingUp, FiUser } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import api, { getAssetUrl } from '../api';
 import AppImage from '../components/AppImage';
 import kyrgyzstanRegionsUrl from '../data/kyrgyzstan-regions.geojson';
-import { KYRGYZSTAN_TOUR_SPOTS, TOUR_IMAGE_FALLBACK } from '../utils/tourMedia';
+import { TOUR_IMAGE_FALLBACK } from '../utils/tourMedia';
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
@@ -116,11 +116,6 @@ const heroExperienceCopy = {
       { key: 'tours', value: '150+', label: 'Туров по Кыргызстану' },
       { key: 'verified', value: '100%', label: 'Проверенные туроператоры' },
     ],
-    tourTitle: 'Kel-Suu Lake',
-    rating: '4.9',
-    duration: '3 дня',
-    seats: '12 мест осталось',
-    price: 'от 4500 сом',
     details: 'Подробнее',
     scroll: 'Исследуйте Кыргызстан',
   },
@@ -130,11 +125,6 @@ const heroExperienceCopy = {
       { key: 'tours', value: '150+', label: 'Tours across Kyrgyzstan' },
       { key: 'verified', value: '100%', label: 'Verified tour operators' },
     ],
-    tourTitle: 'Kel-Suu Lake',
-    rating: '4.9',
-    duration: '3 days',
-    seats: '12 spots left',
-    price: 'from 4500 som',
     details: 'Details',
     scroll: 'Explore Kyrgyzstan',
   },
@@ -144,11 +134,6 @@ const heroExperienceCopy = {
       { key: 'tours', value: '150+', label: 'Кыргызстан боюнча турлар' },
       { key: 'verified', value: '100%', label: 'Текшерилген туроператорлор' },
     ],
-    tourTitle: 'Kel-Suu Lake',
-    rating: '4.9',
-    duration: '3 күн',
-    seats: '12 орун калды',
-    price: '4500 сомдон',
     details: 'Кененирээк',
     scroll: 'Кыргызстанды изилдеңиз',
   },
@@ -186,45 +171,6 @@ const heroTrustCopy = {
     ],
   },
 };
-
-const heroPopularTours = [
-  {
-    key: 'kel-suu',
-    route: '/tours/kel-suu',
-    title: { RU: 'Кель-Суу', EN: 'Kel-Suu', KG: 'Көл-Суу' },
-    rating: '4.9',
-    duration: { RU: '3 дня', EN: '3 days', KG: '3 күн' },
-    seats: { RU: '12 мест осталось', EN: '12 spots left', KG: '12 орун калды' },
-    price: { RU: 'от 4500 сом', EN: 'from 4500 som', KG: '4500 сомдон' },
-  },
-  {
-    key: 'son-kul',
-    route: '/tours/son-kul',
-    title: { RU: 'Сон-Куль', EN: 'Son-Kul', KG: 'Соң-Көл' },
-    rating: '4.8',
-    duration: { RU: '2 дня', EN: '2 days', KG: '2 күн' },
-    seats: { RU: '8 мест осталось', EN: '8 spots left', KG: '8 орун калды' },
-    price: { RU: 'от 3800 сом', EN: 'from 3800 som', KG: '3800 сомдон' },
-  },
-  {
-    key: 'ala-kul',
-    route: '/tours/ala-kul',
-    title: { RU: 'Ала-Куль', EN: 'Ala-Kul', KG: 'Ала-Көл' },
-    rating: '4.9',
-    duration: { RU: '4 дня', EN: '4 days', KG: '4 күн' },
-    seats: { RU: '6 мест осталось', EN: '6 spots left', KG: '6 орун калды' },
-    price: { RU: 'от 6500 сом', EN: 'from 6500 som', KG: '6500 сомдон' },
-  },
-  {
-    key: 'jeti-oguz',
-    route: '/tours/jeti-oguz',
-    title: { RU: 'Джеты-Огуз', EN: 'Jeti-Oguz', KG: 'Жети-Өгүз' },
-    rating: '4.7',
-    duration: { RU: '1 день', EN: '1 day', KG: '1 күн' },
-    seats: { RU: '15 мест осталось', EN: '15 spots left', KG: '15 орун калды' },
-    price: { RU: 'от 2900 сом', EN: 'from 2900 som', KG: '2900 сомдон' },
-  },
-];
 
 const kyrgyzstanMapStops = [
   { key: 'batken', label: 'Batken', x: 78, y: 232 },
@@ -318,40 +264,72 @@ const travelFormats = [
   },
 ];
 
-const extraGallerySpots = [
-  {
-    key: 'sary-chelek',
-    title: 'Сары-Челек',
-    location: 'Джалал-Абадская область',
-    duration: '3 дня',
-    price: 34000,
-    rating: 4.8,
-    image: TOUR_IMAGE_FALLBACK,
-    description: 'Заповедное горное озеро, тихие панорамы и маршрут для спокойного premium nature-отдыха.',
-  },
-  {
-    key: 'kol-suu',
-    title: 'Кёль-Суу',
-    location: 'Нарынская область',
-    duration: '4 дня',
-    price: 46000,
-    rating: 4.9,
-    image: TOUR_IMAGE_FALLBACK,
-    description: 'Высокогорное озеро среди скал, удалённый маршрут и сильная adventure-атмосфера.',
-  },
-];
+const HOME_TOUR_RECOMMENDATION_LIMIT = 6;
+const HOME_TOUR_RECOMMENDATION_CACHE_TTL = 90 * 1000;
 
-const fallbackGalleryCards = [...KYRGYZSTAN_TOUR_SPOTS, ...extraGallerySpots].map((spot, index) => ({
-  ...spot,
-  accent: index % 2 === 0 ? 'gold' : 'blue',
-}));
+// This is intentionally module-scoped: returning to the home page within the
+// stale window does not trigger another identical public `/tours` request.
+let homeTourRecommendationCache = {
+  tours: null,
+  cachedAt: 0,
+};
 
-const parseTourPrice = (value, fallback = 0) => Number(String(value || fallback).replace(/[^0-9]/g, '')) || fallback;
+const getTextValue = (value) => typeof value === 'string' ? value.trim() : '';
 
-const resolveHomeTourImage = (tour, fallbackImage) => {
-  const gallery = Array.isArray(tour?.gallery) ? tour.gallery.filter(Boolean) : [];
-  const rawImage = String(tour?.image || tour?.coverImage || gallery[0] || fallbackImage || TOUR_IMAGE_FALLBACK);
+const getFiniteNumber = (value, { positive = false } = {}) => {
+  if (value === null || value === undefined || value === '') return null;
 
+  if (typeof value === 'object') {
+    return getFiniteNumber(value.amount ?? value.value ?? value.price, { positive });
+  }
+
+  const normalized = String(value)
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/[^0-9,.-]/g, '');
+  const numeric = Number(
+    normalized.includes(',') && !normalized.includes('.')
+      ? normalized.replace(',', '.')
+      : normalized.replace(/,/g, ''),
+  );
+
+  if (!Number.isFinite(numeric) || (positive && numeric <= 0) || (!positive && numeric < 0)) {
+    return null;
+  }
+
+  return numeric;
+};
+
+const getMediaSource = (value) => {
+  if (typeof value === 'string') return value.trim();
+  if (!value || typeof value !== 'object') return '';
+
+  return [
+    value.urls?.large,
+    value.urls?.medium,
+    value.urls?.thumbnail,
+    value.url,
+    value.src,
+    value.secure_url,
+    value.path,
+  ].map(getTextValue).find(Boolean) || '';
+};
+
+const resolveHomeTourImage = (tour) => {
+  const gallery = Array.isArray(tour?.gallery) ? tour.gallery : [];
+  const images = Array.isArray(tour?.images) ? tour.images : [];
+  const photos = Array.isArray(tour?.photos) ? tour.photos : [];
+  const rawImage = [
+    tour?.coverImage,
+    tour?.cover,
+    tour?.image,
+    tour?.imageMedia,
+    ...gallery,
+    ...images,
+    ...photos,
+  ].map(getMediaSource).find(Boolean) || '';
+
+  if (!rawImage) return '';
   if (/^https?:\/\//i.test(rawImage) || rawImage.startsWith('data:') || rawImage.startsWith('/images/')) {
     return rawImage;
   }
@@ -363,57 +341,250 @@ const resolveHomeTourImage = (tour, fallbackImage) => {
   return rawImage;
 };
 
-const getHomeTourStartLabel = (tour) => {
-  const slots = Array.isArray(tour?.departureSlots) ? tour.departureSlots : [];
+const getUpcomingDeparture = (tour) => {
   const now = Date.now();
-  const nextSlot = slots
+  const slots = Array.isArray(tour?.departureSlots) ? tour.departureSlots : [];
+
+  return slots
     .filter((slot) => slot?.active !== false && slot?.startAt && new Date(slot.startAt).getTime() >= now)
-    .sort((left, right) => new Date(left.startAt) - new Date(right.startAt))[0];
-  const dateValue = nextSlot?.startAt || tour?.startDate || tour?.date;
+    .sort((left, right) => new Date(left.startAt) - new Date(right.startAt))[0] || null;
+};
 
-  if (!dateValue) {
-    return '';
-  }
+const getHomeTourAvailablePlaces = (tour, departure) => {
+  const directAvailability = [
+    departure?.remainingSeats,
+    tour?.availablePlaces,
+    tour?.remainingPlaces,
+    tour?.remainingSeats,
+    tour?.availableSeats,
+  ].map((value) => getFiniteNumber(value)).find((value) => value !== null);
 
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
+  if (directAvailability !== undefined) return directAvailability ?? null;
 
-  return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(date);
+  const capacity = getFiniteNumber(tour?.totalSeats ?? tour?.seats ?? tour?.capacity);
+  const bookedSeats = getFiniteNumber(tour?.bookedSeats ?? tour?.reservedSeats ?? tour?.soldSeats);
+
+  return capacity !== null && bookedSeats !== null ? Math.max(capacity - bookedSeats, 0) : null;
+};
+
+const getRecommendationPriority = (tour) => {
+  const booleanFlag = (keys) => keys.some((key) => tour?.[key] === true || String(tour?.[key]).toLowerCase() === 'true');
+  const status = String(tour?.status || '').toLowerCase();
+  return [
+    booleanFlag(['featured', 'isFeatured']) ? 1 : 0,
+    booleanFlag(['popular', 'isPopular']) ? 1 : 0,
+    booleanFlag(['recommended', 'isRecommended']) ? 1 : 0,
+    ['hot', 'discount'].includes(status) ? 1 : 0,
+  ];
+};
+
+const getHomeTourDateScore = (tour) => {
+  const value = tour?.publishedAt || tour?.createdAt || tour?.updatedAt || tour?.startDate;
+  const timestamp = new Date(value || 0).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
 };
 
 const isPublicHomeTour = (tour) => {
-  const status = String(tour?.status || tour?.calendarStatus || '').toLowerCase();
-  return Boolean(tour?.title)
+  const status = String(tour?.status || '').toLowerCase();
+  const title = getTextValue(tour?.title || tour?.name);
+  const id = tour?.id ?? tour?._id ?? tour?.slug;
+
+  return Boolean(title && id !== undefined && id !== null && String(id).trim())
     && tour?.active !== false
-    && !['inactive', 'archived', 'draft', 'cancelled', 'canceled'].includes(status);
+    && tour?.isActive !== false
+    && tour?.hidden !== true
+    && !tour?.deleted
+    && !tour?.isDeleted
+    && !['inactive', 'archived', 'draft', 'deleted', 'hidden', 'sold_out', 'sold-out', 'cancelled', 'canceled'].includes(status);
 };
 
 const normalizeHomeGalleryTour = (tour, index = 0) => {
-  const fallback = fallbackGalleryCards[index % fallbackGalleryCards.length] || {};
-  const durationSource = tour?.duration || fallback.duration || '';
-  const durationDays = Number(String(tour?.durationDays || durationSource).match(/\d+/)?.[0]) || '';
-  const price = parseTourPrice(tour?.price, fallback.price);
-  const rating = Number(tour?.rating || fallback.rating || 4.8);
+  const id = tour?.id ?? tour?._id ?? tour?.slug;
+  const title = getTextValue(tour?.title || tour?.name);
+  if (!title || id === undefined || id === null || String(id).trim() === '') return null;
+
+  const departure = getUpcomingDeparture(tour);
+  const duration = getTextValue(tour?.duration || tour?.durationLabel || tour?.durationText);
+  const durationDays = getFiniteNumber(tour?.durationDays ?? tour?.days, { positive: true });
+  const priceFromSource = tour?.priceFrom ?? tour?.minPrice ?? tour?.startingPrice;
+  const price = getFiniteNumber(priceFromSource ?? tour?.price ?? tour?.amount, { positive: true });
+  const rating = getFiniteNumber(tour?.rating ?? tour?.averageRating ?? tour?.reviewStats?.average);
+  const reviewsCount = getFiniteNumber(
+    tour?.reviewsCount
+      ?? tour?.reviewCount
+      ?? tour?.reviewStats?.count
+      ?? (Array.isArray(tour?.reviews) ? tour.reviews.length : null),
+  );
+  const image = resolveHomeTourImage(tour);
 
   return {
-    ...fallback,
     ...tour,
-    key: String(tour?.id || tour?.slug || tour?.title || fallback.key || `home-tour-${index}`),
-    id: tour?.id || fallback.id,
-    title: tour?.title || fallback.title,
-    location: tour?.location || tour?.city || fallback.location || 'Кыргызстан',
-    city: tour?.city || tour?.location || fallback.location || 'Кыргызстан',
-    description: tour?.description || fallback.description || '',
-    duration: durationSource || (durationDays ? `${durationDays} дня` : fallback.duration || ''),
+    key: String(tour?.slug || id || `home-tour-${index}`),
+    id,
+    slug: getTextValue(tour?.slug),
+    title,
+    location: getTextValue(tour?.location || tour?.city || tour?.route),
+    city: getTextValue(tour?.city || tour?.location),
+    description: getTextValue(tour?.description || tour?.shortDescription),
+    companyName: getTextValue(tour?.companyName || tour?.company?.name || tour?.organizer?.name),
+    company: tour?.company || null,
+    currency: getTextValue(tour?.currency || tour?.priceCurrency || tour?.currencyCode || 'KGS').toUpperCase(),
     price,
-    rating: Number.isFinite(rating) ? rating : 4.8,
-    image: resolveHomeTourImage(tour, fallback.image),
-    startLabel: getHomeTourStartLabel(tour),
-    accent: index % 2 === 0 ? 'gold' : 'blue',
+    isPriceFrom: priceFromSource !== undefined && priceFromSource !== null && priceFromSource !== '',
+    duration,
+    durationDays,
+    availablePlaces: getHomeTourAvailablePlaces(tour, departure),
+    rating,
+    reviewsCount,
+    image,
+    hasImage: Boolean(image),
+    nextDepartureAt: departure?.startAt || tour?.startDate || tour?.date || null,
+    bookedCount: getFiniteNumber(tour?.bookingsCount ?? tour?.bookingCount ?? tour?.bookedSeats),
+    viewsCount: getFiniteNumber(tour?.viewsCount ?? tour?.viewCount ?? tour?.views),
     isActualTour: true,
   };
+};
+
+const rankHomeTourRecommendations = (left, right) => {
+  const leftPriority = getRecommendationPriority(left);
+  const rightPriority = getRecommendationPriority(right);
+
+  for (let index = 0; index < leftPriority.length; index += 1) {
+    if (rightPriority[index] !== leftPriority[index]) return rightPriority[index] - leftPriority[index];
+  }
+
+  const metricComparisons = [
+    (right.rating || 0) - (left.rating || 0),
+    (right.bookedCount || 0) - (left.bookedCount || 0),
+    (right.viewsCount || 0) - (left.viewsCount || 0),
+    getHomeTourDateScore(right) - getHomeTourDateScore(left),
+  ];
+
+  return metricComparisons.find((result) => result !== 0) || 0;
+};
+
+const selectHomeTourRecommendations = (source) => {
+  const uniqueTourKeys = new Set();
+
+  return (Array.isArray(source) ? source : [])
+    .filter(isPublicHomeTour)
+    .map(normalizeHomeGalleryTour)
+    .filter(Boolean)
+    .sort(rankHomeTourRecommendations)
+    .filter((tour) => {
+      const uniqueKey = String(tour.slug || tour.id);
+      if (uniqueTourKeys.has(uniqueKey)) return false;
+      uniqueTourKeys.add(uniqueKey);
+      return true;
+    })
+    .slice(0, HOME_TOUR_RECOMMENDATION_LIMIT);
+};
+
+const heroRecommendationCopy = {
+  RU: {
+    loading: 'Загружаем актуальные рекомендации',
+    error: 'Не удалось загрузить рекомендации',
+    empty: 'Скоро здесь появятся новые туры',
+    retry: 'Повторить',
+    priceOnRequest: 'Цена по запросу',
+    from: 'от',
+    availabilityUnknown: 'Уточнить наличие',
+    soldOut: 'Мест нет',
+    placesOne: 'место',
+    placesFew: 'места',
+    placesMany: 'мест',
+    rating: 'Рейтинг',
+    reviews: 'отзывов',
+  },
+  EN: {
+    loading: 'Loading current recommendations',
+    error: 'Could not load recommendations',
+    empty: 'New tours will appear here soon',
+    retry: 'Retry',
+    priceOnRequest: 'Price on request',
+    from: 'from',
+    availabilityUnknown: 'Check availability',
+    soldOut: 'Sold out',
+    placesOne: 'spot',
+    placesFew: 'spots',
+    placesMany: 'spots',
+    rating: 'Rating',
+    reviews: 'reviews',
+  },
+  KG: {
+    loading: 'Учурдагы сунуштар жүктөлүүдө',
+    error: 'Сунуштарды жүктөө мүмкүн болгон жок',
+    empty: 'Жаңы турлар жакында бул жерде пайда болот',
+    retry: 'Кайталоо',
+    priceOnRequest: 'Баасы суроо боюнча',
+    from: 'баштап',
+    availabilityUnknown: 'Бош орунду тактаңыз',
+    soldOut: 'Орун жок',
+    placesOne: 'орун',
+    placesFew: 'орун',
+    placesMany: 'орун',
+    rating: 'Рейтинг',
+    reviews: 'сын-пикир',
+  },
+};
+
+const getHeroRecommendationLocale = (language) => (
+  language === 'EN' ? 'en-US' : language === 'KG' ? 'ky-KG' : 'ru-RU'
+);
+
+const formatHeroTourPrice = (tour, language, labels) => {
+  if (!tour?.price) return labels.priceOnRequest;
+
+  const amount = new Intl.NumberFormat(getHeroRecommendationLocale(language), {
+    maximumFractionDigits: 0,
+  }).format(tour.price);
+  const currency = tour.currency === 'KGS' || !tour.currency ? 'сом' : tour.currency;
+  return `${tour.isPriceFrom ? `${labels.from} ` : ''}${amount} ${currency}`;
+};
+
+const formatHeroTourDuration = (tour, language) => {
+  if (tour?.duration) return tour.duration;
+  if (!tour?.durationDays) return '';
+
+  const days = Number(tour.durationDays);
+  if (language === 'EN') return `${days} ${days === 1 ? 'day' : 'days'}`;
+  if (language === 'KG') return `${days} күн`;
+
+  const modTen = days % 10;
+  const modHundred = days % 100;
+  const label = modTen === 1 && modHundred !== 11
+    ? 'день'
+    : modTen >= 2 && modTen <= 4 && (modHundred < 12 || modHundred > 14)
+      ? 'дня'
+      : 'дней';
+  return `${days} ${label}`;
+};
+
+const formatHeroTourAvailability = (tour, language, labels) => {
+  if (tour?.availablePlaces === null || tour?.availablePlaces === undefined) return labels.availabilityUnknown;
+  if (tour.availablePlaces <= 0) return labels.soldOut;
+
+  const places = Number(tour.availablePlaces);
+  if (language === 'EN') return `${places} ${places === 1 ? labels.placesOne : labels.placesMany} left`;
+  if (language === 'KG') return `${places} ${labels.placesMany} калды`;
+
+  const modTen = places % 10;
+  const modHundred = places % 100;
+  const label = modTen === 1 && modHundred !== 11
+    ? labels.placesOne
+    : modTen >= 2 && modTen <= 4 && (modHundred < 12 || modHundred > 14)
+      ? labels.placesFew
+      : labels.placesMany;
+  return `${places} ${label} осталось`;
+};
+
+const formatHomeTourDate = (dateValue, language) => {
+  const date = new Date(dateValue || '');
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat(getHeroRecommendationLocale(language), {
+    day: 'numeric',
+    month: 'short',
+  }).format(date);
 };
 
 const whyTravelPay = [
@@ -603,6 +774,8 @@ const HomePage = () => {
   const [activeHeroTourIndex, setActiveHeroTourIndex] = useState(0);
   const [isHeroTourPaused, setIsHeroTourPaused] = useState(false);
   const [isHeroTourSwitching, setIsHeroTourSwitching] = useState(false);
+  const [isDocumentHidden, setIsDocumentHidden] = useState(() => typeof document !== 'undefined' && document.hidden);
+  const [heroRecommendationsStatus, setHeroRecommendationsStatus] = useState('loading');
   const [regionsGeoJson, setRegionsGeoJson] = useState(null);
   const [shouldLoadMap, setShouldLoadMap] = useState(false);
   const [mapLoadState, setMapLoadState] = useState('idle');
@@ -623,6 +796,44 @@ const HomePage = () => {
   const mapStageRef = useRef(null);
   const heroTourSwitchTimeoutRef = useRef(null);
   const heroTourRevealTimeoutRef = useRef(null);
+  const heroToursAbortControllerRef = useRef(null);
+  const activeHeroTourIndexRef = useRef(0);
+
+  const loadHeroRecommendations = useCallback(async ({ force = false } = {}) => {
+    const cacheIsFresh = Array.isArray(homeTourRecommendationCache.tours)
+      && Date.now() - homeTourRecommendationCache.cachedAt < HOME_TOUR_RECOMMENDATION_CACHE_TTL;
+
+    if (!force && cacheIsFresh) {
+      const cachedTours = homeTourRecommendationCache.tours;
+      setActualGalleryTours(cachedTours);
+      setHeroRecommendationsStatus(cachedTours.length ? 'ready' : 'empty');
+      return;
+    }
+
+    heroToursAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    heroToursAbortControllerRef.current = controller;
+    setHeroRecommendationsStatus('loading');
+
+    try {
+      // The existing endpoint performs public visibility filtering server-side.
+      const response = await api.get('/tours', { signal: controller.signal });
+      if (controller.signal.aborted) return;
+
+      const tours = selectHomeTourRecommendations(response.data);
+      homeTourRecommendationCache = { tours, cachedAt: Date.now() };
+      setActualGalleryTours(tours);
+      setHeroRecommendationsStatus(tours.length ? 'ready' : 'empty');
+    } catch (error) {
+      if (controller.signal.aborted || error?.code === 'ERR_CANCELED') return;
+      setActualGalleryTours([]);
+      setHeroRecommendationsStatus('error');
+    } finally {
+      if (heroToursAbortControllerRef.current === controller) {
+        heroToursAbortControllerRef.current = null;
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleLanguageChange = (event) => {
@@ -658,6 +869,15 @@ const HomePage = () => {
 
     mediaQuery.addListener(syncReducedMotion);
     return () => mediaQuery.removeListener(syncReducedMotion);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const syncDocumentVisibility = () => setIsDocumentHidden(document.hidden);
+    syncDocumentVisibility();
+    document.addEventListener('visibilitychange', syncDocumentVisibility);
+    return () => document.removeEventListener('visibilitychange', syncDocumentVisibility);
   }, []);
 
   useEffect(() => {
@@ -761,68 +981,60 @@ const HomePage = () => {
   }, [shouldLoadMap]);
 
   useEffect(() => {
+    // Deferring one task avoids a duplicate request in React Strict Mode while
+    // still starting the recommendation request immediately after mount.
+    const requestId = window.setTimeout(() => {
+      void loadHeroRecommendations();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(requestId);
+      heroToursAbortControllerRef.current?.abort();
+    };
+  }, [loadHeroRecommendations]);
+
+  useEffect(() => {
+    const controller = new AbortController();
     let isMounted = true;
 
-    const loadActualTours = () => {
-      Promise.all([api.get('/tours'), api.get('/accommodations').catch(() => ({ data: [] }))])
-        .then(([response, staysResponse]) => {
-          if (!isMounted) {
-            return;
-          }
+    const loadMapStays = async () => {
+      try {
+        const staysResponse = await api.get('/accommodations', { signal: controller.signal });
+        if (!isMounted || controller.signal.aborted) return;
 
-          const source = Array.isArray(response.data) ? response.data : [];
-          const normalizedTours = source
-            .filter(isPublicHomeTour)
-            .map(normalizeHomeGalleryTour)
-            .sort((left, right) => {
-              const leftTime = left.startDate ? new Date(left.startDate).getTime() : Infinity;
-              const rightTime = right.startDate ? new Date(right.startDate).getTime() : Infinity;
-              const leftDate = Number.isFinite(leftTime) ? leftTime : Infinity;
-              const rightDate = Number.isFinite(rightTime) ? rightTime : Infinity;
-
-              if (leftDate !== rightDate) {
-                return leftDate - rightDate;
-              }
-
-              return Number(right.rating || 0) - Number(left.rating || 0);
-            })
-            .slice(0, 6);
-
-          setActualGalleryTours(normalizedTours);
-          setMapStays((Array.isArray(staysResponse.data) ? staysResponse.data : [])
-            .filter((stay) => stay?.isActive !== false)
-            .map((stay) => ({
-              ...stay,
-              id: stay.id,
-              title: stay.title || stay.name || 'Домик',
-              image: stay.image || stay.images?.[0] || TOUR_IMAGE_FALLBACK,
-              location: stay.location || stay.city || 'Кыргызстан',
-              kind: 'stay',
-            })));
-        })
-        .catch(() => {
-          if (isMounted) {
-            setActualGalleryTours([]);
-            setMapStays([]);
-          }
-        });
+        setMapStays((Array.isArray(staysResponse.data) ? staysResponse.data : [])
+          .filter((stay) => stay?.isActive !== false)
+          .map((stay) => ({
+            ...stay,
+            id: stay.id,
+            title: stay.title || stay.name || 'Домик',
+            image: stay.image || stay.images?.[0] || TOUR_IMAGE_FALLBACK,
+            location: stay.location || stay.city || 'Кыргызстан',
+            kind: 'stay',
+          })));
+      } catch (error) {
+        if (!controller.signal.aborted && isMounted) setMapStays([]);
+      }
     };
 
     const idleId = typeof window !== 'undefined' && 'requestIdleCallback' in window
-      ? window.requestIdleCallback(loadActualTours, { timeout: 1800 })
-      : setTimeout(loadActualTours, 700);
+      ? window.requestIdleCallback(loadMapStays, { timeout: 1800 })
+      : window.setTimeout(loadMapStays, 700);
 
     return () => {
       isMounted = false;
+      controller.abort();
       if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
         window.cancelIdleCallback(idleId);
       } else {
-        clearTimeout(idleId);
+        window.clearTimeout(idleId);
       }
     };
   }, []);
 
   const clearHeroTourTimers = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
     if (heroTourSwitchTimeoutRef.current) {
       window.clearTimeout(heroTourSwitchTimeoutRef.current);
       heroTourSwitchTimeoutRef.current = null;
@@ -834,35 +1046,64 @@ const HomePage = () => {
     }
   }, []);
 
-  const switchHeroTour = useCallback((nextIndex) => {
-    const normalizedNextIndex = (nextIndex + heroPopularTours.length) % heroPopularTours.length;
+  useEffect(() => {
+    activeHeroTourIndexRef.current = activeHeroTourIndex;
+  }, [activeHeroTourIndex]);
 
-    if (normalizedNextIndex === activeHeroTourIndex || typeof window === 'undefined') {
+  useEffect(() => {
+    const maxIndex = Math.max(actualGalleryTours.length - 1, 0);
+    const nextIndex = Math.min(activeHeroTourIndexRef.current, maxIndex);
+    if (nextIndex !== activeHeroTourIndexRef.current) {
+      activeHeroTourIndexRef.current = nextIndex;
+      setActiveHeroTourIndex(nextIndex);
+    }
+    if (actualGalleryTours.length < 2) setIsHeroTourSwitching(false);
+  }, [actualGalleryTours.length]);
+
+  const switchHeroTour = useCallback((nextIndex) => {
+    const toursCount = actualGalleryTours.length;
+    if (toursCount < 2 || typeof window === 'undefined') return;
+
+    const normalizedNextIndex = (nextIndex + toursCount) % toursCount;
+
+    if (normalizedNextIndex === activeHeroTourIndexRef.current) {
       return;
     }
 
     clearHeroTourTimers();
-    setIsHeroTourSwitching(true);
+    if (prefersReducedMotion) {
+      activeHeroTourIndexRef.current = normalizedNextIndex;
+      setActiveHeroTourIndex(normalizedNextIndex);
+      return;
+    }
 
+    setIsHeroTourSwitching(true);
     heroTourSwitchTimeoutRef.current = window.setTimeout(() => {
+      activeHeroTourIndexRef.current = normalizedNextIndex;
       setActiveHeroTourIndex(normalizedNextIndex);
       heroTourRevealTimeoutRef.current = window.setTimeout(() => {
         setIsHeroTourSwitching(false);
       }, 40);
     }, 450);
-  }, [activeHeroTourIndex, clearHeroTourTimers]);
+  }, [actualGalleryTours.length, clearHeroTourTimers, prefersReducedMotion]);
 
   useEffect(() => {
-    if (isHeroTourPaused) {
+    if (
+      heroRecommendationsStatus !== 'ready'
+      || actualGalleryTours.length < 2
+      || isHeroTourPaused
+      || isDocumentHidden
+      || prefersReducedMotion
+    ) {
       return undefined;
     }
 
     const intervalId = window.setInterval(() => {
-      switchHeroTour(activeHeroTourIndex + 1);
+      switchHeroTour(activeHeroTourIndexRef.current + 1);
     }, 6000);
 
     return () => window.clearInterval(intervalId);
-  }, [activeHeroTourIndex, isHeroTourPaused, switchHeroTour]);
+  }, [actualGalleryTours.length, heroRecommendationsStatus, isDocumentHidden, isHeroTourPaused, prefersReducedMotion, switchHeroTour]);
 
   useEffect(() => clearHeroTourTimers, [clearHeroTourTimers]);
 
@@ -870,8 +1111,8 @@ const HomePage = () => {
   const mapSection = premiumMapSectionCopy[language] || premiumMapSectionCopy.RU;
   const heroExperience = heroExperienceCopy[language] || heroExperienceCopy.EN;
   const heroTrust = heroTrustCopy[language] || heroTrustCopy.EN;
-  const activeHeroTour = heroPopularTours[activeHeroTourIndex] || heroPopularTours[0];
-  const getHeroTourText = (value) => (typeof value === 'string' ? value : value?.[language] || value?.EN || '');
+  const heroRecommendationLabels = heroRecommendationCopy[language] || heroRecommendationCopy.RU;
+  const activeHeroTour = actualGalleryTours[activeHeroTourIndex] || null;
   const isValidRegionsGeoJson = useMemo(
     () =>
       regionsGeoJson?.type === 'FeatureCollection' &&
@@ -938,7 +1179,7 @@ const HomePage = () => {
   }, [projectedDestinations]);
   const projectedTourMarkers = useMemo(() => {
     if (!projectedDestinations.length) return [];
-    const tours = actualGalleryTours.length ? actualGalleryTours.map((tour) => ({ ...tour, kind: 'tour' })) : fallbackGalleryCards.map((tour) => ({ ...tour, kind: 'tour' }));
+    const tours = actualGalleryTours.map((tour) => ({ ...tour, kind: 'tour' }));
     const source = [...tours, ...mapStays];
     const groups = new Map();
 
@@ -999,10 +1240,7 @@ const HomePage = () => {
   const showcaseCards = [];
   const kyrgyzstanRoutePath = 'M92 112 C116 120 132 118 154 118 C174 118 188 112 208 108 C228 106 238 146 246 188 C224 202 190 212 168 222 C146 214 142 198 136 184 C124 164 104 130 92 112 C82 146 80 190 78 232 C110 230 140 226 168 222 C214 206 286 160 350 126';
   void kyrgyzstanRoutePath;
-  const galleryCards = useMemo(
-    () => (actualGalleryTours.length ? actualGalleryTours : fallbackGalleryCards),
-    [actualGalleryTours],
-  );
+  const galleryCards = actualGalleryTours;
 
   const handlePartnerInput = (key) => (event) => {
     setPartnerForm((prev) => ({ ...prev, [key]: event.target.value }));
@@ -1019,7 +1257,7 @@ const HomePage = () => {
       return;
     }
     if (tour?.isActualTour && tour.id) {
-      navigate(`/tours/${tour.id}`, { state: { tour, tours: actualGalleryTours } });
+      navigate(`/tours/${tour.slug || tour.id}`, { state: { tour, tours: actualGalleryTours } });
       return;
     }
 
@@ -1168,44 +1406,111 @@ const HomePage = () => {
             </motion.div>
             <aside
               className="home-hero-featured-tour hero-reveal hero-reveal--tour"
-              aria-label={getHeroTourText(activeHeroTour.title)}
+              aria-label={activeHeroTour ? `${heroTrust.tourKicker}: ${activeHeroTour.title}` : heroTrust.tourKicker}
               onMouseEnter={() => setIsHeroTourPaused(true)}
               onMouseLeave={() => setIsHeroTourPaused(false)}
               onFocus={() => setIsHeroTourPaused(true)}
               onBlur={() => setIsHeroTourPaused(false)}
             >
               <div className="home-hero-featured-tour__kicker">{heroTrust.tourKicker}</div>
-              <div className="home-hero-featured-tour__float">
-                <div className={`home-hero-featured-tour__surface${isHeroTourSwitching ? ' is-switching' : ''}`}>
-                  <span className="home-hero-featured-tour__icon" aria-hidden="true"><CompassOutlined /></span>
-                  <div className="home-hero-featured-tour__content">
-                    <div className="home-hero-featured-tour__indicators" aria-label="Popular tours">
-                      {heroPopularTours.map((tour, index) => (
-                        <button
-                          type="button"
-                          key={tour.key}
-                          className={`home-hero-featured-tour__indicator${index === activeHeroTourIndex ? ' is-active' : ''}`}
-                          aria-label={getHeroTourText(tour.title)}
-                          aria-current={index === activeHeroTourIndex ? 'true' : undefined}
-                          onClick={() => switchHeroTour(index)}
-                        />
-                      ))}
+              <div className="home-hero-featured-tour__float" aria-live="polite" aria-busy={heroRecommendationsStatus === 'loading'}>
+                {heroRecommendationsStatus === 'loading' && (
+                  <div className="home-hero-featured-tour__surface home-hero-featured-tour__state">
+                    <span className="home-hero-featured-tour__skeleton" aria-hidden="true" />
+                    <div className="home-hero-featured-tour__content">
+                      <span className="home-hero-featured-tour__skeleton home-hero-featured-tour__skeleton--line" aria-hidden="true" />
+                      <span className="home-hero-featured-tour__skeleton home-hero-featured-tour__skeleton--line is-short" aria-hidden="true" />
+                      <span className="home-hero-featured-tour__loading-label">{heroRecommendationLabels.loading}</span>
                     </div>
-                    <strong>{getHeroTourText(activeHeroTour.title)}</strong>
-                    <div className="home-hero-featured-tour__rating" aria-label={`Rating ${activeHeroTour.rating}`}>
-                      {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} />)}
-                      <span>{activeHeroTour.rating}</span>
-                    </div>
-                    <div className="home-hero-featured-tour__meta">
-                      <span><ClockCircleOutlined /> {getHeroTourText(activeHeroTour.duration)}</span>
-                      <span><TeamOutlined /> {getHeroTourText(activeHeroTour.seats)}</span>
-                    </div>
-                    <div className="home-hero-featured-tour__price">{getHeroTourText(activeHeroTour.price)}</div>
-                    <Button type="text" className="home-hero-featured-tour__button" onClick={() => navigate(activeHeroTour.route)}>
-                      {heroExperience.details} <ArrowRightOutlined />
-                    </Button>
                   </div>
-                </div>
+                )}
+
+                {heroRecommendationsStatus === 'error' && (
+                  <div className="home-hero-featured-tour__surface home-hero-featured-tour__state" role="status">
+                    <span className="home-hero-featured-tour__icon" aria-hidden="true"><CompassOutlined /></span>
+                    <div className="home-hero-featured-tour__content">
+                      <strong>{heroRecommendationLabels.error}</strong>
+                      <Button
+                        type="text"
+                        className="home-hero-featured-tour__button"
+                        onClick={() => loadHeroRecommendations({ force: true })}
+                        aria-label={heroRecommendationLabels.retry}
+                      >
+                        {heroRecommendationLabels.retry} <ReloadOutlined />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {heroRecommendationsStatus === 'empty' && (
+                  <div className="home-hero-featured-tour__surface home-hero-featured-tour__state" role="status">
+                    <span className="home-hero-featured-tour__icon" aria-hidden="true"><CompassOutlined /></span>
+                    <div className="home-hero-featured-tour__content">
+                      <strong>{heroRecommendationLabels.empty}</strong>
+                      <Button type="text" className="home-hero-featured-tour__button" onClick={() => navigate('/tours')}>
+                        {heroExperience.details} <ArrowRightOutlined />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {heroRecommendationsStatus === 'ready' && activeHeroTour && (
+                  <div className={`home-hero-featured-tour__surface${isHeroTourSwitching ? ' is-switching' : ''}`}>
+                    <AppImage
+                      src={activeHeroTour.image || TOUR_IMAGE_FALLBACK}
+                      alt={activeHeroTour.title}
+                      priority
+                      aspectRatio="1 / 1"
+                      className={`home-hero-featured-tour__media${activeHeroTour.hasImage ? '' : ' home-hero-featured-tour__fallback'}`}
+                      imgClassName="home-hero-featured-tour__image"
+                    />
+                    <div className="home-hero-featured-tour__content">
+                      {actualGalleryTours.length > 1 && (
+                        <div className="home-hero-featured-tour__indicators" aria-label="Рекомендованные туры">
+                          {actualGalleryTours.map((tour, index) => (
+                            <button
+                              type="button"
+                              key={tour.key}
+                              className={`home-hero-featured-tour__indicator${index === activeHeroTourIndex ? ' is-active' : ''}`}
+                              aria-label={tour.title}
+                              aria-current={index === activeHeroTourIndex ? 'true' : undefined}
+                              onClick={() => switchHeroTour(index)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <strong>{activeHeroTour.title}</strong>
+                      {(activeHeroTour.companyName || activeHeroTour.location) && (
+                        <span className="home-hero-featured-tour__company">{activeHeroTour.companyName || activeHeroTour.location}</span>
+                      )}
+                      {activeHeroTour.rating !== null && activeHeroTour.rating !== undefined && activeHeroTour.rating > 0 && (
+                        <div
+                          className="home-hero-featured-tour__rating"
+                          aria-label={`${heroRecommendationLabels.rating}: ${activeHeroTour.rating}${activeHeroTour.reviewsCount ? `, ${activeHeroTour.reviewsCount} ${heroRecommendationLabels.reviews}` : ''}`}
+                        >
+                          <StarFilled aria-hidden="true" />
+                          <span>{activeHeroTour.rating}</span>
+                          {activeHeroTour.reviewsCount ? <small>({activeHeroTour.reviewsCount})</small> : null}
+                        </div>
+                      )}
+                      {(formatHeroTourDuration(activeHeroTour, language) || activeHeroTour.availablePlaces !== null) && (
+                        <div className="home-hero-featured-tour__meta">
+                          {formatHeroTourDuration(activeHeroTour, language) && <span><ClockCircleOutlined /> {formatHeroTourDuration(activeHeroTour, language)}</span>}
+                          <span><TeamOutlined /> {formatHeroTourAvailability(activeHeroTour, language, heroRecommendationLabels)}</span>
+                        </div>
+                      )}
+                      <div className="home-hero-featured-tour__price">{formatHeroTourPrice(activeHeroTour, language, heroRecommendationLabels)}</div>
+                      <Button
+                        type="text"
+                        className="home-hero-featured-tour__button"
+                        onClick={() => navigate(`/tours/${activeHeroTour.slug || activeHeroTour.id}`, { state: { tour: activeHeroTour, tours: actualGalleryTours } })}
+                        aria-label={`${heroExperience.details}: ${activeHeroTour.title}`}
+                      >
+                        {heroExperience.details} <ArrowRightOutlined />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </aside>
           </div>
@@ -1296,15 +1601,44 @@ const HomePage = () => {
           </motion.div>
 
           <div className="home-gallery-grid">
+            {heroRecommendationsStatus === 'loading' && Array.from({ length: 3 }).map((_, index) => (
+              <Card key={`gallery-skeleton-${index}`} className="home-gallery-tour-card" style={styles.galleryCard} styles={{ body: { padding: 18 } }} aria-hidden="true">
+                <Skeleton.Image active style={{ width: '100%', height: 220 }} />
+                <Skeleton active title={{ width: '62%' }} paragraph={{ rows: 2 }} />
+              </Card>
+            ))}
+
+            {heroRecommendationsStatus === 'error' && (
+              <Card className="home-gallery-tour-card home-gallery-empty-card" style={styles.galleryCard}>
+                <Empty description={heroRecommendationLabels.error}>
+                  <Button type="primary" onClick={() => loadHeroRecommendations({ force: true })}>
+                    {heroRecommendationLabels.retry}
+                  </Button>
+                </Empty>
+              </Card>
+            )}
+
+            {heroRecommendationsStatus === 'empty' && (
+              <Card className="home-gallery-tour-card home-gallery-empty-card" style={styles.galleryCard}>
+                <Empty description={heroRecommendationLabels.empty}>
+                  <Button type="primary" onClick={() => navigate('/tours')}>
+                    {t.primary}
+                  </Button>
+                </Empty>
+              </Card>
+            )}
+
             {galleryCards.map((spot, index) => (
               <motion.article key={`${spot.key}-gallery`} {...motionCard} transition={{ delay: index * 0.04 }} className="home-gallery-card">
                 <Card hoverable className="home-gallery-tour-card" style={styles.galleryCard} styles={{ body: { padding: 0 } }} onClick={() => handleGalleryTourOpen(spot)}>
                   <div style={styles.galleryImageWrap}>
-                    <AppImage src={spot.image} alt={spot.title} aspectRatio="auto" style={{ height: '100%' }} imgStyle={styles.galleryImage} />
+                    <AppImage src={spot.image || TOUR_IMAGE_FALLBACK} alt={spot.title} aspectRatio="auto" style={{ height: '100%' }} imgStyle={styles.galleryImage} />
                     <div style={styles.galleryShade} />
                     <div style={styles.galleryMetaTop}>
-                      <Tag color={spot.isActualTour ? 'green' : 'gold'}>{spot.isActualTour ? 'Действующий' : spot.rating}</Tag>
-                      <Tag color="processing">{spot.startLabel || spot.duration}</Tag>
+                      <Tag color="green">Действующий</Tag>
+                      {(formatHomeTourDate(spot.nextDepartureAt, language) || formatHeroTourDuration(spot, language)) && (
+                        <Tag color="processing">{formatHomeTourDate(spot.nextDepartureAt, language) || formatHeroTourDuration(spot, language)}</Tag>
+                      )}
                     </div>
                     <div style={styles.galleryMetaBottom}>
                       <Title level={4} style={styles.galleryTitle}>{spot.title}</Title>
@@ -1312,12 +1646,14 @@ const HomePage = () => {
                     </div>
                   </div>
                   <div style={styles.galleryBody}>
-                    <Paragraph ellipsis={{ rows: 2 }} style={styles.galleryText}>{spot.description}</Paragraph>
+                    {spot.description && <Paragraph ellipsis={{ rows: 2 }} style={styles.galleryText}>{spot.description}</Paragraph>}
                     <div style={styles.galleryFooter}>
-                      <span style={styles.galleryPrice}>от {Number(spot.price).toLocaleString('ru-RU')} сом</span>
-                      <Space size={6}>
-                        {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} style={{ color: star <= Math.round(spot.rating) ? BRAND_GOLD : 'rgba(22,50,79,0.18)' }} />)}
-                      </Space>
+                      <span style={styles.galleryPrice}>{formatHeroTourPrice(spot, language, heroRecommendationLabels)}</span>
+                      {spot.rating !== null && spot.rating !== undefined && spot.rating > 0 && (
+                        <Space size={6} aria-label={`${heroRecommendationLabels.rating}: ${spot.rating}`}>
+                          {[1, 2, 3, 4, 5].map((star) => <StarFilled key={star} style={{ color: star <= Math.round(spot.rating) ? BRAND_GOLD : 'rgba(22,50,79,0.18)' }} />)}
+                        </Space>
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -1793,7 +2129,7 @@ const styles = {
     alignItems: 'center',
     padding: '170px 24px 118px',
     overflow: 'hidden',
-    marginTop: -94,
+    marginTop: 0,
   },
   heroOverlay: {
     position: 'absolute',
