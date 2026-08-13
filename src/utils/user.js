@@ -4,7 +4,7 @@ import { readCurrentUser, saveCurrentUser } from './currentUser';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ADMIN_ROLES = new Set(['super_admin', 'company_admin', 'company_manager']);
-const BUSINESS_ROLES = new Set(['business', 'company_admin', 'company_manager', 'super_admin']);
+const BUSINESS_ROLES = new Set(['business', 'company_admin', 'company_manager', 'owner', 'admin', 'manager', 'guide', 'driver', 'accountant', 'content_manager', 'super_admin']);
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
 const normalizeRole = (value) => {

@@ -34,7 +34,14 @@ export const transactionTypeMeta = {
 
 export const paymentMethodMeta = {
   qr: { label: 'Оплата по QR', color: 'blue' },
+  cash: { label: 'Наличные', color: 'green' },
+  card: { label: 'Карта', color: 'purple' },
+  transfer: { label: 'Перевод', color: 'cyan' },
+  wallet: { label: 'TravelPay balance', color: 'gold' },
+  savings: { label: 'TravelPay balance', color: 'gold' },
   manager: { label: 'Через менеджера', color: 'gold' },
+  manual: { label: 'Manager payment', color: 'volcano' },
+  mixed: { label: 'Смешанная оплата', color: 'magenta' },
 };
 
 export const receiptToDataUrl = (file) => new Promise((resolve, reject) => {

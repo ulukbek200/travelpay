@@ -49,6 +49,7 @@ import {
   EyeOutlined,
   FilePdfOutlined,
   FilterOutlined,
+  HistoryOutlined,
   HomeOutlined,
   LinkOutlined,
   LeftOutlined,
@@ -58,6 +59,7 @@ import {
   PlusOutlined,
   ReloadOutlined,
   RightOutlined,
+  SearchOutlined,
   SettingOutlined,
   SunOutlined,
   TeamOutlined,
@@ -66,12 +68,33 @@ import {
 import ruRU from 'antd/locale/ru_RU';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart as RechartsBarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
 import AppImage from '../components/AppImage';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminTopbar from '../components/admin/AdminTopbar';
+import BusinessManagersPage from './BusinessManagersPage';
+import BusinessPaymentSettingsPage from './BusinessPaymentSettingsPage';
+import BusinessPaymentsPage from './BusinessPaymentsPage';
 import { clearCurrentUser, readCurrentUser, saveCurrentUser } from '../utils/currentUser';
+import { BUSINESS_PERMISSION_KEYS, BUSINESS_TAB_PERMISSIONS, canBusiness, getBusinessHomePathForRole } from '../utils/businessPermissions';
 import { normalizeUser } from '../utils/user';
 
 const { Header, Sider, Content } = Layout;
@@ -97,10 +120,117 @@ const BOOKING_MONTHS = [
 void BOOKING_MONTHS;
 const STAY_BOOKING_TIME_OPTIONS = ['14:00', '16:00', '18:00'];
 const STAY_BOOKING_SLOT_DURATION_MINUTES = 120;
+const QUICK_BOOKING_TYPE_OPTIONS = [
+  { label: 'Tour', value: 'tours', icon: <CompassOutlined /> },
+  { label: 'Cottage', value: 'cottages', icon: <HomeOutlined /> },
+  { label: 'House', value: 'houses', icon: <HomeOutlined /> },
+  { label: 'Activity', value: 'activities', icon: <CompassOutlined /> },
+];
+const QUICK_BOOKING_SOURCES = [
+  { value: 'travelpay_marketplace', label: 'TravelPay Marketplace' },
+  { value: 'travelpay', label: 'TravelPay Marketplace' },
+  { value: 'manual', label: 'Manual booking' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'walk_in', label: 'Walk-in / Office' },
+  { value: 'website', label: 'Website' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'partner', label: 'Partner' },
+  { value: 'other', label: 'Other' },
+];
+const QUICK_BOOKING_STATUS_OPTIONS = [
+  { value: 'NEW', label: 'Новая' },
+  { value: 'PENDING', label: 'Ожидает' },
+  { value: 'CONFIRMED', label: 'Подтверждено' },
+  { value: 'AWAITING_PAYMENT', label: 'Ждёт оплату' },
+  { value: 'PARTIALLY_PAID', label: 'Частично оплачено' },
+  { value: 'PAID', label: 'Оплачено' },
+];
+const CASHBOX_PAYMENT_METHOD_OPTIONS = [
+  { value: 'qr', label: 'QR' },
+  { value: 'cash', label: 'Наличные' },
+  { value: 'card', label: 'Карта' },
+  { value: 'transfer', label: 'Перевод' },
+  { value: 'wallet', label: 'TravelPay balance' },
+  { value: 'manager', label: 'Manager payment' },
+  { value: 'mixed', label: 'Смешанная оплата' },
+];
+const DEFAULT_NOTIFICATION_RULES = [
+  { key: 'booking_confirmed', title: 'После бронирования', trigger: 'after_booking', timing: 'Immediately', channel: 'Push', enabled: true, template: 'Ваше бронирование подтверждено' },
+  { key: 'prepayment_received', title: 'После предоплаты', trigger: 'after_prepayment', timing: 'Immediately', channel: 'Push', enabled: true, template: 'Мы получили предоплату {amount} сом' },
+  { key: 'tour_day_before', title: 'Reminder before tour', trigger: 'before_tour', timing: '24 hours', channel: 'WhatsApp', enabled: true, template: 'Напоминаем, завтра ваша поездка {serviceName}' },
+  { key: 'checkin_today', title: 'Перед check-in', trigger: 'before_checkin', timing: '08:00 same day', channel: 'Push', enabled: true, template: 'Сегодня с {checkInTime} доступен заезд' },
+  { key: 'after_trip_review', title: 'После поездки', trigger: 'after_trip', timing: '24 hours after', channel: 'Email', enabled: true, template: 'Спасибо за поездку. Оставьте отзыв' },
+  { key: 'payment_reminder', title: 'Payment reminder', trigger: 'payment_due', timing: '12 hours before', channel: 'Push', enabled: true, template: 'Напоминаем об остатке оплаты по бронированию {serviceName}' },
+];
+const CLIENT_TAG_OPTIONS = [
+  'VIP',
+  'Повторный клиент',
+  'Семья',
+  'Corporate',
+  'Иностранный турист',
+  'Проблемная оплата',
+  'Постоянный',
+];
+const PROPERTY_BLOCK_REASONS = [
+  { value: 'repair', label: 'Ремонт' },
+  { value: 'personal', label: 'Личное использование' },
+  { value: 'unavailable', label: 'Недоступно' },
+  { value: 'other', label: 'Другая причина' },
+];
+const PROPERTY_PRICING_RULE_TYPES = [
+  { value: 'base', label: 'Base price' },
+  { value: 'weekend', label: 'Weekend price' },
+  { value: 'season', label: 'Season price' },
+  { value: 'specific_date', label: 'Specific date price' },
+  { value: 'discount', label: 'Discount' },
+  { value: 'minimum_stay', label: 'Minimum stay' },
+];
+const PREPAYMENT_MODE_OPTIONS = [
+  { value: 'disabled', label: 'Предоплата выключена' },
+  { value: 'fixed', label: 'Фиксированная сумма' },
+  { value: 'percent', label: 'Процент' },
+];
+const TOUR_DEPARTURE_STATUS_OPTIONS = [
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'sold_out', label: 'SOLD OUT' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
+const TOUR_DEPARTURE_STATUS_META = {
+  scheduled: { label: 'Open', color: 'blue' },
+  confirmed: { label: 'Confirmed', color: 'green' },
+  sold_out: { label: 'SOLD OUT', color: 'red' },
+  paused: { label: 'Paused', color: 'default' },
+  cancelled: { label: 'Cancelled', color: 'red' },
+};
+const TOUR_OPERATION_CHECKLIST_ITEMS = [
+  { key: 'guideAssigned', label: 'Гид назначен' },
+  { key: 'driverAssigned', label: 'Водитель назначен' },
+  { key: 'vehicleAssigned', label: 'Транспорт назначен' },
+  { key: 'paymentsChecked', label: 'Все оплаты проверены' },
+  { key: 'participantsReady', label: 'Список участников готов' },
+  { key: 'remindersSent', label: 'Клиентам отправлено напоминание' },
+  { key: 'routeConfirmed', label: 'Маршрут подтвержден' },
+];
+const createEmptyTourOperationsChecklist = () => TOUR_OPERATION_CHECKLIST_ITEMS.reduce((acc, item) => ({
+  ...acc,
+  [item.key]: false,
+}), {});
+const TASK_STATUS_META = {
+  new: { label: 'Новая', color: 'blue' },
+  in_progress: { label: 'В работе', color: 'gold' },
+  done: { label: 'Готово', color: 'green' },
+  overdue: { label: 'Просрочено', color: 'red' },
+};
+const TASK_STATUS_COLUMNS = Object.entries(TASK_STATUS_META).map(([key, meta]) => ({ key, ...meta }));
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('ru-RU')} сом`;
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString('ru-RU') : '—');
 const formatDateTime = (value) => (value ? new Date(value).toLocaleString('ru-RU') : '—');
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
 const getDaysRemaining = (value) => {
   if (!value) return null;
   const diff = new Date(value).getTime() - Date.now();
@@ -144,6 +274,9 @@ const addMinutesToClock = (value, minutes) => {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
 
+const isQuickBookingStayKind = (value) => ['stays', 'cottages', 'houses'].includes(value);
+const isQuickBookingTourKind = (value) => ['tours', 'activities'].includes(value);
+
 const STATUS_META = {
   active: { label: 'Активный', color: 'blue' },
   published: { label: 'Published', color: 'green' },
@@ -168,13 +301,39 @@ const SUBSCRIPTION_STATUS_META = {
 };
 
 const BOOKING_STATUS_META = {
-  paid: { label: 'Оплачено', color: 'green', badge: 'success' },
-  confirmed: { label: 'Подтверждено', color: 'green', badge: 'success' },
-  payment_review: { label: 'Чек на проверке', color: 'blue', badge: 'processing' },
-  pending: { label: 'Ожидает оплаты', color: 'orange', badge: 'warning' },
-  pending_payment: { label: 'Ожидает предоплату', color: 'orange', badge: 'warning' },
-  cancelled: { label: 'Отменено', color: 'red', badge: 'error' },
-  rejected: { label: 'Отклонено', color: 'red', badge: 'error' },
+  NEW: { label: 'Новая', color: 'blue', badge: 'processing', dot: '#3d62e8' },
+  PENDING: { label: 'Ожидает', color: 'gold', badge: 'warning', dot: '#f6b44b' },
+  CONFIRMED: { label: 'Подтверждено', color: 'green', badge: 'success', dot: '#1fa77a' },
+  AWAITING_PAYMENT: { label: 'Ожидает оплату', color: 'orange', badge: 'warning', dot: '#d98a16' },
+  PARTIALLY_PAID: { label: 'Частично оплачено', color: 'cyan', badge: 'processing', dot: '#0891b2' },
+  PAID: { label: 'Оплачено', color: 'green', badge: 'success', dot: '#1fa77a' },
+  IN_PROGRESS: { label: 'В процессе', color: 'blue', badge: 'processing', dot: '#3d62e8' },
+  COMPLETED: { label: 'Завершено', color: 'default', badge: 'default', dot: '#71809a' },
+  CANCELLED: { label: 'Отменено', color: 'red', badge: 'error', dot: '#ef5b68' },
+  NO_SHOW: { label: 'Не приехал', color: 'volcano', badge: 'error', dot: '#e8590c' },
+  RESCHEDULED: { label: 'Перенесено', color: 'purple', badge: 'processing', dot: '#7c5cff' },
+  CHECKED_IN: { label: 'Заселён', color: 'green', badge: 'success', dot: '#1fa77a' },
+  CHECKED_OUT: { label: 'Выехал', color: 'default', badge: 'default', dot: '#71809a' },
+  paid: { label: 'Оплачено', color: 'green', badge: 'success', dot: '#1fa77a' },
+  confirmed: { label: 'Подтверждено', color: 'green', badge: 'success', dot: '#1fa77a' },
+  booking_confirmed: { label: 'Подтверждено', color: 'green', badge: 'success', dot: '#1fa77a' },
+  payment_review: { label: 'Чек на проверке', color: 'blue', badge: 'processing', dot: '#3d62e8' },
+  pending: { label: 'Ожидает', color: 'gold', badge: 'warning', dot: '#f6b44b' },
+  pending_payment: { label: 'Ожидает оплату', color: 'orange', badge: 'warning', dot: '#d98a16' },
+  funds_reserved: { label: 'Средства зарезервированы', color: 'cyan', badge: 'processing', dot: '#0891b2' },
+  completed: { label: 'Завершено', color: 'default', badge: 'default', dot: '#71809a' },
+  cancelled: { label: 'Отменено', color: 'red', badge: 'error', dot: '#ef5b68' },
+  rejected: { label: 'Отклонено', color: 'red', badge: 'error', dot: '#ef5b68' },
+};
+
+const PAYMENT_STATUS_META = {
+  UNPAID: { label: 'Не оплачено', color: 'orange', dot: '#d98a16' },
+  PARTIALLY_PAID: { label: 'Частично оплачено', color: 'cyan', dot: '#0891b2' },
+  PAID: { label: 'Оплачено', color: 'green', dot: '#1fa77a' },
+  REFUNDED: { label: 'Возвращено', color: 'default', dot: '#71809a' },
+  PARTIALLY_REFUNDED: { label: 'Частичный возврат', color: 'purple', dot: '#7c5cff' },
+  REVIEW: { label: 'Проверка', color: 'blue', dot: '#3d62e8' },
+  RESERVED: { label: 'Зарезервировано', color: 'cyan', dot: '#0891b2' },
 };
 
 const statusOptions = Object.entries(STATUS_META).map(([value, meta]) => ({
@@ -233,6 +392,16 @@ const createAccommodationDraft = () => ({
   description: '',
   capacity: 2,
   pricePerNight: 0,
+  propertyName: '',
+  propertyId: '',
+  defaultCheckInTime: '14:00',
+  defaultCheckOutTime: '12:00',
+  weekendPrice: 0,
+  prepaymentMode: 'percent',
+  prepaymentPercent: 30,
+  prepaymentFixedAmount: 0,
+  blockedDates: [],
+  pricingRules: [],
   availableCount: 1,
   amenities: [],
   extraBedAvailable: false,
@@ -262,6 +431,31 @@ const normalizeAccommodation = (item = {}, index = 0) => ({
   location: item.location || '',
   capacity: Number(item.capacity || 0),
   pricePerNight: Number(item.pricePerNight || 0),
+  propertyName: item.propertyName || item.resortName || item.companyName || '',
+  propertyId: item.propertyId || item.resortId || '',
+  defaultCheckInTime: item.defaultCheckInTime || item.checkInTime || '14:00',
+  defaultCheckOutTime: item.defaultCheckOutTime || item.checkOutTime || '12:00',
+  weekendPrice: Number(item.weekendPrice || 0),
+  prepaymentMode: item.prepaymentMode || (item.prepaymentRequired === false ? 'disabled' : Number(item.prepaymentFixedAmount || 0) > 0 ? 'fixed' : 'percent'),
+  prepaymentPercent: Number(item.prepaymentPercent || 30),
+  prepaymentFixedAmount: Number(item.prepaymentFixedAmount || item.prepaymentAmount || 0),
+  blockedDates: Array.isArray(item.blockedDates) ? item.blockedDates.map((block, blockIndex) => ({
+    id: block.id || `block-${blockIndex + 1}`,
+    startDate: block.startDate || block.date || '',
+    endDate: block.endDate || block.startDate || block.date || '',
+    reason: block.reason || 'unavailable',
+    comment: block.comment || block.note || '',
+  })) : [],
+  pricingRules: Array.isArray(item.pricingRules) ? item.pricingRules.map((rule, ruleIndex) => ({
+    id: rule.id || `pricing-${ruleIndex + 1}`,
+    type: rule.type || 'specific_date',
+    startDate: rule.startDate || rule.date || '',
+    endDate: rule.endDate || rule.startDate || rule.date || '',
+    price: Number(rule.price || 0),
+    discount: Number(rule.discount || 0),
+    minimumStay: Number(rule.minimumStay || 0),
+    label: rule.label || '',
+  })) : [],
   totalCount: Number(item.totalCount || item.availableCount || 0),
   availableCount: Number(item.availableCount || 0),
   amenities: Array.isArray(item.amenities) ? item.amenities : [],
@@ -304,6 +498,8 @@ const normalizeStayBooking = (item = {}, index = 0) => ({
   clientName: item.clientName || '',
   clientEmail: item.clientEmail || '',
   clientPhone: item.clientPhone || '',
+  assignedTo: item.assignedTo || item.manager || item.companyName || 'TravelPay Business',
+  bookingSource: item.bookingSource || item.source || '',
   tourTitle: item.stayTitle || item.title || 'Бронь домика',
   stayTitle: item.stayTitle || item.title || '',
   location: item.location || '',
@@ -333,15 +529,23 @@ const normalizeStayBooking = (item = {}, index = 0) => ({
     }))
     : [],
   status: item.status || 'pending',
+  bookingStatus: item.bookingStatus || getCanonicalBookingStatus(item),
   paymentStatus: item.paymentStatus || (item.status === 'confirmed' ? 'confirmed' : item.status || 'pending'),
+  paymentStatusCode: item.paymentStatusCode || getCanonicalPaymentStatus(item),
+  paymentMethod: item.paymentMethod || '',
+  paymentBreakdown: Array.isArray(item.paymentBreakdown) ? item.paymentBreakdown : [],
+  refundedAmount: Number(item.refundedAmount || 0),
+  refunds: Array.isArray(item.refunds) ? item.refunds : [],
+  statusHistory: Array.isArray(item.statusHistory) ? item.statusHistory : [],
   purchasedAt: item.createdAt || item.checkInDate || new Date().toISOString(),
   travelDate: item.checkInDate || '',
   bookingDate: item.checkInDate || item.createdAt || new Date().toISOString(),
   date: item.checkInDate || item.createdAt || new Date().toISOString(),
   endDate: item.checkOutDate || item.checkInDate || '',
   durationMinutes: Number(item.durationMinutes || 120),
-  assignedTo: item.companyName || 'TravelPay Business',
   guests: Number(item.guests || 1),
+  adults: Number(item.adults || item.guests || 1),
+  children: Number(item.children || 0),
   nights: Number(item.nights || 1),
   checkInTime: item.checkInTime || '14:00',
   comment: item.comment || '',
@@ -357,10 +561,16 @@ const normalizeTourBooking = (item = {}, index = 0) => ({
   clientName: item.clientName || '',
   clientPhone: item.clientPhone || '',
   clientEmail: item.clientEmail || '',
+  assignedTo: item.assignedTo || item.manager || item.companyName || 'TravelPay Team',
+  bookingSource: item.bookingSource || item.source || '',
   tourTitle: item.tourTitle || item.title || '',
   bookingDate: item.travelDate || item.createdAt || new Date().toISOString(),
   purchasedAt: item.createdAt || '',
-  assignedTo: item.companyName || 'TravelPay Team',
+  adults: Number(item.adults || item.people || 1),
+  children: Number(item.children || 0),
+  participantType: item.participantType || (Number(item.children || 0) > 0 && Number(item.adults || item.people || 0) <= 0 ? 'child' : 'adult'),
+  pickup: item.pickup || item.pickupLocation || '',
+  emergencyContact: item.emergencyContact || item.emergencyPhone || '',
   amount: Number(item.amount || 0),
   baseTourAmount: Number(item.baseTourAmount || 0),
   accommodationTotal: Number(item.accommodationTotal || 0),
@@ -372,7 +582,14 @@ const normalizeTourBooking = (item = {}, index = 0) => ({
   paymentReceiptName: item.paymentReceiptName || '',
   paymentReceiptType: item.paymentReceiptType || '',
   status: item.status || 'pending_payment',
+  bookingStatus: item.bookingStatus || getCanonicalBookingStatus(item),
   paymentStatus: item.paymentStatus || 'pending',
+  paymentStatusCode: item.paymentStatusCode || getCanonicalPaymentStatus(item),
+  paymentMethod: item.paymentMethod || '',
+  paymentBreakdown: Array.isArray(item.paymentBreakdown) ? item.paymentBreakdown : [],
+  refundedAmount: Number(item.refundedAmount || 0),
+  refunds: Array.isArray(item.refunds) ? item.refunds : [],
+  statusHistory: Array.isArray(item.statusHistory) ? item.statusHistory : [],
   rejectionReason: item.rejectionReason || '',
 });
 
@@ -392,6 +609,17 @@ const normalizeTourRecord = (tour, index = 0) => {
       startAt: slot.startAt || slot.date || '',
       seats: Math.max(Number(slot.seats || slot.capacity || 1), 1),
       active: slot.active !== false,
+      guide: slot.guide || '',
+      driver: slot.driver || '',
+      vehicle: slot.vehicle || '',
+      meetingPoint: slot.meetingPoint || slot.meeting_point || '',
+      price: Number(slot.price || tour.price || 0),
+      status: slot.status || (slot.active === false ? 'paused' : 'scheduled'),
+      waitlist: Array.isArray(slot.waitlist) ? slot.waitlist : [],
+      operationsChecklist: {
+        ...createEmptyTourOperationsChecklist(),
+        ...(slot.operationsChecklist || {}),
+      },
     }))
     .filter((slot) => slot.startAt)
     .sort((left, right) => new Date(left.startAt) - new Date(right.startAt));
@@ -406,6 +634,9 @@ const normalizeTourRecord = (tour, index = 0) => {
     status: tour.status || fallbackStatuses[index % fallbackStatuses.length],
     rating: Number(tour.rating || 4.8),
     price: Number(tour.price || 0),
+    prepaymentMode: tour.prepaymentMode || (tour.prepaymentRequired === false ? 'disabled' : Number(tour.prepaymentFixedAmount || 0) > 0 ? 'fixed' : 'percent'),
+    prepaymentPercent: Number(tour.prepaymentPercent || 30),
+    prepaymentFixedAmount: Number(tour.prepaymentFixedAmount || tour.prepaymentAmount || 0),
     companyId: Number(tour.companyId || 1),
     companyName: tour.companyName || '',
     startDate,
@@ -425,19 +656,28 @@ const normalizeTourRecord = (tour, index = 0) => {
 const getCurrentTab = (pathname) => {
   if (pathname === '/admin' || pathname === '/admin/home' || pathname === '/business/dashboard') return 'home';
   if (pathname === '/admin/tours' || pathname === '/business/tours') return 'tours';
-  if (pathname === '/admin/accommodations' || pathname === '/business/accommodations') return 'accommodations';
+  if (pathname === '/admin/accommodations' || pathname === '/business/accommodations' || pathname === '/business/objects') return 'accommodations';
+  if (pathname === '/admin/properties' || pathname.startsWith('/admin/properties/')) return 'properties';
   if (pathname === '/admin/bookings' || pathname === '/business/bookings') return 'bookings';
+  if (pathname === '/admin/schedule' || pathname === '/business/schedule') return 'schedule';
   if (pathname === '/admin/calendar') return 'calendar';
-  if (pathname === '/admin/payments') return 'payments';
-  if (pathname === '/admin/users' || pathname === '/admin/clients' || pathname === '/business/clients') return 'clients';
+  if (pathname === '/admin/payments' || pathname === '/business/payments') return 'payments';
+  if (pathname === '/admin/users' || pathname.startsWith('/admin/clients') || pathname.startsWith('/business/clients')) return 'clients';
+  if (pathname === '/admin/company' || pathname === '/business/company') return 'company';
+  if (pathname === '/business/team' || pathname === '/admin/team') return 'team';
+  if (pathname === '/business/tasks' || pathname === '/admin/tasks') return 'tasks';
   if (pathname === '/admin/topups' || pathname === '/admin/savings') return 'savings';
-  if (pathname === '/admin/stats' || pathname === '/admin/reports' || pathname === '/business/reports') return 'reports';
+  if (pathname === '/admin/stats' || pathname === '/admin/reports' || pathname === '/admin/analytics' || pathname === '/business/reports' || pathname === '/business/analytics') return 'reports';
+  if (pathname === '/admin/notifications' || pathname === '/business/notifications') return 'notifications';
+  if (pathname === '/admin/activity' || pathname === '/business/activity') return 'activity';
   if (pathname === '/admin/companies') return 'companies';
-  if (pathname === '/admin/settings') return 'settings';
+  if (pathname === '/admin/settings' || pathname === '/business/settings' || pathname === '/business/payment-settings') return 'settings';
+  if (pathname === '/business/support') return 'support';
   return 'home';
 };
 
-const getCatalogMode = (pathname) => (pathname === '/admin/accommodations' || pathname === '/business/accommodations' ? 'accommodations' : 'tours');
+const getCatalogMode = (pathname) => (pathname === '/admin/accommodations' || pathname === '/admin/properties' || pathname === '/business/accommodations' || pathname === '/business/objects' ? 'accommodations' : 'tours');
+const SCHEDULE_VIEW_OPTIONS = ['day', 'week', 'month'];
 
 const startOfWeek = (date) => {
   const next = new Date(date);
@@ -509,27 +749,271 @@ const formatCalendarTimeRange = (item) => {
   return `${start.format('HH:mm')} - ${start.add(duration, 'minute').format('HH:mm')}`;
 };
 
-const getBookingUiStatus = (itemOrStatus, maybePaymentStatus) => {
-  if (typeof itemOrStatus === 'object' && itemOrStatus !== null) {
-    if (itemOrStatus.status === 'confirmed' || itemOrStatus.paymentStatus === 'confirmed' || itemOrStatus.paymentStatus === 'paid') return 'confirmed';
-    if (itemOrStatus.status === 'payment_review' || itemOrStatus.paymentStatus === 'review') return 'payment_review';
-    if (itemOrStatus.status === 'pending_payment') return 'pending_payment';
-    if (itemOrStatus.status === 'cancelled') return 'cancelled';
-    if (itemOrStatus.status === 'rejected' || itemOrStatus.paymentStatus === 'rejected') return 'rejected';
-    if (itemOrStatus.status === 'paid') return 'paid';
-    return itemOrStatus.status || 'pending';
+const applyClockToDate = (dateValue, clockValue, fallbackClock = '09:00') => {
+  const parsed = dayjs(dateValue);
+  const [hours, minutes] = String(clockValue || fallbackClock).split(':').map(Number);
+  if (!parsed.isValid()) return dayjs();
+  return parsed
+    .hour(Number.isFinite(hours) ? hours : 9)
+    .minute(Number.isFinite(minutes) ? minutes : 0)
+    .second(0)
+    .millisecond(0);
+};
+
+const getScheduleEventForDate = (entry, selectedDate) => {
+  const selected = selectedDate.startOf('day');
+
+  if (entry?.type === 'stay_booking') {
+    const checkIn = dayjs(entry.checkInDate || entry.startDate || entry.bookingDate);
+    const checkOut = dayjs(entry.checkOutDate || entry.endDate || entry.bookingDate);
+    const isCheckOut = checkOut.isValid() && selected.isSame(checkOut, 'day') && !selected.isSame(checkIn, 'day');
+    const isCheckIn = checkIn.isValid() && selected.isSame(checkIn, 'day');
+    const startDate = isCheckOut
+      ? applyClockToDate(checkOut, entry.endTime || entry.checkOutTime, '11:30')
+      : isCheckIn
+        ? applyClockToDate(checkIn, entry.startTime || entry.checkInTime, '14:00')
+        : selected.hour(9).minute(0).second(0).millisecond(0);
+
+    return {
+      ...entry,
+      scheduleType: isCheckOut ? 'check-out' : isCheckIn ? 'check-in' : 'stay',
+      scheduleLabel: isCheckOut ? 'Check-out' : isCheckIn ? 'Check-in' : 'Проживание',
+      scheduleTime: startDate,
+      startDate: startDate.toISOString(),
+      endDate: startDate.add(isCheckOut || isCheckIn ? 45 : 120, 'minute').toISOString(),
+      title: entry.stayTitle || entry.title || `Cottage #${entry.stayId || entry.id}`,
+      guestsLabel: entry.guests ? `${entry.guests} гостей` : '',
+    };
   }
 
-  if (itemOrStatus === 'confirmed' || maybePaymentStatus === 'confirmed' || maybePaymentStatus === 'paid') return 'confirmed';
-  if (itemOrStatus === 'payment_review' || maybePaymentStatus === 'review') return 'payment_review';
-  if (itemOrStatus === 'pending_payment') return 'pending_payment';
-  if (itemOrStatus === 'rejected' || maybePaymentStatus === 'rejected') return 'rejected';
-  if (itemOrStatus === 'cancelled') return 'cancelled';
-  if (itemOrStatus === 'paid') return 'paid';
-  return itemOrStatus || 'pending';
+  if (entry?.type === 'tour') {
+    const startDate = dayjs(entry.startDate);
+    return {
+      ...entry,
+      scheduleType: 'departure',
+      scheduleLabel: 'Departure',
+      scheduleTime: startDate.isValid() ? startDate : selected.hour(9),
+      title: entry.title || entry.tourTitle || 'Тур',
+      guestsLabel: `${entry.bookedSeats || 0} / ${entry.totalSeats || 0} гостей`,
+    };
+  }
+
+  const startDate = applyClockToDate(entry.travelDate || entry.bookingDate || entry.startDate, entry.departureTime || entry.time, '09:00');
+  return {
+    ...entry,
+    scheduleType: 'booking',
+    scheduleLabel: entry.type === 'tour_booking' ? 'Departure' : 'Бронирование',
+    scheduleTime: startDate,
+    startDate: startDate.toISOString(),
+    endDate: startDate.add(Math.max(getBookingDurationMinutes(entry), 45), 'minute').toISOString(),
+    title: entry.tourTitle || entry.stayTitle || entry.title || 'Бронирование',
+    guestsLabel: entry.people ? `${entry.people} гостей` : entry.guests ? `${entry.guests} гостей` : '',
+  };
+};
+
+const getSchedulePaymentLabel = (entry) => {
+  const paymentStatus = getCanonicalPaymentStatus(entry);
+  return (PAYMENT_STATUS_META[paymentStatus] || PAYMENT_STATUS_META.UNPAID).label;
+};
+
+const getCanonicalBookingStatus = (booking = {}) => {
+  const raw = String(booking.bookingStatus || booking.status || '').toUpperCase();
+  if (BOOKING_STATUS_META[raw]) return raw;
+  const legacy = String(booking.status || '').toLowerCase();
+  const payment = String(booking.paymentStatus || booking.paymentStatusCode || '').toLowerCase();
+  if (legacy === 'payment_review') return 'AWAITING_PAYMENT';
+  if (legacy === 'pending_payment') return 'AWAITING_PAYMENT';
+  if (legacy === 'funds_reserved') return 'PARTIALLY_PAID';
+  if (legacy === 'booking_confirmed' || legacy === 'confirmed') return 'CONFIRMED';
+  if (legacy === 'paid' || payment === 'paid') return 'PAID';
+  if (legacy === 'completed') return 'COMPLETED';
+  if (legacy === 'cancelled') return 'CANCELLED';
+  if (legacy === 'rejected') return 'CANCELLED';
+  if (legacy === 'rescheduled') return 'RESCHEDULED';
+  if (legacy === 'no_show') return 'NO_SHOW';
+  if (legacy === 'checked_in') return 'CHECKED_IN';
+  if (legacy === 'checked_out') return 'CHECKED_OUT';
+  return legacy === 'pending' ? 'PENDING' : 'NEW';
+};
+
+const getCanonicalPaymentStatus = (booking = {}) => {
+  const raw = String(booking.paymentStatusCode || '').toUpperCase();
+  if (PAYMENT_STATUS_META[raw]) return raw;
+  const legacy = String(booking.paymentStatus || '').toLowerCase();
+  if (legacy === 'paid' || legacy === 'confirmed') return 'PAID';
+  if (legacy === 'reserved') return 'PARTIALLY_PAID';
+  if (legacy === 'review') return 'PARTIALLY_PAID';
+  if (legacy === 'refunded') return 'REFUNDED';
+  if (legacy === 'partially_refunded') return 'PARTIALLY_REFUNDED';
+  if (String(booking.status || '').toLowerCase() === 'rejected') return 'REFUNDED';
+  return 'UNPAID';
+};
+
+const getBookingDebtSummary = (booking = {}) => {
+  const total = Math.max(Number(booking.amount || booking.price || 0), 0);
+  const breakdownPaid = Array.isArray(booking.paymentBreakdown)
+    ? booking.paymentBreakdown
+      .filter((part) => String(part.status || 'completed').toLowerCase() !== 'rejected')
+      .reduce((sum, part) => sum + Number(part.amount || 0), 0)
+    : 0;
+  const paidBeforeRefund = booking.paymentStatusCode === 'PAID'
+    ? Math.max(total, breakdownPaid, Number(booking.prepaymentAmount || 0))
+    : Math.max(breakdownPaid, Number(booking.prepaymentAmount || 0), Number(booking.walletReservedAmount || 0));
+  const refunded = Math.max(Number(booking.refundedAmount || 0), 0);
+  const paid = Math.max(paidBeforeRefund - refunded, 0);
+  const remaining = Math.max(total - paid, 0);
+  const status = refunded > 0 && paid <= 0
+    ? 'Refunded'
+    : remaining <= 0
+      ? 'Paid'
+      : paid > 0
+        ? 'Partially paid'
+        : 'Unpaid';
+
+  return { total, paid, remaining, refunded, status };
+};
+
+const getPaymentStatusLabel = (booking = {}) => (
+  (PAYMENT_STATUS_META[getCanonicalPaymentStatus(booking)] || PAYMENT_STATUS_META.UNPAID).label
+);
+
+const getFriendlyErrorMessage = (error, fallback = 'Не удалось выполнить действие.') => {
+  const status = Number(error?.response?.status || error?.status || 0);
+  const serverMessage = String(error?.response?.data?.message || error?.message || '').trim();
+  if (status === 403) return 'У вас нет доступа к этому разделу.';
+  if (status === 409) return 'Этот объект уже занят на выбранные даты.';
+  if (/request failed.*409/i.test(serverMessage)) return 'Этот объект уже занят на выбранные даты.';
+  if (/request failed.*403/i.test(serverMessage)) return 'У вас нет доступа к этому разделу.';
+  return serverMessage && !/^request failed/i.test(serverMessage) ? serverMessage : fallback;
+};
+
+const getBookingSourceLabel = (source) => (
+  QUICK_BOOKING_SOURCES.find((item) => item.value === source)?.label || source || 'TravelPay Marketplace'
+);
+const isTravelPayMarketplaceSource = (source) => ['travelpay_marketplace', 'travelpay', '', undefined, null].includes(source);
+
+const getChartColor = (index) => ['#2563eb', '#16a34a', '#f97316', '#8b5cf6', '#06b6d4', '#ef4444', '#14b8a6', '#f59e0b'][index % 8];
+
+const addGroupedMetric = (map, key, patch = {}) => {
+  const safeKey = key || '—';
+  const current = map.get(safeKey) || { name: safeKey, revenue: 0, bookings: 0, received: 0, cancelled: 0, completed: 0 };
+  map.set(safeKey, {
+    ...current,
+    revenue: current.revenue + Number(patch.revenue || 0),
+    received: current.received + Number(patch.received || 0),
+    bookings: current.bookings + Number(patch.bookings || 0),
+    cancelled: current.cancelled + Number(patch.cancelled || 0),
+    completed: current.completed + Number(patch.completed || 0),
+    occupancy: patch.occupancy !== undefined ? patch.occupancy : current.occupancy,
+  });
+};
+
+const buildBookingCommunicationEntries = (booking = {}) => {
+  const serviceName = booking.tourTitle || booking.stayTitle || booking.title || 'TravelPay';
+  const startDate = booking.travelDate || booking.checkInDate || booking.bookingDate || booking.createdAt;
+  const endDate = booking.endDate || booking.checkOutDate || booking.travelDate || booking.bookingDate;
+  const entries = [];
+
+  if (booking.createdAt || booking.bookingDate) {
+    entries.push({
+      key: `comm-confirm-${booking.key || booking.id}`,
+      date: booking.createdAt || booking.bookingDate,
+      channel: 'Push',
+      title: 'Booking confirmation',
+      description: 'Ваше бронирование подтверждено',
+      tone: 'success',
+    });
+  }
+  if (Number(booking.prepaymentAmount || 0) > 0) {
+    entries.push({
+      key: `comm-prepay-${booking.key || booking.id}`,
+      date: booking.paymentReviewedAt || booking.createdAt || booking.bookingDate,
+      channel: 'Push',
+      title: 'Payment confirmation',
+      description: `Мы получили предоплату ${formatMoney(booking.prepaymentAmount)}`,
+      tone: 'success',
+    });
+  }
+  if (startDate && booking.type === 'tour_booking') {
+    entries.push({
+      key: `comm-tour-reminder-${booking.key || booking.id}`,
+      date: dayjs(startDate).subtract(1, 'day').hour(10).minute(0).toISOString(),
+      channel: 'WhatsApp',
+      title: 'WhatsApp отправлен',
+      description: `Напоминаем, завтра ваша поездка ${serviceName}`,
+      tone: 'accent',
+    });
+  }
+  if (startDate && booking.type === 'stay_booking') {
+    entries.push({
+      key: `comm-checkin-${booking.key || booking.id}`,
+      date: dayjs(startDate).hour(8).minute(0).toISOString(),
+      channel: 'Push',
+      title: 'Check-in reminder',
+      description: `Сегодня с ${booking.checkInTime || '14:00'} доступен заезд`,
+      tone: 'info',
+    });
+  }
+  if (getBookingDebtSummary(booking).remaining > 0) {
+    entries.push({
+      key: `comm-payment-reminder-${booking.key || booking.id}`,
+      date: dayjs(startDate || booking.createdAt).subtract(12, 'hour').toISOString(),
+      channel: 'Push',
+      title: 'Payment reminder',
+      description: `Остаток к оплате: ${formatMoney(getBookingDebtSummary(booking).remaining)}`,
+      tone: 'warning',
+    });
+  }
+  if (endDate && dayjs(endDate).isBefore(dayjs())) {
+    entries.push({
+      key: `comm-review-${booking.key || booking.id}`,
+      date: dayjs(endDate).add(1, 'day').hour(12).minute(0).toISOString(),
+      channel: 'Email',
+      title: 'Review request',
+      description: 'Спасибо за поездку. Оставьте отзыв',
+      tone: 'info',
+    });
+  }
+
+  return entries.filter((entry) => entry.date);
+};
+
+const getScheduleResourceKey = (entry = {}, groupBy = 'resources') => {
+  if (groupBy === 'managers') {
+    return entry.manager || entry.assignedTo || entry.companyName || 'Без менеджера';
+  }
+  if (groupBy === 'tours') {
+    if (entry.type === 'stay_booking') return 'Жильё';
+    return entry.title || entry.tourTitle || `Тур #${entry.tourId || entry.id}`;
+  }
+  if (entry.type === 'stay_booking') {
+    return entry.stayTitle || entry.title || `Cottage #${entry.stayId || entry.id}`;
+  }
+  return entry.title || entry.tourTitle || `Тур #${entry.tourId || entry.id}`;
+};
+
+const getBookingUiStatus = (itemOrStatus, maybePaymentStatus) => {
+  if (typeof itemOrStatus === 'object' && itemOrStatus !== null) {
+    return getCanonicalBookingStatus(itemOrStatus);
+  }
+
+  return getCanonicalBookingStatus({ status: itemOrStatus, paymentStatus: maybePaymentStatus });
 };
 
 const getBookingStatusVisual = (status) => ({
+  NEW: { label: 'Новая', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.13)' },
+  PENDING: { label: 'Ожидает', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' },
+  CONFIRMED: { label: 'Подтверждено', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
+  AWAITING_PAYMENT: { label: 'Ждёт оплату', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)' },
+  PARTIALLY_PAID: { label: 'Частично оплачено', color: '#0891b2', bg: 'rgba(8, 145, 178, 0.14)' },
+  PAID: { label: 'Оплачено', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
+  IN_PROGRESS: { label: 'В процессе', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.13)' },
+  COMPLETED: { label: 'Завершено', color: '#64748b', bg: 'rgba(100, 116, 139, 0.13)' },
+  CANCELLED: { label: 'Отменено', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.12)' },
+  NO_SHOW: { label: 'Не приехал', color: '#e8590c', bg: 'rgba(232, 89, 12, 0.13)' },
+  RESCHEDULED: { label: 'Перенесено', color: '#7c5cff', bg: 'rgba(124, 92, 255, 0.14)' },
+  CHECKED_IN: { label: 'Заселён', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
+  CHECKED_OUT: { label: 'Выехал', color: '#64748b', bg: 'rgba(100, 116, 139, 0.13)' },
   paid: { label: 'Подтверждено', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
   confirmed: { label: 'Подтверждено', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.12)' },
   payment_review: { label: 'Чек на проверке', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.14)' },
@@ -625,9 +1109,10 @@ const renderStayBookingFinance = (booking) => {
 
   const baseAmount = Number(booking.baseAmount || Math.max((booking.amount || 0) - (booking.extrasAmount || 0), 0));
   const extrasAmount = Number(booking.extrasAmount || 0);
+  const debt = getBookingDebtSummary(booking);
   const prepaymentAmount = Number(booking.prepaymentAmount || 0);
   const totalAmount = Number(booking.amount || 0);
-  const remainingAmount = Math.max(totalAmount - prepaymentAmount, 0);
+  const remainingAmount = debt.remaining;
 
   return (
     <Card size="small" className="tp-admin-inline-card" title="Финансы заявки">
@@ -879,6 +1364,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [accommodationForm] = Form.useForm();
   const [reviewForm] = Form.useForm();
   const [companyRequestReviewForm] = Form.useForm();
+  const [businessProfileForm] = Form.useForm();
   const [stayBookingDecisionForm] = Form.useForm();
   const [stayBookingForm] = Form.useForm();
   const [quickBookingForm] = Form.useForm();
@@ -890,6 +1376,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [accommodations, setAccommodations] = useState([]);
   const [stayBookings, setStayBookings] = useState([]);
   const [tourBookings, setTourBookings] = useState([]);
+  const [businessStaff, setBusinessStaff] = useState([]);
   const [topupRequests, setTopupRequests] = useState([]);
   const [businessSubscriptionRequests, setBusinessSubscriptionRequests] = useState([]);
 
@@ -911,6 +1398,10 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [quickBookingSaving, setQuickBookingSaving] = useState(false);
   const [quickBookingSlots, setQuickBookingSlots] = useState([]);
   const [quickBookingSlotsLoading, setQuickBookingSlotsLoading] = useState(false);
+  const [quickBookingWaitlistSaving, setQuickBookingWaitlistSaving] = useState(false);
+  const [departureOpsDrawerItem, setDepartureOpsDrawerItem] = useState(null);
+  const [departureOpsSaving, setDepartureOpsSaving] = useState(false);
+  const [scheduleDragAction, setScheduleDragAction] = useState(null);
   const [reviewRequest, setReviewRequest] = useState(null);
   const [reviewAction, setReviewAction] = useState('approve');
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -925,7 +1416,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const [tourSearch, setTourSearch] = useState('');
   const [tourStatusFilter, setTourStatusFilter] = useState('all');
+  const [taskViewMode, setTaskViewMode] = useState('kanban');
   const [clientSearch, setClientSearch] = useState('');
+  const [clientSegmentFilter, setClientSegmentFilter] = useState('all');
+  const [clientDrawerItem, setClientDrawerItem] = useState(null);
+  const [propertyDetailItem, setPropertyDetailItem] = useState(null);
   const [bookingSearch] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingManagerFilter, setBookingManagerFilter] = useState('all');
@@ -936,6 +1431,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     return ['day', 'three-day', 'week', 'month', 'list'].includes(savedView) ? savedView : 'day';
   });
   const [calendarResource, setCalendarResource] = useState('tours');
+  const [scheduleGroupBy, setScheduleGroupBy] = useState('resources');
   const [weekManagerSelection, setWeekManagerSelection] = useState([]);
   const [calendarCompanyFilter, setCalendarCompanyFilter] = useState('all');
   const [calendarTourFilter, setCalendarTourFilter] = useState('all');
@@ -945,6 +1441,22 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [calendarSearchInput, setCalendarSearchInput] = useState('');
   const [calendarFiltersDrawerOpen, setCalendarFiltersDrawerOpen] = useState(false);
   const [calendarDrawerItem, setCalendarDrawerItem] = useState(null);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [commandPaletteQuery, setCommandPaletteQuery] = useState('');
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('day');
+  const [analyticsRange, setAnalyticsRange] = useState([dayjs().startOf('day'), dayjs().endOf('day')]);
+  const [notificationRules, setNotificationRules] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('travelpay.business.notificationRules') || '[]');
+      if (Array.isArray(saved) && saved.length) {
+        const savedByKey = new Map(saved.map((rule) => [rule.key, rule]));
+        return DEFAULT_NOTIFICATION_RULES.map((rule) => ({ ...rule, ...(savedByKey.get(rule.key) || {}) }));
+      }
+    } catch (error) {
+      // Ignore broken local rule drafts and fall back to defaults.
+    }
+    return DEFAULT_NOTIFICATION_RULES;
+  });
   const [catalogMode, setCatalogMode] = useState(getCatalogMode(location.pathname));
   const [companyOnboardingSearch, setCompanyOnboardingSearch] = useState('');
   const [companyOnboardingStatusFilter, setCompanyOnboardingStatusFilter] = useState('all');
@@ -957,11 +1469,27 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const [companyRequestReviewLoading, setCompanyRequestReviewLoading] = useState(false);
   const [companyRequestReviewAction, setCompanyRequestReviewAction] = useState('approve');
   const [companyRequestReviewItem, setCompanyRequestReviewItem] = useState(null);
+  const [businessProfileSaving, setBusinessProfileSaving] = useState(false);
   const [notificationsError, setNotificationsError] = useState('');
 
   useEffect(() => {
     localStorage.setItem('travelpay.admin.sidebar.collapsed', String(collapsed));
   }, [collapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('travelpay.business.notificationRules', JSON.stringify(notificationRules));
+  }, [notificationRules]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const syncNetwork = () => setIsOnline(navigator.onLine);
@@ -976,8 +1504,43 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const hasAccommodation = Form.useWatch('hasAccommodation', tourForm);
   const quickBookingResource = Form.useWatch('resource', quickBookingForm);
   const quickBookingObjectId = Form.useWatch('objectId', quickBookingForm);
+  const quickBookingClientId = Form.useWatch('clientId', quickBookingForm);
+  const quickBookingDate = Form.useWatch('checkInDate', quickBookingForm);
+  const quickBookingStartTime = Form.useWatch('startTime', quickBookingForm);
+  const quickBookingEndTime = Form.useWatch('endTime', quickBookingForm);
+  const quickBookingPeople = Form.useWatch('people', quickBookingForm);
+  const quickBookingDepartureSlotId = Form.useWatch('departureSlotId', quickBookingForm);
   const currentTab = useMemo(() => getCurrentTab(location.pathname), [location.pathname]);
-  const isCalendarTab = currentTab === 'bookings' || currentTab === 'calendar';
+  const canBusinessPermission = useCallback((permission) => !businessMode || canBusiness(sessionUser, permission), [businessMode, sessionUser]);
+  const isCalendarTab = currentTab === 'bookings' || currentTab === 'calendar' || currentTab === 'schedule';
+
+  useEffect(() => {
+    if (!businessMode) return;
+    const requiredPermission = BUSINESS_TAB_PERMISSIONS[currentTab];
+    if (!requiredPermission || canBusinessPermission(requiredPermission)) return;
+    navigate(getBusinessHomePathForRole(sessionUser, basePath), { replace: true });
+  }, [basePath, businessMode, canBusinessPermission, currentTab, navigate, sessionUser]);
+
+  useEffect(() => {
+    if (currentTab !== 'schedule') return;
+    const params = new URLSearchParams(location.search);
+    const queryDate = params.get('date');
+    const queryView = params.get('view');
+    const parsedDate = queryDate ? dayjs(queryDate) : null;
+
+    if (parsedDate?.isValid() && !parsedDate.isSame(calendarDate, 'day')) {
+      setCalendarDate(parsedDate);
+    }
+
+    if (queryView && SCHEDULE_VIEW_OPTIONS.includes(queryView) && queryView !== bookingTab) {
+      setBookingTab(queryView);
+      return;
+    }
+
+    if (!queryView && bookingTab !== 'day') {
+      setBookingTab('day');
+    }
+  }, [bookingTab, calendarDate, currentTab, location.search]);
 
   useEffect(() => {
     setCatalogMode(getCatalogMode(location.pathname));
@@ -1001,7 +1564,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       setCalendarError('');
     }
     try {
-      const [toursResponse, usersResponse, companiesResponse, accommodationsResponse, stayBookingsResponse, tourBookingsResponse, topupsResponse, businessSubscriptionsResponse] = await Promise.all([
+      const [toursResponse, usersResponse, companiesResponse, accommodationsResponse, stayBookingsResponse, tourBookingsResponse, topupsResponse, businessSubscriptionsResponse, staffResponse] = await Promise.all([
         api.get('/tours'),
         api.get('/users'),
         api.get('/companies').catch(() => ({ data: [] })),
@@ -1010,6 +1573,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         includeBookings ? api.get('/tour-bookings').catch(() => ({ data: [] })) : Promise.resolve({ data: null }),
         api.get('/api/admin/topups').catch(() => ({ data: [] })),
         api.get('/api/admin/business-subscriptions').catch(() => ({ data: [] })),
+        api.get('/business/managers').catch(() => ({ data: [] })),
       ]);
 
       setTours((toursResponse.data || []).map(normalizeTourRecord));
@@ -1022,6 +1586,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       }
       setTopupRequests(topupResponseSort(topupsResponse.data || []));
       setBusinessSubscriptionRequests(Array.isArray(businessSubscriptionsResponse.data) ? businessSubscriptionsResponse.data : []);
+      setBusinessStaff(Array.isArray(staffResponse.data) ? staffResponse.data : []);
     } catch (error) {
       setMessageState({ type: 'error', text: 'Не удалось загрузить данные админ-панели.' });
       if (includeBookings) {
@@ -1074,6 +1639,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     }
   }, [bookingTab, calendarDate, calendarResource]);
 
+  const refreshBusinessData = useCallback((options = {}) => {
+    if (isCalendarTab) return loadCalendarPeriod();
+    return loadDashboardData(options);
+  }, [isCalendarTab, loadCalendarPeriod, loadDashboardData]);
+
   useEffect(() => {
     loadDashboardData({ includeBookings: !isCalendarTab });
   }, [isCalendarTab, loadDashboardData]);
@@ -1081,6 +1651,34 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   useEffect(() => {
     if (isCalendarTab) loadCalendarPeriod();
   }, [isCalendarTab, loadCalendarPeriod]);
+
+  useEffect(() => {
+    const handleBusinessDataChanged = () => {
+      if (document.visibilityState === 'hidden') return;
+      refreshBusinessData({ includeBookings: true });
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshBusinessData({ includeBookings: true });
+    };
+
+    window.addEventListener('travelpay-business-data-changed', handleBusinessDataChanged);
+    window.addEventListener('travelpay-catalog-updated', handleBusinessDataChanged);
+    window.addEventListener('focus', handleBusinessDataChanged);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const refreshInterval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      refreshBusinessData({ includeBookings: true });
+    }, 45000);
+
+    return () => {
+      window.removeEventListener('travelpay-business-data-changed', handleBusinessDataChanged);
+      window.removeEventListener('travelpay-catalog-updated', handleBusinessDataChanged);
+      window.removeEventListener('focus', handleBusinessDataChanged);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.clearInterval(refreshInterval);
+    };
+  }, [refreshBusinessData]);
 
   useEffect(() => () => calendarAbortControllerRef.current?.abort(), []);
 
@@ -1108,12 +1706,11 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   useEffect(() => {
     if (!isCalendarTab || isDesktop) return;
-    setBookingTab(isMobileViewport ? 'day' : 'three-day');
+    if (isMobileViewport) setBookingTab('day');
   }, [isCalendarTab, isDesktop, isMobileViewport]);
 
   useEffect(() => {
-    if (isDesktop && bookingTab === 'three-day') setBookingTab('week');
-    if (isMobileViewport && bookingTab === 'three-day') setBookingTab('day');
+    if (bookingTab === 'three-day' || bookingTab === 'list') setBookingTab('day');
   }, [bookingTab, isDesktop, isMobileViewport]);
 
   useEffect(() => {
@@ -1130,7 +1727,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   useEffect(() => {
     const tourId = Number(quickBookingObjectId);
-    if (!quickBookingDrawerOpen || quickBookingResource !== 'tours' || !tourId) {
+    if (!quickBookingDrawerOpen || !isQuickBookingTourKind(quickBookingResource) || !tourId) {
       setQuickBookingSlots([]);
       return undefined;
     }
@@ -1149,7 +1746,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           ? dayjs(`${requestedDate.format('YYYY-MM-DD')}T${requestedTime}`)
           : null;
         const matchingSlot = preferredStart?.isValid()
-          ? slots.find((slot) => slot.active !== false && dayjs(slot.startAt).isSame(preferredStart, 'minute'))
+          ? slots.find((slot) => slot.active !== false && slot.available !== false && !slot.soldOut && dayjs(slot.startAt).isSame(preferredStart, 'minute'))
           : null;
         if (!selectedSlot && matchingSlot?.id) {
           quickBookingForm.setFieldsValue({ departureSlotId: matchingSlot.id });
@@ -1234,6 +1831,32 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const currentBusinessRequestTimeline = useMemo(() => (
     buildBusinessSubscriptionTimelineEntries(currentBusinessSubscriptionRequest, currentBusinessRequestReviewerName)
   ), [currentBusinessSubscriptionRequest, currentBusinessRequestReviewerName]);
+  const primaryPaymentMethod = useMemo(() => {
+    const methods = Array.isArray(currentCompany?.paymentMethods) ? currentCompany.paymentMethods : [];
+    return methods.find((method) => method.primary) || methods[0] || {};
+  }, [currentCompany?.paymentMethods]);
+  useEffect(() => {
+    if (!currentCompany) return;
+    businessProfileForm.setFieldsValue({
+      logo: currentCompany.logo,
+      cover: currentCompany.cover,
+      name: currentCompany.name,
+      description: currentCompany.description,
+      phone: currentCompany.phone,
+      whatsapp: currentCompany.whatsapp || currentCompany.phone,
+      instagramUrl: currentCompany.instagramUrl,
+      website: currentCompany.website,
+      address: currentCompany.address,
+      city: currentCompany.city,
+      region: currentCompany.region,
+      workingHours: currentCompany.workingHours,
+      managerPhone: currentCompany.managerPhone,
+      documents: Array.isArray(currentCompany.documents) ? currentCompany.documents : [],
+      paymentMethods: Array.isArray(currentCompany.paymentMethods) && currentCompany.paymentMethods.length
+        ? currentCompany.paymentMethods
+        : [{ type: 'qr', title: 'Main QR', qrCodeUrl: primaryPaymentMethod.qrCodeUrl || '/images/payment-qr.png', primary: true, active: true }],
+    });
+  }, [businessProfileForm, currentCompany, primaryPaymentMethod.qrCodeUrl]);
   const previewIsPdf = useMemo(
     () => String(documentPreview?.type || documentPreview?.url || '').toLowerCase().includes('pdf'),
     [documentPreview],
@@ -1254,6 +1877,41 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   const calendarDrawerTimeline = useMemo(() => (
     buildStayBookingTimelineEntries(calendarDrawerItem, calendarDrawerReviewerName)
   ), [calendarDrawerItem, calendarDrawerReviewerName]);
+  const calendarDrawerStatusHistory = useMemo(() => {
+    if (!calendarDrawerItem || !Array.isArray(calendarDrawerItem.statusHistory)) return [];
+
+    const getHistoryValueLabel = (field, value) => {
+      if (!value) return '—';
+      const raw = String(value);
+      const upper = raw.toUpperCase();
+      if (field === 'paymentStatus' || field === 'paymentStatusCode') {
+        return (PAYMENT_STATUS_META[upper] || PAYMENT_STATUS_META[raw])?.label || raw;
+      }
+      return (BOOKING_STATUS_META[upper] || BOOKING_STATUS_META[raw])?.label || raw;
+    };
+
+    return [...calendarDrawerItem.statusHistory]
+      .sort((left, right) => new Date(right.changedAt || right.createdAt || 0) - new Date(left.changedAt || left.createdAt || 0))
+      .map((entry, index) => {
+        const field = entry.field === 'paymentStatusCode' ? 'paymentStatus' : (entry.field || 'bookingStatus');
+        const isPayment = field === 'paymentStatus';
+        const toCode = String(entry.to || '').toUpperCase();
+        const meta = isPayment
+          ? (PAYMENT_STATUS_META[toCode] || PAYMENT_STATUS_META.UNPAID)
+          : (BOOKING_STATUS_META[toCode] || BOOKING_STATUS_META.NEW);
+
+        return {
+          key: entry.id || `${field}-${entry.changedAt || index}`,
+          fieldLabel: isPayment ? 'Оплата' : 'Бронь',
+          fromLabel: getHistoryValueLabel(field, entry.from),
+          toLabel: getHistoryValueLabel(field, entry.to),
+          actor: entry.actorName || entry.actorRole || 'TravelPay',
+          changedAt: entry.changedAt || entry.createdAt,
+          comment: entry.comment,
+          color: meta.dot || meta.color || '#2563eb',
+        };
+      });
+  }, [calendarDrawerItem]);
 
   const totalRevenue = users.reduce((sum, user) => (
     sum + (user?.travelHistory || []).reduce((inner, item) => inner + Number(item.amount || 0), 0)
@@ -1293,13 +1951,241 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     return [...tourBookings, ...legacyTourBookings, ...stayBookings];
   }, [currentCompany?.name, stayBookings, tourBookings, users]);
 
+  const analyticsWindow = useMemo(() => {
+    const now = dayjs();
+    if (analyticsPeriod === 'custom' && Array.isArray(analyticsRange) && analyticsRange[0] && analyticsRange[1]) {
+      return {
+        start: dayjs(analyticsRange[0]).startOf('day'),
+        end: dayjs(analyticsRange[1]).endOf('day'),
+      };
+    }
+
+    return {
+      start: now.startOf(analyticsPeriod),
+      end: now.endOf(analyticsPeriod),
+    };
+  }, [analyticsPeriod, analyticsRange]);
+
+  const analyticsKpis = useMemo(() => {
+    const getBookingDate = (booking) => dayjs(booking.bookingDate || booking.travelDate || booking.checkInDate || booking.createdAt || booking.date);
+    const inRange = (booking) => {
+      const date = getBookingDate(booking);
+      return date.isValid()
+        && (date.isAfter(analyticsWindow.start) || date.isSame(analyticsWindow.start))
+        && (date.isBefore(analyticsWindow.end) || date.isSame(analyticsWindow.end));
+    };
+    const rows = bookingRows.filter(inRange);
+    const clientKey = (booking) => String(booking.clientPhone || booking.clientEmail || booking.clientName || booking.clientId || booking.userId || booking.id).trim().toLowerCase();
+    const firstBookingByClient = bookingRows.reduce((map, booking) => {
+      const key = clientKey(booking);
+      const date = getBookingDate(booking);
+      if (!key || !date.isValid()) return map;
+      const previous = map.get(key);
+      if (!previous || date.isBefore(previous)) map.set(key, date);
+      return map;
+    }, new Map());
+    const rangeClients = new Set(rows.map(clientKey).filter(Boolean));
+    const revenue = rows.reduce((sum, booking) => sum + Number(booking.amount || booking.price || 0), 0);
+    const received = rows.reduce((sum, booking) => sum + getBookingDebtSummary(booking).paid, 0);
+    const completed = rows.filter((booking) => ['COMPLETED', 'CHECKED_OUT'].includes(getCanonicalBookingStatus(booking)) || ['completed', 'checked_out'].includes(String(booking.status || '').toLowerCase())).length;
+    const cancelled = rows.filter((booking) => ['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking)) || ['cancelled', 'rejected', 'no_show'].includes(String(booking.status || '').toLowerCase())).length;
+    const newClients = Array.from(rangeClients).filter((key) => {
+      const first = firstBookingByClient.get(key);
+      return first && (first.isAfter(analyticsWindow.start) || first.isSame(analyticsWindow.start)) && (first.isBefore(analyticsWindow.end) || first.isSame(analyticsWindow.end));
+    }).length;
+
+    const daysInWindow = Math.max(analyticsWindow.end.diff(analyticsWindow.start, 'day') + 1, 1);
+    const bucketUnit = daysInWindow > 370 ? 'month' : daysInWindow > 95 ? 'week' : 'day';
+    const bucketFormat = bucketUnit === 'month' ? 'MMM YYYY' : bucketUnit === 'week' ? 'DD MMM' : 'DD MMM';
+    const bucketMap = new Map();
+    let cursor = analyticsWindow.start.startOf(bucketUnit);
+    while (cursor.isBefore(analyticsWindow.end) || cursor.isSame(analyticsWindow.end, bucketUnit)) {
+      const key = cursor.format(bucketFormat);
+      bucketMap.set(key, { date: key, revenue: 0, bookings: 0, average: 0 });
+      cursor = cursor.add(1, bucketUnit);
+    }
+
+    const statusMap = new Map();
+    const paymentStatusMap = new Map();
+    const sourceMap = new Map();
+    const tourMap = new Map();
+    const propertyMap = new Map();
+    const managerMap = new Map();
+
+    rows.forEach((booking) => {
+      const date = getBookingDate(booking);
+      const bucketKey = date.isValid() ? date.startOf(bucketUnit).format(bucketFormat) : '—';
+      const debt = getBookingDebtSummary(booking);
+      const bookingRevenue = Number(booking.amount || booking.price || 0);
+      const status = getCanonicalBookingStatus(booking);
+      const paymentStatus = getCanonicalPaymentStatus(booking);
+      const isCancelled = ['CANCELLED', 'NO_SHOW'].includes(status) || ['cancelled', 'rejected', 'no_show'].includes(String(booking.status || '').toLowerCase());
+      const isCompleted = ['COMPLETED', 'CHECKED_OUT'].includes(status) || ['completed', 'checked_out'].includes(String(booking.status || '').toLowerCase());
+
+      if (!bucketMap.has(bucketKey)) bucketMap.set(bucketKey, { date: bucketKey, revenue: 0, bookings: 0, average: 0 });
+      const bucket = bucketMap.get(bucketKey);
+      bucket.revenue += bookingRevenue;
+      bucket.bookings += 1;
+      bucket.average = Math.round(bucket.revenue / Math.max(bucket.bookings, 1));
+
+      addGroupedMetric(statusMap, BOOKING_STATUS_META[status]?.label || status, { bookings: 1, revenue: bookingRevenue });
+      addGroupedMetric(paymentStatusMap, PAYMENT_STATUS_META[paymentStatus]?.label || paymentStatus, { bookings: 1, revenue: debt.paid });
+      addGroupedMetric(sourceMap, getBookingSourceLabel(booking.bookingSource), { bookings: 1, revenue: bookingRevenue });
+      if (booking.type === 'tour_booking') {
+        addGroupedMetric(tourMap, booking.tourTitle || booking.title || `Tour #${booking.tourId || booking.id}`, {
+          bookings: 1,
+          revenue: bookingRevenue,
+          received: debt.paid,
+          cancelled: isCancelled ? 1 : 0,
+          completed: isCompleted ? 1 : 0,
+        });
+      }
+      if (booking.type === 'stay_booking') {
+        addGroupedMetric(propertyMap, booking.stayTitle || booking.title || `Property #${booking.stayId || booking.id}`, {
+          bookings: 1,
+          revenue: bookingRevenue,
+          received: debt.paid,
+          cancelled: isCancelled ? 1 : 0,
+          completed: isCompleted ? 1 : 0,
+        });
+      }
+      addGroupedMetric(managerMap, booking.assignedTo || booking.createdByAdminName || 'Без менеджера', {
+        bookings: 1,
+        revenue: bookingRevenue,
+        received: debt.paid,
+        cancelled: isCancelled ? 1 : 0,
+        completed: isCompleted ? 1 : 0,
+      });
+    });
+
+    const occupancyByProperty = Array.from(propertyMap.values()).map((item) => ({
+      ...item,
+      occupancy: Math.min(100, Math.round((item.bookings / Math.max(daysInWindow, 1)) * 100)),
+    }));
+    const futureRevenue = bookingRows
+      .filter((booking) => {
+        const date = getBookingDate(booking);
+        return date.isValid() && date.isAfter(dayjs()) && !['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking));
+      })
+      .reduce((sum, booking) => sum + getBookingDebtSummary(booking).remaining + getBookingDebtSummary(booking).paid, 0);
+
+    return {
+      rows,
+      revenue,
+      received,
+      unpaid: Math.max(revenue - received, 0),
+      averageCheck: rows.length ? Math.round(revenue / rows.length) : 0,
+      bookings: rows.length,
+      completed,
+      cancelled,
+      newClients,
+      repeatClients: Math.max(rangeClients.size - newClients, 0),
+      cancellationRate: rows.length ? Math.round((cancelled / rows.length) * 100) : 0,
+      missedRevenue: rows
+        .filter((booking) => ['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking)))
+        .reduce((sum, booking) => sum + Number(booking.amount || booking.price || 0), 0),
+      futureRevenue,
+      revenueOverTime: Array.from(bucketMap.values()),
+      bookingsOverTime: Array.from(bucketMap.values()),
+      averageBookingValue: Array.from(bucketMap.values()),
+      bookingByStatus: Array.from(statusMap.values()).sort((a, b) => b.bookings - a.bookings),
+      paymentStatus: Array.from(paymentStatusMap.values()).sort((a, b) => b.bookings - a.bookings),
+      bookingSource: Array.from(sourceMap.values()).sort((a, b) => b.bookings - a.bookings),
+      tourPopularity: Array.from(tourMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 8),
+      propertyOccupancy: occupancyByProperty.sort((a, b) => b.occupancy - a.occupancy).slice(0, 8),
+      managerPerformance: Array.from(managerMap.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 8),
+    };
+  }, [analyticsWindow, bookingRows]);
+
+  const scheduledAutomaticReminders = useMemo(() => {
+    const activeRules = notificationRules.filter((rule) => rule.enabled);
+    const ruleByKey = new Map(activeRules.map((rule) => [rule.key, rule]));
+    return bookingRows.flatMap((booking) => {
+      const serviceName = booking.tourTitle || booking.stayTitle || booking.title || 'TravelPay';
+      const debt = getBookingDebtSummary(booking);
+      const start = dayjs(booking.travelDate || booking.checkInDate || booking.bookingDate || booking.createdAt);
+      const end = dayjs(booking.endDate || booking.checkOutDate || booking.travelDate || booking.bookingDate);
+      const entries = [];
+      const pushEntry = (ruleKey, sendAt, fallbackMessage) => {
+        const rule = ruleByKey.get(ruleKey);
+        if (!rule || !sendAt?.isValid?.()) return;
+        entries.push({
+          key: `scheduled-${ruleKey}-${booking.key || booking.id}`,
+          sendAt: sendAt.toISOString(),
+          channel: rule.channel,
+          rule: rule.title,
+          client: booking.clientName || booking.clientPhone || 'Клиент TravelPay',
+          booking: serviceName,
+          message: (rule.template || fallbackMessage)
+            .replace('{serviceName}', serviceName)
+            .replace('{amount}', Number(booking.prepaymentAmount || 0).toLocaleString('ru-RU'))
+            .replace('{checkInTime}', booking.checkInTime || '14:00'),
+        });
+      };
+
+      pushEntry('booking_confirmed', dayjs(booking.createdAt || booking.bookingDate), 'Ваше бронирование подтверждено');
+      if (Number(booking.prepaymentAmount || 0) > 0) pushEntry('prepayment_received', dayjs(booking.paymentReviewedAt || booking.createdAt || booking.bookingDate), 'Мы получили предоплату {amount} сом');
+      if (booking.type === 'tour_booking' && start.isValid()) pushEntry('tour_day_before', start.subtract(1, 'day'), 'Напоминаем, завтра ваша поездка {serviceName}');
+      if (booking.type === 'stay_booking' && start.isValid()) pushEntry('checkin_today', start.hour(8).minute(0), 'Сегодня с {checkInTime} доступен заезд');
+      if (debt.remaining > 0 && start.isValid()) pushEntry('payment_reminder', start.subtract(12, 'hour'), 'Напоминаем об остатке оплаты по бронированию {serviceName}');
+      if (end.isValid()) pushEntry('after_trip_review', end.add(1, 'day').hour(12).minute(0), 'Спасибо за поездку. Оставьте отзыв');
+      return entries;
+    })
+      .filter((entry) => dayjs(entry.sendAt).isAfter(dayjs().subtract(1, 'day')))
+      .sort((left, right) => dayjs(left.sendAt).valueOf() - dayjs(right.sendAt).valueOf())
+      .slice(0, 12);
+  }, [bookingRows, notificationRules]);
+
   const managerOptions = useMemo(() => {
     const unique = Array.from(new Set([
+      ...businessStaff.map((staff) => [staff.firstName, staff.lastName].filter(Boolean).join(' ') || staff.email || staff.phone),
       ...bookingRows.map((item) => item.assignedTo),
       ...tours.map((tour) => tour.manager || tour.companyName),
     ].filter(Boolean)));
     return unique.map((value) => ({ value, label: value }));
-  }, [bookingRows, tours]);
+  }, [bookingRows, businessStaff, tours]);
+
+  const isStaffAvailableForDate = useCallback((staff, dateValue, resource) => {
+    if (!staff || staff.active === false) return false;
+    const selected = dayjs(dateValue || calendarDate);
+    if (!selected.isValid()) return true;
+    const dayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][selected.day()];
+    const workingDays = Array.isArray(staff.workingDays) && staff.workingDays.length ? staff.workingDays : ['mon', 'tue', 'wed', 'thu', 'fri'];
+    if (!workingDays.includes(dayKey)) return false;
+    const selectedDate = selected.format('YYYY-MM-DD');
+    const unavailableDates = [
+      ...(Array.isArray(staff.dayOffDates) ? staff.dayOffDates : []),
+      ...(Array.isArray(staff.vacationDates) ? staff.vacationDates : []),
+    ];
+    if (unavailableDates.includes(selectedDate)) return false;
+    const services = Array.isArray(staff.services) ? staff.services.map((item) => String(item).toLowerCase()) : [];
+    if (services.length) {
+      const resourceNeedle = String(resource || '').toLowerCase();
+      const serviceMatch = services.some((service) => (
+        resourceNeedle.includes('tour') ? ['tour', 'tours', 'vip clients'].includes(service) || /кель|сон|ала/.test(service)
+          : resourceNeedle.includes('cottage') || resourceNeedle.includes('house') ? ['cottage', 'cottages', 'house', 'houses'].includes(service)
+            : true
+      ));
+      if (!serviceMatch) return false;
+    }
+    return true;
+  }, [calendarDate]);
+
+  const assignmentStaffOptions = useMemo(() => {
+    const selectedDate = quickBookingDate || calendarDate;
+    const roleAllowed = new Set(['owner', 'administrator', 'manager', 'guide']);
+    const staffOptions = businessStaff
+      .filter((staff) => roleAllowed.has(staff.role || 'manager'))
+      .filter((staff) => isStaffAvailableForDate(staff, selectedDate, quickBookingResource))
+      .map((staff) => {
+        const name = [staff.firstName, staff.lastName].filter(Boolean).join(' ') || staff.email || staff.phone;
+        return {
+          value: name,
+          label: `${name} · ${staff.role || 'manager'}`,
+        };
+      });
+    return staffOptions.length ? staffOptions : managerOptions;
+  }, [businessStaff, calendarDate, isStaffAvailableForDate, managerOptions, quickBookingDate, quickBookingResource]);
 
   const companyOptions = useMemo(() => {
     const list = isSuperAdmin ? companies : (currentCompany ? [currentCompany] : companies);
@@ -1340,15 +2226,215 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     const manager = entry.manager || entry.assignedTo || entry.companyName;
     return weekManagerSelection.includes(manager);
   }, [weekManagerSelection]);
+  const quickBookingClientOptions = useMemo(() => users
+    .map((user) => ({
+      value: String(user.id),
+      label: `${user.name || user.email || `Клиент #${user.id}`} ${user.phone ? `· ${user.phone}` : ''}`,
+      search: [user.name, user.phone, user.email].filter(Boolean).join(' ').toLowerCase(),
+      user,
+    }))
+    .filter((option) => option.user?.name || option.user?.phone || option.user?.email)
+    .slice(0, 80), [users]);
+
+  const quickBookingStayDate = quickBookingDate && dayjs(quickBookingDate).isValid()
+    ? dayjs(quickBookingDate)
+    : calendarDate;
+  const quickBookingSlotStart = quickBookingStartTime || '14:00';
+  const quickBookingSlotEnd = quickBookingEndTime || addMinutesToClock(quickBookingSlotStart, STAY_BOOKING_SLOT_DURATION_MINUTES);
+  const isStayQuickBooking = isQuickBookingStayKind(quickBookingResource);
+  const isTourQuickBooking = isQuickBookingTourKind(quickBookingResource);
+
+  const getStaySlotConflicts = useCallback((stayId, {
+    date = quickBookingStayDate,
+    startTime = quickBookingSlotStart,
+    endTime = quickBookingSlotEnd,
+  } = {}) => {
+    const selected = dayjs(date);
+    if (!selected.isValid() || !startTime || !endTime) return [];
+    const selectedStart = clockToMinutesLabel(startTime);
+    let selectedEnd = clockToMinutesLabel(endTime);
+    if (selectedEnd <= selectedStart) selectedEnd += 24 * 60;
+
+    return stayBookings.filter((booking) => {
+      if (Number(booking.stayId) !== Number(stayId)) return false;
+      if (['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking))) return false;
+      const checkIn = dayjs(booking.checkInDate || booking.startDate || booking.bookingDate);
+      const checkOut = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate || booking.bookingDate);
+      const overlapsDate = checkIn.isValid() && checkOut.isValid()
+        ? (selected.isSame(checkIn, 'day') || (selected.isAfter(checkIn, 'day') && selected.isBefore(checkOut, 'day')))
+        : selected.isSame(dayjs(booking.bookingDate || booking.travelDate || booking.createdAt), 'day');
+      if (!overlapsDate) return false;
+      const bookingStart = clockToMinutesLabel(booking.startTime || booking.checkInTime || '14:00');
+      let bookingEnd = clockToMinutesLabel(booking.endTime || booking.checkOutTime || '16:00');
+      if (bookingEnd <= bookingStart) bookingEnd += 24 * 60;
+      return Math.max(bookingStart, selectedStart) < Math.min(bookingEnd, selectedEnd);
+    });
+  }, [quickBookingSlotEnd, quickBookingSlotStart, quickBookingStayDate, stayBookings]);
+
+  const getStayBlockForDate = useCallback((unit, dateValue) => {
+    const selected = dayjs(dateValue).startOf('day');
+    if (!unit || !selected.isValid()) return null;
+    return (unit.blockedDates || []).find((block) => {
+      const start = dayjs(block.startDate || block.date).startOf('day');
+      const end = dayjs(block.endDate || block.startDate || block.date).startOf('day');
+      const normalizedEnd = end.isValid() ? end : start;
+      return start.isValid()
+        && (selected.isSame(start, 'day') || selected.isAfter(start, 'day'))
+        && (selected.isSame(normalizedEnd, 'day') || selected.isBefore(normalizedEnd, 'day'));
+    }) || null;
+  }, []);
+
+  const quickBookingAvailability = useMemo(() => {
+    if (isTourQuickBooking) {
+      const people = Math.max(Number(quickBookingPeople || 1), 1);
+      const selectedDate = quickBookingDate && dayjs(quickBookingDate).isValid() ? dayjs(quickBookingDate) : null;
+      const availableSlots = quickBookingSlots
+        .filter((slot) => slot.active !== false && slot.available !== false && !slot.soldOut && Number(slot.remainingSeats || 0) >= people)
+        .filter((slot) => !selectedDate || dayjs(slot.startAt).isSame(selectedDate, 'day'))
+        .sort((left, right) => dayjs(left.startAt).valueOf() - dayjs(right.startAt).valueOf());
+      const waitlistSlots = quickBookingSlots
+        .filter((slot) => slot.active !== false)
+        .filter((slot) => slot.soldOut || slot.status === 'sold_out' || Number(slot.remainingSeats || 0) < people)
+        .filter((slot) => !selectedDate || dayjs(slot.startAt).isSame(selectedDate, 'day'))
+        .sort((left, right) => dayjs(left.startAt).valueOf() - dayjs(right.startAt).valueOf());
+      const selectedSlot = quickBookingDepartureSlotId
+        ? quickBookingSlots.find((slot) => String(slot.id) === String(quickBookingDepartureSlotId))
+        : null;
+      return {
+        kind: 'tour',
+        availableSlots,
+        waitlistSlots,
+        selectedSlot,
+        hasConflict: Boolean(selectedSlot && (selectedSlot.soldOut || selectedSlot.available === false || Number(selectedSlot.remainingSeats || 0) < people)),
+      };
+    }
+
+    if (isStayQuickBooking) {
+      const selectedStayId = Number(quickBookingObjectId);
+      const selectedStay = accommodations.find((item) => Number(item.id) === selectedStayId);
+      const conflicts = selectedStayId ? getStaySlotConflicts(selectedStayId) : [];
+      const block = selectedStay ? getStayBlockForDate(selectedStay, quickBookingStayDate) : null;
+      const alternatives = accommodations
+        .filter((item) => isSuperAdmin || !currentCompany?.id || Number(item.companyId) === Number(currentCompany.id))
+        .filter((item) => Number(item.id) !== selectedStayId && item.status === 'available')
+        .filter((item) => !getStayBlockForDate(item, quickBookingStayDate))
+        .filter((item) => getStaySlotConflicts(item.id).length === 0)
+        .slice(0, 5);
+      const occupiedBlocks = conflicts.map((booking) => ({
+        id: booking.id,
+        label: `${booking.startTime || booking.checkInTime || '14:00'} → ${booking.endTime || booking.checkOutTime || '16:00'}`,
+        clientName: booking.clientName,
+      }));
+
+      return {
+        kind: 'stay',
+        selectedStay,
+        block,
+        conflicts,
+        alternatives,
+        occupiedBlocks,
+        hasConflict: conflicts.length > 0 || Boolean(block),
+      };
+    }
+
+    return { kind: 'unknown', hasConflict: false };
+  }, [
+    accommodations,
+    currentCompany?.id,
+    getStaySlotConflicts,
+    getStayBlockForDate,
+    isStayQuickBooking,
+    isSuperAdmin,
+    isTourQuickBooking,
+    quickBookingDate,
+    quickBookingDepartureSlotId,
+    quickBookingObjectId,
+    quickBookingPeople,
+    quickBookingSlots,
+    quickBookingStayDate,
+  ]);
+
+  const quickBookingFreeSlots = useMemo(() => {
+    if (isTourQuickBooking) {
+      return quickBookingAvailability.availableSlots?.slice(0, 6).map((slot) => ({
+        key: slot.id,
+        title: dayjs(slot.startAt).format('HH:mm'),
+        subtitle: `${slot.remainingSeats} / ${slot.seats} мест свободно`,
+      })) || [];
+    }
+
+    if (!isStayQuickBooking || !quickBookingObjectId) return [];
+    const occupied = stayBookings
+      .filter((booking) => Number(booking.stayId) === Number(quickBookingObjectId))
+      .filter((booking) => !['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking)))
+      .filter((booking) => {
+        const selected = quickBookingStayDate;
+        const checkIn = dayjs(booking.checkInDate || booking.startDate || booking.bookingDate);
+        const checkOut = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate || booking.bookingDate);
+        return checkIn.isValid() && checkOut.isValid()
+          ? (selected.isSame(checkIn, 'day') || (selected.isAfter(checkIn, 'day') && selected.isBefore(checkOut, 'day')))
+          : selected.isSame(dayjs(booking.bookingDate || booking.travelDate || booking.createdAt), 'day');
+      })
+      .map((booking) => ({
+        start: clockToMinutesLabel(booking.startTime || booking.checkInTime || '14:00'),
+        end: clockToMinutesLabel(booking.endTime || booking.checkOutTime || '16:00'),
+      }))
+      .sort((left, right) => left.start - right.start);
+
+    const windows = [];
+    let cursor = weekBoardStartHour * 60;
+    const boardEnd = weekBoardEndHour * 60;
+    occupied.forEach((block) => {
+      if (block.start > cursor) windows.push({ start: cursor, end: block.start });
+      cursor = Math.max(cursor, block.end);
+    });
+    if (cursor < boardEnd) windows.push({ start: cursor, end: boardEnd });
+
+    const toClock = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+    return windows
+      .filter((slot) => slot.end - slot.start >= 45)
+      .slice(0, 6)
+      .map((slot) => ({
+        key: `${slot.start}-${slot.end}`,
+        title: `${toClock(slot.start)}–${toClock(slot.end)}`,
+        subtitle: 'Свободно',
+      }));
+  }, [isStayQuickBooking, isTourQuickBooking, quickBookingAvailability.availableSlots, quickBookingObjectId, quickBookingStayDate, stayBookings]);
+
   const quickBookingObjectOptions = useMemo(() => {
-    const source = quickBookingResource === 'stays' ? accommodations : tours;
+    const source = isStayQuickBooking ? accommodations : tours;
+    const selectedDate = quickBookingDate && dayjs(quickBookingDate).isValid() ? dayjs(quickBookingDate) : null;
+    const people = Math.max(Number(quickBookingPeople || 1), 1);
+
     return source
       .filter((item) => isSuperAdmin || !currentCompany?.id || Number(item.companyId) === Number(currentCompany.id))
+      .filter((item) => {
+        if (isStayQuickBooking) {
+          return item.status === 'available' && !getStayBlockForDate(item, quickBookingDate || calendarDate) && getStaySlotConflicts(item.id).length === 0;
+        }
+        if (selectedDate && Array.isArray(item.departureSlots) && item.departureSlots.length) {
+          return item.departureSlots.some((slot) => {
+            const bookedSeats = tourBookings
+              .filter((booking) => Number(booking.tourId) === Number(item.id))
+              .filter((booking) => String(booking.departureSlotId || '') === String(slot.id || ''))
+              .filter((booking) => !['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking)))
+              .reduce((sum, booking) => sum + Math.max(Number(booking.people || booking.adults) || 1, 1), 0);
+            const remainingSeats = Math.max(Number(slot.seats || 0) - bookedSeats, 0);
+            return slot.active !== false
+              && slot.status !== 'sold_out'
+              && slot.status !== 'cancelled'
+              && slot.status !== 'paused'
+              && dayjs(slot.startAt).isSame(selectedDate, 'day')
+              && remainingSeats >= people;
+          });
+        }
+        return true;
+      })
       .map((item) => ({
         value: String(item.id),
-        label: item.title || item.name || `${quickBookingResource === 'stays' ? 'Домик' : 'Тур'} #${item.id}`,
+        label: item.title || item.name || `${isStayQuickBooking ? 'Объект' : 'Тур'} #${item.id}`,
       }));
-  }, [accommodations, currentCompany?.id, isSuperAdmin, quickBookingResource, tours]);
+  }, [accommodations, calendarDate, currentCompany?.id, getStayBlockForDate, getStaySlotConflicts, isStayQuickBooking, isSuperAdmin, quickBookingDate, quickBookingPeople, tourBookings, tours]);
 
   const resetCalendarFilters = useCallback(() => {
     setCalendarCompanyFilter('all');
@@ -1425,14 +2511,86 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     });
   }, [tourSearch, tourStatusFilter, tours]);
 
-  const filteredClients = useMemo(() => {
-    const query = clientSearch.trim().toLowerCase();
+  const tourOperationCards = useMemo(() => (
+    filteredTours.flatMap((tour) => (tour.departureSlots || []).map((slot) => {
+      const slotBookings = tourBookings.filter((booking) => (
+        Number(booking.tourId) === Number(tour.id)
+        && String(booking.departureSlotId || '') === String(slot.id || '')
+      ));
+      const bookedSeats = slotBookings.reduce((sum, booking) => sum + Math.max(Number(booking.people) || 1, 1), 0);
+      const confirmedSeats = slotBookings
+        .filter((booking) => ['CONFIRMED', 'PAID', 'PARTIALLY_PAID', 'COMPLETED'].includes(getCanonicalBookingStatus(booking)))
+        .reduce((sum, booking) => sum + Math.max(Number(booking.people) || 1, 1), 0);
+      const revenue = slotBookings.reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+      const start = dayjs(slot.startAt);
+      const totalSeats = Number(slot.seats || 0);
+      const remainingSeats = Math.max(totalSeats - bookedSeats, 0);
+      const computedStatus = !slot.active
+        ? 'paused'
+        : bookedSeats >= totalSeats
+          ? 'sold_out'
+          : (slot.status || (confirmedSeats > 0 ? 'confirmed' : 'scheduled'));
+      const statusMeta = TOUR_DEPARTURE_STATUS_META[computedStatus] || TOUR_DEPARTURE_STATUS_META.scheduled;
+      const waitlist = Array.isArray(slot.waitlist) ? slot.waitlist : [];
+      const operationsChecklist = {
+        ...createEmptyTourOperationsChecklist(),
+        ...(slot.operationsChecklist || {}),
+      };
+      const checklistDone = TOUR_OPERATION_CHECKLIST_ITEMS
+        .filter((item) => operationsChecklist[item.key])
+        .length;
 
-    return users.filter((user) => {
-      const haystack = [user.name, user.email, user.phone, user.role, user.level].filter(Boolean).join(' ').toLowerCase();
-      return !query || haystack.includes(query);
-    });
-  }, [clientSearch, users]);
+      return {
+        key: `${tour.id}-${slot.id}`,
+        tour,
+        slot,
+        title: tour.title,
+        date: start,
+        time: start.format('HH:mm'),
+        bookedSeats,
+        confirmedSeats,
+        totalSeats,
+        remainingSeats,
+        revenue,
+        price: Number(slot.price || tour.price || 0),
+        status: computedStatus,
+        statusLabel: statusMeta.label,
+        statusColor: statusMeta.color,
+        waitlistCount: Number(slot.waitlistCount || waitlist.length || 0),
+        nextWaitlistClient: slot.nextWaitlistClient || waitlist.find((item) => item.status !== 'resolved'),
+        operationsChecklist,
+        checklistDone,
+      };
+    }))
+      .filter((card) => card.date.isValid())
+      .sort((left, right) => left.date.valueOf() - right.date.valueOf())
+  ), [filteredTours, tourBookings]);
+
+  const activeDepartureOpsCard = useMemo(() => {
+    if (!departureOpsDrawerItem) return null;
+    return tourOperationCards.find((card) => card.key === departureOpsDrawerItem.key) || departureOpsDrawerItem;
+  }, [departureOpsDrawerItem, tourOperationCards]);
+
+  const departureParticipantRows = useMemo(() => {
+    if (!activeDepartureOpsCard) return [];
+    return tourBookings
+      .filter((booking) => Number(booking.tourId) === Number(activeDepartureOpsCard.tour.id))
+      .filter((booking) => String(booking.departureSlotId || '') === String(activeDepartureOpsCard.slot.id || ''))
+      .map((booking) => {
+        const paymentMeta = PAYMENT_STATUS_META[getCanonicalPaymentStatus(booking)] || PAYMENT_STATUS_META.UNPAID;
+        return {
+          key: `participant-${booking.id}`,
+          name: booking.clientName || 'TravelPay client',
+          phone: booking.clientPhone || '',
+          type: Number(booking.children || 0) > 0 && Number(booking.adults || 0) <= 0 ? 'Child' : Number(booking.children || 0) > 0 ? `Adult + ${booking.children} child` : 'Adult',
+          paymentLabel: paymentMeta.label,
+          paymentColor: paymentMeta.color,
+          pickup: booking.pickup || booking.pickupLocation || '',
+          comment: booking.comment || '',
+          emergencyContact: booking.emergencyContact || booking.emergencyPhone || '',
+        };
+      });
+  }, [activeDepartureOpsCard, tourBookings]);
 
   const filteredBookings = useMemo(() => {
     const query = (calendarSearch || bookingSearch).trim().toLowerCase();
@@ -1465,6 +2623,157 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       return matchesStatus && matchesManager && matchesExtras && (!query || haystack.includes(query));
     });
   }, [bookingExtraFilter, bookingManagerFilter, bookingRows, bookingSearch, bookingStatusFilter, calendarSearch]);
+
+  const clientRecords = useMemo(() => {
+    const findBookingsForUser = (user) => {
+      const userId = Number(user.id);
+      const email = String(user.email || '').toLowerCase();
+      const phone = String(user.phone || '').replace(/\D/g, '');
+      const name = String(user.name || '').trim().toLowerCase();
+
+      return bookingRows.filter((booking) => {
+        const bookingPhone = String(booking.clientPhone || '').replace(/\D/g, '');
+        return Number(booking.clientId || booking.userId || 0) === userId
+          || (email && String(booking.clientEmail || '').toLowerCase() === email)
+          || (phone && bookingPhone && bookingPhone.endsWith(phone.slice(-7)))
+          || (name && String(booking.clientName || '').trim().toLowerCase() === name);
+      });
+    };
+
+    return users.map((user) => {
+      const clientBookings = findBookingsForUser(user);
+      const spent = clientBookings
+        .filter((booking) => ['PAID', 'PARTIALLY_PAID', 'COMPLETED', 'CONFIRMED'].includes(getCanonicalBookingStatus(booking))
+          || ['PAID', 'PARTIALLY_PAID'].includes(getCanonicalPaymentStatus(booking)))
+        .reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+      const lastBooking = [...clientBookings].sort((left, right) => (
+        dayjs(right.bookingDate || right.travelDate || right.checkInDate || right.createdAt).valueOf()
+        - dayjs(left.bookingDate || left.travelDate || left.checkInDate || left.createdAt).valueOf()
+      ))[0] || null;
+      const cancelledCount = clientBookings.filter((booking) => ['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking))).length;
+      const unpaidCount = clientBookings.filter((booking) => {
+        const total = Number(booking.amount || 0);
+        const prepaid = Number(booking.prepaymentAmount || 0);
+        return total > prepaid && !['PAID', 'REFUNDED'].includes(getCanonicalPaymentStatus(booking));
+      }).length;
+      const travelpayCount = clientBookings.filter((booking) => isTravelPayMarketplaceSource(booking.bookingSource)).length;
+      const manualCount = clientBookings.filter((booking) => booking.paymentMethod === 'manual' || booking.bookingSource === 'phone' || booking.bookingSource === 'whatsapp').length;
+      const tourCount = clientBookings.filter((booking) => booking.type === 'tour_booking').length;
+      const stayCount = clientBookings.filter((booking) => booking.type === 'stay_booking').length;
+      const isVip = spent >= 100000 || clientBookings.length >= 5;
+      const status = unpaidCount ? 'debtor' : isVip ? 'vip' : clientBookings.length > 1 ? 'repeat' : clientBookings.length ? 'new' : 'lead';
+      const walletBalance = Number(user.savings?.currentAmount ?? user.balance ?? 0);
+      const walletHistory = [
+        ...(user.topUps || []).map((topUp, index) => ({
+          key: `topup-${topUp.id || index}`,
+          type: topUp.bonus ? 'Bonus' : 'Пополнение',
+          date: topUp.date || topUp.createdAt,
+          amount: Number(topUp.amount || 0) + Number(topUp.bonus || 0),
+          description: topUp.bonus ? `Пополнение + bonus ${formatMoney(topUp.bonus)}` : 'Пополнение TravelPay',
+        })),
+        ...(user.walletAdjustments || user.managerAdjustments || []).map((adjustment, index) => ({
+          key: `adjustment-${adjustment.id || index}`,
+          type: 'Manager adjustment',
+          date: adjustment.date || adjustment.createdAt,
+          amount: Number(adjustment.amount || 0),
+          description: adjustment.comment || adjustment.reason || 'Корректировка менеджера',
+        })),
+        ...clientBookings.filter((booking) => Number(booking.prepaymentAmount || booking.amount || 0) > 0).map((booking) => ({
+          key: `payment-${booking.key}`,
+          type: ['REFUNDED', 'PARTIALLY_REFUNDED'].includes(getCanonicalPaymentStatus(booking)) ? 'Refund' : 'Оплата бронирования',
+          date: booking.paymentReviewedAt || booking.createdAt || booking.bookingDate,
+          amount: Number(booking.prepaymentAmount || booking.amount || 0),
+          description: booking.tourTitle || booking.stayTitle || 'Бронирование',
+        })),
+      ].sort((left, right) => dayjs(right.date).valueOf() - dayjs(left.date).valueOf());
+      const timeline = [
+        ...clientBookings.flatMap((booking) => [
+          {
+            key: `created-${booking.key}`,
+            date: booking.createdAt || booking.bookingDate,
+            title: `Бронирование создано`,
+            description: booking.tourTitle || booking.stayTitle || 'TravelPay',
+            tone: 'info',
+          },
+          Number(booking.prepaymentAmount || 0) > 0 ? {
+            key: `paid-${booking.key}`,
+            date: booking.paymentReviewedAt || booking.createdAt || booking.bookingDate,
+            title: `Оплата ${formatMoney(booking.prepaymentAmount)}`,
+            description: booking.tourTitle || booking.stayTitle || 'Бронирование',
+            tone: 'success',
+          } : null,
+          ...(booking.statusHistory || []).map((entry, index) => ({
+            key: `status-${booking.key}-${entry.id || index}`,
+            date: entry.changedAt,
+            title: `Менеджер изменил статус на ${(BOOKING_STATUS_META[String(entry.to || '').toUpperCase()] || PAYMENT_STATUS_META[String(entry.to || '').toUpperCase()] || {}).label || entry.to}`,
+            description: booking.tourTitle || booking.stayTitle || entry.comment || '',
+            tone: 'accent',
+          })),
+        ].filter(Boolean)),
+        ...walletHistory.map((entry) => ({
+          key: `wallet-${entry.key}`,
+          date: entry.date,
+          title: entry.type,
+          description: `${entry.description} · ${formatMoney(entry.amount)}`,
+          tone: entry.type === 'Refund' ? 'danger' : 'success',
+        })),
+      ].filter((entry) => entry.date).sort((left, right) => dayjs(right.date).valueOf() - dayjs(left.date).valueOf());
+      const communicationHistory = clientBookings
+        .flatMap(buildBookingCommunicationEntries)
+        .sort((left, right) => dayjs(right.date).valueOf() - dayjs(left.date).valueOf());
+
+      return {
+        ...user,
+        key: `client-${user.id}`,
+        bookings: clientBookings,
+        bookingsCount: clientBookings.length,
+        spent,
+        lastBooking,
+        lastTripAt: lastBooking?.bookingDate || lastBooking?.travelDate || lastBooking?.checkInDate || lastBooking?.createdAt || '',
+        tourCount,
+        stayCount,
+        cancelledCount,
+        unpaidCount,
+        travelpayCount,
+        manualCount,
+        clientStatus: status,
+        clientLabel: isVip ? 'VIP' : unpaidCount ? 'Должник' : clientBookings.length > 1 ? 'Повторный' : clientBookings.length ? 'Новый' : 'Лид',
+        manager: lastBooking?.assignedTo || user.manager || currentCompany?.name || 'TravelPay',
+        sourceLabel: manualCount > travelpayCount ? 'Ручное бронирование' : 'TravelPay',
+        clientSince: user.createdAt || lastBooking?.createdAt || '',
+        clientTags: Array.isArray(user.clientTags) ? user.clientTags : [],
+        walletBalance,
+        walletHistory,
+        communicationHistory,
+        timeline,
+      };
+    });
+  }, [bookingRows, currentCompany?.name, users]);
+
+  const filteredClients = useMemo(() => {
+    const query = clientSearch.trim().toLowerCase();
+
+    return clientRecords.filter((client) => {
+      const haystack = [client.name, client.email, client.phone, client.role, client.level].filter(Boolean).join(' ').toLowerCase();
+      const matchesQuery = !query || haystack.includes(query);
+      const matchesFilter = clientSegmentFilter === 'all'
+        || (clientSegmentFilter === 'new' && client.clientStatus === 'new')
+        || (clientSegmentFilter === 'repeat' && client.clientStatus === 'repeat')
+        || (clientSegmentFilter === 'vip' && client.clientStatus === 'vip')
+        || (clientSegmentFilter === 'debtors' && client.unpaidCount > 0)
+        || (clientSegmentFilter === 'cancelled' && client.cancelledCount > 0)
+        || (clientSegmentFilter === 'travelpay' && client.travelpayCount > 0)
+        || (clientSegmentFilter === 'manual' && client.manualCount > 0);
+      return matchesQuery && matchesFilter;
+    });
+  }, [clientRecords, clientSearch, clientSegmentFilter]);
+
+  useEffect(() => {
+    const match = location.pathname.match(/^\/(?:admin|business)\/clients\/([^/]+)/);
+    if (!match) return;
+    const nextClient = clientRecords.find((client) => String(client.id) === String(match[1]));
+    if (nextClient) setClientDrawerItem(nextClient);
+  }, [clientRecords, location.pathname]);
 
   const editingStayAccommodation = useMemo(
     () => accommodations.find((item) => Number(item.id) === Number(editingStayBooking?.stayId)) || null,
@@ -1744,8 +3053,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     })
   ), [bookingTab, calendarDate]);
 
-  const weekBoardStartHour = 8;
-  const weekBoardEndHour = 22;
+  const weekBoardStartHour = 7;
+  const weekBoardEndHour = 23;
   const weekHourHeight = 64;
   const stayBookingsOnly = useMemo(
     () => filteredBookings.filter((booking) => booking.type === 'stay_booking'),
@@ -1782,6 +3091,30 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       loadDashboardData();
     }
   };
+
+  const saveBusinessProfile = async (values) => {
+    if (!currentCompany?.id) {
+      message.error('Компания не найдена.');
+      return;
+    }
+    setBusinessProfileSaving(true);
+    try {
+      const payload = {
+        ...values,
+        paymentMethods: (values.paymentMethods || []).filter((method) => method?.title || method?.qrCodeUrl || method?.phoneNumber || method?.bankName),
+        documents: (values.documents || []).filter((document) => document?.name || document?.dataUrl),
+      };
+      const response = await api.put(`/companies/${currentCompany.id}`, payload);
+      const updatedCompany = response.data;
+      setCompanies((items) => items.map((item) => (Number(item.id) === Number(updatedCompany.id) ? updatedCompany : item)));
+      message.success('Профиль сохранён');
+    } catch (error) {
+      message.error(getFriendlyErrorMessage(error, 'Не удалось сохранить профиль.'));
+    } finally {
+      setBusinessProfileSaving(false);
+    }
+  };
+
   const topExtraService = useMemo(() => {
     const totals = new Map();
     stayBookingsOnly.forEach((booking) => {
@@ -1796,6 +3129,111 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
     return Array.from(totals.values()).sort((left, right) => right.revenue - left.revenue)[0] || null;
   }, [stayBookingsOnly]);
+
+  const propertyDateRange = useMemo(() => (
+    Array.from({ length: 7 }, (_, index) => dayjs().startOf('day').add(index, 'day'))
+  ), []);
+
+  const getUnitBookings = useCallback((unit) => stayBookings
+    .filter((booking) => Number(booking.stayId) === Number(unit.id))
+    .filter((booking) => !['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking))), [stayBookings]);
+
+  const getUnitMetrics = useCallback((unit) => {
+    const unitBookings = getUnitBookings(unit);
+    const windowStart = dayjs().subtract(30, 'day').startOf('day');
+    const windowEnd = dayjs().add(30, 'day').endOf('day');
+    const activeInWindow = unitBookings.filter((booking) => {
+      const start = dayjs(booking.checkInDate || booking.bookingDate);
+      const end = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate);
+      return start.isBefore(windowEnd) && end.isAfter(windowStart);
+    });
+    const occupiedDays = new Set();
+    activeInWindow.forEach((booking) => {
+      let cursor = dayjs(booking.checkInDate || booking.bookingDate).startOf('day');
+      const end = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate).startOf('day');
+      while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
+        occupiedDays.add(cursor.format('YYYY-MM-DD'));
+        cursor = cursor.add(1, 'day');
+      }
+    });
+    const bookingsCount = unitBookings.length;
+    const revenue = unitBookings.reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+    const cancellations = stayBookings
+      .filter((booking) => Number(booking.stayId) === Number(unit.id))
+      .filter((booking) => ['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking))).length;
+    const avgPrice = bookingsCount ? Math.round(revenue / bookingsCount) : Number(unit.pricePerNight || 0);
+    const nextCheckIn = unitBookings
+      .filter((booking) => dayjs(booking.checkInDate || booking.bookingDate).isAfter(dayjs().startOf('day')))
+      .sort((left, right) => dayjs(left.checkInDate || left.bookingDate).valueOf() - dayjs(right.checkInDate || right.bookingDate).valueOf())[0] || null;
+
+    return {
+      bookings: unitBookings,
+      bookingsCount,
+      revenue,
+      cancellations,
+      avgPrice,
+      occupiedDays: occupiedDays.size,
+      freeDays: Math.max(60 - occupiedDays.size, 0),
+      occupancy: Math.min(Math.round((occupiedDays.size / 60) * 100), 100),
+      nextCheckIn,
+    };
+  }, [getUnitBookings, stayBookings]);
+
+  const propertyRecords = useMemo(() => {
+    const groups = new Map();
+    accommodations
+      .filter((unit) => isSuperAdmin || !currentCompany?.id || Number(unit.companyId) === Number(currentCompany.id))
+      .forEach((unit) => {
+        const key = unit.propertyId || unit.propertyName || unit.companyName || unit.location || `property-${unit.id}`;
+        const label = unit.propertyName || unit.companyName || unit.location || unit.title || `Property #${unit.id}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            id: key,
+            title: label,
+            location: unit.location,
+            companyName: unit.companyName,
+            units: [],
+          });
+        }
+        groups.get(key).units.push(unit);
+      });
+
+    return Array.from(groups.values()).map((property) => {
+      const units = property.units.map((unit) => ({ ...unit, metrics: getUnitMetrics(unit) }));
+      const revenue = units.reduce((sum, unit) => sum + unit.metrics.revenue, 0);
+      const bookingsCount = units.reduce((sum, unit) => sum + unit.metrics.bookingsCount, 0);
+      const occupancy = units.length ? Math.round(units.reduce((sum, unit) => sum + unit.metrics.occupancy, 0) / units.length) : 0;
+      const nextCheckIn = units
+        .map((unit) => unit.metrics.nextCheckIn ? { unit, booking: unit.metrics.nextCheckIn } : null)
+        .filter(Boolean)
+        .sort((left, right) => dayjs(left.booking.checkInDate || left.booking.bookingDate).valueOf() - dayjs(right.booking.checkInDate || right.booking.bookingDate).valueOf())[0] || null;
+
+      return {
+        ...property,
+        units,
+        image: units[0]?.images?.[0],
+        type: units.length > 1 ? 'Property' : (ACCOMMODATION_TYPES.find((item) => item.value === units[0]?.type)?.label || units[0]?.type || 'Unit'),
+        capacity: units.reduce((sum, unit) => sum + Number(unit.capacity || 0), 0),
+        price: units.length ? Math.round(units.reduce((sum, unit) => sum + Number(unit.pricePerNight || 0), 0) / units.length) : 0,
+        status: units.every((unit) => unit.status === 'available') ? 'available' : units.some((unit) => unit.status === 'available') ? 'mixed' : 'sold_out',
+        occupancy,
+        revenue,
+        bookingsCount,
+        cancellations: units.reduce((sum, unit) => sum + unit.metrics.cancellations, 0),
+        avgPrice: bookingsCount ? Math.round(revenue / bookingsCount) : 0,
+        nextCheckIn,
+      };
+    });
+  }, [accommodations, currentCompany?.id, getUnitMetrics, isSuperAdmin]);
+
+  useEffect(() => {
+    const match = location.pathname.match(/^\/admin\/properties\/([^/]+)/);
+    if (!match) return;
+    const requestedPropertyId = decodeURIComponent(match[1]);
+    const nextProperty = propertyRecords.find((property) => String(property.id) === requestedPropertyId);
+    if (nextProperty) setPropertyDetailItem(nextProperty);
+  }, [location.pathname, propertyRecords]);
+
   const weekHourRows = useMemo(() => (
     Array.from({ length: weekBoardEndHour - weekBoardStartHour }, (_, index) => weekBoardStartHour + index)
   ), []);
@@ -1874,6 +3312,102 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     })
   ), [weekCalendarDays, weekCalendarEntries]);
 
+  const scheduleDayEntries = useMemo(() => (
+    selectedDayCalendarEntries
+      .map((entry) => getScheduleEventForDate(entry, calendarDate))
+      .filter((entry) => {
+        const start = entry.scheduleTime || dayjs(entry.startDate);
+        return start.isValid()
+          && start.hour() >= weekBoardStartHour
+          && start.hour() < weekBoardEndHour;
+      })
+      .sort((left, right) => (
+        (left.scheduleTime || dayjs(left.startDate)).valueOf() - (right.scheduleTime || dayjs(right.startDate)).valueOf()
+      ))
+  ), [calendarDate, selectedDayCalendarEntries]);
+
+  const scheduleDayTimedEntries = useMemo(() => {
+    const boardStartMinutes = weekBoardStartHour * 60;
+    const boardEndMinutes = weekBoardEndHour * 60;
+    const items = scheduleDayEntries.map((entry) => {
+      const start = entry.scheduleTime || dayjs(entry.startDate);
+      const durationMinutes = entry.type === 'tour'
+        ? 90
+        : Math.min(Math.max(dayjs(entry.endDate).diff(start, 'minute') || getBookingDurationMinutes(entry), 45), 180);
+      const startMinutes = (start.hour() * 60) + start.minute();
+      const endMinutes = Math.min(startMinutes + durationMinutes, boardEndMinutes);
+      const topMinutes = Math.max(0, startMinutes - boardStartMinutes);
+      const visibleDuration = Math.max(45, endMinutes - Math.max(startMinutes, boardStartMinutes));
+
+      return {
+        ...entry,
+        startMinute: Math.max(startMinutes, boardStartMinutes),
+        endMinute: Math.max(endMinutes, Math.max(startMinutes, boardStartMinutes) + 45),
+        timeLabel: start.format('HH:mm'),
+        style: {
+          top: `${(topMinutes / 60) * weekHourHeight}px`,
+          height: `${(visibleDuration / 60) * weekHourHeight}px`,
+        },
+      };
+    });
+    const lanes = [];
+    const placed = items.map((item) => {
+      const laneIndex = lanes.findIndex((laneEnd) => laneEnd <= item.startMinute);
+      const nextLane = laneIndex === -1 ? lanes.length : laneIndex;
+      lanes[nextLane] = item.endMinute;
+      return { ...item, laneIndex: nextLane };
+    });
+    const laneCount = Math.max(lanes.length, 1);
+
+    return placed.map((item) => ({
+      ...item,
+      style: {
+        ...item.style,
+        left: `calc(${(item.laneIndex / laneCount) * 100}% + 12px)`,
+        width: `calc(${100 / laneCount}% - 18px)`,
+      },
+    }));
+  }, [scheduleDayEntries, weekHourHeight]);
+
+  const scheduleResourceColumns = useMemo(() => {
+    const columns = new Map();
+    const addColumn = (key, label, meta = {}) => {
+      if (!columns.has(key)) columns.set(key, { key, label, items: [], ...meta });
+    };
+
+    if (scheduleGroupBy === 'resources') {
+      if (calendarResource === 'stays') {
+        accommodations
+          .filter((item) => isSuperAdmin || !currentCompany?.id || Number(item.companyId) === Number(currentCompany.id))
+          .forEach((item) => addColumn(
+            item.title || item.name || `Cottage #${item.id}`,
+            item.title || item.name || `Cottage #${item.id}`,
+            { bookingResource: 'cottages', objectId: String(item.id), resourceType: item.type || 'cottage' },
+          ));
+      } else {
+        tours
+          .filter((item) => isSuperAdmin || !currentCompany?.id || Number(item.companyId) === Number(currentCompany.id))
+          .forEach((item) => addColumn(
+            item.title || `Тур #${item.id}`,
+            item.title || `Тур #${item.id}`,
+            { bookingResource: 'tours', objectId: String(item.id), resourceType: 'tour' },
+          ));
+      }
+    }
+
+    scheduleDayTimedEntries.forEach((entry) => {
+      const key = getScheduleResourceKey(entry, scheduleGroupBy);
+      addColumn(key, key, {
+        bookingResource: entry.type === 'stay_booking' ? 'cottages' : 'tours',
+        objectId: entry.type === 'stay_booking' ? String(entry.stayId || '') : String(entry.tourId || entry.id || ''),
+      });
+      const column = columns.get(key);
+      column.items.push(entry);
+    });
+
+    return Array.from(columns.values()).filter((column) => column.items.length || scheduleGroupBy === 'resources').slice(0, 12);
+  }, [accommodations, calendarResource, currentCompany?.id, isSuperAdmin, scheduleDayTimedEntries, scheduleGroupBy, tours]);
+
   const tourStatusSegments = useMemo(() => [
     { label: `Все ${tours.length}`, value: 'all' },
     ...Object.entries(STATUS_META).map(([value, meta]) => ({
@@ -1889,6 +3423,105 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     { title: 'Бронирования', value: bookingRows.length, color: '#8b5cf6' },
     { title: 'Клиенты', value: users.length, color: '#0ea5e9' },
   ];
+  const isBusinessPaidBooking = (booking) => (
+    ['paid', 'confirmed'].includes(booking.status) || ['paid', 'confirmed'].includes(booking.paymentStatus)
+  );
+  const getBookingsForBusinessDate = useCallback((date) => bookingRows.filter((booking) => {
+    const selected = date.startOf('day');
+    const candidateDates = [
+      booking.travelDate,
+      booking.bookingDate,
+      booking.checkInDate,
+      booking.checkOutDate,
+      booking.endDate,
+      booking.purchasedAt,
+    ].filter(Boolean);
+    return candidateDates.some((value) => dayjs(value).isValid() && dayjs(value).isSame(selected, 'day'));
+  }), [bookingRows]);
+  const getPeriodChange = (current, previous) => {
+    if (!previous && !current) return 'без изменений';
+    if (!previous) return '+100%';
+    const value = Math.round(((current - previous) / previous) * 100);
+    return `${value > 0 ? '+' : ''}${value}%`;
+  };
+  const businessToday = dayjs();
+  const businessYesterday = businessToday.subtract(1, 'day');
+  const businessTodayBookings = getBookingsForBusinessDate(businessToday);
+  const businessYesterdayBookings = getBookingsForBusinessDate(businessYesterday);
+  const businessTodayRevenue = businessTodayBookings
+    .filter(isBusinessPaidBooking)
+    .reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+  const businessYesterdayRevenue = businessYesterdayBookings
+    .filter(isBusinessPaidBooking)
+    .reduce((sum, booking) => sum + Number(booking.amount || 0), 0);
+  const businessTodayPendingPayment = businessTodayBookings
+    .filter((booking) => !isBusinessPaidBooking(booking) && !['cancelled', 'rejected'].includes(booking.status))
+    .reduce((sum, booking) => sum + Number(booking.prepaymentAmount || booking.amount || 0), 0);
+  const businessTodayGuests = businessTodayBookings.reduce((sum, booking) => (
+    sum + Math.max(Number(booking.people || booking.guests || 0), 0)
+  ), 0);
+  const businessYesterdayGuests = businessYesterdayBookings.reduce((sum, booking) => (
+    sum + Math.max(Number(booking.people || booking.guests || 0), 0)
+  ), 0);
+  const businessTodayTours = tours.flatMap((tour) => (
+    (Array.isArray(tour.departureSlots) ? tour.departureSlots : [])
+      .filter((slot) => slot?.active !== false && dayjs(slot.startAt).isSame(businessToday, 'day'))
+      .map((slot, index) => {
+        const slotBookings = bookingRows.filter((booking) => (
+          Number(booking.tourId) === Number(tour.id)
+          && (!booking.departureSlotId || String(booking.departureSlotId) === String(slot.id || ''))
+          && dayjs(booking.travelDate || booking.bookingDate).isSame(dayjs(slot.startAt), 'day')
+        ));
+        const totalSeats = Number(slot.seats || tour.totalSeats || tour.seats || 0);
+        const bookedSeats = slotBookings.reduce((sum, booking) => sum + Math.max(Number(booking.people) || 1, 1), 0);
+        return getScheduleEventForDate({
+          ...tour,
+          key: `business-home-tour-${tour.id}-${slot.id || index}`,
+          type: 'tour',
+          startDate: slot.startAt,
+          totalSeats,
+          bookedSeats,
+          companyName: tour.companyName || currentCompany?.name,
+        }, businessToday);
+      })
+  ));
+  const businessTodayStayEvents = businessTodayBookings
+    .filter((booking) => booking.type === 'stay_booking')
+    .map((booking) => getScheduleEventForDate(booking, businessToday));
+  const businessTodayTimeline = [...businessTodayTours, ...businessTodayStayEvents]
+    .sort((left, right) => (
+      (left.scheduleTime || dayjs(left.startDate)).valueOf() - (right.scheduleTime || dayjs(right.startDate)).valueOf()
+    ));
+  const businessUpcomingBookings = bookingRows
+    .filter((booking) => dayjs(booking.bookingDate || booking.travelDate || booking.checkInDate).isAfter(businessToday.startOf('day')))
+    .sort((left, right) => dayjs(left.bookingDate || left.travelDate || left.checkInDate).valueOf() - dayjs(right.bookingDate || right.travelDate || right.checkInDate).valueOf());
+  const businessAwaitingConfirmation = bookingRows.filter((booking) => ['pending', 'pending_payment', 'payment_review'].includes(booking.status));
+  const businessUnpaidBookings = bookingRows.filter((booking) => !isBusinessPaidBooking(booking) && !['cancelled', 'rejected'].includes(booking.status));
+  const businessCheckInsToday = businessTodayStayEvents.filter((entry) => entry.scheduleType === 'check-in');
+  const businessCheckOutsToday = businessTodayStayEvents.filter((entry) => entry.scheduleType === 'check-out');
+  const businessOverdueTasks = businessAwaitingConfirmation.filter((booking) => dayjs(booking.bookingDate || booking.createdAt).isBefore(businessToday.startOf('day'))).length;
+  const cottagesLoad = accommodations.length
+    ? Math.min(100, Math.round((stayBookingsOnly.filter((booking) => {
+      const start = dayjs(booking.checkInDate || booking.bookingDate);
+      const end = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate);
+      return start.isValid() && end.isValid() && !businessToday.isBefore(start, 'day') && !businessToday.isAfter(end, 'day');
+    }).length / accommodations.length) * 100))
+    : 0;
+  const toursLoad = businessTodayTours.length
+    ? Math.round((businessTodayTours.reduce((sum, tour) => sum + Number(tour.bookedSeats || 0), 0)
+      / Math.max(businessTodayTours.reduce((sum, tour) => sum + Number(tour.totalSeats || 0), 0), 1)) * 100)
+    : 0;
+  const onboardingSteps = [
+    { title: 'Создайте компанию', done: Boolean(currentCompany?.name && currentCompany?.phone), action: '/admin/company' },
+    { title: 'Добавьте тур или объект', done: tours.length > 0 || accommodations.length > 0, action: tours.length ? `${basePath}/objects` : `${basePath}/tours` },
+    { title: 'Настройте цены', done: [...tours, ...accommodations].some((item) => Number(item.price || item.pricePerNight || item.basePrice) > 0), action: tours.length ? `${basePath}/tours` : `${basePath}/objects` },
+    { title: 'Добавьте менеджера', done: businessStaff.length > 0, action: `${basePath}/team` },
+    { title: 'Укажите реквизиты', done: Boolean(primaryPaymentMethod.qrCodeUrl || primaryPaymentMethod.phoneNumber || primaryPaymentMethod.bankName), action: '/admin/company' },
+    { title: 'Создайте первое бронирование', done: bookingRows.length > 0, action: `${basePath}/bookings` },
+    { title: 'Опубликуйте предложение', done: [...tours, ...accommodations].some((item) => item.status === 'active' || item.status === 'available'), action: tours.length ? `${basePath}/tours` : `${basePath}/objects` },
+  ];
+  const onboardingDone = onboardingSteps.filter((step) => step.done).length;
+  const onboardingProgress = Math.round((onboardingDone / onboardingSteps.length) * 100);
 
   const copyPortalLink = async () => {
     const nextLink = `${window.location.origin}${businessMode ? '/business/register' : '/register'}`;
@@ -1922,11 +3555,22 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       companyId: currentCompany?.id ? String(currentCompany.id) : undefined,
       status: businessMode ? 'draft' : 'active',
       rating: 4.8,
+      prepaymentMode: 'percent',
+      prepaymentPercent: 30,
+      prepaymentFixedAmount: 0,
       departureSlots: [{
         id: `departure-${Date.now()}`,
         startAt: calendarDate.add(1, 'day').hour(9).minute(0),
         seats: 20,
         active: true,
+        guide: '',
+        driver: '',
+        vehicle: '',
+        meetingPoint: '',
+        price: 0,
+        status: 'scheduled',
+        waitlist: [],
+        operationsChecklist: createEmptyTourOperationsChecklist(),
       }],
       route: '',
       manager: sessionUser?.name || currentCompany?.name || '',
@@ -1986,11 +3630,25 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       companyId: tour.companyId ? String(tour.companyId) : (currentCompany?.id ? String(currentCompany.id) : undefined),
       rating: Number(tour.rating || 4.8),
       price: Number(tour.price || 0),
+      prepaymentMode: tour.prepaymentMode || 'percent',
+      prepaymentPercent: Number(tour.prepaymentPercent || 30),
+      prepaymentFixedAmount: Number(tour.prepaymentFixedAmount || 0),
       departureSlots: (tour.departureSlots || []).map((slot, index) => ({
         id: slot.id || `departure-${index + 1}`,
         startAt: toDayjsField(slot.startAt),
         seats: Number(slot.seats || 1),
         active: slot.active !== false,
+        guide: slot.guide || '',
+        driver: slot.driver || '',
+        vehicle: slot.vehicle || '',
+        meetingPoint: slot.meetingPoint || '',
+        price: Number(slot.price || tour.price || 0),
+        status: slot.status || (slot.active === false ? 'paused' : 'scheduled'),
+        waitlist: Array.isArray(slot.waitlist) ? slot.waitlist : [],
+        operationsChecklist: {
+          ...createEmptyTourOperationsChecklist(),
+          ...(slot.operationsChecklist || {}),
+        },
       })),
       route: tour.route || tour.location || '',
       manager: tour.manager || '',
@@ -2011,6 +3669,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const handleSaveTour = async (values) => {
     if (tourSaving) return;
+    const previousTour = editingTourId ? tours.find((item) => Number(item.id) === Number(editingTourId)) : null;
     const accommodationsPayload = (values.accommodations || []).map(normalizeAccommodation).map((item) => ({
       ...item,
       images: (item.images || []).filter(Boolean),
@@ -2018,12 +3677,27 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
     const departureSlots = (values.departureSlots || [])
       .filter((slot) => slot?.startAt)
-      .map((slot, index) => ({
-        id: slot.id || `departure-${Date.now()}-${index}`,
-        startAt: slot.startAt.toISOString(),
-        seats: Math.max(Number(slot.seats || 1), 1),
-        active: slot.active !== false,
-      }));
+      .map((slot, index) => {
+        const id = slot.id || `departure-${Date.now()}-${index}`;
+        const previousSlot = previousTour?.departureSlots?.find((item) => String(item.id) === String(id));
+        return {
+          id,
+          startAt: slot.startAt.toISOString(),
+          seats: Math.max(Number(slot.seats || 1), 1),
+          active: slot.active !== false,
+          guide: slot.guide || '',
+          driver: slot.driver || '',
+          vehicle: slot.vehicle || '',
+          meetingPoint: slot.meetingPoint || '',
+          price: Number(slot.price || values.price || 0),
+          status: slot.status || (slot.active === false ? 'paused' : 'scheduled'),
+          waitlist: Array.isArray(slot.waitlist) ? slot.waitlist : (previousSlot?.waitlist || []),
+          operationsChecklist: {
+            ...createEmptyTourOperationsChecklist(),
+            ...(slot.operationsChecklist || previousSlot?.operationsChecklist || {}),
+          },
+        };
+      });
     if (!departureSlots.length) {
       message.error('Добавьте хотя бы одно отправление тура.');
       return;
@@ -2035,6 +3709,10 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       companyId: Number(values.companyId || currentCompany?.id || sessionUser?.companyId || 1),
       companyName: companiesById.get(Number(values.companyId || currentCompany?.id || sessionUser?.companyId || 1))?.name || currentCompany?.name || values.companyName || 'TravelPay',
       price: Number(values.price || 0),
+      prepaymentMode: values.prepaymentMode || 'percent',
+      prepaymentPercent: values.prepaymentMode === 'percent' ? Number(values.prepaymentPercent || 0) : 0,
+      prepaymentFixedAmount: values.prepaymentMode === 'fixed' ? Number(values.prepaymentFixedAmount || 0) : 0,
+      prepaymentRequired: values.prepaymentMode !== 'disabled',
       rating: Number(values.rating || 0),
       departureSlots,
       startDate: firstDeparture?.startAt || '',
@@ -2067,10 +3745,10 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
       await loadDashboardData();
       closeTourDrawer(true);
-      message.success('Тур сохранён. Данные каталога обновлены.');
+      message.success('Тур обновлён');
       setMessageState({ type: 'success', text: 'Тур сохранён.' });
     } catch (error) {
-      setMessageState({ type: 'error', text: error.response?.data?.message || 'Не удалось сохранить тур.' });
+      setMessageState({ type: 'error', text: getFriendlyErrorMessage(error, 'Не удалось сохранить тур.') });
     } finally {
       setTourSaving(false);
     }
@@ -2131,10 +3809,21 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const startEditAccommodation = (item) => {
     setEditingAccommodationId(item.id);
+    const normalizedItem = normalizeAccommodation(item);
     accommodationForm.setFieldsValue({
-      ...normalizeAccommodation(item),
+      ...normalizedItem,
       title: item.title || item.name,
       images: item.images?.length ? item.images : [''],
+      blockedDates: (normalizedItem.blockedDates || []).map((block) => ({
+        ...block,
+        startDate: block.startDate ? dayjs(block.startDate) : null,
+        endDate: block.endDate ? dayjs(block.endDate) : null,
+      })),
+      pricingRules: (normalizedItem.pricingRules || []).map((rule) => ({
+        ...rule,
+        startDate: rule.startDate ? dayjs(rule.startDate) : null,
+        endDate: rule.endDate ? dayjs(rule.endDate) : null,
+      })),
       companyId: item.companyId ? String(item.companyId) : (currentCompany?.id ? String(currentCompany.id) : undefined),
       companyName: item.companyName || currentCompany?.name || '',
     });
@@ -2165,6 +3854,32 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       availableCount: Number(values.availableCount || values.totalCount || 0),
       capacity: Number(values.capacity || 0),
       pricePerNight: Number(values.pricePerNight || 0),
+      weekendPrice: Number(values.weekendPrice || 0),
+      prepaymentMode: values.prepaymentMode || 'percent',
+      prepaymentPercent: values.prepaymentMode === 'percent' ? Number(values.prepaymentPercent || 0) : 0,
+      prepaymentFixedAmount: values.prepaymentMode === 'fixed' ? Number(values.prepaymentFixedAmount || 0) : 0,
+      prepaymentRequired: values.prepaymentMode !== 'disabled',
+      propertyName: String(values.propertyName || '').trim(),
+      propertyId: String(values.propertyId || '').trim(),
+      defaultCheckInTime: values.defaultCheckInTime || '14:00',
+      defaultCheckOutTime: values.defaultCheckOutTime || '12:00',
+      blockedDates: (values.blockedDates || []).map((block, index) => ({
+        id: block.id || `block-${Date.now()}-${index}`,
+        startDate: block.startDate?.startOf?.('day')?.toISOString?.() || block.startDate || '',
+        endDate: block.endDate?.startOf?.('day')?.toISOString?.() || block.endDate || block.startDate || '',
+        reason: block.reason || 'unavailable',
+        comment: String(block.comment || '').trim(),
+      })).filter((block) => block.startDate),
+      pricingRules: (values.pricingRules || []).map((rule, index) => ({
+        id: rule.id || `pricing-${Date.now()}-${index}`,
+        type: rule.type || 'specific_date',
+        startDate: rule.startDate?.startOf?.('day')?.toISOString?.() || rule.startDate || '',
+        endDate: rule.endDate?.startOf?.('day')?.toISOString?.() || rule.endDate || rule.startDate || '',
+        price: Number(rule.price || 0),
+        discount: Number(rule.discount || 0),
+        minimumStay: Number(rule.minimumStay || 0),
+        label: String(rule.label || '').trim(),
+      })),
       extraBedPrice: Number(values.extraBedPrice || 0),
       extraServices: (values.extraServices || []).map((service, serviceIndex) => ({
         id: service.id || `service-${Date.now()}-${serviceIndex}`,
@@ -2202,10 +3917,10 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
       await loadDashboardData();
       closeAccommodationDrawer(true);
-      message.success('Домик сохранён. Данные каталога обновлены.');
+      message.success('Объект обновлён');
       setMessageState({ type: 'success', text: 'Домик сохранён.' });
     } catch (error) {
-      setMessageState({ type: 'error', text: error.response?.data?.message || 'Не удалось сохранить домик.' });
+      setMessageState({ type: 'error', text: getFriendlyErrorMessage(error, 'Не удалось сохранить объект.') });
     } finally {
       setAccommodationSaving(false);
     }
@@ -2283,7 +3998,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       setCalendarDrawerItem(null);
       setMessageState({ type: 'success', text: 'Бронь домика обновлена.' });
     } catch (error) {
-      setMessageState({ type: 'error', text: error.response?.data?.message || 'Не удалось обновить бронь домика.' });
+      setMessageState({ type: 'error', text: getFriendlyErrorMessage(error, 'Не удалось обновить бронь.') });
     } finally {
       setStayBookingEditLoading(false);
     }
@@ -2384,6 +4099,46 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     },
   });
 
+  const openClientDetails = (client) => {
+    if (!client?.id) return;
+    setClientDrawerItem(client);
+    navigate(`${basePath}/clients/${client.id}`);
+  };
+
+  const closeClientDetails = () => {
+    setClientDrawerItem(null);
+    if (location.pathname.includes('/clients/')) {
+      navigate(`${basePath}/clients`);
+    }
+  };
+
+  const openPropertyDetails = (property) => {
+    if (!property?.id) return;
+    setPropertyDetailItem(property);
+    navigate(`/admin/properties/${encodeURIComponent(property.id)}`);
+  };
+
+  const closePropertyDetails = () => {
+    setPropertyDetailItem(null);
+    if (location.pathname.includes('/properties/')) {
+      navigate('/admin/properties');
+    }
+  };
+
+  const saveClientTags = async (client, tags) => {
+    if (!client?.id) return;
+    const nextTags = Array.from(new Set((tags || []).map((tag) => String(tag).trim()).filter(Boolean)));
+    setClientDrawerItem((current) => current && Number(current.id) === Number(client.id) ? { ...current, clientTags: nextTags } : current);
+    setUsers((items) => items.map((item) => Number(item.id) === Number(client.id) ? normalizeUser({ ...item, clientTags: nextTags }) : item));
+    try {
+      await api.put(`/users/${client.id}`, { clientTags: nextTags });
+      message.success('Метки клиента сохранены.');
+    } catch (error) {
+      message.error(getFriendlyErrorMessage(error, 'Не удалось сохранить клиента.'));
+      loadDashboardData();
+    }
+  };
+
   const getClientActions = (user) => ({
     items: [
       { key: 'profile', icon: <EyeOutlined />, label: 'Профиль' },
@@ -2394,7 +4149,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       }] : []),
     ],
     onClick: ({ key }) => {
-      if (key === 'profile') navigate('/profile');
+      if (key === 'profile') openClientDetails(user);
       if (key === 'role') toggleAdmin(user);
     },
   });
@@ -2444,7 +4199,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           message.success(key === 'confirm' ? 'Бронирование подтверждено.' : 'Бронирование отменено.');
           loadDashboardData();
         } catch (error) {
-          message.error(error?.response?.data?.message || 'Не удалось обновить бронирование.');
+          message.error(getFriendlyErrorMessage(error, 'Не удалось обновить бронирование.'));
         }
       }
 
@@ -2468,34 +4223,47 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   };
 
   const closeQuickBookingDrawer = () => {
-    if (quickBookingSaving) return;
+    if (quickBookingSaving || quickBookingWaitlistSaving) return;
     setQuickBookingDrawerOpen(false);
     quickBookingForm.resetFields();
     setQuickBookingSlots([]);
   };
 
   const openQuickBookingDrawer = (defaults = {}) => {
-    const resource = defaults.resource || calendarResource;
+    const resource = defaults.resource || (calendarResource === 'stays' ? 'cottages' : 'tours');
     const defaultDate = dayjs(defaults.date || calendarDate).startOf('day');
     const slotHour = Number.isFinite(Number(defaults.hour)) ? Number(defaults.hour) : null;
     const selectedObjectId = defaults.objectId
       || (calendarTourFilter !== 'all' ? calendarTourFilter : undefined);
     const startTime = slotHour === null ? '14:00' : `${String(slotHour).padStart(2, '0')}:00`;
+    const defaultPeople = 1;
 
     quickBookingForm.resetFields();
     quickBookingForm.setFieldsValue({
       resource,
+      clientId: undefined,
       objectId: selectedObjectId,
       departureSlotId: undefined,
+      waitlistDepartureSlotId: undefined,
       clientName: '',
       clientPhone: '',
       clientEmail: '',
-      people: 1,
-      guests: 1,
+      people: defaultPeople,
+      guests: defaultPeople,
+      adults: defaultPeople,
+      children: 0,
       nights: 1,
       checkInDate: defaultDate,
       startTime,
       endTime: addMinutesToClock(startTime, STAY_BOOKING_SLOT_DURATION_MINUTES),
+      amount: undefined,
+      prepaymentAmount: 0,
+      paymentMethod: 'manager',
+      manager: sessionUser?.name || currentCompany?.name || 'TravelPay Business',
+      bookingSource: 'manual',
+      bookingStatus: 'PENDING',
+      pickup: '',
+      emergencyContact: '',
       comment: '',
     });
     setQuickBookingDrawerOpen(true);
@@ -2507,21 +4275,47 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     setQuickBookingSaving(true);
     try {
       let response;
-      if (values.resource === 'tours') {
+      if (isQuickBookingTourKind(values.resource)) {
+        const selectedSlot = quickBookingSlots.find((slot) => String(slot.id) === String(values.departureSlotId));
+        const people = Math.max(Number(values.people || values.adults || 1), 1);
+        if (selectedSlot && (selectedSlot.soldOut || selectedSlot.available === false || Number(selectedSlot.remainingSeats || 0) < people)) {
+          message.warning(`На это отправление осталось только ${selectedSlot.remainingSeats || 0} мест.`);
+          return;
+        }
         response = await api.post('/tour-bookings', {
           tourId: Number(values.objectId),
           departureSlotId: values.departureSlotId,
           clientName: values.clientName?.trim(),
           clientPhone: values.clientPhone?.trim(),
           clientEmail: values.clientEmail?.trim(),
-          people: Math.max(Number(values.people) || 1, 1),
+          people,
+          adults: Math.max(Number(values.adults) || people, 1),
+          children: Math.max(Number(values.children) || 0, 0),
+          amount: Number(values.amount) || undefined,
+          prepaymentAmount: Number(values.prepaymentAmount) || 0,
+          assignedTo: values.manager?.trim(),
+          bookingSource: values.bookingSource,
+          bookingStatus: values.bookingStatus,
+          pickup: values.pickup?.trim(),
+          pickupLocation: values.pickup?.trim(),
+          emergencyContact: values.emergencyContact?.trim(),
           comment: values.comment?.trim(),
-          paymentMethod: 'manual',
+          paymentMethod: values.paymentMethod || 'manager',
           manualBooking: true,
         });
         const booking = normalizeTourBooking(response.data?.booking || response.data);
         setTourBookings((items) => [booking, ...items.filter((item) => Number(item.id) !== Number(booking.id))]);
       } else {
+        const conflicts = getStaySlotConflicts(values.objectId, {
+          date: values.checkInDate,
+          startTime: values.startTime,
+          endTime: values.endTime,
+        });
+        if (conflicts.length) {
+          const firstConflict = conflicts[0];
+          message.warning(`${firstConflict.stayTitle || 'Объект'} уже занят: ${firstConflict.startTime || firstConflict.checkInTime || '14:00'} → ${firstConflict.endTime || firstConflict.checkOutTime || '16:00'}`);
+          return;
+        }
         const checkInDate = values.checkInDate?.startOf('day');
         response = await api.post('/stay-bookings', {
           stayId: Number(values.objectId),
@@ -2529,14 +4323,21 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           clientPhone: values.clientPhone?.trim(),
           clientEmail: values.clientEmail?.trim(),
           guests: Math.max(Number(values.guests) || 1, 1),
+          adults: Math.max(Number(values.adults) || Number(values.guests) || 1, 1),
+          children: Math.max(Number(values.children) || 0, 0),
           nights: Math.max(Number(values.nights) || 1, 1),
           checkInDate: checkInDate?.format('YYYY-MM-DD'),
           startTime: values.startTime,
           checkInTime: values.startTime,
           endTime: values.endTime,
+          amount: Number(values.amount) || undefined,
+          prepaymentAmount: Number(values.prepaymentAmount) || 0,
+          assignedTo: values.manager?.trim(),
+          bookingSource: values.bookingSource,
+          bookingStatus: values.bookingStatus,
           comment: values.comment?.trim(),
           prepaymentRequired: false,
-          paymentMethod: 'manual',
+          paymentMethod: values.paymentMethod || 'manager',
           manualBooking: true,
         });
         const booking = normalizeStayBooking(response.data?.booking || response.data);
@@ -2546,13 +4347,597 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       setQuickBookingDrawerOpen(false);
       quickBookingForm.resetFields();
       setQuickBookingSlots([]);
-      message.success('Бронирование создано и добавлено в календарь.');
+      window.dispatchEvent(new CustomEvent('travelpay-business-data-changed', { detail: { type: 'booking', action: 'created' } }));
+      message.success('Бронирование создано');
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Не удалось создать бронирование. Проверьте данные и повторите попытку.');
+      message.error(getFriendlyErrorMessage(error, 'Не удалось создать бронирование.'));
     } finally {
       setQuickBookingSaving(false);
     }
   };
+
+  const globalSearchItems = useMemo(() => {
+    const clientItems = clientRecords.map((client) => ({
+      key: `client-${client.id}`,
+      type: 'client',
+      typeLabel: 'Клиент',
+      color: 'green',
+      title: client.name || client.fullName || client.phone || 'Клиент',
+      description: [client.phone, `${client.bookingsCount || 0} броней`, formatMoney(client.totalSpent || 0)].filter(Boolean).join(' · '),
+      searchable: [client.name, client.fullName, client.phone, client.email, client.clientTags?.join(' ')].filter(Boolean).join(' '),
+      action: () => openClientDetails(client),
+    })).filter(() => canBusinessPermission(BUSINESS_PERMISSION_KEYS.VIEW_CLIENTS));
+
+    const bookingItems = bookingRows.map((booking) => ({
+      key: `booking-${booking.type || 'booking'}-${booking.id}`,
+      type: 'booking',
+      typeLabel: 'Бронь',
+      color: 'purple',
+      title: `#TRP-${String(booking.id || 0).padStart(4, '0')} · ${booking.clientName || 'Клиент'}`,
+      description: [booking.tourTitle || booking.stayTitle, booking.clientPhone, formatDate(booking.bookingDate || booking.checkInDate), formatMoney(booking.amount || 0)].filter(Boolean).join(' · '),
+      searchable: [booking.id, booking.clientName, booking.clientPhone, booking.clientEmail, booking.tourTitle, booking.stayTitle, booking.bookingSource, booking.status].filter(Boolean).join(' '),
+      action: () => setCalendarDrawerItem(booking),
+    })).filter(() => canBusinessPermission(BUSINESS_PERMISSION_KEYS.VIEW_BOOKINGS));
+
+    const tourItems = tours.map((tour) => ({
+      key: `tour-${tour.id}`,
+      type: 'tour',
+      typeLabel: 'Тур',
+      color: 'cyan',
+      title: tour.title || tour.name || 'Тур',
+      description: [tour.location || tour.route, tour.duration, formatMoney(tour.price || 0)].filter(Boolean).join(' · '),
+      searchable: [tour.title, tour.name, tour.location, tour.route, tour.description, tour.price].filter(Boolean).join(' '),
+      action: () => navigate(`/tours/${tour.id}`, { state: { tour } }),
+    })).filter(() => canBusinessPermission(BUSINESS_PERMISSION_KEYS.VIEW_TOURS));
+
+    const propertyItems = accommodations.map((item) => ({
+      key: `property-${item.id}`,
+      type: 'property',
+      typeLabel: 'Объект',
+      color: 'gold',
+      title: item.title || item.name || item.propertyName || 'Объект',
+      description: [item.propertyName, item.location || item.region, `${item.capacity || 0} гостей`, formatMoney(item.pricePerNight || item.price || 0)].filter(Boolean).join(' · '),
+      searchable: [item.title, item.name, item.propertyName, item.location, item.region, item.address, item.status].filter(Boolean).join(' '),
+      action: () => navigate(`${basePath}/properties`),
+    })).filter(() => canBusinessPermission(BUSINESS_PERMISSION_KEYS.VIEW_PROPERTIES));
+
+    const transactionItems = bookingRows
+      .filter((booking) => Number(booking.prepaymentAmount || booking.paidAmount || booking.amountPaid || 0) > 0 || booking.paymentStatus)
+      .map((booking) => {
+        const debt = getBookingDebtSummary(booking);
+        return {
+          key: `transaction-${booking.type || 'booking'}-${booking.id}`,
+          type: 'transaction',
+          typeLabel: 'Транзакция',
+          color: 'volcano',
+          title: `${formatMoney(debt.paid)} · ${booking.clientName || 'Клиент'}`,
+          description: [`#TRP-${String(booking.id || 0).padStart(4, '0')}`, booking.tourTitle || booking.stayTitle, getPaymentStatusLabel(booking)].filter(Boolean).join(' · '),
+          searchable: [booking.id, booking.clientName, booking.clientPhone, booking.paymentMethod, booking.paymentStatus, debt.paid].filter(Boolean).join(' '),
+          action: () => setCalendarDrawerItem(booking),
+        };
+      })
+      .filter(() => canBusinessPermission(BUSINESS_PERMISSION_KEYS.VIEW_PAYMENTS));
+
+    return [...clientItems, ...bookingItems, ...tourItems, ...propertyItems, ...transactionItems];
+  }, [accommodations, basePath, bookingRows, canBusinessPermission, clientRecords, navigate, openClientDetails, tours]);
+
+  const commandItems = useMemo(() => ([
+    {
+      key: 'command-find-client',
+      type: 'command',
+      typeLabel: 'Команда',
+      color: 'blue',
+      title: 'Найти клиента',
+      description: 'Открыть CRM клиентов',
+      searchable: 'найти клиент client поиск телефон',
+      action: () => navigate(`${basePath}/clients`),
+      permission: BUSINESS_PERMISSION_KEYS.VIEW_CLIENTS,
+    },
+    {
+      key: 'command-create-booking',
+      type: 'command',
+      typeLabel: 'Команда',
+      color: 'blue',
+      title: 'Создать бронь',
+      description: 'Открыть drawer новой брони',
+      searchable: 'создать бронь booking reservation',
+      action: () => openQuickBookingDrawer({ date: calendarDate, resource: 'tours' }),
+      permission: BUSINESS_PERMISSION_KEYS.MANAGE_BOOKINGS,
+    },
+    {
+      key: 'command-create-tour',
+      type: 'command',
+      typeLabel: 'Команда',
+      color: 'blue',
+      title: 'Создать тур',
+      description: 'Добавить тур и отправления',
+      searchable: 'создать тур tour departure',
+      action: openCreateTourDrawer,
+      permission: BUSINESS_PERMISSION_KEYS.MANAGE_TOURS,
+    },
+    {
+      key: 'command-add-property',
+      type: 'command',
+      typeLabel: 'Команда',
+      color: 'blue',
+      title: 'Добавить объект',
+      description: 'Коттедж, домик или другое жильё',
+      searchable: 'добавить объект коттедж дом property cottage house',
+      action: openAccommodationDrawer,
+      permission: BUSINESS_PERMISSION_KEYS.MANAGE_PROPERTIES,
+    },
+    {
+      key: 'command-accept-payment',
+      type: 'command',
+      typeLabel: 'Команда',
+      color: 'blue',
+      title: 'Принять оплату',
+      description: 'Перейти в кассу и транзакции',
+      searchable: 'принять оплату payment cashbox qr',
+      action: () => navigate(`${basePath}/payments`),
+      permission: BUSINESS_PERMISSION_KEYS.VIEW_PAYMENTS,
+    },
+    {
+      key: 'command-create-task',
+      type: 'command',
+      typeLabel: 'Команда',
+      color: 'blue',
+      title: 'Создать задачу',
+      description: 'Открыть задачи команды',
+      searchable: 'создать задачу task kanban',
+      action: () => navigate(`${basePath}/tasks`),
+      permission: BUSINESS_PERMISSION_KEYS.MANAGE_TASKS,
+    },
+  ].filter((item) => canBusinessPermission(item.permission))), [basePath, calendarDate, canBusinessPermission, navigate, openAccommodationDrawer, openCreateTourDrawer, openQuickBookingDrawer]);
+
+  const commandPaletteResults = useMemo(() => {
+    const query = normalizePhone(commandPaletteQuery) || commandPaletteQuery.trim().toLowerCase();
+    const allItems = [...commandItems, ...globalSearchItems];
+    if (!query) return allItems.slice(0, 12);
+
+    return allItems
+      .map((item) => {
+        const haystack = `${item.title || ''} ${item.description || ''} ${item.searchable || ''}`.toLowerCase();
+        const normalizedHaystack = normalizePhone(haystack);
+        const exactPhoneMatch = Boolean(normalizedHaystack && query.length >= 5 && normalizedHaystack.includes(query));
+        const textMatch = haystack.includes(commandPaletteQuery.trim().toLowerCase());
+        const startsWith = haystack.split(/\s+/).some((part) => part.startsWith(commandPaletteQuery.trim().toLowerCase()));
+        if (!exactPhoneMatch && !textMatch && !startsWith) return null;
+        return {
+          ...item,
+          score: exactPhoneMatch ? 0 : startsWith ? 1 : 2,
+        };
+      })
+      .filter(Boolean)
+      .sort((left, right) => left.score - right.score)
+      .slice(0, 20);
+  }, [commandItems, commandPaletteQuery, globalSearchItems]);
+
+  const runCommandPaletteItem = (item) => {
+    if (!item?.action) return;
+    item.action();
+    setCommandPaletteOpen(false);
+    setCommandPaletteQuery('');
+  };
+
+  const activityLogRows = useMemo(() => {
+    const rows = [];
+    const actorName = (id, fallback = 'TravelPay Business') => (
+      id ? (usersById.get(Number(id))?.name || fallback) : fallback
+    );
+
+    bookingRows.forEach((booking) => {
+      const bookingCode = `#TRP-${String(booking.id || 0).padStart(4, '0')}`;
+      const serviceTitle = booking.tourTitle || booking.stayTitle || booking.title || 'Бронирование';
+      const fallbackActor = booking.assignedTo || booking.manager || booking.createdByAdminName || 'Manager';
+
+      (booking.statusHistory || []).forEach((entry, index) => {
+        const field = entry.field || entry.type || 'status';
+        const fromLabel = entry.from ? ((BOOKING_STATUS_META[String(entry.from).toUpperCase()] || PAYMENT_STATUS_META[String(entry.from).toUpperCase()] || {}).label || entry.from) : '';
+        const toLabel = entry.to ? ((BOOKING_STATUS_META[String(entry.to).toUpperCase()] || PAYMENT_STATUS_META[String(entry.to).toUpperCase()] || {}).label || entry.to) : '';
+        rows.push({
+          key: `booking-history-${booking.type}-${booking.id}-${index}`,
+          date: entry.changedAt || entry.time || booking.updatedAt || booking.createdAt || booking.bookingDate,
+          actor: entry.actorName || actorName(entry.actorId || entry.changedBy, fallbackActor),
+          type: 'booking',
+          typeLabel: 'Booking',
+          color: 'purple',
+          title: `${entry.actorName || actorName(entry.actorId || entry.changedBy, fallbackActor)} изменил booking ${bookingCode}`,
+          details: [serviceTitle, field, [fromLabel, toLabel].filter(Boolean).join(' → ')].filter(Boolean).join(' · '),
+        });
+      });
+
+      const debt = getBookingDebtSummary(booking);
+      if (debt.paid > 0) {
+        const paymentDate = booking.paymentReviewedAt || booking.fundsReservedAt || booking.paymentCreatedAt || booking.createdAt || booking.bookingDate;
+        rows.push({
+          key: `booking-payment-${booking.type}-${booking.id}`,
+          date: paymentDate,
+          actor: actorName(booking.paymentReviewedBy, fallbackActor),
+          type: 'payment',
+          typeLabel: 'Payment',
+          color: 'green',
+          title: `${actorName(booking.paymentReviewedBy, fallbackActor)} принял оплату ${formatMoney(debt.paid)}`,
+          details: [bookingCode, serviceTitle, booking.clientName, booking.paymentMethod || getPaymentStatusLabel(booking)].filter(Boolean).join(' · '),
+        });
+      }
+
+      (booking.refunds || booking.refundHistory || []).forEach((refund, index) => {
+        rows.push({
+          key: `booking-refund-${booking.type}-${booking.id}-${index}`,
+          date: refund.createdAt || refund.date || booking.updatedAt,
+          actor: refund.processedByName || actorName(refund.processedBy || refund.createdBy, fallbackActor),
+          type: 'refund',
+          typeLabel: 'Refund',
+          color: 'volcano',
+          title: `${refund.processedByName || actorName(refund.processedBy || refund.createdBy, fallbackActor)} оформил refund ${formatMoney(refund.amount)}`,
+          details: [bookingCode, refund.reason, refund.comment].filter(Boolean).join(' · '),
+        });
+      });
+
+      if (booking.type === 'stay_booking' && booking.updatedAt && booking.createdAt && dayjs(booking.updatedAt).diff(dayjs(booking.createdAt), 'minute') > 5) {
+        rows.push({
+          key: `booking-checkin-moved-${booking.id}`,
+          date: booking.updatedAt,
+          actor: fallbackActor || 'Admin',
+          type: 'schedule',
+          typeLabel: 'Schedule',
+          color: 'blue',
+          title: `${fallbackActor || 'Admin'} перенес check-in`,
+          details: [bookingCode, booking.stayTitle, booking.clientName, `${formatDate(booking.checkInDate || booking.bookingDate)} ${booking.checkInTime || booking.startTime || ''}`.trim()].filter(Boolean).join(' · '),
+        });
+      }
+    });
+
+    tours.forEach((tour) => {
+      if (!tour.updatedAt || !tour.createdAt || dayjs(tour.updatedAt).diff(dayjs(tour.createdAt), 'minute') <= 5) return;
+      rows.push({
+        key: `tour-price-${tour.id}`,
+        date: tour.updatedAt,
+        actor: tour.manager || currentCompany?.name || 'Owner',
+        type: 'catalog',
+        typeLabel: 'Catalog',
+        color: 'cyan',
+        title: `${tour.manager || 'Owner'} изменил цену ${tour.title || tour.name || 'тура'}`,
+        details: [tour.location || tour.route, formatMoney(tour.price || 0)].filter(Boolean).join(' · '),
+      });
+    });
+
+    accommodations.forEach((item) => {
+      if (!item.updatedAt || !item.createdAt || dayjs(item.updatedAt).diff(dayjs(item.createdAt), 'minute') <= 5) return;
+      rows.push({
+        key: `property-price-${item.id}`,
+        date: item.updatedAt,
+        actor: currentCompany?.name || 'Owner',
+        type: 'catalog',
+        typeLabel: 'Catalog',
+        color: 'gold',
+        title: `Owner изменил цену ${item.title || item.name || item.propertyName || 'объекта'}`,
+        details: [item.propertyName, formatMoney(item.pricePerNight || item.price || 0), item.weekendPrice ? `Weekend ${formatMoney(item.weekendPrice)}` : ''].filter(Boolean).join(' · '),
+      });
+    });
+
+    return rows
+      .filter((item) => item.date)
+      .sort((left, right) => dayjs(right.date).valueOf() - dayjs(left.date).valueOf())
+      .slice(0, 120);
+  }, [accommodations, bookingRows, currentCompany?.name, tours, usersById]);
+
+  const addQuickBookingWaitlist = async () => {
+    if (quickBookingWaitlistSaving) return;
+    const values = quickBookingForm.getFieldsValue();
+    if (!isQuickBookingTourKind(values.resource)) {
+      return;
+    }
+
+    const waitlistSlots = quickBookingAvailability.waitlistSlots || [];
+    const departureSlotId = values.waitlistDepartureSlotId || waitlistSlots[0]?.id;
+    if (!values.objectId || !departureSlotId) {
+      message.warning('Select a sold-out departure first.');
+      return;
+    }
+    if (!values.clientName?.trim() && !values.clientPhone?.trim()) {
+      message.warning('Add client name or phone for the waitlist.');
+      return;
+    }
+
+    setQuickBookingWaitlistSaving(true);
+    try {
+      const response = await api.post('/tour-bookings/waitlist', {
+        tourId: Number(values.objectId),
+        departureSlotId,
+        clientName: values.clientName?.trim(),
+        clientPhone: values.clientPhone?.trim(),
+        clientEmail: values.clientEmail?.trim(),
+        people: Math.max(Number(values.people || values.adults || 1), 1),
+        comment: values.comment?.trim(),
+      });
+      const updatedSlot = response.data?.departureSlot;
+      if (updatedSlot?.id) {
+        setQuickBookingSlots((slots) => slots.map((slot) => (
+          String(slot.id) === String(updatedSlot.id) ? { ...slot, ...updatedSlot } : slot
+        )));
+        setTours((items) => items.map((tour) => (
+          Number(tour.id) === Number(values.objectId)
+            ? normalizeTourRecord({
+              ...tour,
+              departureSlots: (tour.departureSlots || []).map((slot) => (
+                String(slot.id) === String(updatedSlot.id) ? { ...slot, ...updatedSlot } : slot
+              )),
+            })
+            : tour
+        )));
+      }
+      message.success('Клиент добавлен');
+    } catch (error) {
+      message.error(getFriendlyErrorMessage(error, 'Не удалось добавить клиента.'));
+    } finally {
+      setQuickBookingWaitlistSaving(false);
+    }
+  };
+
+  const saveDepartureOperationsChecklist = async (key, checked) => {
+    if (!activeDepartureOpsCard || departureOpsSaving) return;
+    const nextChecklist = {
+      ...createEmptyTourOperationsChecklist(),
+      ...(activeDepartureOpsCard.operationsChecklist || activeDepartureOpsCard.slot.operationsChecklist || {}),
+      [key]: checked,
+    };
+
+    setDepartureOpsSaving(true);
+    try {
+      const response = await api.put(`/tour-departures/${activeDepartureOpsCard.tour.id}/${activeDepartureOpsCard.slot.id}/operations`, {
+        operationsChecklist: nextChecklist,
+      });
+      const updatedSlot = response.data?.departureSlot;
+      if (updatedSlot?.id) {
+        setTours((items) => items.map((tour) => (
+          Number(tour.id) === Number(activeDepartureOpsCard.tour.id)
+            ? normalizeTourRecord({
+              ...tour,
+              departureSlots: (tour.departureSlots || []).map((slot) => (
+                String(slot.id) === String(updatedSlot.id) ? { ...slot, ...updatedSlot } : slot
+              )),
+            })
+            : tour
+        )));
+        setDepartureOpsDrawerItem((current) => current ? {
+          ...current,
+          slot: { ...current.slot, ...updatedSlot },
+          operationsChecklist: nextChecklist,
+          checklistDone: TOUR_OPERATION_CHECKLIST_ITEMS.filter((item) => nextChecklist[item.key]).length,
+        } : current);
+      }
+    } catch (error) {
+      message.error(getFriendlyErrorMessage(error, 'Не удалось обновить чеклист.'));
+    } finally {
+      setDepartureOpsSaving(false);
+    }
+  };
+
+  const updateBookingLocally = useCallback((booking, patch) => {
+    if (booking.type === 'stay_booking') {
+      setStayBookings((items) => items.map((item) => (
+        Number(item.id) === Number(booking.id)
+          ? normalizeStayBooking({ ...item, ...patch })
+          : item
+      )));
+      return;
+    }
+
+    if (booking.type === 'tour_booking') {
+      setTourBookings((items) => items.map((item) => (
+        Number(item.id) === Number(booking.id)
+          ? normalizeTourBooking({ ...item, ...patch })
+          : item
+      )));
+    }
+  }, []);
+
+  const restoreBookingLocally = useCallback((booking, previousStayBookings, previousTourBookings) => {
+    if (booking.type === 'stay_booking') {
+      setStayBookings(previousStayBookings);
+      return;
+    }
+    if (booking.type === 'tour_booking') {
+      setTourBookings(previousTourBookings);
+    }
+  }, []);
+
+  const persistScheduleBookingChange = useCallback(async (booking, patch, optimisticPatch, successText) => {
+    const previousStayBookings = stayBookings;
+    const previousTourBookings = tourBookings;
+    updateBookingLocally(booking, optimisticPatch);
+
+    try {
+      const resource = booking.type === 'stay_booking' ? 'stay-bookings' : 'tour-bookings';
+      const response = await api.put(`/${resource}/${booking.id}`, patch);
+      const savedBooking = booking.type === 'stay_booking'
+        ? normalizeStayBooking(response.data?.booking || response.data)
+        : normalizeTourBooking(response.data?.booking || response.data);
+      updateBookingLocally(booking, savedBooking);
+      message.success(successText);
+      await loadDashboardData({ includeBookings: true });
+    } catch (error) {
+      restoreBookingLocally(booking, previousStayBookings, previousTourBookings);
+      message.error(getFriendlyErrorMessage(error, 'Не удалось изменить бронь.'));
+    }
+  }, [loadDashboardData, restoreBookingLocally, stayBookings, tourBookings, updateBookingLocally]);
+
+  const findAvailableDepartureForDrop = useCallback((tourId, date, hour, people = 1) => {
+    const tour = tours.find((item) => Number(item.id) === Number(tourId));
+    if (!tour) return null;
+    const target = dayjs(date).hour(hour).minute(0).second(0).millisecond(0);
+    const bookedBySlot = new Map();
+    tourBookings
+      .filter((booking) => Number(booking.tourId) === Number(tourId))
+      .filter((booking) => !['CANCELLED', 'NO_SHOW'].includes(getCanonicalBookingStatus(booking)))
+      .forEach((booking) => {
+        if (!booking.departureSlotId) return;
+        bookedBySlot.set(String(booking.departureSlotId), (bookedBySlot.get(String(booking.departureSlotId)) || 0) + Math.max(Number(booking.people) || 1, 1));
+      });
+
+    return (tour.departureSlots || []).find((slot) => {
+      const booked = bookedBySlot.get(String(slot.id)) || 0;
+      const remaining = Math.max(Number(slot.seats || 0) - booked, 0);
+      return slot.active !== false && dayjs(slot.startAt).isSame(target, 'hour') && remaining >= Math.max(Number(people) || 1, 1);
+    });
+  }, [tourBookings, tours]);
+
+  const handleScheduleDrop = useCallback((column, hour) => {
+    const action = scheduleDragAction;
+    if (!action?.entry) return;
+    setScheduleDragAction(null);
+
+    const booking = action.entry;
+    if (!['stay_booking', 'tour_booking'].includes(booking.type)) {
+      message.info('Перетаскивание доступно для бронирований, не для шаблонов отправлений.');
+      return;
+    }
+
+    if (action.mode === 'resize' && booking.type === 'stay_booking') {
+      message.info('Для проживания меняем даты/время через отдельную логику брони, а не простым resize карточки.');
+      setCalendarDrawerItem(booking);
+      return;
+    }
+
+    const start = booking.scheduleTime || dayjs(booking.startDate || booking.travelDate || booking.checkInDate);
+    const targetStart = dayjs(calendarDate).hour(hour).minute(0).second(0).millisecond(0);
+    const duration = Math.max(getBookingDurationMinutes(booking), 45);
+
+    if (action.mode === 'resize') {
+      const startMinutes = (start.hour() * 60) + start.minute();
+      const targetEndMinutes = Math.max((hour * 60), startMinutes + 45);
+      const nextDuration = Math.max(targetEndMinutes - startMinutes, 45);
+      Modal.confirm({
+        title: 'Изменить длительность брони?',
+        content: `${booking.tourTitle || booking.title || 'Бронирование'}: ${start.format('HH:mm')}–${start.add(nextDuration, 'minute').format('HH:mm')}`,
+        okText: 'Изменить',
+        cancelText: 'Отмена',
+        onOk: () => persistScheduleBookingChange(
+          booking,
+          { durationMinutes: nextDuration, comment: 'Длительность изменена в календаре' },
+          {
+            durationMinutes: nextDuration,
+            endDate: start.add(nextDuration, 'minute').toISOString(),
+          },
+          'Длительность брони обновлена.',
+        ),
+      });
+      return;
+    }
+
+    if (booking.type === 'stay_booking') {
+      const targetStayId = column.objectId ? Number(column.objectId) : Number(booking.stayId);
+      const targetStay = accommodations.find((item) => Number(item.id) === targetStayId);
+      if (!targetStay) {
+        message.warning('Выберите колонку объекта для переноса брони.');
+        return;
+      }
+      const nextEndTime = targetStart.add(duration, 'minute').format('HH:mm');
+      const nextStartTime = targetStart.format('HH:mm');
+      const conflicts = getStaySlotConflicts(targetStayId, {
+        date: targetStart,
+        startTime: nextStartTime,
+        endTime: nextEndTime,
+      }).filter((item) => Number(item.id) !== Number(booking.id));
+      if (conflicts.length) {
+        const conflict = conflicts[0];
+        message.warning(`${targetStay.title || targetStay.name || 'Объект'} уже занят: ${conflict.startTime || conflict.checkInTime || '14:00'} → ${conflict.endTime || conflict.checkOutTime || '16:00'}`);
+        return;
+      }
+
+      Modal.confirm({
+        title: 'Перенести бронирование?',
+        content: `${booking.clientName || 'Клиент'} → ${targetStay.title || targetStay.name}, ${targetStart.locale('ru').format('D MMMM HH:mm')}`,
+        okText: 'Перенести',
+        cancelText: 'Отмена',
+        onOk: () => persistScheduleBookingChange(
+          booking,
+          {
+            stayId: targetStayId,
+            checkInDate: targetStart.format('YYYY-MM-DD'),
+            startTime: nextStartTime,
+            checkInTime: nextStartTime,
+            endTime: nextEndTime,
+            assignedTo: column.bookingResource ? booking.assignedTo : column.label,
+            comment: 'Бронь перенесена в календаре',
+          },
+          {
+            stayId: targetStayId,
+            stayTitle: targetStay.title || targetStay.name,
+            tourTitle: targetStay.title || targetStay.name,
+            checkInDate: targetStart.toISOString(),
+            bookingDate: targetStart.toISOString(),
+            date: targetStart.toISOString(),
+            startTime: nextStartTime,
+            checkInTime: nextStartTime,
+            endTime: nextEndTime,
+            assignedTo: column.bookingResource ? booking.assignedTo : column.label,
+          },
+          'Бронь перенесена.',
+        ),
+      });
+      return;
+    }
+
+    if (booking.type === 'tour_booking') {
+      const targetTourId = column.objectId ? Number(column.objectId) : Number(booking.tourId);
+      const targetTour = tours.find((item) => Number(item.id) === targetTourId);
+      if (!targetTour) {
+        message.warning('Выберите колонку тура для переноса брони.');
+        return;
+      }
+      const matchingSlot = findAvailableDepartureForDrop(targetTourId, targetStart, hour, booking.people);
+      if (!matchingSlot && column.bookingResource) {
+        message.warning(`Для ${targetTour.title || 'тура'} нет доступного отправления в ${targetStart.format('HH:mm')}.`);
+        return;
+      }
+      const patch = matchingSlot
+        ? {
+          tourId: targetTourId,
+          departureSlotId: matchingSlot.id,
+          assignedTo: column.bookingResource ? booking.assignedTo : column.label,
+          comment: 'Бронь перенесена в календаре',
+        }
+        : {
+          assignedTo: column.label,
+          comment: 'Бронь перенесена на менеджера',
+        };
+      const optimisticPatch = matchingSlot
+        ? {
+          tourId: targetTourId,
+          departureSlotId: matchingSlot.id,
+          tourTitle: targetTour.title,
+          travelDate: matchingSlot.startAt,
+          bookingDate: matchingSlot.startAt,
+          date: matchingSlot.startAt,
+          startDate: matchingSlot.startAt,
+          endDate: dayjs(matchingSlot.startAt).add(duration, 'minute').toISOString(),
+          departureTime: dayjs(matchingSlot.startAt).format('HH:mm'),
+          assignedTo: column.bookingResource ? booking.assignedTo : column.label,
+        }
+        : { assignedTo: column.label };
+
+      Modal.confirm({
+        title: 'Перенести бронирование?',
+        content: matchingSlot
+          ? `${booking.clientName || 'Клиент'} → ${targetTour.title}, ${dayjs(matchingSlot.startAt).locale('ru').format('D MMMM HH:mm')}`
+          : `${booking.clientName || 'Клиент'} → менеджер ${column.label}`,
+        okText: 'Перенести',
+        cancelText: 'Отмена',
+        onOk: () => persistScheduleBookingChange(booking, patch, optimisticPatch, 'Бронь перенесена.'),
+      });
+    }
+  }, [
+    accommodations,
+    calendarDate,
+    findAvailableDepartureForDrop,
+    getStaySlotConflicts,
+    persistScheduleBookingChange,
+    scheduleDragAction,
+    tours,
+  ]);
 
   const openCalendarItemDetails = (item) => {
     setCalendarDrawerItem(item);
@@ -2642,6 +5027,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           ? 'Заявка отклонена.'
           : 'Бронь отменена.';
       message.success(successMessage);
+      window.dispatchEvent(new CustomEvent('travelpay-business-data-changed', { detail: { type: 'booking', action: 'status_changed', id: booking.id } }));
       setCalendarDrawerItem((current) => current ? {
         ...current,
         status,
@@ -2656,7 +5042,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       } : current);
       loadDashboardData();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Не удалось обновить статус брони.');
+      message.error(getFriendlyErrorMessage(error, 'Не удалось обновить статус брони.'));
     }
   };
 
@@ -2684,10 +5070,15 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       closeStayBookingRejectModal();
       loadDashboardData();
     } catch (error) {
-      message.error(error?.response?.data?.message || 'Не удалось отклонить заявку.');
+      message.error(getFriendlyErrorMessage(error, 'Не удалось отклонить заявку.'));
     } finally {
       setStayBookingDecisionLoading(false);
     }
+  };
+
+  const crmTableProps = {
+    sticky: true,
+    size: isDesktop ? 'middle' : 'small',
   };
 
   const tourColumns = [
@@ -2789,12 +5180,41 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   ];
 
   const clientColumns = [
-    { title: 'Клиент', dataIndex: 'name', width: 180 },
-    { title: 'Email', dataIndex: 'email', width: 240 },
+    {
+      title: 'Клиент',
+      dataIndex: 'name',
+      width: 220,
+      render: (value, record) => (
+        <button type="button" className="tp-admin-client-link" onClick={() => openClientDetails(record)}>
+          <Avatar size={34} icon={<UserOutlined />} src={record.avatar || record.photo} />
+          <span>
+            <strong>{value || record.email || 'Клиент'}</strong>
+            <small>{record.email || '—'}</small>
+          </span>
+        </button>
+      ),
+    },
     { title: 'Телефон', dataIndex: 'phone', width: 150, render: (value) => value || '—' },
-    { title: 'Роль', dataIndex: 'role', width: 140, render: (value) => <Tag>{value}</Tag> },
-    { title: 'Накоплено', width: 150, render: (_, record) => formatMoney(record?.savings?.currentAmount) },
-    { title: 'Поездки', width: 110, render: (_, record) => record?.travelHistory?.length || 0 },
+    { title: 'Бронирований', dataIndex: 'bookingsCount', width: 130 },
+    { title: 'Потрачено', dataIndex: 'spent', width: 140, render: formatMoney },
+    { title: 'Последняя поездка', dataIndex: 'lastTripAt', width: 160, render: (value) => value ? formatDate(value) : '—' },
+    {
+      title: 'Статус',
+      dataIndex: 'clientStatus',
+      width: 130,
+      render: (value) => {
+        const meta = {
+          vip: { label: 'VIP', color: 'gold' },
+          debtor: { label: 'Должник', color: 'red' },
+          repeat: { label: 'Повторный', color: 'green' },
+          new: { label: 'Новый', color: 'blue' },
+          lead: { label: 'Лид', color: 'default' },
+        }[value] || { label: value || '—', color: 'default' };
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+    },
+    { title: 'Метка', dataIndex: 'sourceLabel', width: 160, render: (value, record) => <Tag color={record.manualCount > record.travelpayCount ? 'purple' : 'cyan'}>{value}</Tag> },
+    { title: 'Менеджер', dataIndex: 'manager', width: 160, render: (value) => value || '—' },
     {
       title: 'Действия',
       key: 'actions',
@@ -2997,7 +5417,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const headerBranchText = currentCompany?.address || currentCompany?.name || 'TravelPay Company';
 
-  const sidebar = (<AdminSidebar collapsed={collapsed} businessMode={businessMode} homePath={homePath} basePath={basePath} currentTab={currentTab} company={currentCompany} onNavigate={handleSidebarAction} />);
+  const sidebar = (<AdminSidebar collapsed={collapsed} businessMode={businessMode} homePath={homePath} basePath={basePath} currentTab={currentTab} company={currentCompany} user={liveSessionUser} onNavigate={handleSidebarAction} />);
   /* Legacy inline sidebar and notification card were replaced by AdminSidebar and AdminTopbar.
     <div className="tp-admin-sidebar-shell">
       <div className={`tp-admin-brand ${collapsed ? 'tp-admin-brand--collapsed' : ''}`}>
@@ -3028,7 +5448,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             { key: '/admin/savings', icon: <WalletOutlined />, label: 'Накопления' },
             { key: '/admin/companies', icon: <BankOutlined />, label: 'Компании' },
           ] : []),
-          { key: `${basePath}/reports`, icon: <BarChartOutlined />, label: 'Отчеты' },
+          { key: `${basePath}/analytics`, icon: <BarChartOutlined />, label: 'Отчеты' },
           ...(!businessMode ? [{ key: '/admin/settings', icon: <SettingOutlined />, label: 'Настройки' }] : []),
           { type: 'divider' },
           { key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', danger: true },
@@ -3051,45 +5471,630 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     </Card>
   );
 
-  const renderNotificationsCard = () => (
-    <Card
-      className="tp-admin-card"
-      title={businessMode ? 'Уведомления компании' : 'Уведомления и оплаты'}
-      extra={<Badge count={userNotifications.length} showZero />}
-    >
-      {userNotifications.length ? (
-        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-          {userNotifications.slice(0, 6).map((item) => (
-            <div key={item.id || `${item.type}-${item.createdAt}`} className="tp-admin-booking-card">
-              <div className="tp-admin-booking-card__top">
-                <div>
-                  <Title level={5} style={{ marginBottom: 4 }}>{item.title || 'Новое уведомление'}</Title>
-                  <Text type="secondary">{item.message || item.description || 'Есть обновление по компании или оплате.'}</Text>
-                </div>
-                <Tag color={item.read ? 'default' : 'blue'}>{item.read ? 'Прочитано' : 'Новое'}</Tag>
-              </div>
-              <div className="tp-admin-booking-card__meta">
-                <span>{formatDateTime(item.createdAt)}</span>
-                <strong>{item.type || 'notification'}</strong>
-              </div>
-              {!businessMode && (item.type === 'business-registration' || item.type === 'business-subscription') && (
-                <div style={{ marginTop: 12 }}>
-                  <Button type="primary" size="small" onClick={() => navigate('/admin/companies')}>
-                    Открыть компании
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
+  const renderChartCard = (title, children, extra = null) => (
+    <Card className="tp-admin-card" title={title} extra={extra}>
+      <div style={{ width: '100%', height: 280 }}>
+        {children}
+      </div>
+    </Card>
+  );
+
+  const renderContextHelp = (title, text) => (
+    <Alert
+      type="info"
+      showIcon
+      message={`? ${title}`}
+      description={text}
+      className="tp-admin-context-help"
+    />
+  );
+
+  const renderEmptyState = ({ title, description, actionText, onAction } = {}) => (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description={(
+        <Space orientation="vertical" size={6}>
+          <Text strong>{title || 'Пока здесь пусто'}</Text>
+          {description && <Text type="secondary">{description}</Text>}
         </Space>
+      )}
+    >
+      {actionText && onAction ? <Button type="primary" icon={<PlusOutlined />} onClick={onAction}>{actionText}</Button> : null}
+    </Empty>
+  );
+
+  const renderCommandPalette = () => (
+    <Modal
+      open={commandPaletteOpen}
+      footer={null}
+      closable={false}
+      width={720}
+      className="tp-admin-command-palette"
+      onCancel={() => setCommandPaletteOpen(false)}
+      destroyOnClose
+    >
+      <Input
+        autoFocus
+        allowClear
+        size="large"
+        prefix={<SearchOutlined />}
+        value={commandPaletteQuery}
+        placeholder="Поиск: клиент, бронь, тур, объект, транзакция или команда"
+        onChange={(event) => setCommandPaletteQuery(event.target.value)}
+        onPressEnter={() => {
+          if (commandPaletteResults[0]) runCommandPaletteItem(commandPaletteResults[0]);
+        }}
+      />
+      <div className="tp-admin-command-palette__hint">
+        <Text type="secondary">Ctrl/Cmd + K · пример: 996555123456</Text>
+        <Text type="secondary">Enter откроет первый результат</Text>
+      </div>
+      <div className="tp-admin-command-palette__list">
+        {commandPaletteResults.length ? commandPaletteResults.map((item) => (
+          <button
+            type="button"
+            key={item.key}
+            className="tp-admin-command-palette__item"
+            onClick={() => runCommandPaletteItem(item)}
+          >
+            <span className="tp-admin-command-palette__icon">
+              {item.type === 'command' ? <PlusOutlined /> : item.type === 'client' ? <UserOutlined /> : item.type === 'booking' ? <CalendarOutlined /> : item.type === 'tour' ? <CompassOutlined /> : item.type === 'property' ? <HomeOutlined /> : <BankOutlined />}
+            </span>
+            <span className="tp-admin-command-palette__body">
+              <strong>{item.title}</strong>
+              {item.description ? <Text type="secondary">{item.description}</Text> : null}
+            </span>
+            <Tag color={item.color}>{item.typeLabel}</Tag>
+          </button>
+        )) : (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="Ничего не найдено. Попробуйте имя, телефон, номер брони или команду."
+          />
+        )}
+      </div>
+    </Modal>
+  );
+
+  const renderActivityLog = () => {
+    const todayRows = activityLogRows.filter((item) => dayjs(item.date).isSame(dayjs(), 'day'));
+    const paymentRows = activityLogRows.filter((item) => item.type === 'payment' || item.type === 'refund');
+    const bookingChangeRows = activityLogRows.filter((item) => item.type === 'booking' || item.type === 'schedule');
+
+    return (
+      <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+        <Row gutter={[16, 16]}>
+          {[
+            { title: 'Событий сегодня', value: todayRows.length, color: '#1677ff' },
+            { title: 'Изменений броней', value: bookingChangeRows.length, color: '#722ed1' },
+            { title: 'Платежных действий', value: paymentRows.length, color: '#16a34a' },
+            { title: 'Всего в журнале', value: activityLogRows.length, color: '#f97316' },
+          ].map(renderStatCard)}
+        </Row>
+
+        <Card
+          className="tp-admin-card"
+          title="Activity Log"
+          extra={<Tag icon={<HistoryOutlined />} color="blue">Business account</Tag>}
+        >
+          <Paragraph type="secondary">
+            Командный журнал собирает изменения бронирований, принятые оплаты, refund flow, переносы check-in и изменения каталога из существующих данных TravelPay.
+          </Paragraph>
+          <Table
+            rowKey="key"
+            dataSource={activityLogRows}
+            pagination={{ pageSize: 12 }}
+            scroll={{ x: 980 }}
+            columns={[
+              {
+                title: 'Дата',
+                dataIndex: 'date',
+                width: 180,
+                render: (value) => formatDateTime(value),
+              },
+              {
+                title: 'Кто',
+                dataIndex: 'actor',
+                width: 180,
+                render: (value) => (
+                  <Space>
+                    <Avatar size={28}>{String(value || 'TP').slice(0, 1).toUpperCase()}</Avatar>
+                    <Text strong>{value || 'TravelPay Business'}</Text>
+                  </Space>
+                ),
+              },
+              {
+                title: 'Событие',
+                dataIndex: 'title',
+                render: (value, record) => (
+                  <Space orientation="vertical" size={2}>
+                    <Text strong>{value}</Text>
+                    <Text type="secondary">{record.details || '—'}</Text>
+                  </Space>
+                ),
+              },
+              {
+                title: 'Тип',
+                dataIndex: 'typeLabel',
+                width: 130,
+                render: (value, record) => <Tag color={record.color}>{value}</Tag>,
+              },
+            ]}
+          />
+        </Card>
+      </Space>
+    );
+  };
+
+  const renderNotificationsCard = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card
+        className="tp-admin-card"
+        title="Smart Notifications"
+        extra={<Badge count={userNotifications.filter((item) => !item.read).length} showZero />}
+      >
+        <Paragraph>
+          Операционный центр напоминаний для клиентов и команды. Подключены только реальные для проекта каналы: internal Push уже работает в TravelPay, Email доступен в backend для системных писем, WhatsApp работает как manual/link flow. SMS пока отмечен как канал без интеграции.
+        </Paragraph>
+        <Row gutter={[14, 14]}>
+          {[
+            { channel: 'WhatsApp', status: 'Manual link', color: 'green', description: 'Открытие диалога с клиентом через wa.me; автоматическая отправка не подключена.' },
+            { channel: 'SMS', status: 'Not connected', color: 'default', description: 'SMS-provider в проекте не найден, канал отображается как future integration.' },
+            { channel: 'Email', status: 'System email', color: 'blue', description: 'Backend уже отправляет email verification; CRM-шаблоны можно подключить поверх этого канала.' },
+            { channel: 'Push', status: 'Available', color: 'purple', description: 'Внутренние TravelPay notifications уже сохраняются в профиле пользователя.' },
+          ].map((item) => (
+            <Col xs={24} md={12} xl={6} key={item.channel}>
+              <Card size="small" className="tp-admin-inline-card">
+                <Space orientation="vertical" size={8}>
+                  <Space>
+                    <Tag color={item.color}>{item.channel}</Tag>
+                    <Text strong>{item.status}</Text>
+                  </Space>
+                  <Text type="secondary">{item.description}</Text>
+                </Space>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Card>
+
+      <Card className="tp-admin-card" title="Notification rules">
+        <Table
+          rowKey="key"
+          dataSource={notificationRules}
+          pagination={false}
+          scroll={{ x: 980 }}
+          columns={[
+            {
+              title: 'Rule',
+              dataIndex: 'title',
+              width: 190,
+              render: (value, record) => (
+                <Space orientation="vertical" size={2}>
+                  <Text strong>{value}</Text>
+                  <Text type="secondary">{record.trigger}</Text>
+                </Space>
+              ),
+            },
+            {
+              title: 'On/off',
+              dataIndex: 'enabled',
+              width: 100,
+              render: (value, record) => (
+                <Switch
+                  checked={value}
+                  onChange={(checked) => setNotificationRules((rules) => rules.map((rule) => (
+                    rule.key === record.key ? { ...rule, enabled: checked } : rule
+                  )))}
+                />
+              ),
+            },
+            {
+              title: 'Channel',
+              dataIndex: 'channel',
+              width: 160,
+              render: (value, record) => (
+                <Select
+                  value={value}
+                  style={{ width: '100%' }}
+                  options={[
+                    { value: 'Push', label: 'Push' },
+                    { value: 'WhatsApp', label: 'WhatsApp' },
+                    { value: 'Email', label: 'Email' },
+                    { value: 'SMS', label: 'SMS' },
+                  ]}
+                  onChange={(channel) => setNotificationRules((rules) => rules.map((rule) => (
+                    rule.key === record.key ? { ...rule, channel } : rule
+                  )))}
+                />
+              ),
+            },
+            {
+              title: 'Send time',
+              dataIndex: 'timing',
+              width: 170,
+              render: (value, record) => (
+                <Input
+                  value={value}
+                  placeholder="24 hours"
+                  onChange={(event) => setNotificationRules((rules) => rules.map((rule) => (
+                    rule.key === record.key ? { ...rule, timing: event.target.value } : rule
+                  )))}
+                />
+              ),
+            },
+            {
+              title: 'Template',
+              dataIndex: 'template',
+              render: (value, record) => (
+                <Input.TextArea
+                  autoSize={{ minRows: 1, maxRows: 3 }}
+                  value={value}
+                  onChange={(event) => setNotificationRules((rules) => rules.map((rule) => (
+                    rule.key === record.key ? { ...rule, template: event.target.value } : rule
+                  )))}
+                />
+              ),
+            },
+          ]}
+        />
+      </Card>
+
+      <Card className="tp-admin-card" title="Scheduled automatic reminders">
+        <Table
+          rowKey="key"
+          size="small"
+          dataSource={scheduledAutomaticReminders}
+          pagination={{ pageSize: 6, showSizeChanger: false }}
+          columns={[
+            { title: 'Send at', dataIndex: 'sendAt', render: formatDateTime, width: 170 },
+            { title: 'Channel', dataIndex: 'channel', width: 110, render: (value) => <Tag>{value}</Tag> },
+            { title: 'Rule', dataIndex: 'rule', width: 180 },
+            { title: 'Client', dataIndex: 'client', width: 180 },
+            { title: 'Booking', dataIndex: 'booking', width: 190 },
+            { title: 'Message', dataIndex: 'message' },
+          ]}
+        />
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={10}>
+          <Card className="tp-admin-card" title="Smart automation ideas">
+            <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+              {[
+                ['24h до тура', 'Проверить оплату и отправить reminder', 'Push · WhatsApp manual'],
+                ['3h до тура', 'Связаться с клиентом и подтвердить pickup', 'WhatsApp manual'],
+                ['День check-in', 'Подтвердить приезд гостя', 'Push'],
+                ['После check-out', 'Попросить отзыв', 'Email · Push'],
+                ['Долг по брони', 'Напомнить об остатке оплаты', 'Push · WhatsApp manual'],
+              ].map(([time, title, channel]) => (
+                <div className="tp-admin-calendar-client-row" key={title}>
+                  <div>
+                    <strong>{title}</strong>
+                    <div><Text type="secondary">{time}</Text></div>
+                  </div>
+                  <Tag>{channel}</Tag>
+                </div>
+              ))}
+            </Space>
+          </Card>
+        </Col>
+        <Col xs={24} xl={14}>
+          <Card
+            className="tp-admin-card"
+            title={businessMode ? 'Уведомления компании' : 'Уведомления и оплаты'}
+            extra={<Badge count={userNotifications.length} showZero />}
+          >
+            {userNotifications.length ? (
+              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
+                {userNotifications.slice(0, 8).map((item) => (
+                  <div key={item.id || `${item.type}-${item.createdAt}`} className="tp-admin-booking-card">
+                    <div className="tp-admin-booking-card__top">
+                      <div>
+                        <Title level={5} style={{ marginBottom: 4 }}>{item.title || 'Новое уведомление'}</Title>
+                        <Text type="secondary">{item.message || item.description || 'Есть обновление по компании или оплате.'}</Text>
+                      </div>
+                      <Tag color={item.read ? 'default' : 'blue'}>{item.read ? 'Прочитано' : 'Новое'}</Tag>
+                    </div>
+                    <div className="tp-admin-booking-card__meta">
+                      <span>{formatDateTime(item.createdAt || item.date)}</span>
+                      <strong>{item.type || 'notification'}</strong>
+                    </div>
+                    <Space wrap style={{ marginTop: 12 }}>
+                      {!item.read && <Button size="small" onClick={() => markNotificationRead(item.id)}>Отметить прочитанным</Button>}
+                      {!businessMode && (item.type === 'business-registration' || item.type === 'business-subscription') && (
+                        <Button type="primary" size="small" onClick={() => navigate('/admin/companies')}>
+                          Открыть компании
+                        </Button>
+                      )}
+                    </Space>
+                  </div>
+                ))}
+              </Space>
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Пока нет уведомлений" />
+            )}
+          </Card>
+        </Col>
+      </Row>
+    </Space>
+  );
+
+  const renderBusinessProfile = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card className="tp-admin-card">
+        <div className="tp-admin-section-head">
+          <div>
+            <Text className="tp-admin-section-label">Business Profile</Text>
+            <Title level={3}>Профиль компании</Title>
+            <Paragraph>
+              Эти данные используются в публичной странице TravelPay, карточках предложений, контактах и оплатах.
+            </Paragraph>
+          </div>
+          <Space wrap>
+            {currentCompany?.id && <Button icon={<EyeOutlined />} onClick={() => navigate(`/companies/${currentCompany.id}`)}>Публичная страница</Button>}
+            <Button type="primary" loading={businessProfileSaving} onClick={() => businessProfileForm.submit()}>Сохранить</Button>
+          </Space>
+        </div>
+        {renderContextHelp('Что видно публично?', 'Название, логотип, описание, контакты, график, туры, объекты, рейтинг и CTA бронирования показываются клиентам на странице компании. Реквизиты и документы остаются в бизнес-кабинете, если вы не используете их в оплате.')}
+
+        <Form form={businessProfileForm} layout="vertical" onFinish={saveBusinessProfile}>
+          <Row gutter={[16, 12]}>
+            <Col xs={24} md={8}><Form.Item label="Логотип" name="logo"><Input placeholder="URL или data:image" /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Название" name="name" rules={[{ required: true, message: 'Укажите название' }]}><Input /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="График" name="workingHours"><Input placeholder="09:00–18:00" /></Form.Item></Col>
+            <Col xs={24}><Form.Item label="Описание" name="description"><Input.TextArea rows={4} /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Телефон" name="phone"><Input /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="WhatsApp" name="whatsapp"><Input /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Instagram" name="instagramUrl"><Input /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Website" name="website"><Input /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Адрес" name="address"><Input /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Локация / регион" name="region"><Input placeholder="Иссык-Куль, Бишкек..." /></Form.Item></Col>
+            <Col xs={24} md={8}><Form.Item label="Manager phone" name="managerPhone"><Input /></Form.Item></Col>
+          </Row>
+
+          <Divider />
+          {renderContextHelp('Как работает предоплата?', 'Укажите QR/реквизиты, а размер предоплаты настраивается в туре или объекте. BookingStatus и PaymentStatus остаются раздельными: бронь может быть подтверждена, но оплата — частичной.')}
+          <Title level={4}>Реквизиты и Payment QR</Title>
+          <Form.List name="paymentMethods">
+            {(fields, { add, remove }) => (
+              <Space orientation="vertical" style={{ width: '100%' }}>
+                {fields.map((field) => (
+                  <Card key={field.key} size="small" className="tp-admin-inline-card">
+                    <Row gutter={[12, 8]}>
+                      <Col xs={24} md={6}><Form.Item label="Название" name={[field.name, 'title']}><Input placeholder="MBANK QR" /></Form.Item></Col>
+                      <Col xs={24} md={6}><Form.Item label="Банк" name={[field.name, 'bankName']}><Input /></Form.Item></Col>
+                      <Col xs={24} md={6}><Form.Item label="Получатель" name={[field.name, 'recipientName']}><Input /></Form.Item></Col>
+                      <Col xs={24} md={6}><Form.Item label="Телефон" name={[field.name, 'phoneNumber']}><Input /></Form.Item></Col>
+                      <Col xs={24}><Form.Item label="Payment QR" name={[field.name, 'qrCodeUrl']}><Input.TextArea rows={2} /></Form.Item></Col>
+                      <Col xs={12} md={4}><Form.Item label="Активен" name={[field.name, 'active']} valuePropName="checked"><Switch /></Form.Item></Col>
+                      <Col xs={12} md={4}><Form.Item label="Основной" name={[field.name, 'primary']} valuePropName="checked"><Switch /></Form.Item></Col>
+                      <Col xs={24} md={8}><Button danger onClick={() => remove(field.name)}>Удалить</Button></Col>
+                    </Row>
+                  </Card>
+                ))}
+                <Button icon={<PlusOutlined />} onClick={() => add({ type: 'qr', active: true })}>Добавить реквизиты</Button>
+              </Space>
+            )}
+          </Form.List>
+
+          <Divider />
+          <Title level={4}>Менеджеры</Title>
+          <Table
+            rowKey="id"
+            size="small"
+            dataSource={businessStaff}
+            pagination={false}
+            columns={[
+              { title: 'Имя', render: (_, item) => [item.firstName, item.lastName].filter(Boolean).join(' ') || item.email || item.phone },
+              { title: 'Роль', dataIndex: 'role', render: (value) => <Tag>{value}</Tag> },
+              { title: 'Телефон', dataIndex: 'phone' },
+              { title: 'WhatsApp', dataIndex: 'whatsapp' },
+            ]}
+          />
+
+          <Divider />
+          <Title level={4}>Документы</Title>
+          <Form.List name="documents">
+            {(fields, { add, remove }) => (
+              <Space orientation="vertical" style={{ width: '100%' }}>
+                {fields.map((field) => (
+                  <Row gutter={[12, 8]} key={field.key}>
+                    <Col xs={24} md={8}><Form.Item label="Название" name={[field.name, 'name']}><Input /></Form.Item></Col>
+                    <Col xs={24} md={8}><Form.Item label="Тип" name={[field.name, 'type']}><Input placeholder="pdf/image" /></Form.Item></Col>
+                    <Col xs={24} md={6}><Form.Item label="URL/Data URL" name={[field.name, 'dataUrl']}><Input /></Form.Item></Col>
+                    <Col xs={24} md={2}><Button danger onClick={() => remove(field.name)}>×</Button></Col>
+                  </Row>
+                ))}
+                <Button icon={<PlusOutlined />} onClick={() => add({})}>Добавить документ</Button>
+              </Space>
+            )}
+          </Form.List>
+        </Form>
+      </Card>
+    </Space>
+  );
+
+  const renderBusinessMetric = ({ title, value, change, formatter }) => (
+    <Card className="tp-business-home-metric" styles={{ body: { padding: 16 } }}>
+      <Text>{title}</Text>
+      <strong>{formatter ? formatter(value) : value}</strong>
+      <small>{change}</small>
+    </Card>
+  );
+
+  const renderBusinessQueue = (title, items, actionPath) => (
+    <Card className="tp-admin-card tp-business-home-panel" title={title} extra={<Tag>{items.length}</Tag>}>
+      {items.length ? (
+        <div className="tp-business-home-list">
+          {items.slice(0, 4).map((item) => (
+            <button key={item.key || item.id} type="button" onClick={() => navigate(actionPath)}>
+              <span>
+                <strong>{item.tourTitle || item.stayTitle || item.title || 'Бронирование'}</strong>
+                <small>{[item.clientName, item.clientPhone, formatDateTime(item.bookingDate || item.travelDate || item.checkInDate)].filter(Boolean).join(' · ')}</small>
+              </span>
+              <Tag color={(BOOKING_STATUS_META[item.status] || BOOKING_STATUS_META.pending).color}>
+                {(BOOKING_STATUS_META[item.status] || BOOKING_STATUS_META.pending).label}
+              </Tag>
+            </button>
+          ))}
+        </div>
       ) : (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Пока нет уведомлений" />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Пусто" />
       )}
     </Card>
   );
 
-  // Notifications are now rendered exclusively through AdminTopbar.
-  void renderNotificationsCard;
+  const renderBusinessHome = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      {loading && !bookingRows.length && (
+        <div className="tp-admin-page-skeleton">
+          <Skeleton active paragraph={{ rows: 3 }} />
+          <Skeleton active paragraph={{ rows: 5 }} />
+        </div>
+      )}
+      <section className="tp-business-mobile-home">
+        <div className="tp-business-mobile-home__head">
+          <div>
+            <Text className="tp-admin-section-label">Сегодня</Text>
+            <Title level={2}>{businessToday.locale('ru').format('D MMMM')}</Title>
+          </div>
+          <Button type="primary" shape="circle" icon={<PlusOutlined />} onClick={() => openQuickBookingDrawer({ date: businessToday })} />
+        </div>
+        <div className="tp-business-mobile-home__metrics">
+          <div><span>Брони</span><strong>{businessTodayBookings.length}</strong></div>
+          <div><span>Выручка</span><strong>{formatMoney(businessTodayRevenue)}</strong></div>
+          <div><span>Ожидают</span><strong>{businessAwaitingConfirmation.length}</strong></div>
+        </div>
+        <div className="tp-business-mobile-home__actions">
+          <Button onClick={() => openQuickBookingDrawer({ date: businessToday })}>Бронь</Button>
+          <Button onClick={() => navigate(`${basePath}/payments`)}>Оплата</Button>
+          <Button onClick={() => navigate(`${basePath}/clients`)}>Клиент</Button>
+          <Button onClick={() => navigate(`${basePath}/tasks`)}>Задача</Button>
+        </div>
+        <Card className="tp-admin-card tp-business-mobile-home__agenda" title="Agenda">
+          {businessTodayTimeline.length ? businessTodayTimeline.slice(0, 6).map((entry) => (
+            <button key={entry.key} type="button" onClick={() => navigate(`${basePath}/schedule`)}>
+              <time>{(entry.scheduleTime || dayjs(entry.startDate)).format('HH:mm')}</time>
+              <span>
+                <strong>{entry.title || entry.tourTitle || entry.stayTitle}</strong>
+                <small>{[entry.clientName, entry.guestsLabel, getSchedulePaymentLabel(entry)].filter(Boolean).join(' · ')}</small>
+              </span>
+            </button>
+          )) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Сегодня нет событий. Создайте бронь вручную или дождитесь заявки через TravelPay.">
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => openQuickBookingDrawer({ date: businessToday })}>Создать бронь</Button>
+            </Empty>
+          )}
+        </Card>
+      </section>
+
+      <section className="tp-business-home-hero">
+        <div>
+          <Text className="tp-admin-section-label">TravelPay Business OS</Text>
+          <Title level={2}>Добрый день, {liveSessionUser?.name || sessionUser?.name || 'менеджер'}</Title>
+          <Text type="secondary">Сегодня, {businessToday.locale('ru').format('D MMMM')}</Text>
+        </div>
+        <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => openQuickBookingDrawer({ date: businessToday })}>
+          Новое бронирование
+        </Button>
+      </section>
+
+      <Card className="tp-admin-card" title="Настройка TravelPay" extra={<Tag>{onboardingDone}/7</Tag>}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} xl={8}>
+            <Progress percent={onboardingProgress} strokeColor="#2563eb" />
+            <Text type="secondary">Завершите базовую настройку, чтобы публичная страница и CRM работали без ручных костылей.</Text>
+          </Col>
+          <Col xs={24} xl={16}>
+            <Row gutter={[8, 8]}>
+              {onboardingSteps.map((step) => (
+                <Col xs={24} md={12} key={step.title}>
+                  <Button block type={step.done ? 'default' : 'dashed'} icon={step.done ? <CheckOutlined /> : <PlusOutlined />} onClick={() => navigate(step.action)}>
+                    {step.title}
+                  </Button>
+                </Col>
+              ))}
+            </Row>
+          </Col>
+        </Row>
+      </Card>
+
+      <div className="tp-business-home-metrics">
+        {renderBusinessMetric({
+          title: 'Бронирований сегодня',
+          value: businessTodayBookings.length,
+          change: getPeriodChange(businessTodayBookings.length, businessYesterdayBookings.length),
+        })}
+        {renderBusinessMetric({
+          title: 'Выручка сегодня',
+          value: businessTodayRevenue,
+          formatter: formatMoney,
+          change: getPeriodChange(businessTodayRevenue, businessYesterdayRevenue),
+        })}
+        {renderBusinessMetric({
+          title: 'Ожидается оплат',
+          value: businessTodayPendingPayment,
+          formatter: formatMoney,
+          change: `${businessUnpaidBookings.length} неоплаченных`,
+        })}
+        {renderBusinessMetric({
+          title: 'Гостей сегодня',
+          value: businessTodayGuests,
+          change: getPeriodChange(businessTodayGuests, businessYesterdayGuests),
+        })}
+      </div>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={15}>
+          <Card className="tp-admin-card tp-business-home-today" title="Сегодня" extra={<Button onClick={() => navigate('/business/schedule')}>Расписание</Button>}>
+            {businessTodayTimeline.length ? (
+              <div className="tp-business-home-timeline">
+                {businessTodayTimeline.slice(0, 8).map((entry) => (
+                  <button key={entry.key} type="button" onClick={() => navigate('/business/schedule')}>
+                    <time>{(entry.scheduleTime || dayjs(entry.startDate)).format('HH:mm')}</time>
+                    <span>
+                      <strong>{entry.title || entry.tourTitle || entry.stayTitle}</strong>
+                      <small>{[entry.scheduleLabel, entry.guestsLabel, entry.clientName].filter(Boolean).join(' · ')}</small>
+                    </span>
+                    <Tag color={isBusinessPaidBooking(entry) ? 'green' : 'gold'}>{getSchedulePaymentLabel(entry)}</Tag>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Сегодня в расписании спокойно" />
+            )}
+          </Card>
+        </Col>
+        <Col xs={24} xl={9}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+            <Card className="tp-admin-card tp-business-home-tasks" title="Задачи">
+              <div>
+                <strong>{businessAwaitingConfirmation.length}</strong>
+                <span>сегодня</span>
+              </div>
+              <div>
+                <strong>{businessOverdueTasks}</strong>
+                <span>просрочена</span>
+              </div>
+            </Card>
+            <Card className="tp-admin-card tp-business-home-load" title="Загрузка бизнеса">
+              <div><span>Cottages</span><Progress percent={cottagesLoad} /></div>
+              <div><span>Tours</span><Progress percent={toursLoad} /></div>
+            </Card>
+          </Space>
+        </Col>
+      </Row>
+
+      <div className="tp-business-home-queues">
+        {renderBusinessQueue('Ближайшие бронирования', businessUpcomingBookings, `${basePath}/bookings`)}
+        {renderBusinessQueue('Ожидают подтверждения', businessAwaitingConfirmation, `${basePath}/bookings`)}
+        {renderBusinessQueue('Неоплаченные', businessUnpaidBookings, `${basePath}/payments`)}
+        {renderBusinessQueue('Сегодня заезжают', businessCheckInsToday, `${basePath}/schedule`)}
+        {renderBusinessQueue('Сегодня выезжают', businessCheckOutsToday, `${basePath}/schedule`)}
+      </div>
+    </Space>
+  );
 
   const renderDashboard = () => (
     <Space orientation="vertical" size={18} style={{ width: '100%' }}>
@@ -3301,6 +6306,260 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     </Space>
   );
 
+  const renderBusinessTasks = () => {
+    const pendingBookings = bookingRows.filter((booking) => ['pending', 'pending_payment', 'payment_review'].includes(booking.status));
+    const taskItems = [
+      ...pendingBookings.slice(0, 5).map((booking) => ({
+        key: `booking-${booking.key}`,
+        title: `Проверить бронь: ${booking.tourTitle || booking.stayTitle || 'услуга'}`,
+        description: [booking.clientName, booking.clientPhone, formatMoney(booking.amount)].filter(Boolean).join(' · '),
+        tag: (BOOKING_STATUS_META[booking.status] || BOOKING_STATUS_META.pending).label,
+        color: (BOOKING_STATUS_META[booking.status] || BOOKING_STATUS_META.pending).color,
+        action: () => navigate(`${basePath}/bookings`),
+      })),
+      ...(prepaymentReviewCount ? [{
+        key: 'payments-review',
+        title: 'Проверить клиентские оплаты',
+        description: `${prepaymentReviewCount} платеж(а) ожидают решения по чеку или предоплате.`,
+        tag: 'Оплаты',
+        color: 'blue',
+        action: () => navigate(`${basePath}/payments`),
+      }] : []),
+      ...(currentCompany?.subscriptionStatus && currentCompany.subscriptionStatus !== 'active' ? [{
+        key: 'subscription',
+        title: 'Довести подписку до активного статуса',
+        description: getSubscriptionHealthMeta(currentCompany).label,
+        tag: 'Подписка',
+        color: getSubscriptionHealthMeta(currentCompany).color,
+        action: () => navigate(`${basePath}/settings`),
+      }] : []),
+    ];
+
+    return (
+      <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+        <Card className="tp-admin-card">
+          <div className="tp-admin-section-head">
+            <div>
+              <Text className="tp-admin-section-label">Travel CRM</Text>
+              <Title level={3}>Задачи</Title>
+              <Paragraph>
+                Рабочий список собирается из существующих броней, платежей и статуса компании.
+              </Paragraph>
+            </div>
+            <Tag color={taskItems.length ? 'blue' : 'green'}>{taskItems.length || 0} активных</Tag>
+          </div>
+          {taskItems.length ? (
+            <div className="tp-admin-booking-list">
+              {taskItems.map((task) => (
+                <button key={task.key} type="button" className="tp-admin-business-task" onClick={task.action}>
+                  <span>
+                    <strong>{task.title}</strong>
+                    <small>{task.description || 'Откройте связанный раздел для продолжения.'}</small>
+                  </span>
+                  <Tag color={task.color}>{task.tag}</Tag>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Нет срочных задач" />
+          )}
+        </Card>
+      </Space>
+    );
+  };
+
+  void renderBusinessTasks;
+
+  const renderBusinessTasksV2 = () => {
+    const pendingBookings = bookingRows.filter((booking) => ['pending', 'pending_payment', 'payment_review'].includes(booking.status));
+    const now = dayjs();
+    const automationTasks = bookingRows.flatMap((booking) => {
+      const start = dayjs(booking.bookingDate || booking.travelDate || booking.checkInDate || booking.startDate || booking.createdAt);
+      const end = dayjs(booking.endDate || booking.checkOutDate || booking.bookingDate || booking.travelDate || booking.createdAt);
+      if (!start.isValid()) return [];
+      const title = booking.tourTitle || booking.stayTitle || 'Travel service';
+      const manager = booking.assignedTo || currentCompany?.name || 'TravelPay';
+      const base = {
+        related: `Booking #${booking.id || booking.key}`,
+        manager,
+        description: [title, booking.clientName, booking.clientPhone].filter(Boolean).join(' · '),
+        color: 'purple',
+        action: () => navigate(`${basePath}/bookings`),
+      };
+      const getStatus = (due) => due.isBefore(now) ? 'overdue' : due.diff(now, 'hour') <= 6 ? 'in_progress' : 'new';
+      const tasks = [];
+      if (booking.type === 'tour_booking') {
+        const payDue = start.subtract(24, 'hour');
+        const contactDue = start.subtract(3, 'hour');
+        if (Math.abs(payDue.diff(now, 'hour')) <= 48 && !['PAID', 'REFUNDED'].includes(getCanonicalPaymentStatus(booking))) {
+          tasks.push({ ...base, key: `auto-pay-${booking.key}`, title: 'Проверить оплату', dueAt: payDue.format('DD.MM HH:mm'), status: getStatus(payDue), tag: '24h до тура' });
+        }
+        if (Math.abs(contactDue.diff(now, 'hour')) <= 24) {
+          tasks.push({ ...base, key: `auto-contact-${booking.key}`, title: 'Связаться с клиентом', dueAt: contactDue.format('DD.MM HH:mm'), status: getStatus(contactDue), tag: '3h до тура' });
+        }
+      }
+      if (booking.type === 'stay_booking') {
+        if (start.isSame(now, 'day')) {
+          tasks.push({ ...base, key: `auto-checkin-${booking.key}`, title: 'Подтвердить приезд', dueAt: start.hour(10).minute(0).format('Сегодня HH:mm'), status: 'in_progress', tag: 'Check-in' });
+        }
+        if (end.isValid() && end.isBefore(now, 'day') && now.diff(end, 'day') <= 3) {
+          tasks.push({ ...base, key: `auto-review-${booking.key}`, title: 'Попросить отзыв', dueAt: end.add(1, 'day').format('DD.MM HH:mm'), status: 'new', tag: 'After check-out' });
+        }
+      }
+      return tasks;
+    });
+    const taskItems = [
+      ...automationTasks,
+      ...pendingBookings.slice(0, 8).map((booking, index) => {
+        const status = booking.status === 'payment_review'
+          ? 'in_progress'
+          : dayjs(booking.bookingDate || booking.createdAt).isBefore(dayjs().subtract(1, 'day')) ? 'overdue' : 'new';
+        return {
+          key: `booking-${booking.key}`,
+          title: `Позвонить ${booking.clientName || 'клиенту'}`,
+          related: `Booking #${booking.id || index + 1}`,
+          dueAt: dayjs().hour(16).minute(0).format('Сегодня HH:mm'),
+          manager: booking.assignedTo || currentCompany?.name || 'TravelPay',
+          status,
+          description: [booking.tourTitle || booking.stayTitle || 'Travel service', booking.clientPhone, formatMoney(booking.amount)].filter(Boolean).join(' · '),
+          tag: (BOOKING_STATUS_META[booking.status] || BOOKING_STATUS_META.pending).label,
+          color: (BOOKING_STATUS_META[booking.status] || BOOKING_STATUS_META.pending).color,
+          action: () => navigate(`${basePath}/bookings`),
+        };
+      }),
+      ...(prepaymentReviewCount ? [{
+        key: 'payments-review',
+        title: 'Проверить клиентские оплаты',
+        related: 'Payments queue',
+        dueAt: dayjs().hour(17).minute(0).format('Сегодня HH:mm'),
+        manager: currentCompany?.name || 'Finance',
+        status: 'in_progress',
+        description: `${prepaymentReviewCount} платеж(а) ожидают решения по чеку или предоплате.`,
+        tag: 'Оплаты',
+        color: 'blue',
+        action: () => navigate(`${basePath}/payments`),
+      }] : []),
+      ...(currentCompany?.subscriptionStatus && currentCompany.subscriptionStatus !== 'active' ? [{
+        key: 'subscription',
+        title: 'Довести подписку до активного статуса',
+        related: 'Business account',
+        dueAt: 'Сегодня',
+        manager: currentCompany?.name || 'Owner',
+        status: 'overdue',
+        description: getSubscriptionHealthMeta(currentCompany).label,
+        tag: 'Подписка',
+        color: getSubscriptionHealthMeta(currentCompany).color,
+        action: () => navigate(`${basePath}/settings`),
+      }] : []),
+    ];
+    const renderTaskCard = (task) => (
+      <button key={task.key} type="button" className="tp-admin-business-task" onClick={task.action}>
+        <span>
+          <strong>{task.title}</strong>
+          <small>{task.related} · {task.dueAt}</small>
+          <small>Manager: {task.manager}</small>
+          <small>{task.description || 'Откройте связанный раздел для продолжения.'}</small>
+        </span>
+        <Tag color={task.color}>{task.tag}</Tag>
+      </button>
+    );
+
+    return (
+      <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+        <Card className="tp-admin-card">
+          <div className="tp-admin-section-head">
+            <div>
+              <Text className="tp-admin-section-label">Travel CRM</Text>
+              <Title level={3}>Задачи</Title>
+              <Paragraph>
+                Kanban/List для операционных задач: звонки, оплаты, связанные бронирования и ответственные сотрудники.
+              </Paragraph>
+            </div>
+            <Space>
+              <Segmented
+                value={taskViewMode}
+                onChange={setTaskViewMode}
+                options={[
+                  { value: 'kanban', label: 'Kanban' },
+                  { value: 'list', label: 'List' },
+                ]}
+              />
+              <Tag color={taskItems.length ? 'blue' : 'green'}>{taskItems.length || 0} активных</Tag>
+            </Space>
+          </div>
+          {taskItems.length ? (
+            taskViewMode === 'kanban' ? (
+              <div className="tp-admin-task-kanban">
+                {TASK_STATUS_COLUMNS.map((column) => {
+                  const columnTasks = taskItems.filter((task) => task.status === column.key);
+                  return (
+                    <section key={column.key} className="tp-admin-task-column">
+                      <div className="tp-admin-task-column__head">
+                        <strong>{column.label}</strong>
+                        <Tag color={column.color}>{columnTasks.length}</Tag>
+                      </div>
+                      <div className="tp-admin-booking-list">
+                        {columnTasks.length ? columnTasks.map(renderTaskCard) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Пусто" />}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="tp-admin-booking-list">
+                {taskItems.map(renderTaskCard)}
+              </div>
+            )
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Нет срочных задач" />
+          )}
+        </Card>
+      </Space>
+    );
+  };
+
+  const renderBusinessSupport = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card className="tp-admin-card">
+        <div className="tp-admin-section-head">
+          <div>
+            <Text className="tp-admin-section-label">TravelPay Business</Text>
+            <Title level={3}>Поддержка</Title>
+            <Paragraph>
+              Быстрые точки входа для вопросов по бронированиям, оплатам, публикации туров и объектам.
+            </Paragraph>
+          </div>
+        </div>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={8}>
+            <Card size="small" className="tp-admin-inline-card" title="Оплаты">
+              <Space orientation="vertical" size={10}>
+                <Text type="secondary">Проверьте реквизиты и спорные платежи.</Text>
+                <Button onClick={() => navigate(`${basePath}/payments`)}>Открыть оплаты</Button>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card size="small" className="tp-admin-inline-card" title="Контент">
+              <Space orientation="vertical" size={10}>
+                <Text type="secondary">Маршруты, объекты, даты и вместимость.</Text>
+                <Button onClick={() => navigate(`${basePath}/tours`)}>Открыть каталог</Button>
+              </Space>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card size="small" className="tp-admin-inline-card" title="Команда">
+              <Space orientation="vertical" size={10}>
+                <Text type="secondary">Менеджеры, контакты и ответственные по оплатам.</Text>
+                <Button onClick={() => navigate(`${basePath}/team`)}>Открыть команду</Button>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+      </Card>
+    </Space>
+  );
+
   const renderCatalog = () => (
     <Space orientation="vertical" size={18} style={{ width: '100%' }}>
       <Card className="tp-admin-card">
@@ -3335,9 +6594,50 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </Button>
           </Space>
         </div>
+        {renderContextHelp(
+          catalogMode === 'tours' ? 'Как настроить предоплату?' : 'Как добавить объект?',
+          catalogMode === 'tours'
+            ? 'Откройте тур, выберите Prepayment: выключена, фиксированная сумма или процент. Это влияет на required prepayment при создании брони.'
+            : 'Создайте Property/Unit, укажите capacity, цены, check-in/check-out и доступность. После этого объект появится в календаре и публичной странице компании.',
+        )}
 
         {catalogMode === 'tours' ? (
           <>
+            <div className="tp-admin-tour-ops-grid">
+              {tourOperationCards.slice(0, 12).map((card) => (
+                <button
+                  key={card.key}
+                  type="button"
+                  className="tp-admin-tour-ops-card"
+                  onClick={() => {
+                    setDepartureOpsDrawerItem(card);
+                  }}
+                >
+                  <div>
+                    <strong>{card.title}</strong>
+                    {(card.slot.guide || card.slot.vehicle || card.slot.meetingPoint) && (
+                      <small>
+                        {[card.slot.guide && `Guide: ${card.slot.guide}`, card.slot.vehicle, card.slot.meetingPoint]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </small>
+                    )}
+                    <small>{card.date.locale('ru').format('D MMMM')} · {card.time}</small>
+                  </div>
+                  <div className="tp-admin-tour-ops-card__stats">
+                    <span>{card.bookedSeats} / {card.totalSeats}</span>
+                    <span>{card.remainingSeats} free</span>
+                    <span>{formatMoney(card.revenue)}</span>
+                    <Tag color={card.statusColor}>{card.statusLabel}</Tag>
+                    {card.waitlistCount > 0 && <Tag color="gold">Waitlist {card.waitlistCount}</Tag>}
+                    <Tag color={card.checklistDone === TOUR_OPERATION_CHECKLIST_ITEMS.length ? 'green' : 'purple'}>
+                      Ops {card.checklistDone}/{TOUR_OPERATION_CHECKLIST_ITEMS.length}
+                    </Tag>
+                  </div>
+                </button>
+              ))}
+            </div>
+
             <div className="tp-admin-toolbar">
               <Input.Search
                 allowClear
@@ -3366,6 +6666,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </div>
 
             <Table
+              {...crmTableProps}
               rowKey="id"
               dataSource={filteredTours}
               columns={tourColumns}
@@ -3376,6 +6677,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           </>
         ) : (
           <Table
+            {...crmTableProps}
             rowKey="id"
             dataSource={accommodations}
             columns={accommodationColumns}
@@ -3606,10 +6908,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
 
   const calendarViewOptions = [
     { label: 'День', value: 'day' },
-    ...(!isDesktop && !isMobileViewport ? [{ label: '3 дня', value: 'three-day' }] : []),
     { label: 'Неделя', value: 'week' },
     { label: 'Месяц', value: 'month' },
-    { label: 'Список', value: 'list' },
   ];
 
   const calendarPeriodLabel = useMemo(() => {
@@ -3617,15 +6917,13 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     if (bookingTab === 'month') return localized.format('MMMM YYYY');
     if (bookingTab === 'day') return localized.format('dddd, D MMMM YYYY');
 
-    const start = bookingTab === 'three-day'
-      ? localized.startOf('day')
-      : dayjs(startOfWeek(calendarDate.toDate())).locale('ru');
-    const end = start.add(bookingTab === 'three-day' ? 2 : 6, 'day');
+    const start = dayjs(startOfWeek(calendarDate.toDate())).locale('ru');
+    const end = start.add(6, 'day');
     return `${start.format('D MMMM')} — ${end.format('D MMMM YYYY')}`;
   }, [bookingTab, calendarDate]);
 
   const shiftCalendarPeriod = useCallback((direction) => {
-    const amount = bookingTab === 'month' ? 1 : ['week', 'list'].includes(bookingTab) ? 7 : bookingTab === 'three-day' ? 3 : 1;
+    const amount = bookingTab === 'month' ? 1 : bookingTab === 'week' ? 7 : 1;
     const unit = bookingTab === 'month' ? 'month' : 'day';
     setCalendarDate((value) => value.add(direction * amount, unit));
   }, [bookingTab]);
@@ -3776,6 +7074,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       </div>
     </div>
   );
+  void renderCalendarMobileAgenda;
 
   const renderCalendarListView = () => {
     if (!calendarListGroups.length) {
@@ -3839,6 +7138,337 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       </div>
     );
   };
+  void renderCalendarListView;
+
+  const renderScheduleDayView = () => (
+    <div className="tp-admin-schedule-day" style={{ '--tp-calendar-hour-height': `${weekHourHeight}px` }}>
+      <div className="tp-admin-schedule-day__hours" aria-hidden="true">
+        <div className="tp-admin-schedule-day__resource-spacer" />
+        {weekHourRows.map((hour) => (
+          <div key={hour} className="tp-admin-schedule-day__hour-label">
+            {String(hour).padStart(2, '0')}:00
+          </div>
+        ))}
+      </div>
+      <div className="tp-admin-schedule-day__resources" style={{ gridTemplateColumns: `repeat(${Math.max(scheduleResourceColumns.length, 1)}, minmax(190px, 1fr))` }}>
+        {scheduleResourceColumns.map((column) => (
+          <div key={column.key} className="tp-admin-schedule-resource">
+            <div className="tp-admin-schedule-resource__head">
+              <strong>{column.label}</strong>
+              <small>{column.items.length} событий</small>
+            </div>
+            <div className="tp-admin-schedule-day__grid">
+              {weekHourRows.map((hour) => (
+                <button
+                  key={hour}
+                  type="button"
+                  className="tp-admin-schedule-day__slot"
+                  aria-label={`Создать бронирование: ${column.label}, ${String(hour).padStart(2, '0')}:00`}
+                  onDragOver={(event) => {
+                    if (scheduleDragAction) event.preventDefault();
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    handleScheduleDrop(column, hour);
+                  }}
+                  onClick={() => openQuickBookingDrawer({
+                    date: calendarDate,
+                    hour,
+                    resource: column.bookingResource,
+                    objectId: column.objectId,
+                  })}
+                />
+              ))}
+              {calendarDate.isSame(dayjs(), 'day') && dayjs().hour() >= weekBoardStartHour && dayjs().hour() < weekBoardEndHour && (
+                <span className="tp-admin-schedule-day__now" style={{ top: `${(((dayjs().hour() * 60) + dayjs().minute() - (weekBoardStartHour * 60)) / 60) * weekHourHeight}px` }}>
+                  <span>{dayjs().format('HH:mm')}</span>
+                </span>
+              )}
+              {column.items.map((entry) => {
+                const statusMeta = BOOKING_STATUS_META[getCanonicalBookingStatus(entry)] || BOOKING_STATUS_META.NEW;
+                const paymentMeta = PAYMENT_STATUS_META[getCanonicalPaymentStatus(entry)] || PAYMENT_STATUS_META.UNPAID;
+                const eventStyle = {
+                  top: entry.style.top,
+                  height: entry.style.height,
+                };
+                const priceVisible = Number(entry.amount || entry.price || 0) > 0;
+                return (
+                  <button
+                    key={entry.key}
+                    type="button"
+                    className={`tp-admin-schedule-event is-${entry.type || 'booking'} is-${entry.scheduleType || 'booking'}`}
+                    style={eventStyle}
+                    draggable={['stay_booking', 'tour_booking'].includes(entry.type)}
+                    onDragStart={(event) => {
+                      event.stopPropagation();
+                      setScheduleDragAction({ mode: 'move', entry });
+                      event.dataTransfer.effectAllowed = 'move';
+                    }}
+                    onDragEnd={() => setScheduleDragAction(null)}
+                    onClick={() => openCalendarItemDetails(entry)}
+                  >
+                    <span className="tp-admin-schedule-event__time">{entry.timeLabel}</span>
+                    <span className="tp-admin-schedule-event__body">
+                      <strong>{entry.title || entry.tourTitle || entry.stayTitle || 'Бронирование'}</strong>
+                      <small>{entry.clientName || entry.companyName || 'TravelPay'}</small>
+                      <small>{[entry.guestsLabel, priceVisible ? formatMoney(entry.amount || entry.price) : ''].filter(Boolean).join(' · ')}</small>
+                    </span>
+                    <span className="tp-admin-schedule-event__status"><i style={{ background: paymentMeta.dot || statusMeta.dot }} />{paymentMeta.label}</span>
+                    {entry.type === 'tour_booking' && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="tp-admin-schedule-event__resize"
+                        draggable
+                        aria-label="Изменить длительность бронирования"
+                        onClick={(event) => event.stopPropagation()}
+                        onDragStart={(event) => {
+                          event.stopPropagation();
+                          setScheduleDragAction({ mode: 'resize', entry });
+                          event.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragEnd={() => setScheduleDragAction(null)}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {!scheduleDayTimedEntries.length && (
+          <div className="tp-admin-schedule-day__empty">
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="На выбранный день событий нет">
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => openQuickBookingDrawer({ date: calendarDate })}>
+                Новое бронирование
+              </Button>
+            </Empty>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderScheduleWeekView = () => (
+    <div className="tp-admin-schedule-week" style={{ '--tp-calendar-hour-height': `${weekHourHeight}px` }} ref={weekBoardRef}>
+      <div className="tp-admin-schedule-week__head">
+        <div className="tp-admin-schedule-week__corner" />
+        {weekEventsByDay.map((day) => (
+          <button
+            key={day.key}
+            type="button"
+            className={`tp-admin-schedule-week__day-head${day.isToday ? ' is-today' : ''}${day.isSelected ? ' is-selected' : ''}`}
+            onClick={() => setCalendarDate(day.date)}
+          >
+            <span>{day.date.locale('ru').format('dd').toUpperCase()}</span>
+            <strong>{day.date.format('D')}</strong>
+            <small>{day.items.length} событий</small>
+          </button>
+        ))}
+      </div>
+      <div className="tp-admin-schedule-week__body">
+        <div className="tp-admin-schedule-week__hours">
+          {weekHourRows.map((hour) => (
+            <div key={hour} className="tp-admin-schedule-week__hour">{String(hour).padStart(2, '0')}:00</div>
+          ))}
+        </div>
+        <div className="tp-admin-schedule-week__days">
+          {weekEventsByDay.map((day) => (
+            <div key={day.key} className={`tp-admin-schedule-week__day${day.isToday ? ' is-today' : ''}`}>
+              {weekHourRows.map((hour) => (
+                <button
+                  key={hour}
+                  type="button"
+                  className="tp-admin-schedule-week__slot"
+                  aria-label={`Создать бронирование: ${day.date.format('DD.MM.YYYY')} ${String(hour).padStart(2, '0')}:00`}
+                  onClick={() => openQuickBookingDrawer({ date: day.date, hour })}
+                />
+              ))}
+              {day.isToday && dayjs().hour() >= weekBoardStartHour && dayjs().hour() < weekBoardEndHour && (
+                <span className="tp-admin-schedule-week__now" style={{ top: `${(((dayjs().hour() * 60) + dayjs().minute() - (weekBoardStartHour * 60)) / 60) * weekHourHeight}px` }}>
+                  <span>{dayjs().format('HH:mm')}</span>
+                </span>
+              )}
+              {day.items.map((entry) => {
+                const paymentMeta = PAYMENT_STATUS_META[getCanonicalPaymentStatus(entry)] || PAYMENT_STATUS_META.UNPAID;
+                return (
+                  <button
+                    key={entry.key}
+                    type="button"
+                    className={`tp-admin-schedule-week-event is-${entry.type || 'event'}`}
+                    style={entry.style}
+                    onClick={() => openCalendarItemDetails(entry)}
+                  >
+                    <span className="tp-admin-schedule-week-event__time">{entry.timeLabel}</span>
+                    <strong>{entry.title || entry.tourTitle || entry.stayTitle || 'Бронирование'}</strong>
+                    <small>{entry.clientName || entry.companyName || 'TravelPay'}</small>
+                    <small><i style={{ background: paymentMeta.dot }} />{paymentMeta.label}</small>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderScheduleMonthView = () => (
+    <Calendar
+      value={calendarDate}
+      onSelect={(value) => {
+        setCalendarDate(value);
+        setBookingTab('day');
+      }}
+      locale={ruRU}
+      className="tp-admin-month-overview"
+      cellRender={(value) => {
+        const items = calendarEntriesByDate.get(value.format('YYYY-MM-DD')) || [];
+        if (!items.length) return null;
+        const bookings = items.filter((entry) => entry.type !== 'tour');
+        const revenue = bookings.reduce((sum, entry) => sum + Number(entry.amount || entry.price || 0), 0);
+        const checkIns = items.filter((entry) => entry.scheduleType === 'check-in' || entry.type === 'stay_booking').length;
+        const toursCount = items.filter((entry) => entry.type === 'tour' || entry.type === 'tour_booking').length;
+        const visible = items.slice(0, 3);
+
+        return (
+          <button
+            type="button"
+            className="tp-admin-month-summary"
+            onClick={(event) => {
+              event.stopPropagation();
+              setCalendarDate(value);
+              setBookingTab('day');
+            }}
+          >
+            <strong>{bookings.length} бронирования</strong>
+            <span>{formatMoney(revenue)}</span>
+            <small>{checkIns} check-in · {toursCount} tour</small>
+            <div>
+              {visible.map((entry) => (
+                <i key={entry.key}>{entry.clientName || entry.title || entry.tourTitle || entry.stayTitle}</i>
+              ))}
+              {items.length > 3 && <em>+{items.length - 3} ещё</em>}
+            </div>
+          </button>
+        );
+      }}
+    />
+  );
+
+  const renderUnitAvailabilityStrip = (unit) => {
+    const unitBookings = getUnitBookings(unit);
+    return (
+      <div className="tp-admin-property-availability-strip">
+        {propertyDateRange.map((date) => {
+          const blocked = getStayBlockForDate(unit, date);
+          const occupied = unitBookings.some((booking) => {
+            const start = dayjs(booking.checkInDate || booking.bookingDate).startOf('day');
+            const end = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate).startOf('day');
+            return date.isSame(start, 'day') || (date.isAfter(start, 'day') && date.isBefore(end, 'day'));
+          });
+          return (
+            <span key={date.format('YYYY-MM-DD')} className={blocked ? 'is-blocked' : occupied ? 'is-booked' : 'is-free'} title={`${date.format('DD.MM')} · ${blocked ? PROPERTY_BLOCK_REASONS.find((item) => item.value === blocked.reason)?.label || 'закрыто' : occupied ? 'занято' : 'свободно'}`}>
+              {date.format('DD')}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const getUnitPriceForDate = (unit, dateValue) => {
+    const date = dayjs(dateValue).startOf('day');
+    const rules = unit.pricingRules || [];
+    const baseRule = rules.find((rule) => rule.type === 'base' && Number(rule.price) > 0);
+    const weekendRule = rules.find((rule) => rule.type === 'weekend' && Number(rule.price) > 0);
+    const rangedRules = rules.filter((rule) => {
+      const start = dayjs(rule.startDate).startOf('day');
+      const end = dayjs(rule.endDate || rule.startDate).startOf('day');
+      return start.isValid()
+        && (date.isSame(start, 'day') || date.isAfter(start, 'day'))
+        && (date.isSame(end.isValid() ? end : start, 'day') || date.isBefore(end.isValid() ? end : start, 'day'));
+    });
+    const specificRule = rangedRules.find((rule) => rule.type === 'specific_date' && Number(rule.price) > 0);
+    const seasonRule = rangedRules.find((rule) => rule.type === 'season' && Number(rule.price) > 0);
+    const discountRule = rangedRules.find((rule) => rule.type === 'discount' && Number(rule.discount) > 0);
+    const minStayRule = rangedRules.find((rule) => rule.type === 'minimum_stay' && Number(rule.minimumStay) > 0);
+    let price = Number(specificRule?.price || seasonRule?.price || 0);
+    if (!price && [5, 6, 0].includes(date.day())) price = Number(weekendRule?.price || unit.weekendPrice || 0);
+    if (!price) price = Number(baseRule?.price || unit.pricePerNight || 0);
+    if (discountRule) price = Math.max(Math.round(price * (1 - (Number(discountRule.discount) / 100))), 0);
+
+    return {
+      price,
+      label: specificRule?.label || seasonRule?.label || discountRule?.label || minStayRule?.label || ([5, 6, 0].includes(date.day()) ? 'Weekend' : 'Base'),
+      minimumStay: Number(minStayRule?.minimumStay || 0),
+    };
+  };
+
+  const renderProperties = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card className="tp-admin-card tp-admin-properties-page">
+        <div className="tp-admin-section-head">
+          <div>
+            <Text className="tp-admin-section-label">Property Management</Text>
+            <Title level={3}>Объекты и юниты</Title>
+            <Paragraph>Управляйте комплексами, коттеджами, домиками, загрузкой, check-in/check-out и доступностью.</Paragraph>
+          </div>
+          <Button type="primary" icon={<PlusOutlined />} onClick={openAccommodationDrawer}>Добавить Unit</Button>
+        </div>
+
+        <div className="tp-admin-property-grid">
+          {propertyRecords.map((property) => (
+            <button key={property.id} type="button" className="tp-admin-property-card" onClick={() => openPropertyDetails(property)}>
+              <div className="tp-admin-property-card__image">
+                {property.image ? <AppImage src={property.image} alt={property.title} /> : <HomeOutlined />}
+              </div>
+              <div className="tp-admin-property-card__body">
+                <div>
+                  <strong>{property.title}</strong>
+                  <small>{property.location || property.companyName || 'Кыргызстан'}</small>
+                </div>
+                <div className="tp-admin-property-card__meta">
+                  <Tag color={property.status === 'available' ? 'green' : property.status === 'mixed' ? 'gold' : 'red'}>{property.status === 'mixed' ? 'Частично' : property.status === 'available' ? 'Доступен' : 'Нет мест'}</Tag>
+                  <span>{property.type}</span>
+                  <span>до {property.capacity} гостей</span>
+                  <span>{formatMoney(property.price)}</span>
+                </div>
+                <div className="tp-admin-property-card__stats">
+                  <div><Text type="secondary">Загрузка</Text><Progress percent={property.occupancy} size="small" /></div>
+                  <div><Text type="secondary">Доход</Text><strong>{formatMoney(property.revenue)}</strong></div>
+                  <div><Text type="secondary">Следующий check-in</Text><strong>{property.nextCheckIn ? `${property.nextCheckIn.unit.title || property.nextCheckIn.unit.name} · ${formatDate(property.nextCheckIn.booking.checkInDate)}` : '—'}</strong></div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="tp-admin-card" title="Availability calendar">
+        <div className="tp-admin-property-availability">
+          <div className="tp-admin-property-availability__head">
+            <span />
+            {propertyDateRange.map((date) => <strong key={date.format('YYYY-MM-DD')}>{date.format('DD')}</strong>)}
+          </div>
+          {accommodations.map((unit) => (
+            <div key={unit.id} className="tp-admin-property-availability__row">
+              <strong>{unit.title || unit.name}</strong>
+              {propertyDateRange.map((date) => {
+                const blocked = getStayBlockForDate(unit, date);
+                const occupied = getUnitBookings(unit).some((booking) => {
+                  const start = dayjs(booking.checkInDate || booking.bookingDate).startOf('day');
+                  const end = dayjs(booking.checkOutDate || booking.endDate || booking.checkInDate).startOf('day');
+                  return date.isSame(start, 'day') || (date.isAfter(start, 'day') && date.isBefore(end, 'day'));
+                });
+                return <span key={date.format('YYYY-MM-DD')} className={blocked ? 'is-blocked' : occupied ? 'is-booked' : 'is-free'} />;
+              })}
+            </div>
+          ))}
+        </div>
+      </Card>
+    </Space>
+  );
 
   const renderBookingsModern = () => (
     <section className="tp-admin-calendar-page">
@@ -3879,8 +7509,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         <main className={`tp-admin-calendar-main${bookingTab === 'three-day' ? ' is-three-days' : ''}`}>
           <div className="tp-admin-calendar-header">
             <div className="tp-admin-calendar-title">
-              <Title level={2}>Календарь</Title>
-              <Text type="secondary">Управление бронированиями и расписанием</Text>
+              <Title level={2}>{currentTab === 'schedule' ? 'Расписание' : 'Календарь'}</Title>
+              <Text type="secondary">{currentTab === 'schedule' ? 'Центр всей операционной системы бизнеса' : 'Управление бронированиями и расписанием'}</Text>
             </div>
             <div className="tp-admin-calendar-actions">
               <Button
@@ -3889,7 +7519,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                 className="tp-admin-calendar-create"
                 onClick={() => openQuickBookingDrawer()}
               >
-                Новое бронирование
+                Бронирование
               </Button>
             </div>
             <div className="tp-admin-calendar-toolbar" aria-label="Управление календарём">
@@ -3909,6 +7539,16 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                   aria-label="Поиск по календарю"
                 />
                 <Segmented value={bookingTab} onChange={setBookingTab} options={calendarViewOptions} aria-label="Режим календаря" />
+                <Segmented
+                  value={scheduleGroupBy}
+                  onChange={setScheduleGroupBy}
+                  options={[
+                    { label: 'Объекты', value: 'resources' },
+                    { label: 'Туры', value: 'tours' },
+                    { label: 'Менеджеры', value: 'managers' },
+                  ]}
+                  aria-label="Группировать расписание"
+                />
                 <Segmented
                   value={calendarResource}
                   onChange={setCalendarResource}
@@ -3947,6 +7587,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               </div>
             </div>
           </div>
+
+          {renderContextHelp('Как настроить календарь?', 'Используйте группировку по объектам, турам или менеджерам. Клик по свободному слоту создаёт бронь с уже подставленными датой, временем и ресурсом.')}
 
           {!isOnline && (
             <Alert
@@ -3991,229 +7633,19 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                       </button>
                     ))}
                   </div>
-                  <div className="tp-admin-calendar-day-view">
-                    <div className="tp-admin-calendar-day-view__date">
-                      {calendarDate.locale('ru').format('dddd, D MMMM')}
-                    </div>
-                    {selectedDayCalendarEntries.length ? (
-                      <div className="tp-admin-calendar-day-view__list">
-                        {[...selectedDayCalendarEntries]
-                          .sort((first, second) => dayjs(first.startDate).valueOf() - dayjs(second.startDate).valueOf())
-                          .map((booking) => (
-                            <button
-                              key={booking.key}
-                              type="button"
-                              className={`tp-admin-calendar-day-event is-${booking.status || 'new'}`}
-                              onClick={() => openCalendarItemDetails(booking)}
-                            >
-                              <span className="tp-admin-calendar-day-event__time">{formatCalendarTimeRange(booking)}</span>
-                              <span className="tp-admin-calendar-day-event__content">
-                                <strong>{booking.title || booking.tourTitle}</strong>
-                                <small>{booking.clientName || booking.companyName || 'TravelPay'}</small>
-                              </span>
-                              {renderBookingStatusChip(booking)}
-                            </button>
-                          ))}
-                      </div>
-                    ) : (
-                      <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description="На выбранную дату бронирований нет"
-                      >
-                        <Button type="primary" icon={<PlusOutlined />} onClick={() => openQuickBookingDrawer()}>
-                          Добавить бронирование
-                        </Button>
-                      </Empty>
-                    )}
-                  </div>
+                  {isMobileViewport ? renderCalendarMobileAgenda('schedule') : renderScheduleDayView()}
                   </>
                 ),
               },
               {
                 key: 'week',
                 label: 'Неделя',
-                children: (
-                  <>
-                  <div className="tp-admin-mobile-calendar-agenda">
-                    <div className="tp-admin-mobile-calendar-agenda__days" role="tablist" aria-label="Дни недели">
-                      {weekEventsByDay.map((day) => (
-                        <button
-                          key={day.key}
-                          type="button"
-                          role="tab"
-                          aria-selected={day.isSelected}
-                          className={`tp-admin-mobile-calendar-agenda__day${day.isSelected ? ' is-selected' : ''}${day.isToday ? ' is-today' : ''}`}
-                          onClick={() => setCalendarDate(day.date)}
-                        >
-                          <span>{day.label.slice(0, 2)}</span>
-                          <strong>{day.dayNumber}</strong>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="tp-admin-mobile-calendar-agenda__timeline">
-                      {weekHourRows.map((hour) => {
-                        const hourEntries = selectedDayCalendarEntries.filter((item) => dayjs(item.startDate).hour() === hour);
-                        return (
-                          <div key={hour} className="tp-admin-mobile-calendar-agenda__slot">
-                            <time>{String(hour).padStart(2, '0')}:00</time>
-                            <div className="tp-admin-mobile-calendar-agenda__slot-content">
-                              {hourEntries.length ? hourEntries.map((booking) => (
-                                <button key={booking.key} type="button" className={`tp-admin-calendar-day-event is-${booking.status || 'new'}`} onClick={() => openCalendarItemDetails(booking)}>
-                                  <span className="tp-admin-calendar-day-event__content">
-                                    <strong>{booking.title || booking.tourTitle}</strong>
-                                    <small>{booking.clientName || booking.companyName || 'TravelPay'}</small>
-                                  </span>
-                                  {renderBookingStatusChip(booking)}
-                                </button>
-                              )) : (
-                                <button
-                                  type="button"
-                                  className="tp-admin-mobile-calendar-agenda__free"
-                                  onClick={() => openQuickBookingDrawer({ date: calendarDate, hour })}
-                                >
-                                  Свободно
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className={`tp-admin-week-board${bookingTab === 'three-day' ? ' tp-admin-week-board--three-days' : ''}`} ref={weekBoardRef}>
-                    <div className="tp-admin-week-board__header">
-                      <div className="tp-admin-week-board__header-spacer" />
-                      <div className="tp-admin-week-board__days">
-                        {weekEventsByDay.map((day) => (
-                          <button
-                            key={day.key}
-                            type="button"
-                            className={`tp-admin-week-board__day-tab${day.isSelected ? ' is-selected' : ''}${day.isToday ? ' is-today' : ''}`}
-                            onClick={() => setCalendarDate(day.date)}
-                          >
-                            <span>{day.label}</span>
-                            <strong>{day.dayNumber}</strong>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="tp-admin-week-board__body">
-                      <div className="tp-admin-week-board__hours">
-                        {weekHourRows.map((hour) => (
-                          <div key={hour} className="tp-admin-week-board__hour">
-                            {String(hour).padStart(2, '0')}:00
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="tp-admin-week-board__grid">
-                        {weekEventsByDay.map((day) => (
-                          <div key={day.key} className={`tp-admin-week-board__column${day.isToday ? ' is-today' : ''}`}>
-                            {weekHourRows.map((hour) => (
-                              <button
-                                key={hour}
-                                type="button"
-                                className="tp-admin-week-board__slot"
-                                aria-label={`Создать бронирование на ${day.date.format('D MMMM')} в ${String(hour).padStart(2, '0')}:00`}
-                                onClick={() => openQuickBookingDrawer({ date: day.date, hour })}
-                              />
-                            ))}
-                            {day.isToday && dayjs().hour() >= weekBoardStartHour && dayjs().hour() < weekBoardEndHour && <span className="tp-admin-week-board__now-line" style={{ top: `${(((dayjs().hour() * 60) + dayjs().minute() - (weekBoardStartHour * 60)) / 60) * weekHourHeight}px` }} aria-label="Текущее время" />}
-
-                            {day.items.map((booking) => (
-                              <div
-                                key={booking.key}
-                                className={`tp-admin-week-event${booking.type === 'tour' ? ' is-tour' : ' is-booking'}`}
-                                style={booking.style}
-                                onClick={() => openCalendarItemDetails(booking)}
-                                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openCalendarItemDetails(booking); } }}
-                                role="button"
-                                tabIndex={0}
-                              >
-                                <div className="tp-admin-week-event__time">{booking.timeLabel}</div>
-                                <div className="tp-admin-week-event__title">{booking.title || booking.tourTitle}</div>
-                                <Tooltip title={`${booking.timeLabel} · ${booking.clientName || booking.companyName || ''} · ${booking.paymentStatus ? `Оплата: ${booking.paymentStatus}` : ''}`}>
-                                  <Dropdown trigger={['click']} menu={{ items: [{ key: 'details', label: 'Открыть детали' }], onClick: ({ domEvent }) => { domEvent?.stopPropagation?.(); openCalendarItemDetails(booking); } }}>
-                                    <Button type="text" size="small" className="tp-admin-week-event__more" icon={<MoreOutlined />} aria-label="Действия бронирования" onClick={(event) => event.stopPropagation()} />
-                                  </Dropdown>
-                                </Tooltip>
-                                {booking.type === 'tour' ? (
-                                  <div className="tp-admin-week-event__meta">
-                                    <span>{booking.companyName}</span>
-                                    <span>{booking.bookedSeats}/{booking.totalSeats} мест</span>
-                                  </div>
-                                ) : (
-                                  <div className="tp-admin-week-event__meta">
-                                    {booking.companyName && <span>{booking.companyName}</span>}
-                                    {booking.clientName && <span>{booking.clientName}</span>}
-                                    {booking.clientPhone && <span>{booking.clientPhone}</span>}
-                                    {booking.type === 'tour_booking' && booking.people && <span>{booking.people} мест</span>}
-                                    {Array.isArray(booking.extras) && booking.extras.filter((item) => item.title).length > 0 && (
-                                      <span>+{booking.extras.filter((item) => item.title).length} услуг</span>
-                                    )}
-                                    {renderBookingStatusChip(booking)}
-                                    {booking.paymentStatus && <span className="tp-admin-week-event__payment">{booking.paymentStatus === 'paid' ? 'Оплачено' : 'Оплата ожидается'}</span>}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  </>
-                ),
+                children: renderScheduleWeekView(),
               },
               {
                 key: 'month',
                 label: 'Месяц',
-                children: (
-                  <>
-                    {renderCalendarMobileAgenda('month')}
-                    <Calendar
-                      value={calendarDate}
-                      onSelect={setCalendarDate}
-                      locale={ruRU}
-                      className="tp-admin-full-calendar"
-                      cellRender={(value) => {
-                        const items = calendarEntriesByDate.get(value.format('YYYY-MM-DD')) || [];
-                        return items.length ? (
-                          <div className="tp-admin-calendar-cell">
-                            {items.slice(0, 3).map((entry) => {
-                              const meta = entry.type === 'tour'
-                                ? (TOUR_CALENDAR_STATUS_META[entry.status] || TOUR_CALENDAR_STATUS_META.scheduled)
-                                : (BOOKING_STATUS_META[entry.status] || BOOKING_STATUS_META.pending);
-                              return (
-                                <button
-                                  key={entry.key}
-                                  type="button"
-                                  className="tp-admin-calendar-pill"
-                                  onClick={() => openCalendarItemDetails(entry)}
-                                >
-                                  <Tag color={meta.color}>{entry.type === 'tour' ? `${entry.title} - ${entry.companyName}` : `${entry.clientName} - ${entry.tourTitle}`}</Tag>
-                                  {entry.type === 'tour' && <span>{entry.bookedSeats}/{entry.totalSeats} мест</span>}
-                                  {entry.type !== 'tour' && renderBookingStatusChip(entry)}
-                                  {entry.type === 'tour_booking' && entry.people && <span>{entry.people} мест</span>}
-                                  {entry.type !== 'tour' && Array.isArray(entry.extras) && entry.extras.filter((item) => item.title).length > 0 && (
-                                    <span>{entry.extras.filter((item) => item.title).length} доп.</span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                            {items.length > 3 && <span className="tp-admin-calendar-more">+ еще {items.length - 3}</span>}
-                          </div>
-                        ) : null;
-                      }}
-                    />
-                  </>
-                ),
-              },
-              {
-                key: 'list',
-                label: 'Список',
-                children: renderCalendarListView(),
+                children: renderScheduleMonthView(),
               },
             ]}
           />
@@ -4231,34 +7663,57 @@ const ActualToursAdmin = ({ businessMode = false }) => {
   );
 
   const renderClients = () => (
-    <Card className="tp-admin-card">
+    <Card className="tp-admin-card tp-admin-clients-crm">
       <div className="tp-admin-section-head">
         <div>
-          <Text className="tp-admin-section-label">Клиенты</Text>
-          <Title level={3}>База клиентов</Title>
-          <Paragraph>Поиск, роли, уровень пользователя, накопления и история поездок.</Paragraph>
+          <Text className="tp-admin-section-label">Travel CRM</Text>
+          <Title level={3}>Клиенты</Title>
+          <Paragraph>Единая клиентская база: бронирования, траты, поездки, долги, менеджеры и источники.</Paragraph>
         </div>
+        <Space wrap>
+          <Statistic title="Клиентов" value={clientRecords.length} />
+          <Statistic title="VIP" value={clientRecords.filter((client) => client.clientStatus === 'vip').length} />
+          <Statistic title="Должники" value={clientRecords.filter((client) => client.unpaidCount > 0).length} />
+        </Space>
       </div>
       <div className="tp-admin-toolbar">
         <Input.Search
           allowClear
           size="large"
           value={clientSearch}
-          placeholder="Поиск по имени, email, телефону"
+          placeholder="Поиск по имени или телефону"
           onChange={(event) => setClientSearch(event.target.value)}
           className="tp-admin-search"
         />
         <Space wrap>
+          <Segmented
+            value={clientSegmentFilter}
+            onChange={setClientSegmentFilter}
+            options={[
+              { label: 'Все', value: 'all' },
+              { label: 'Новые', value: 'new' },
+              { label: 'Повторные', value: 'repeat' },
+              { label: 'VIP', value: 'vip' },
+              { label: 'Должники', value: 'debtors' },
+              { label: 'Отменяли', value: 'cancelled' },
+              { label: 'с TravelPay', value: 'travelpay' },
+              { label: 'Ручные', value: 'manual' },
+            ]}
+          />
           <Button icon={<ReloadOutlined />} onClick={loadDashboardData} loading={loading}>Обновить</Button>
         </Space>
       </div>
       <Table
+        {...crmTableProps}
         rowKey="id"
         dataSource={filteredClients}
         columns={clientColumns}
         loading={loading}
         pagination={{ pageSize: 8, showSizeChanger: false }}
-        scroll={{ x: 1080 }}
+        scroll={{ x: 1220 }}
+        onRow={(record) => ({
+          onDoubleClick: () => openClientDetails(record),
+        })}
       />
     </Card>
   );
@@ -4290,12 +7745,263 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     </Space>
   );
 
+  const renderAnalyticsDashboard = () => (
+    <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+      <Card className="tp-admin-card">
+        <div className="tp-admin-section-head">
+          <div>
+            <Text className="tp-admin-section-label">TravelPay Business OS</Text>
+            <Title level={3}>Аналитика</Title>
+            <Paragraph>
+              Выручка, полученные деньги, долги и динамика клиентов по бронированиям бизнеса.
+            </Paragraph>
+          </div>
+          <Space wrap>
+            <Segmented
+              value={analyticsPeriod}
+              onChange={setAnalyticsPeriod}
+              options={[
+                { label: 'Day', value: 'day' },
+                { label: 'Week', value: 'week' },
+                { label: 'Month', value: 'month' },
+                { label: 'Year', value: 'year' },
+                { label: 'Custom range', value: 'custom' },
+              ]}
+            />
+            {analyticsPeriod === 'custom' && (
+              <DatePicker.RangePicker
+                value={analyticsRange}
+                onChange={(range) => setAnalyticsRange(range || [dayjs().startOf('day'), dayjs().endOf('day')])}
+              />
+            )}
+          </Space>
+        </div>
+
+        <Text type="secondary">
+          Период: {analyticsWindow.start.format('DD MMM YYYY')} — {analyticsWindow.end.format('DD MMM YYYY')}
+        </Text>
+
+        <Row gutter={[14, 14]} style={{ marginTop: 18 }}>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Выручка', value: analyticsKpis.revenue, formatter: formatMoney, color: '#2563eb' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Получено', value: analyticsKpis.received, formatter: formatMoney, color: '#16a34a' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Не оплачено', value: analyticsKpis.unpaid, formatter: formatMoney, color: '#f97316' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Средний чек', value: analyticsKpis.averageCheck, formatter: formatMoney, color: '#8b5cf6' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Количество бронирований', value: analyticsKpis.bookings, color: '#0f172a' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Completed', value: analyticsKpis.completed, color: '#22c55e' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Cancelled', value: analyticsKpis.cancelled, color: '#ef4444' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Новые клиенты', value: analyticsKpis.newClients, color: '#06b6d4' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Повторные клиенты', value: analyticsKpis.repeatClients, color: '#14b8a6' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Cancellation rate', value: analyticsKpis.cancellationRate, formatter: (value) => `${value}%`, color: '#ef4444' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Недополученная выручка', value: analyticsKpis.missedRevenue, formatter: formatMoney, color: '#dc2626' })}
+          </Col>
+          <Col xs={24} md={12} xl={6}>
+            {renderStatCard({ title: 'Будущая выручка', value: analyticsKpis.futureRevenue, formatter: formatMoney, color: '#0ea5e9' })}
+          </Col>
+        </Row>
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Revenue over time', (
+            <ResponsiveContainer>
+              <AreaChart data={analyticsKpis.revenueOverTime}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.32} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <RechartsTooltip formatter={(value) => formatMoney(value)} />
+                <Area type="monotone" dataKey="revenue" stroke="#2563eb" fill="url(#revenueGradient)" strokeWidth={3} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Bookings over time', (
+            <ResponsiveContainer>
+              <LineChart data={analyticsKpis.bookingsOverTime}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" />
+                <YAxis allowDecimals={false} />
+                <RechartsTooltip />
+                <Line type="monotone" dataKey="bookings" stroke="#16a34a" strokeWidth={3} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Booking by status', (
+            <ResponsiveContainer>
+              <RechartsBarChart data={analyticsKpis.bookingByStatus}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <RechartsTooltip />
+                <Bar dataKey="bookings" radius={[10, 10, 0, 0]}>
+                  {analyticsKpis.bookingByStatus.map((entry, index) => <Cell key={entry.name} fill={getChartColor(index)} />)}
+                </Bar>
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Payment status', (
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={analyticsKpis.paymentStatus} dataKey="bookings" nameKey="name" outerRadius={96} label>
+                  {analyticsKpis.paymentStatus.map((entry, index) => <Cell key={entry.name} fill={getChartColor(index)} />)}
+                </Pie>
+                <Legend />
+                <RechartsTooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Booking source', (
+            <ResponsiveContainer>
+              <RechartsBarChart data={analyticsKpis.bookingSource} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" allowDecimals={false} />
+                <YAxis dataKey="name" type="category" width={130} />
+                <RechartsTooltip />
+                <Bar dataKey="bookings" fill="#8b5cf6" radius={[0, 10, 10, 0]} />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Average booking value', (
+            <ResponsiveContainer>
+              <LineChart data={analyticsKpis.averageBookingValue}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <RechartsTooltip formatter={(value) => formatMoney(value)} />
+                <Line type="monotone" dataKey="average" stroke="#f97316" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Tour popularity', (
+            <ResponsiveContainer>
+              <RechartsBarChart data={analyticsKpis.tourPopularity}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" interval={0} angle={-12} textAnchor="end" height={70} />
+                <YAxis />
+                <RechartsTooltip formatter={(value) => formatMoney(value)} />
+                <Bar dataKey="revenue" fill="#06b6d4" radius={[10, 10, 0, 0]} />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24} xl={12}>
+          {renderChartCard('Property occupancy', (
+            <ResponsiveContainer>
+              <RechartsBarChart data={analyticsKpis.propertyOccupancy}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" interval={0} angle={-12} textAnchor="end" height={70} />
+                <YAxis domain={[0, 100]} />
+                <RechartsTooltip formatter={(value) => `${value}%`} />
+                <Bar dataKey="occupancy" fill="#14b8a6" radius={[10, 10, 0, 0]} />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+        <Col xs={24}>
+          {renderChartCard('Manager performance', (
+            <ResponsiveContainer>
+              <RechartsBarChart data={analyticsKpis.managerPerformance}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <RechartsTooltip formatter={(value, name) => (name === 'revenue' || name === 'received' ? formatMoney(value) : value)} />
+                <Legend />
+                <Bar dataKey="revenue" fill="#2563eb" radius={[10, 10, 0, 0]} />
+                <Bar dataKey="received" fill="#22c55e" radius={[10, 10, 0, 0]} />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          ))}
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={8}>
+          <Card className="tp-admin-card" title="Топ туров">
+            <Table rowKey="name" size="small" pagination={false} dataSource={analyticsKpis.tourPopularity.slice(0, 5)} columns={[
+              { title: 'Тур', dataIndex: 'name' },
+              { title: 'Брони', dataIndex: 'bookings', width: 80 },
+              { title: 'Выручка', dataIndex: 'revenue', render: formatMoney, width: 130 },
+            ]} />
+          </Card>
+        </Col>
+        <Col xs={24} xl={8}>
+          <Card className="tp-admin-card" title="Топ объектов">
+            <Table rowKey="name" size="small" pagination={false} dataSource={analyticsKpis.propertyOccupancy.slice(0, 5)} columns={[
+              { title: 'Объект', dataIndex: 'name' },
+              { title: 'Загрузка', dataIndex: 'occupancy', render: (value) => `${value}%`, width: 95 },
+              { title: 'Выручка', dataIndex: 'revenue', render: formatMoney, width: 130 },
+            ]} />
+          </Card>
+        </Col>
+        <Col xs={24} xl={8}>
+          <Card className="tp-admin-card" title="Топ менеджеров">
+            <Table rowKey="name" size="small" pagination={false} dataSource={analyticsKpis.managerPerformance.slice(0, 5)} columns={[
+              { title: 'Менеджер', dataIndex: 'name' },
+              { title: 'Брони', dataIndex: 'bookings', width: 80 },
+              { title: 'Получено', dataIndex: 'received', render: formatMoney, width: 130 },
+            ]} />
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="tp-admin-card" title="Бронирования периода">
+        <Table
+          rowKey="key"
+          dataSource={analyticsKpis.rows}
+          columns={bookingTableColumnsExtended}
+          pagination={{ pageSize: 8, showSizeChanger: false }}
+          scroll={{ x: 920 }}
+        />
+      </Card>
+
+      {renderReports()}
+    </Space>
+  );
+
   const renderReports = () => (
     <Space orientation="vertical" size={18} style={{ width: '100%' }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={12}>
           <Card className="tp-admin-card" title="Платежи">
             <Table
+              {...crmTableProps}
               rowKey="key"
               dataSource={users.flatMap((user) => (user?.topUps || []).map((topUp, index) => ({
                 key: `${user.id}-topup-${index}`,
@@ -4312,6 +8018,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         <Col xs={24} xl={12}>
           <Card className="tp-admin-card" title="Журнал бронирований">
             <Table
+              {...crmTableProps}
               rowKey="key"
               dataSource={filteredBookings}
               columns={bookingTableColumnsExtended}
@@ -4790,8 +8497,8 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       <Layout className="tp-admin-layout">
         {isDesktop ? (
           <Sider
-            width={272}
-            collapsedWidth={96}
+            width={248}
+            collapsedWidth={80}
             collapsed={collapsed}
             trigger={null}
             className="tp-admin-sider"
@@ -4815,6 +8522,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             currentTab={currentTab}
             branchText={headerBranchText}
             isDesktop={isDesktop}
+            businessMode={businessMode}
             onMenu={() => (isDesktop ? setCollapsed((value) => !value) : setMenuOpen(true))}
             onCopyLink={copyPortalLink}
             theme={theme}
@@ -4829,6 +8537,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             onMarkRead={markNotificationRead}
             pendingPayments={prepaymentReviewCount + pendingBusinessSubscriptionRequests.length + pendingTopups.length}
             onNavigate={navigate}
+            onOpenCommandPalette={() => setCommandPaletteOpen(true)}
             paymentsPath={businessMode ? '/business/payments' : '/admin/payments'}
             notificationsPath={businessMode ? '/business/dashboard' : '/admin/home'}
           />
@@ -4886,15 +8595,22 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               />
             )}
 
-            {currentTab === 'home' && renderDashboard()}
+            {currentTab === 'home' && (businessMode ? renderBusinessHome() : renderDashboard())}
             {(currentTab === 'tours' || currentTab === 'accommodations') && renderCatalog()}
-            {(currentTab === 'bookings' || currentTab === 'calendar') && renderBookingsModern()}
+            {currentTab === 'properties' && renderProperties()}
+            {(currentTab === 'bookings' || currentTab === 'calendar' || currentTab === 'schedule') && renderBookingsModern()}
             {currentTab === 'clients' && renderClients()}
+            {currentTab === 'company' && renderBusinessProfile()}
+            {currentTab === 'team' && <BusinessManagersPage embedded />}
+            {currentTab === 'tasks' && renderBusinessTasksV2()}
             {currentTab === 'savings' && renderSavings()}
-            {currentTab === 'reports' && renderReports()}
+            {currentTab === 'reports' && renderAnalyticsDashboard()}
             {currentTab === 'companies' && renderCompanies()}
-            {currentTab === 'settings' && renderSettings()}
-            {currentTab === 'payments' && renderSavings()}
+            {currentTab === 'notifications' && renderNotificationsCard()}
+            {currentTab === 'activity' && renderActivityLog()}
+            {currentTab === 'settings' && (businessMode ? <BusinessPaymentSettingsPage embedded /> : renderSettings())}
+            {currentTab === 'support' && renderBusinessSupport()}
+            {currentTab === 'payments' && <BusinessPaymentsPage embedded />}
           </Content>
         </Layout>
       </Layout>
@@ -5075,6 +8791,435 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       </Drawer>
 
       <Drawer
+        title={activeDepartureOpsCard ? `Departure · ${activeDepartureOpsCard.title}` : 'Departure operations'}
+        open={Boolean(activeDepartureOpsCard)}
+        onClose={() => setDepartureOpsDrawerItem(null)}
+        width={isDesktop ? 780 : '100%'}
+        className="tp-admin-form-drawer"
+        extra={activeDepartureOpsCard ? <Tag color={activeDepartureOpsCard.statusColor}>{activeDepartureOpsCard.statusLabel}</Tag> : null}
+      >
+        {activeDepartureOpsCard && (
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+            <Card size="small" className="tp-admin-inline-card">
+              <div className="tp-admin-calendar-detail-grid">
+                <div><Text type="secondary">Date</Text><strong>{activeDepartureOpsCard.date.locale('ru').format('D MMMM YYYY')}</strong></div>
+                <div><Text type="secondary">Time</Text><strong>{activeDepartureOpsCard.time}</strong></div>
+                <div><Text type="secondary">Capacity</Text><strong>{activeDepartureOpsCard.bookedSeats} / {activeDepartureOpsCard.totalSeats}</strong></div>
+                <div><Text type="secondary">Available</Text><strong>{activeDepartureOpsCard.remainingSeats}</strong></div>
+                <div><Text type="secondary">Guide</Text><strong>{activeDepartureOpsCard.slot.guide || '—'}</strong></div>
+                <div><Text type="secondary">Driver</Text><strong>{activeDepartureOpsCard.slot.driver || '—'}</strong></div>
+                <div><Text type="secondary">Vehicle</Text><strong>{activeDepartureOpsCard.slot.vehicle || '—'}</strong></div>
+                <div><Text type="secondary">Meeting point</Text><strong>{activeDepartureOpsCard.slot.meetingPoint || '—'}</strong></div>
+              </div>
+            </Card>
+
+            <Card size="small" className="tp-admin-inline-card" title="Участники" extra={<Tag>{departureParticipantRows.length}</Tag>}>
+              <Table
+                size="small"
+                pagination={false}
+                rowKey="key"
+                scroll={{ x: 920 }}
+                dataSource={departureParticipantRows}
+                columns={[
+                  { title: 'Имя', dataIndex: 'name', width: 170 },
+                  { title: 'Телефон', dataIndex: 'phone', width: 140 },
+                  { title: 'Взрослый/ребёнок', dataIndex: 'type', width: 150 },
+                  { title: 'Оплата', width: 150, render: (_, record) => <Tag color={record.paymentColor}>{record.paymentLabel}</Tag> },
+                  { title: 'Pickup', dataIndex: 'pickup', width: 160, render: (value) => value || '—' },
+                  { title: 'Комментарий', dataIndex: 'comment', width: 180, render: (value) => value || '—' },
+                  { title: 'Emergency contact', dataIndex: 'emergencyContact', width: 170, render: (value) => value || '—' },
+                ]}
+                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Участников пока нет" /> }}
+              />
+            </Card>
+
+            <Card
+              size="small"
+              className="tp-admin-inline-card"
+              title="Tour operations checklist"
+              extra={<Tag color={activeDepartureOpsCard.checklistDone === TOUR_OPERATION_CHECKLIST_ITEMS.length ? 'green' : 'purple'}>{activeDepartureOpsCard.checklistDone}/{TOUR_OPERATION_CHECKLIST_ITEMS.length}</Tag>}
+            >
+              <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+                {TOUR_OPERATION_CHECKLIST_ITEMS.map((item) => (
+                  <Checkbox
+                    key={item.key}
+                    checked={Boolean(activeDepartureOpsCard.operationsChecklist?.[item.key])}
+                    disabled={departureOpsSaving}
+                    onChange={(event) => saveDepartureOperationsChecklist(item.key, event.target.checked)}
+                  >
+                    {item.label}
+                  </Checkbox>
+                ))}
+              </Space>
+            </Card>
+
+            <Space wrap>
+              <Button onClick={() => {
+                setCalendarResource('tours');
+                setCalendarDate(activeDepartureOpsCard.date);
+                navigate(`${basePath}/schedule?date=${activeDepartureOpsCard.date.format('YYYY-MM-DD')}&view=day`);
+              }}>
+                Open in schedule
+              </Button>
+              <Button type="primary" onClick={() => startEditTour(activeDepartureOpsCard.tour)}>
+                Edit tour
+              </Button>
+            </Space>
+          </Space>
+        )}
+      </Drawer>
+
+      <Drawer
+        title={propertyDetailItem?.title || 'Property'}
+        open={Boolean(propertyDetailItem)}
+        onClose={closePropertyDetails}
+        width={isDesktop ? 820 : '100%'}
+        className="tp-admin-form-drawer tp-admin-property-drawer"
+      >
+        {propertyDetailItem && (
+          <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+            <div className="tp-admin-property-detail-hero">
+              <div className="tp-admin-property-detail-hero__image">
+                {propertyDetailItem.image ? <AppImage src={propertyDetailItem.image} alt={propertyDetailItem.title} /> : <HomeOutlined />}
+              </div>
+              <div>
+                <Title level={3}>{propertyDetailItem.title}</Title>
+                <Text>{propertyDetailItem.location || propertyDetailItem.companyName || 'Кыргызстан'}</Text>
+                <Space wrap style={{ marginTop: 10 }}>
+                  <Tag>{propertyDetailItem.type}</Tag>
+                  <Tag color="blue">{propertyDetailItem.units.length} unit</Tag>
+                  <Tag color={propertyDetailItem.status === 'available' ? 'green' : 'gold'}>{propertyDetailItem.status}</Tag>
+                </Space>
+              </div>
+            </div>
+
+            <Row gutter={[12, 12]}>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Загрузка" value={propertyDetailItem.occupancy} suffix="%" /></Card></Col>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Доход" value={propertyDetailItem.revenue} formatter={(value) => formatMoney(value)} /></Card></Col>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Брони" value={propertyDetailItem.bookingsCount} /></Card></Col>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Средний чек" value={propertyDetailItem.avgPrice} formatter={(value) => formatMoney(value)} /></Card></Col>
+            </Row>
+
+            <Tabs
+              items={[
+                {
+                  key: 'overview',
+                  label: 'Обзор',
+                  children: (
+                    <div className="tp-admin-property-unit-grid">
+                      {propertyDetailItem.units.map((unit) => (
+                        <Card key={unit.id} size="small" title={unit.title || unit.name} extra={<Tag>{unit.status}</Tag>}>
+                          <div className="tp-admin-client-overview">
+                            <div><Text type="secondary">Capacity</Text><strong>{unit.capacity} гостей</strong></div>
+                            <div><Text type="secondary">Цена</Text><strong>{formatMoney(unit.pricePerNight)}</strong></div>
+                            <div><Text type="secondary">Check-in</Text><strong>{unit.defaultCheckInTime}</strong></div>
+                            <div><Text type="secondary">Check-out</Text><strong>{unit.defaultCheckOutTime}</strong></div>
+                            <div><Text type="secondary">Загрузка</Text><strong>{unit.metrics.occupancy}%</strong></div>
+                            <div><Text type="secondary">Доход</Text><strong>{formatMoney(unit.metrics.revenue)}</strong></div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'calendar',
+                  label: 'Календарь',
+                  children: (
+                    <Space orientation="vertical" size={14} style={{ width: '100%' }}>
+                      <div className="tp-admin-property-availability">
+                        <div className="tp-admin-property-availability__head">
+                          <span />
+                          {propertyDateRange.map((date) => <strong key={date.format('YYYY-MM-DD')}>{date.format('DD')}</strong>)}
+                        </div>
+                        {propertyDetailItem.units.map((unit) => (
+                          <div key={unit.id} className="tp-admin-property-availability__row">
+                            <strong>{unit.title || unit.name}</strong>
+                            {renderUnitAvailabilityStrip(unit)}
+                          </div>
+                        ))}
+                      </div>
+                      <Table
+                        rowKey="id"
+                        size="small"
+                        pagination={false}
+                        dataSource={propertyDetailItem.units.flatMap((unit) => (unit.blockedDates || []).map((block) => ({ ...block, unitTitle: unit.title || unit.name })))}
+                        locale={{ emptyText: 'Закрытых дат нет' }}
+                        columns={[
+                          { title: 'Unit', dataIndex: 'unitTitle' },
+                          { title: 'Период', render: (_, block) => `${formatDate(block.startDate)} → ${formatDate(block.endDate)}` },
+                          { title: 'Причина', dataIndex: 'reason', render: (value) => PROPERTY_BLOCK_REASONS.find((item) => item.value === value)?.label || value },
+                          { title: 'Комментарий', dataIndex: 'comment', render: (value) => value || '—' },
+                        ]}
+                      />
+                    </Space>
+                  ),
+                },
+                {
+                  key: 'bookings',
+                  label: 'Бронирования',
+                  children: (
+          <Table
+            {...crmTableProps}
+            rowKey="key"
+                      size="small"
+                      pagination={false}
+                      dataSource={propertyDetailItem.units.flatMap((unit) => unit.metrics.bookings.map((booking) => ({ ...booking, unitTitle: unit.title || unit.name })))}
+                      columns={[
+                        { title: 'Unit', dataIndex: 'unitTitle' },
+                        { title: 'Клиент', dataIndex: 'clientName' },
+                        { title: 'Даты', render: (_, booking) => `${formatDate(booking.checkInDate)} → ${formatDate(booking.checkOutDate)}` },
+                        { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
+                        { title: 'Статус', render: (_, booking) => renderBookingStatusChip(booking) },
+                      ]}
+                    />
+                  ),
+                },
+                {
+                  key: 'prices',
+                  label: 'Цены',
+                  children: (
+                    <Space orientation="vertical" size={14} style={{ width: '100%' }}>
+                      <div className="tp-admin-pricing-calendar">
+                        <div className="tp-admin-pricing-calendar__head">
+                          <span>Unit</span>
+                          {propertyDateRange.map((date) => <strong key={date.format('YYYY-MM-DD')}>{date.format('DD.MM')}</strong>)}
+                        </div>
+                        {propertyDetailItem.units.map((unit) => (
+                          <div key={unit.id} className="tp-admin-pricing-calendar__row">
+                            <strong>{unit.title || unit.name}</strong>
+                            {propertyDateRange.map((date) => {
+                              const price = getUnitPriceForDate(unit, date);
+                              return (
+                                <span key={date.format('YYYY-MM-DD')}>
+                                  <b>{formatMoney(price.price)}</b>
+                                  <small>{price.minimumStay ? `min ${price.minimumStay} ноч.` : price.label}</small>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                      <Table
+                        rowKey="id"
+                        size="small"
+                        pagination={false}
+                        dataSource={propertyDetailItem.units.flatMap((unit) => (unit.pricingRules || []).map((rule) => ({ ...rule, unitTitle: unit.title || unit.name })))}
+                        columns={[
+                          { title: 'Unit', dataIndex: 'unitTitle' },
+                          { title: 'Тип', dataIndex: 'type', render: (value) => PROPERTY_PRICING_RULE_TYPES.find((item) => item.value === value)?.label || value },
+                          { title: 'Период', render: (_, rule) => [formatDate(rule.startDate), formatDate(rule.endDate)].filter((value) => value !== '—').join(' → ') || 'Всегда' },
+                          { title: 'Цена', dataIndex: 'price', render: formatMoney },
+                          { title: 'Discount', dataIndex: 'discount', render: (value) => value ? `${value}%` : '—' },
+                          { title: 'Minimum stay', dataIndex: 'minimumStay', render: (value) => value ? `${value} ноч.` : '—' },
+                        ]}
+                      />
+                    </Space>
+                  ),
+                },
+                { key: 'photos', label: 'Фотографии', children: <div className="tp-admin-property-photo-grid">{propertyDetailItem.units.flatMap((unit) => unit.images || []).map((image, index) => <AppImage key={`${image}-${index}`} src={image} alt="Property" />)}</div> },
+                { key: 'amenities', label: 'Удобства', children: <Space wrap>{Array.from(new Set(propertyDetailItem.units.flatMap((unit) => unit.amenities || []))).map((amenity) => <Tag key={amenity}>{amenity}</Tag>)}</Space> },
+                { key: 'reviews', label: 'Отзывы', children: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Отзывы объектов подключим после связи с публичными отзывами" /> },
+                { key: 'history', label: 'История', children: <div className="tp-admin-timeline">{propertyDetailItem.units.flatMap((unit) => unit.metrics.bookings).slice(0, 12).map((booking, index) => <div key={booking.key} className="tp-admin-timeline__item is-info"><div className="tp-admin-timeline__rail"><span className="tp-admin-timeline__dot" />{index < 11 ? <span className="tp-admin-timeline__line" /> : null}</div><div className="tp-admin-timeline__content"><div className="tp-admin-timeline__head"><strong>{booking.clientName || 'Бронирование'}</strong><Text type="secondary">{formatDateTime(booking.createdAt || booking.bookingDate)}</Text></div><Text type="secondary">{booking.stayTitle || booking.comment || 'История объекта'}</Text></div></div>)}</div> },
+                { key: 'settings', label: 'Настройки', children: <Button onClick={() => propertyDetailItem.units[0] && startEditAccommodation(propertyDetailItem.units[0])}>Редактировать первый Unit</Button> },
+              ]}
+            />
+          </Space>
+        )}
+      </Drawer>
+
+      <Drawer
+        title={clientDrawerItem ? `Клиент #${clientDrawerItem.id}` : 'Клиент'}
+        open={Boolean(clientDrawerItem)}
+        onClose={closeClientDetails}
+        width={isDesktop ? 720 : '100%'}
+        className="tp-admin-form-drawer tp-admin-client-drawer"
+      >
+        {clientDrawerItem && (
+          <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+            <div className="tp-admin-client-card-hero">
+              <Avatar size={58} icon={<UserOutlined />} src={clientDrawerItem.avatar || clientDrawerItem.photo} />
+              <div>
+                <Title level={3}>{clientDrawerItem.name || 'Клиент TravelPay'}</Title>
+                <Text>{clientDrawerItem.phone || clientDrawerItem.email || 'Контакт не указан'}</Text>
+                <small>Клиент с: {formatDate(clientDrawerItem.clientSince || clientDrawerItem.createdAt)}</small>
+              </div>
+              <Tag color={clientDrawerItem.clientStatus === 'vip' ? 'gold' : clientDrawerItem.unpaidCount > 0 ? 'red' : 'blue'}>
+                {clientDrawerItem.clientLabel}
+              </Tag>
+            </div>
+
+            <Row gutter={[12, 12]}>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Бронирований" value={clientDrawerItem.bookingsCount} /></Card></Col>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Потрачено" value={clientDrawerItem.spent} formatter={(value) => formatMoney(value)} /></Card></Col>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Туры" value={clientDrawerItem.tourCount} /></Card></Col>
+              <Col xs={12} md={6}><Card size="small"><Statistic title="Коттеджи" value={clientDrawerItem.stayCount} /></Card></Col>
+            </Row>
+
+            <Card size="small" className="tp-admin-client-wallet-card">
+              <div>
+                <Text type="secondary">Баланс TravelPay</Text>
+                <strong>{formatMoney(clientDrawerItem.walletBalance)}</strong>
+              </div>
+              <Space wrap>
+                <Button onClick={() => navigate('/admin/savings')}>Пополнить</Button>
+                <Button type="primary" onClick={() => openQuickBookingDrawer({ date: calendarDate })}>Использовать</Button>
+              </Space>
+            </Card>
+
+            <Card size="small" title="Метки клиента" className="tp-admin-inline-card">
+              <Select
+                mode="tags"
+                style={{ width: '100%' }}
+                value={clientDrawerItem.clientTags || []}
+                options={CLIENT_TAG_OPTIONS.map((tag) => ({ value: tag, label: tag }))}
+                placeholder="VIP, Семья, Corporate..."
+                onChange={(tags) => saveClientTags(clientDrawerItem, tags)}
+              />
+            </Card>
+
+            <Tabs
+              items={[
+                {
+                  key: 'overview',
+                  label: 'Обзор',
+                  children: (
+                    <div className="tp-admin-client-overview">
+                      <div><Text type="secondary">Телефон</Text><strong>{clientDrawerItem.phone || '—'}</strong></div>
+                      <div><Text type="secondary">Email</Text><strong>{clientDrawerItem.email || '—'}</strong></div>
+                      <div><Text type="secondary">Менеджер</Text><strong>{clientDrawerItem.manager || '—'}</strong></div>
+                      <div><Text type="secondary">Источник</Text><strong>{clientDrawerItem.sourceLabel || '—'}</strong></div>
+                      <div><Text type="secondary">Отмены</Text><strong>{clientDrawerItem.cancelledCount}</strong></div>
+                      <div><Text type="secondary">Неоплаченные</Text><strong>{clientDrawerItem.unpaidCount}</strong></div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'bookings',
+                  label: 'Бронирования',
+                  children: (
+                    <Table
+                      rowKey="key"
+                      size="small"
+                      pagination={false}
+                      dataSource={clientDrawerItem.bookings}
+                      columns={[
+                        { title: 'Услуга', render: (_, booking) => booking.tourTitle || booking.stayTitle || '—' },
+                        { title: 'Дата', render: (_, booking) => formatDate(booking.bookingDate || booking.travelDate || booking.checkInDate) },
+                        { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
+                        { title: 'Статус', render: (_, booking) => renderBookingStatusChip(booking) },
+                      ]}
+                    />
+                  ),
+                },
+                {
+                  key: 'payments',
+                  label: 'Оплаты',
+                  children: (
+                    <Table
+                      rowKey="key"
+                      size="small"
+                      pagination={false}
+                      dataSource={clientDrawerItem.walletHistory}
+                      columns={[
+                        { title: 'Дата', dataIndex: 'date', render: formatDateTime },
+                        { title: 'Тип', dataIndex: 'type' },
+                        { title: 'Описание', dataIndex: 'description' },
+                        { title: 'Сумма', dataIndex: 'amount', render: formatMoney },
+                      ]}
+                    />
+                  ),
+                },
+                {
+                  key: 'trips',
+                  label: 'Поездки',
+                  children: clientDrawerItem.bookings.length ? (
+                    <div className="tp-admin-client-trip-list">
+                      {clientDrawerItem.bookings.map((booking) => (
+                        <button key={booking.key} type="button" onClick={() => openCalendarItemDetails(booking)}>
+                          <strong>{booking.tourTitle || booking.stayTitle || 'Бронирование'}</strong>
+                          <span>{formatDate(booking.bookingDate || booking.travelDate || booking.checkInDate)} · {formatMoney(booking.amount)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Поездок пока нет" />,
+                },
+                {
+                  key: 'files',
+                  label: 'Файлы',
+                  children: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Файлы клиента появятся после подключения документов к броням" />,
+                },
+                {
+                  key: 'comments',
+                  label: 'Комментарии',
+                  children: (
+                    <Space orientation="vertical" style={{ width: '100%' }}>
+                      {clientDrawerItem.bookings.filter((booking) => booking.comment).map((booking) => (
+                        <Card key={booking.key} size="small">
+                          <Text type="secondary">{booking.tourTitle || booking.stayTitle}</Text>
+                          <Paragraph style={{ marginBottom: 0 }}>{booking.comment}</Paragraph>
+                        </Card>
+                      ))}
+                      {!clientDrawerItem.bookings.some((booking) => booking.comment) && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Комментариев пока нет" />}
+                    </Space>
+                  ),
+                },
+                {
+                  key: 'communications',
+                  label: 'Коммуникации',
+                  children: clientDrawerItem.communicationHistory?.length ? (
+                    <div className="tp-admin-timeline">
+                      {clientDrawerItem.communicationHistory.slice(0, 24).map((entry, index) => (
+                        <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone || 'info'}`}>
+                          <div className="tp-admin-timeline__rail">
+                            <span className="tp-admin-timeline__dot" />
+                            {index < Math.min(clientDrawerItem.communicationHistory.length, 24) - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                          </div>
+                          <div className="tp-admin-timeline__content">
+                            <div className="tp-admin-timeline__head">
+                              <strong>{entry.title}</strong>
+                              <Text type="secondary">{formatDateTime(entry.date)}</Text>
+                            </div>
+                            <Space size={8} wrap>
+                              <Tag>{entry.channel}</Tag>
+                              <Text type="secondary">{entry.description}</Text>
+                            </Space>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="История коммуникаций пока пуста" />,
+                },
+                {
+                  key: 'history',
+                  label: 'История',
+                  children: (
+                    <div className="tp-admin-timeline">
+                      {clientDrawerItem.timeline.slice(0, 20).map((entry, index) => (
+                        <div key={entry.key} className={`tp-admin-timeline__item is-${entry.tone || 'info'}`}>
+                          <div className="tp-admin-timeline__rail">
+                            <span className="tp-admin-timeline__dot" />
+                            {index < Math.min(clientDrawerItem.timeline.length, 20) - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                          </div>
+                          <div className="tp-admin-timeline__content">
+                            <div className="tp-admin-timeline__head">
+                              <strong>{entry.title}</strong>
+                              <Text type="secondary">{formatDateTime(entry.date)}</Text>
+                            </div>
+                            <Text type="secondary">{entry.description}</Text>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </Space>
+        )}
+      </Drawer>
+
+      <Drawer
         title="Новое бронирование"
         open={quickBookingDrawerOpen}
         onClose={closeQuickBookingDrawer}
@@ -5083,7 +9228,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         footer={(
           <div className="tp-admin-drawer-footer">
             <Button onClick={closeQuickBookingDrawer} disabled={quickBookingSaving}>Отмена</Button>
-            <Button type="primary" loading={quickBookingSaving} onClick={() => quickBookingForm.submit()}>
+            <Button type="primary" loading={quickBookingSaving} disabled={quickBookingAvailability.hasConflict} onClick={() => quickBookingForm.submit()}>
               Создать бронирование
             </Button>
           </div>
@@ -5103,33 +9248,149 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           onFinish={saveQuickBooking}
           onValuesChange={(changed) => {
             if (changed.resource) quickBookingForm.setFieldsValue({ objectId: undefined, departureSlotId: undefined });
-            if (changed.objectId) quickBookingForm.setFieldsValue({ departureSlotId: undefined });
+            if (changed.objectId) {
+              quickBookingForm.setFieldsValue({ departureSlotId: undefined });
+              const selectedStay = accommodations.find((item) => Number(item.id) === Number(changed.objectId));
+              if (selectedStay && isQuickBookingStayKind(quickBookingForm.getFieldValue('resource'))) {
+                quickBookingForm.setFieldsValue({
+                  startTime: selectedStay.defaultCheckInTime || '14:00',
+                  endTime: selectedStay.defaultCheckOutTime || '12:00',
+                });
+              }
+            }
+            if (changed.clientId) {
+              const selectedClient = users.find((user) => String(user.id) === String(changed.clientId));
+              if (selectedClient) {
+                quickBookingForm.setFieldsValue({
+                  clientName: selectedClient.name || '',
+                  clientPhone: selectedClient.phone || '',
+                  clientEmail: selectedClient.email || '',
+                });
+              }
+            }
+            if (changed.adults !== undefined || changed.children !== undefined) {
+              const adults = Math.max(Number(quickBookingForm.getFieldValue('adults')) || 0, 0);
+              const children = Math.max(Number(quickBookingForm.getFieldValue('children')) || 0, 0);
+              const totalGuests = Math.max(adults + children, 1);
+              quickBookingForm.setFieldsValue({ guests: totalGuests, people: totalGuests });
+            }
           }}
         >
-          <Form.Item name="resource" label="Тип объекта" rules={[{ required: true, message: 'Выберите тип объекта' }]}>
+          <Divider orientation="left" plain>Клиент</Divider>
+          <Form.Item name="clientId" label="Поиск клиента">
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="search"
+              placeholder="ФИО или телефон"
+              options={quickBookingClientOptions}
+              fieldNames={{ label: 'label', value: 'value' }}
+              filterOption={(input, option) => String(option?.search || option?.label || '').toLowerCase().includes(input.toLowerCase())}
+              notFoundContent="Клиент не найден — заполните нового клиента ниже"
+            />
+          </Form.Item>
+          <Alert
+            type={quickBookingClientId ? 'success' : 'info'}
+            showIcon
+            message={quickBookingClientId ? 'Клиент найден в CRM' : 'Новый клиент'}
+            description={quickBookingClientId ? 'Контакты подставлены автоматически, их можно поправить.' : 'Если клиента нет в базе, заполните имя и телефон — бронь сохранит эти данные.'}
+            style={{ marginBottom: 14 }}
+          />
+          <Row gutter={12}>
+            <Col xs={24} sm={12}>
+              <Form.Item name="clientName" label="ФИО" rules={[{ required: true, whitespace: true, message: 'Укажите имя клиента' }]}>
+                <Input autoComplete="name" placeholder="Например, Айбек Т." />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="clientPhone" label="Телефон" rules={[{ required: true, whitespace: true, message: 'Укажите телефон' }]}>
+                <Input autoComplete="tel" placeholder="+996 555 123 456" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="clientEmail" label="Email">
+            <Input autoComplete="email" type="email" placeholder="Необязательно" />
+          </Form.Item>
+
+          <Divider orientation="left" plain>Бронирование</Divider>
+          <Form.Item name="resource" label="Тип" rules={[{ required: true, message: 'Выберите тип' }]}>
             <Segmented
               block
-              options={[
-                { label: 'Туры', value: 'tours', icon: <CompassOutlined /> },
-                { label: 'Домики', value: 'stays', icon: <HomeOutlined /> },
-              ]}
+              options={QUICK_BOOKING_TYPE_OPTIONS}
             />
           </Form.Item>
           <Form.Item
             name="objectId"
-            label={quickBookingResource === 'stays' ? 'Домик' : 'Тур'}
+            label={isStayQuickBooking ? 'Объект' : 'Тур / активность'}
             rules={[{ required: true, message: 'Выберите объект' }]}
+            extra={isStayQuickBooking ? 'Показываем только объекты без конфликта на выбранное время.' : 'Для туров и активностей доступны только отправления со свободными местами.'}
           >
             <Select
               showSearch
               optionFilterProp="label"
-              placeholder={quickBookingResource === 'stays' ? 'Выберите домик' : 'Выберите тур'}
+              placeholder={isStayQuickBooking ? 'Выберите коттедж или дом' : 'Выберите тур или активность'}
               options={quickBookingObjectOptions}
               notFoundContent="Доступных объектов нет"
             />
           </Form.Item>
 
-          {quickBookingResource === 'tours' ? (
+          {quickBookingAvailability.hasConflict && isStayQuickBooking && (
+            <Alert
+              type="warning"
+              showIcon
+              message={quickBookingAvailability.block
+                ? `${quickBookingAvailability.selectedStay?.title || quickBookingAvailability.selectedStay?.name || 'Объект'} закрыт`
+                : `${quickBookingAvailability.selectedStay?.title || quickBookingAvailability.selectedStay?.name || 'Объект'} уже занят`}
+              description={(
+                <Space orientation="vertical" size={6}>
+                  {quickBookingAvailability.block && (
+                    <span>
+                      {(PROPERTY_BLOCK_REASONS.find((item) => item.value === quickBookingAvailability.block.reason)?.label || 'Недоступно')}
+                      {quickBookingAvailability.block.comment ? ` · ${quickBookingAvailability.block.comment}` : ''}
+                    </span>
+                  )}
+                  {quickBookingAvailability.occupiedBlocks.map((block) => (
+                    <span key={block.id}>{block.label}{block.clientName ? ` · ${block.clientName}` : ''}</span>
+                  ))}
+                  {quickBookingAvailability.alternatives.length > 0 && (
+                    <span>
+                      Доступны: {quickBookingAvailability.alternatives.map((item) => item.title || item.name || `Объект #${item.id}`).join(', ')}
+                    </span>
+                  )}
+                </Space>
+              )}
+              style={{ marginBottom: 14 }}
+            />
+          )}
+
+          {quickBookingFreeSlots.length > 0 && (
+            <div className="tp-admin-free-slots">
+              <Text type="secondary">{isTourQuickBooking ? 'Отправления' : 'Свободные окна'}</Text>
+              <div className="tp-admin-free-slots__list">
+                {quickBookingFreeSlots.map((slot) => (
+                  <button
+                    key={slot.key}
+                    type="button"
+                    className="tp-admin-free-slot"
+                    onClick={() => {
+                      if (isTourQuickBooking) {
+                        quickBookingForm.setFieldsValue({ departureSlotId: slot.key });
+                      } else {
+                        const [start, end] = String(slot.key).split('-').map(Number);
+                        const toClock = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+                        quickBookingForm.setFieldsValue({ startTime: toClock(start), endTime: toClock(Math.min(end, start + STAY_BOOKING_SLOT_DURATION_MINUTES)) });
+                      }
+                    }}
+                  >
+                    <strong>{slot.title}</strong>
+                    <small>{slot.subtitle}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isTourQuickBooking ? (
             <>
               <Form.Item
                 name="departureSlotId"
@@ -5140,17 +9401,59 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                   loading={quickBookingSlotsLoading}
                   placeholder="Выберите дату и время"
                   options={quickBookingSlots
-                    .filter((slot) => slot.active !== false && Number(slot.remainingSeats || 0) > 0 && dayjs(slot.startAt).isAfter(dayjs()))
+                    .filter((slot) => slot.active !== false && slot.available !== false && !slot.soldOut && Number(slot.remainingSeats || 0) >= Math.max(Number(quickBookingPeople || 1), 1) && dayjs(slot.startAt).isAfter(dayjs()))
+                    .filter((slot) => !quickBookingDate || !dayjs(quickBookingDate).isValid() || dayjs(slot.startAt).isSame(dayjs(quickBookingDate), 'day'))
                     .map((slot) => ({
                       value: slot.id,
-                      label: `${dayjs(slot.startAt).locale('ru').format('D MMMM, HH:mm')} · осталось ${slot.remainingSeats} мест`,
+                      label: `${dayjs(slot.startAt).locale('ru').format('D MMMM, HH:mm')} · свободно ${slot.remainingSeats} / ${slot.seats}`,
                     }))}
                   notFoundContent={quickBookingObjectId ? 'Нет доступных отправлений' : 'Сначала выберите тур'}
                 />
               </Form.Item>
-              <Form.Item name="people" label="Количество мест" rules={[{ required: true, message: 'Укажите количество мест' }]}>
+              <Form.Item name="checkInDate" label="Дата" rules={[{ required: true, message: 'Выберите дату' }]}>
+                <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+              </Form.Item>
+              {(quickBookingAvailability.waitlistSlots || []).length > 0 && (
+                <div className="tp-admin-waitlist-box">
+                  <Alert
+                    type="warning"
+                    showIcon
+                    message="Tour departure is full"
+                    description="Add the client to the waitlist. When seats are released, managers will see the next client here."
+                  />
+                  <Form.Item name="waitlistDepartureSlotId" label="Waitlist departure">
+                    <Select
+                      placeholder="Select sold-out departure"
+                      options={(quickBookingAvailability.waitlistSlots || []).map((slot) => ({
+                        value: slot.id,
+                        label: `${dayjs(slot.startAt).locale('ru').format('D MMMM, HH:mm')} · booked ${slot.bookedSeats || 0} / ${slot.seats} · waitlist ${slot.waitlistCount || 0}`,
+                      }))}
+                    />
+                  </Form.Item>
+                  <Button
+                    block
+                    loading={quickBookingWaitlistSaving}
+                    onClick={addQuickBookingWaitlist}
+                  >
+                    Add to waitlist
+                  </Button>
+                </div>
+              )}
+              <Form.Item name="people" label="Количество гостей" rules={[{ required: true, message: 'Укажите количество гостей' }]}>
                 <InputNumber min={1} max={12} style={{ width: '100%' }} />
               </Form.Item>
+              <Row gutter={12}>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="pickup" label="Pickup">
+                    <Input placeholder="Hotel, office, точка сбора" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="emergencyContact" label="Emergency contact">
+                    <Input placeholder="+996..." />
+                  </Form.Item>
+                </Col>
+              </Row>
             </>
           ) : (
             <Row gutter={12}>
@@ -5186,15 +9489,52 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </Row>
           )}
 
-          <Divider orientation="left" plain>Клиент</Divider>
-          <Form.Item name="clientName" label="Имя клиента" rules={[{ required: true, whitespace: true, message: 'Укажите имя клиента' }]}>
-            <Input autoComplete="name" placeholder="Например, Айбек Т." />
+          <Row gutter={12}>
+            <Col xs={12}>
+              <Form.Item name="adults" label="Взрослые">
+                <InputNumber min={0} max={100} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={12}>
+              <Form.Item name="children" label="Дети">
+                <InputNumber min={0} max={100} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col xs={12}>
+              <Form.Item name="amount" label="Стоимость">
+                <InputNumber min={0} addonAfter="сом" style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={12}>
+              <Form.Item name="prepaymentAmount" label="Предоплата">
+                <InputNumber min={0} addonAfter="сом" style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="paymentMethod" label="Payment method">
+            <Select options={CASHBOX_PAYMENT_METHOD_OPTIONS} />
           </Form.Item>
-          <Form.Item name="clientPhone" label="Телефон" rules={[{ required: true, whitespace: true, message: 'Укажите телефон для связи' }]}>
-            <Input autoComplete="tel" placeholder="+996 555 123 456" />
-          </Form.Item>
-          <Form.Item name="clientEmail" label="Email">
-            <Input autoComplete="email" type="email" placeholder="Необязательно" />
+          <Row gutter={12}>
+            <Col xs={24} sm={12}>
+              <Form.Item name="manager" label="Менеджер">
+                <Select
+                  showSearch
+                  allowClear
+                  placeholder="Ответственный"
+                  options={assignmentStaffOptions}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="bookingSource" label="Источник бронирования">
+                <Select options={QUICK_BOOKING_SOURCES} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="bookingStatus" label="Статус">
+            <Select options={QUICK_BOOKING_STATUS_OPTIONS} />
           </Form.Item>
           <Form.Item name="comment" label="Комментарий">
             <Input.TextArea rows={3} maxLength={500} showCount placeholder="Необязательно" />
@@ -5251,6 +9591,17 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       >
         {calendarDrawerItem && (
           <Space orientation="vertical" size={18} style={{ width: '100%' }}>
+            {['stay_booking', 'tour_booking'].includes(calendarDrawerItem.type) && (
+              <div className="tp-admin-booking-drawer-summary">
+                <div>
+                  <Text type="secondary">#{`TRP-${String(calendarDrawerItem.id || 0).padStart(4, '0')}`}</Text>
+                  <Title level={4}>{calendarDrawerItem.clientName || 'Клиент'}</Title>
+                  <Text>{calendarDrawerItem.clientPhone || calendarDrawerItem.clientEmail || 'Контакт не указан'}</Text>
+                </div>
+                {renderBookingStatusChip(calendarDrawerItem)}
+              </div>
+            )}
+
             <div className="tp-admin-calendar-detail">
               <Title level={4} style={{ marginBottom: 8 }}>{calendarDrawerItem.title || calendarDrawerItem.tourTitle}</Title>
               <Space wrap>
@@ -5275,8 +9626,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                 {calendarDrawerItem.companyName && <div><Text type="secondary">Компания</Text><strong>{calendarDrawerItem.companyName}</strong></div>}
                 {(calendarDrawerItem.route || calendarDrawerItem.location) && <div><Text type="secondary">Локация</Text><strong>{calendarDrawerItem.route || calendarDrawerItem.location}</strong></div>}
                 {(calendarDrawerItem.guests || calendarDrawerItem.people || calendarDrawerItem.totalSeats) && <div><Text type="secondary">Гости / места</Text><strong>{calendarDrawerItem.guests ? `${calendarDrawerItem.guests} чел.` : calendarDrawerItem.people ? `${calendarDrawerItem.people} чел.` : `${calendarDrawerItem.bookedSeats || 0}/${calendarDrawerItem.totalSeats}`}</strong></div>}
+                {(calendarDrawerItem.adults || calendarDrawerItem.children) && <div><Text type="secondary">Состав</Text><strong>{Number(calendarDrawerItem.adults || 0)} взрослых · {Number(calendarDrawerItem.children || 0)} детей</strong></div>}
                 {(calendarDrawerItem.nights || calendarDrawerItem.duration) && <div><Text type="secondary">Длительность</Text><strong>{calendarDrawerItem.nights ? `${calendarDrawerItem.nights} ночи` : calendarDrawerItem.duration}</strong></div>}
                 {(calendarDrawerItem.price || calendarDrawerItem.amount) && <div><Text type="secondary">Стоимость</Text><strong>{formatMoney(calendarDrawerItem.price || calendarDrawerItem.amount)}</strong></div>}
+                {calendarDrawerItem.prepaymentAmount > 0 && <div><Text type="secondary">Предоплата</Text><strong>{formatMoney(calendarDrawerItem.prepaymentAmount)}</strong></div>}
+                {calendarDrawerItem.assignedTo && <div><Text type="secondary">Менеджер</Text><strong>{calendarDrawerItem.assignedTo}</strong></div>}
+                {calendarDrawerItem.bookingSource && <div><Text type="secondary">Источник</Text><strong>{QUICK_BOOKING_SOURCES.find((item) => item.value === calendarDrawerItem.bookingSource)?.label || calendarDrawerItem.bookingSource}</strong></div>}
                 <div>
                   <Text type="secondary">Статус</Text>
                   <div style={{ marginTop: 8 }}>
@@ -5297,6 +9652,20 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             {calendarDrawerItem.rejectionReason && (
               <Card size="small" className="tp-admin-inline-card" title="Причина отклонения">
                 <Paragraph style={{ marginBottom: 0 }}>{calendarDrawerItem.rejectionReason}</Paragraph>
+              </Card>
+            )}
+
+            {['stay_booking', 'tour_booking'].includes(calendarDrawerItem.type) && (
+              <Card size="small" className="tp-admin-inline-card" title="Оплата">
+                <div className="tp-admin-calendar-detail-grid">
+                  <div><Text type="secondary">Total</Text><strong>{formatMoney(getBookingDebtSummary(calendarDrawerItem).total)}</strong></div>
+                  <div><Text type="secondary">Paid</Text><strong>{formatMoney(getBookingDebtSummary(calendarDrawerItem).paid)}</strong></div>
+                  <div><Text type="secondary">Remaining</Text><strong>{formatMoney(getBookingDebtSummary(calendarDrawerItem).remaining)}</strong></div>
+                  <div><Text type="secondary">Status</Text><strong>{getBookingDebtSummary(calendarDrawerItem).status}</strong></div>
+                  {getBookingDebtSummary(calendarDrawerItem).refunded > 0 && (
+                    <div><Text type="secondary">Refunded</Text><strong>{formatMoney(getBookingDebtSummary(calendarDrawerItem).refunded)}</strong></div>
+                  )}
+                </div>
               </Card>
             )}
 
@@ -5360,6 +9729,35 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               </Card>
             )}
 
+            {['stay_booking', 'tour_booking'].includes(calendarDrawerItem.type) && calendarDrawerStatusHistory.length > 0 && (
+              <Card size="small" className="tp-admin-inline-card" title="История статусов">
+                <div className="tp-admin-timeline tp-admin-status-history">
+                  {calendarDrawerStatusHistory.map((entry, index) => (
+                    <div
+                      key={entry.key}
+                      className="tp-admin-timeline__item"
+                      style={{ '--timeline-color': entry.color }}
+                    >
+                      <div className="tp-admin-timeline__rail">
+                        <span className="tp-admin-timeline__dot" />
+                        {index < calendarDrawerStatusHistory.length - 1 ? <span className="tp-admin-timeline__line" /> : null}
+                      </div>
+                      <div className="tp-admin-timeline__content">
+                        <div className="tp-admin-timeline__head">
+                          <strong>{entry.fieldLabel}: {entry.fromLabel} → {entry.toLabel}</strong>
+                          <Text type="secondary">{formatDateTime(entry.changedAt)}</Text>
+                        </div>
+                        <Text type="secondary">
+                          {entry.actor}
+                          {entry.comment ? ` · ${entry.comment}` : ''}
+                        </Text>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             <Card size="small" className="tp-admin-inline-card" title="Клиенты / брони">
               <Space orientation="vertical" size={10} style={{ width: '100%' }}>
                 {(calendarDrawerItem.clients?.length
@@ -5384,18 +9782,39 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               {['stay_booking', 'tour_booking'].includes(calendarDrawerItem?.type) && (
                 <>
                   <Button type="primary" onClick={() => updateStayBookingStatus(calendarDrawerItem, 'confirmed')}>
-                    Подтвердить заявку
+                    Подтвердить
+                  </Button>
+                  <Button onClick={() => {
+                    if (calendarDrawerItem.type === 'stay_booking') {
+                      openStayBookingEditor(calendarDrawerItem);
+                    } else {
+                      message.info('Изменение деталей тур-брони оставил внутри drawer-логики следующего шага; перенос уже доступен drag/drop.');
+                    }
+                  }}>
+                    Изменить
+                  </Button>
+                  <Button onClick={() => updateStayBookingStatus(calendarDrawerItem, 'confirmed')}>
+                    Принять оплату
+                  </Button>
+                  <Button
+                    href={`https://wa.me/${String(calendarDrawerItem.clientPhone || '').replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    disabled={!String(calendarDrawerItem.clientPhone || '').replace(/\D/g, '')}
+                  >
+                    Написать
+                  </Button>
+                  <Button href={`tel:${calendarDrawerItem.clientPhone || ''}`} disabled={!calendarDrawerItem.clientPhone}>
+                    Позвонить
                   </Button>
                   {canReviewStayBooking(calendarDrawerItem) && (
                     <Button danger onClick={() => openStayBookingRejectModal(calendarDrawerItem)}>
                       Отклонить заявку
                     </Button>
                   )}
-                  {calendarDrawerItem.type === 'stay_booking' && (
-                    <Button onClick={() => message.info('Перенос брони подключим следующим шагом.')}>
-                      Перенести
-                    </Button>
-                  )}
+                  <Button onClick={() => message.info('Перетащите карточку в календаре на новое время, объект или менеджера.')}>
+                    Перенести
+                  </Button>
                   <Button danger onClick={() => updateStayBookingStatus(calendarDrawerItem, 'cancelled')}>
                     Отменить
                   </Button>
@@ -5406,7 +9825,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                   Открыть тур
                 </Button>
               )}
-              {calendarDrawerItem?.type !== 'tour_booking' && <Button onClick={() => {
+              {calendarDrawerItem?.type === 'tour' && <Button onClick={() => {
                 if (calendarDrawerItem?.type === 'tour') {
                   startEditTour(calendarDrawerItem);
                   closeCalendarItemDetails();
@@ -5416,7 +9835,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               }}>
                 Редактировать
               </Button>}
-              <Button onClick={() => navigate('/tour-booking')}>
+              <Button onClick={() => openQuickBookingDrawer({ date: calendarDate })}>
                 Создать бронь
               </Button>
             </div>
@@ -5472,6 +9891,24 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             <Col span={12}>
               <Form.Item name="duration" label="Длительность" rules={[{ required: true, message: 'Введите длительность' }]}>
                 <Input placeholder="3 дня" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={12}>
+            <Col xs={24} md={8}>
+              <Form.Item name="prepaymentMode" label="Prepayment">
+                <Select options={PREPAYMENT_MODE_OPTIONS} />
+              </Form.Item>
+            </Col>
+            <Col xs={12} md={8}>
+              <Form.Item name="prepaymentPercent" label="Prepayment %">
+                <InputNumber min={0} max={100} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={12} md={8}>
+              <Form.Item name="prepaymentFixedAmount" label="Fixed prepayment">
+                <InputNumber min={0} style={{ width: '100%' }} suffix="сом" />
               </Form.Item>
             </Col>
           </Row>
@@ -5534,13 +9971,45 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                           </Form.Item>
                         </Col>
                       </Row>
+                      <Row gutter={12}>
+                        <Col xs={24} md={8}>
+                          <Form.Item {...restField} name={[name, 'guide']} label="Guide">
+                            <Input placeholder="Guide name" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={8}>
+                          <Form.Item {...restField} name={[name, 'driver']} label="Driver">
+                            <Input placeholder="Driver name" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={8}>
+                          <Form.Item {...restField} name={[name, 'vehicle']} label="Vehicle">
+                            <Input placeholder="Sprinter, SUV..." />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={10}>
+                          <Form.Item {...restField} name={[name, 'meetingPoint']} label="Meeting point">
+                            <Input placeholder="Bishkek, main office" />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={6}>
+                          <Form.Item {...restField} name={[name, 'price']} label="Price">
+                            <InputNumber min={0} step={500} style={{ width: '100%' }} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} md={8}>
+                          <Form.Item {...restField} name={[name, 'status']} label="Departure status">
+                            <Select options={TOUR_DEPARTURE_STATUS_OPTIONS} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
                     </Card>
                   ))}
                   <Button
                     type="dashed"
                     block
                     icon={<PlusOutlined />}
-                    onClick={() => add({ id: `departure-${Date.now()}`, startAt: dayjs().add(1, 'day').hour(9).minute(0), seats: 20, active: true })}
+                    onClick={() => add({ id: `departure-${Date.now()}`, startAt: dayjs().add(1, 'day').hour(9).minute(0), seats: 20, active: true, guide: '', driver: '', vehicle: '', meetingPoint: '', price: Number(tourForm.getFieldValue('price') || 0), status: 'scheduled', waitlist: [], operationsChecklist: createEmptyTourOperationsChecklist() })}
                   >
                     Добавить ещё дату и время
                   </Button>
@@ -5557,7 +10026,12 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             </Col>
             <Col xs={24} md={12}>
               <Form.Item name="manager" label="Менеджер">
-                <Input placeholder="Имя менеджера" />
+                <Select
+                  showSearch
+                  allowClear
+                  placeholder="Имя менеджера"
+                  options={managerOptions}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -5870,6 +10344,24 @@ const ActualToursAdmin = ({ businessMode = false }) => {
             <Input placeholder="Каракол, Иссык-Куль" />
           </Form.Item>
 
+          <Row gutter={12}>
+            <Col xs={24} md={12}>
+              <Form.Item name="propertyName" label="Property / комплекс">
+                <Input placeholder="Issyk-Kul Resort" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item name="defaultCheckInTime" label="Default check-in">
+                <Input type="time" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item name="defaultCheckOutTime" label="Default check-out">
+                <Input type="time" />
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Form.List name="images">
             {(fields, { add, remove }) => (
               <div className="tp-admin-inline-list">
@@ -5909,8 +10401,31 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
+              <Form.Item name="weekendPrice" label="Weekend price">
+                <InputNumber min={0} style={{ width: '100%' }} suffix="сом" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
               <Form.Item name="totalCount" label="Всего домиков">
                 <InputNumber min={0} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={12}>
+            <Col xs={24} md={8}>
+              <Form.Item name="prepaymentMode" label="Prepayment">
+                <Select options={PREPAYMENT_MODE_OPTIONS} />
+              </Form.Item>
+            </Col>
+            <Col xs={12} md={8}>
+              <Form.Item name="prepaymentPercent" label="Prepayment %">
+                <InputNumber min={0} max={100} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={12} md={8}>
+              <Form.Item name="prepaymentFixedAmount" label="Fixed prepayment">
+                <InputNumber min={0} style={{ width: '100%' }} suffix="сом" />
               </Form.Item>
             </Col>
           </Row>
@@ -5936,6 +10451,105 @@ const ActualToursAdmin = ({ businessMode = false }) => {
               </Form.Item>
             </Col>
           </Row>
+
+          <Divider orientation="left">Block dates</Divider>
+          <Form.List name="blockedDates">
+            {(fields, { add, remove }) => (
+              <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+                {fields.map((field) => (
+                  <Card key={field.key} size="small" className="tp-admin-inline-card">
+                    <Row gutter={10}>
+                      <Col xs={24} md={7}>
+                        <Form.Item {...field} name={[field.name, 'startDate']} label="С даты">
+                          <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={7}>
+                        <Form.Item {...field} name={[field.name, 'endDate']} label="По дату">
+                          <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={6}>
+                        <Form.Item {...field} name={[field.name, 'reason']} label="Причина">
+                          <Select options={PROPERTY_BLOCK_REASONS} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={4}>
+                        <Form.Item label=" ">
+                          <Button danger block onClick={() => remove(field.name)}>Удалить</Button>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item {...field} name={[field.name, 'comment']} label="Комментарий">
+                          <Input placeholder="Например, ремонт крыши" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+                <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ id: `block-${Date.now()}`, startDate: dayjs(), endDate: dayjs(), reason: 'unavailable', comment: '' })}>
+                  Закрыть день / диапазон
+                </Button>
+              </Space>
+            )}
+          </Form.List>
+
+          <Divider orientation="left">Pricing calendar</Divider>
+          <Form.List name="pricingRules">
+            {(fields, { add, remove }) => (
+              <Space orientation="vertical" size={10} style={{ width: '100%' }}>
+                {fields.map((field) => (
+                  <Card key={field.key} size="small" className="tp-admin-inline-card">
+                    <Row gutter={10}>
+                      <Col xs={24} md={6}>
+                        <Form.Item {...field} name={[field.name, 'type']} label="Тип">
+                          <Select options={PROPERTY_PRICING_RULE_TYPES} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={5}>
+                        <Form.Item {...field} name={[field.name, 'startDate']} label="С даты">
+                          <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={5}>
+                        <Form.Item {...field} name={[field.name, 'endDate']} label="По дату">
+                          <DatePicker style={{ width: '100%' }} format="DD.MM.YYYY" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={12} md={4}>
+                        <Form.Item {...field} name={[field.name, 'price']} label="Цена">
+                          <InputNumber min={0} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={12} md={4}>
+                        <Form.Item label=" ">
+                          <Button danger block onClick={() => remove(field.name)}>Удалить</Button>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={12} md={6}>
+                        <Form.Item {...field} name={[field.name, 'discount']} label="Discount %">
+                          <InputNumber min={0} max={100} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={12} md={6}>
+                        <Form.Item {...field} name={[field.name, 'minimumStay']} label="Minimum stay">
+                          <InputNumber min={0} style={{ width: '100%' }} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item {...field} name={[field.name, 'label']} label="Название">
+                          <Input placeholder="Новый год, высокий сезон..." />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+                <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ id: `pricing-${Date.now()}`, type: 'specific_date', startDate: dayjs(), endDate: dayjs(), price: 0, discount: 0, minimumStay: 0, label: '' })}>
+                  Добавить правило цены
+                </Button>
+              </Space>
+            )}
+          </Form.List>
 
           <Form.Item name="amenities" label="Удобства">
             <Checkbox.Group options={ACCOMMODATION_AMENITIES} />
@@ -6314,6 +10928,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           )}
         </Form>
       </Modal>
+      {renderCommandPalette()}
     </div>
   );
 };

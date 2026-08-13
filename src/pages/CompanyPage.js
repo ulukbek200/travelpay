@@ -67,9 +67,13 @@ export default function CompanyPage() {
       .filter(Boolean).slice(0, 6);
   }, [company, stays, tours]);
   const rating = useMemo(() => {
-    const values = tours.map((tour) => number(tour.rating)).filter(Boolean);
+    const values = [...tours.map((tour) => number(tour.rating)), ...stays.map((stay) => number(stay.rating))].filter(Boolean);
     return values.length ? values.reduce((sum, item) => sum + item, 0) / values.length : 4.9;
-  }, [tours]);
+  }, [stays, tours]);
+  const reviews = useMemo(() => ([
+    ...tours.flatMap((tour) => safeArray(tour.reviews).map((review) => ({ ...review, service: tour.title }))),
+    ...stays.flatMap((stay) => safeArray(stay.reviews).map((review) => ({ ...review, service: stay.name || stay.title }))),
+  ]).slice(0, 4), [stays, tours]);
 
   const openEdit = () => {
     form.setFieldsValue({
@@ -119,7 +123,8 @@ export default function CompanyPage() {
   );
 
   const mapQuery = encodeURIComponent(company.address || company.city || 'Bishkek, Kyrgyzstan');
-  const contactUrl = company.phone ? `https://wa.me/${String(company.phone).replace(/\D/g, '')}` : company.email ? `mailto:${company.email}` : '';
+  const whatsappPhone = company.whatsapp || company.managerPhone || company.phone;
+  const contactUrl = whatsappPhone ? `https://wa.me/${String(whatsappPhone).replace(/\D/g, '')}` : company.email ? `mailto:${company.email}` : '';
 
   return (
     <main className="company-page">
@@ -134,7 +139,7 @@ export default function CompanyPage() {
                 <Title level={1}>{company.name}</Title>
                 {company.verified && <Tag className="company-verified"><CheckCircleFilled /> Проверенный партнёр</Tag>}
               </Space>
-              <Text><EnvironmentOutlined /> {company.city || company.address || 'Кыргызстан'}</Text>
+              <Text><EnvironmentOutlined /> {[company.city || company.region, company.address].filter(Boolean).join(' · ') || 'Кыргызстан'}</Text>
             </div>
           </div>
           <Space wrap className="company-hero__actions">
@@ -142,7 +147,7 @@ export default function CompanyPage() {
               {favorite ? 'В избранном' : 'В избранное'}
             </Button>
             {contactUrl && <Button icon={<SendOutlined />} href={contactUrl} target="_blank">Связаться с менеджером</Button>}
-            <Button type="primary" icon={<CalendarOutlined />} onClick={() => tours[0] ? navigate(`/booking`, { state: { tour: tours[0] } }) : navigate('/tours')}>Забронировать</Button>
+            <Button type="primary" icon={<CalendarOutlined />} onClick={() => tours[0] ? navigate(`/booking`, { state: { tour: tours[0] } }) : stays[0] ? navigate(`/stays/${stays[0].id}`) : navigate('/tours')}>Забронировать</Button>
             {isOwner && <Button icon={<EditOutlined />} onClick={openEdit}>Редактировать страницу</Button>}
           </Space>
         </div>
@@ -158,6 +163,7 @@ export default function CompanyPage() {
               <span><SafetyCertificateOutlined /> Проверенные условия</span>
               <span><TeamOutlined /> Локальная команда</span>
               <span><StarFilled /> Поддержка до поездки</span>
+              {company.workingHours && <span><CalendarOutlined /> {company.workingHours}</span>}
             </div>
           </Card>
 
@@ -170,14 +176,24 @@ export default function CompanyPage() {
           </section>
 
           {gallery.length > 0 && <section className="company-section"><div className="company-section__head"><div><Text className="company-eyebrow">Галерея</Text><Title level={2}>Атмосфера поездок</Title></div></div><div className="company-gallery">{gallery.map((image, index) => <AppImage key={`${image}-${index}`} src={image} alt={`${company.name}, фото ${index + 1}`} aspectRatio="4 / 3" />)}</div></section>}
+
+          <section className="company-section">
+            <div className="company-section__head"><div><Text className="company-eyebrow">Отзывы</Text><Title level={2}>Что говорят гости</Title></div></div>
+            {reviews.length ? <Row gutter={[16, 16]}>
+              {reviews.map((review, index) => <Col xs={24} md={12} key={`${review.service}-${index}`}><Card><Rate disabled allowHalf value={number(review.rating) || 5} /><Paragraph>{review.text || review.comment || 'Отличная поездка и внимательная команда.'}</Paragraph><Text type="secondary">{review.author || review.name || 'Гость TravelPay'} · {review.service}</Text></Card></Col>)}
+            </Row> : <Empty description="Отзывы появятся после первых поездок и бронирований." />}
+          </section>
         </div>
 
         <aside className="company-side">
           <Card className="company-rating"><Text type="secondary">Рейтинг путешественников</Text><div><strong>{rating.toFixed(1)}</strong><Rate disabled allowHalf value={rating} /></div><Text>{tours.length ? `${tours.length} предложений компании` : 'Новые отзывы появятся после поездок'}</Text></Card>
           <Card><Title level={4}>Контакты</Title><Space direction="vertical" size={14} className="company-contact-list">
             {company.phone && <a href={`tel:${company.phone}`}><PhoneOutlined /> {company.phone}</a>}
+            {company.whatsapp && <a href={`https://wa.me/${String(company.whatsapp).replace(/\D/g, '')}`} target="_blank" rel="noreferrer"><SendOutlined /> WhatsApp</a>}
             {company.email && <a href={`mailto:${company.email}`}><MailOutlined /> {company.email}</a>}
             {company.instagramUrl && <a href={company.instagramUrl} target="_blank" rel="noreferrer"><InstagramOutlined /> Instagram</a>}
+            {company.website && <a href={company.website} target="_blank" rel="noreferrer"><GlobalOutlined /> Website</a>}
+            {company.workingHours && <Text><CalendarOutlined /> {company.workingHours}</Text>}
           </Space><Divider /><Title level={5}>Условия бронирования</Title><Paragraph type="secondary">После заявки менеджер подтвердит свободные места и детали оплаты. Отмена и изменения доступны до подтверждения брони.</Paragraph></Card>
           <Card className="company-map-card"><Text className="company-eyebrow">Расположение</Text><Title level={4}>{company.address || company.city || 'Кыргызстан'}</Title><a className="company-map-link" href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`} target="_blank" rel="noreferrer"><EnvironmentOutlined /><span>Открыть на карте</span><GlobalOutlined /></a></Card>
         </aside>

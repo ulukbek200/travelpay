@@ -103,7 +103,7 @@ export const hasBusinessSession = (user = readCurrentUser()) => {
   const companyId = readStoredCompanyId() || user?.companyId || '';
   return Boolean(
     companyId
-    && ['business', 'company_admin', 'company_manager', 'admin', 'super_admin'].includes(role),
+    && ['business', 'owner', 'company_owner', 'company_admin', 'company_manager', 'admin', 'manager', 'guide', 'driver', 'accountant', 'content_manager', 'super_admin'].includes(role),
   );
 };
 

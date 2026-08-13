@@ -6,7 +6,7 @@ import api from '../api';
 
 const { Title, Paragraph } = Typography;
 
-const BusinessPaymentSettingsPage = () => {
+const BusinessPaymentSettingsPage = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
@@ -37,11 +37,13 @@ const BusinessPaymentSettingsPage = () => {
   };
 
   return (
-    <main className="tp-business-finance-page">
+    <main className={`tp-business-finance-page${embedded ? ' tp-business-finance-page--embedded' : ''}`}>
       <div className="tp-business-finance-shell">
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/business/dashboard')} type="text">
-          Назад в бизнес-панель
-        </Button>
+        {!embedded && (
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/business/dashboard')} type="text">
+            Назад в бизнес-панель
+          </Button>
+        )}
 
         <section className="tp-business-finance-hero">
           <span><BankOutlined /> TravelPay Business</span>

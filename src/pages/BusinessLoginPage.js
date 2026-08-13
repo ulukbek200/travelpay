@@ -39,7 +39,7 @@ import { BUSINESS_MONTHLY_PLAN_ID, findCottagePlan, formatPlanPrice } from '../c
 const { Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 
-const ALLOWED_BUSINESS_ROLES = new Set(['business', 'company_admin', 'company_manager', 'admin', 'super_admin']);
+const ALLOWED_BUSINESS_ROLES = new Set(['business', 'owner', 'company_owner', 'company_admin', 'company_manager', 'admin', 'manager', 'guide', 'driver', 'accountant', 'content_manager', 'super_admin']);
 const BUSINESS_SUBSCRIPTION_PLAN = findCottagePlan(BUSINESS_MONTHLY_PLAN_ID);
 
 const fileToDataUrl = (file) => new Promise((resolve, reject) => {
