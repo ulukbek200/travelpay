@@ -462,7 +462,7 @@ const Header = () => {
             {currentUser ? (
               <Dropdown menu={userMenu} trigger={['click']} placement="bottomRight">
                 <Button className="travelpay-premium-profile-button">
-                  <Avatar size={28} src={currentUser.avatar} icon={<UserOutlined />} />
+                  <Avatar size={28} src={String(currentUser.avatar || '').trim() || null} icon={<UserOutlined />} />
                   <Text className="travelpay-premium-profile-name">
                     {currentUser.name}
                   </Text>

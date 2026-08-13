@@ -23,7 +23,7 @@ export default function AppImage({
   onError,
   ...rest
 }) {
-  const source = getMediaUrl(src, variant, fallbackSrc);
+  const source = getMediaUrl(src, variant, fallbackSrc) || TOUR_IMAGE_FALLBACK;
   const [imageSrc, setImageSrc] = useState(source);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
@@ -61,7 +61,7 @@ export default function AppImage({
       <img
         {...rest}
         className={`tp-image__img ${imgClassName}`.trim()}
-        src={imageSrc}
+        src={imageSrc || TOUR_IMAGE_FALLBACK}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : undefined}

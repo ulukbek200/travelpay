@@ -32,7 +32,7 @@ export function DepartureList({ departures = [], onOpen }) {
 }
 
 export function DepartureDrawer({ departure, children, ...props }) {
-  return <Drawer title={departure?.title || 'Departure'} width={760} {...props}>{children}</Drawer>;
+  return <Drawer title={departure?.title || 'Departure'} size={760} {...props}>{children}</Drawer>;
 }
 
 export function ParticipantTable({ participants = [], columns }) {

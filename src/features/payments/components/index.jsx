@@ -67,7 +67,8 @@ export function AcceptPaymentModal({ open, loading, initialValues, onCancel, onS
       confirmLoading={loading}
       onCancel={onCancel}
       onOk={() => form.submit()}
-      destroyOnClose
+      destroyOnHidden
+      forceRender
     >
       <Form form={form} layout="vertical" initialValues={{ method: 'qr', currency: 'KGS', ...initialValues }} onFinish={onSubmit}>
         <Form.Item name="amount" label="Сумма" rules={[{ required: true, message: 'Укажите сумму' }]}>
@@ -95,7 +96,8 @@ export function RefundModal({ open, loading, maxAmount, onCancel, onSubmit }) {
       confirmLoading={loading}
       onCancel={onCancel}
       onOk={() => form.submit()}
-      destroyOnClose
+      destroyOnHidden
+      forceRender
     >
       <Form form={form} layout="vertical" initialValues={{ reason: 'client_cancelled', amount: maxAmount }} onFinish={onSubmit}>
         <Form.Item name="amount" label="Сумма" rules={[{ required: true, message: 'Укажите сумму' }]}>

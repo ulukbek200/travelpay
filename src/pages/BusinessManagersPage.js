@@ -193,13 +193,13 @@ const BusinessManagersPage = ({ embedded = false }) => {
         title={employeeCard ? [employeeCard.firstName, employeeCard.lastName].filter(Boolean).join(' ') || 'Employee' : 'Employee'}
         open={Boolean(employeeCard)}
         onClose={() => setEmployeeCard(null)}
-        width={860}
+        size={860}
       >
         {employeeCard && (
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <Card>
               <Space align="center" size={16}>
-                <Avatar size={72} src={employeeCard.photoUrl} icon={<CustomerServiceOutlined />} />
+                <Avatar size={72} src={String(employeeCard.photoUrl || '').trim() || null} icon={<CustomerServiceOutlined />} />
                 <div>
                   <Title level={3} style={{ marginBottom: 4 }}>{[employeeCard.firstName, employeeCard.lastName].filter(Boolean).join(' ') || 'Без имени'}</Title>
                   <Space wrap>
@@ -253,6 +253,7 @@ const BusinessManagersPage = ({ embedded = false }) => {
       <Modal
         centered
         confirmLoading={saving}
+        forceRender
         okText="Сохранить"
         onCancel={() => setModalOpen(false)}
         onOk={submit}

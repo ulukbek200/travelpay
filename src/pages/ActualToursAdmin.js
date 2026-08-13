@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
+  Alert as AntAlert,
   Avatar,
   Badge,
   Button,
@@ -10,7 +10,7 @@ import {
   Col,
   DatePicker,
   Divider,
-  Drawer,
+  Drawer as AntDrawer,
   Dropdown,
   Empty,
   Form,
@@ -19,7 +19,7 @@ import {
   Input,
   InputNumber,
   Layout,
-  Modal,
+  Modal as AntModal,
   Progress,
   Rate,
   Result,
@@ -100,6 +100,17 @@ import { normalizeUser } from '../utils/user';
 const { Header, Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 const { useBreakpoint } = Grid;
+const safeSrc = (value) => String(value || '').trim() || null;
+
+const Alert = ({ message: legacyMessage, title, ...props }) => <AntAlert title={title ?? legacyMessage} {...props} />;
+const Drawer = ({ width, height, size, placement, ...props }) => {
+  const placementSize = ['top', 'bottom'].includes(placement) ? height : width;
+  return <AntDrawer forceRender placement={placement} size={size ?? placementSize ?? width ?? height} {...props} />;
+};
+const Modal = Object.assign(
+  ({ destroyOnClose, destroyOnHidden, ...props }) => <AntModal forceRender destroyOnHidden={destroyOnHidden ?? destroyOnClose} {...props} />,
+  AntModal,
+);
 
 const BOOKING_MONTHS = [
   'Январь',
@@ -5186,7 +5197,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       width: 220,
       render: (value, record) => (
         <button type="button" className="tp-admin-client-link" onClick={() => openClientDetails(record)}>
-          <Avatar size={34} icon={<UserOutlined />} src={record.avatar || record.photo} />
+          <Avatar size={34} icon={<UserOutlined />} src={safeSrc(record.avatar || record.photo)} />
           <span>
             <strong>{value || record.email || 'Клиент'}</strong>
             <small>{record.email || '—'}</small>
@@ -5264,7 +5275,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       width: 220,
       render: (_, record) => (
         <Space size={12}>
-          <Avatar src={record.clientAvatar} icon={<UserOutlined />} />
+          <Avatar src={safeSrc(record.clientAvatar)} icon={<UserOutlined />} />
           <div>
             <div style={{ fontWeight: 700 }}>{record.clientName || '—'}</div>
             <Text type="secondary">{record.clientPhone || record.clientEmail || '—'}</Text>
@@ -5317,7 +5328,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       width: 220,
       render: (_, record) => (
         <Space size={12}>
-          <Avatar src={record.clientAvatar} icon={<UserOutlined />} />
+          <Avatar src={safeSrc(record.clientAvatar)} icon={<UserOutlined />} />
           <div>
             <div style={{ fontWeight: 700 }}>{record.clientName || '—'}</div>
             <Text type="secondary">{record.clientPhone || record.clientEmail || '—'}</Text>
@@ -5511,7 +5522,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       width={720}
       className="tp-admin-command-palette"
       onCancel={() => setCommandPaletteOpen(false)}
-      destroyOnClose
+      destroyOnHidden
     >
       <Input
         autoFocus
@@ -6287,7 +6298,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
           <Card className="tp-admin-card" title="Сводка компании">
             <Space orientation="vertical" size={16} style={{ width: '100%' }}>
               <div className="tp-admin-company-card">
-                <Avatar size={52} src={sessionUser?.avatar} icon={<UserOutlined />} />
+                <Avatar size={52} src={safeSrc(sessionUser?.avatar)} icon={<UserOutlined />} />
                 <div>
                   <Title level={5}>{currentCompany?.name || 'TravelPay Company'}</Title>
                   <Text type="secondary">{headerBranchText}</Text>
@@ -8083,7 +8094,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
     const columns = [
       { title: 'Компания', dataIndex: 'name', render: (value, record) => (
         <Space>
-          <Avatar src={record.logo} icon={<BankOutlined />} />
+          <Avatar src={safeSrc(record.logo)} icon={<BankOutlined />} />
           <div>
             <strong>{value}</strong>
             <div><Text type="secondary">{record.city || record.address || 'Адрес не указан'}</Text></div>
@@ -8386,7 +8397,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
       <Col xs={24} xl={10}>
         <Card className="tp-admin-card" title="Профиль администратора">
           <div className="tp-admin-company-card">
-            <Avatar size={60} src={sessionUser?.avatar} icon={<UserOutlined />} />
+            <Avatar size={60} src={safeSrc(sessionUser?.avatar)} icon={<UserOutlined />} />
             <div>
               <Title level={5}>{sessionUser?.name || 'Admin'}</Title>
               <Text type="secondary">{sessionUser?.email || '—'}</Text>
@@ -8574,7 +8585,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
                 <Button icon={<EyeOutlined />} onClick={() => navigate('/')} />
               </Tooltip>
               <div className="tp-admin-profile-chip">
-                <Avatar src={sessionUser?.avatar} icon={<UserOutlined />} />
+                <Avatar src={safeSrc(sessionUser?.avatar)} icon={<UserOutlined />} />
                 <div>
                   <strong>{sessionUser?.name || 'Admin'}</strong>
                   <span>{currentCompany?.name || 'TravelPay'}</span>
@@ -9038,7 +9049,7 @@ const ActualToursAdmin = ({ businessMode = false }) => {
         {clientDrawerItem && (
           <Space orientation="vertical" size={18} style={{ width: '100%' }}>
             <div className="tp-admin-client-card-hero">
-              <Avatar size={58} icon={<UserOutlined />} src={clientDrawerItem.avatar || clientDrawerItem.photo} />
+              <Avatar size={58} icon={<UserOutlined />} src={safeSrc(clientDrawerItem.avatar || clientDrawerItem.photo)} />
               <div>
                 <Title level={3}>{clientDrawerItem.name || 'Клиент TravelPay'}</Title>
                 <Text>{clientDrawerItem.phone || clientDrawerItem.email || 'Контакт не указан'}</Text>

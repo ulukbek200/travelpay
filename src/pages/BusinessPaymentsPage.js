@@ -439,6 +439,7 @@ const BusinessPaymentsPage = ({ embedded = false }) => {
       <Modal
         centered
         confirmLoading={actionLoading}
+        forceRender
         okText="Оформить refund"
         onCancel={() => setRefundModal(null)}
         onOk={submitRefund}
@@ -446,12 +447,12 @@ const BusinessPaymentsPage = ({ embedded = false }) => {
         title="Controlled refund"
         width={620}
       >
-        {refundModal ? (
+        {(
           <Space orientation="vertical" size={14} style={{ width: '100%' }}>
             <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="Booking">{refundModal.booking}</Descriptions.Item>
-              <Descriptions.Item label="Клиент">{refundModal.client}</Descriptions.Item>
-              <Descriptions.Item label="Доступно к возврату">{formatSom(refundModal.refundableAmount)}</Descriptions.Item>
+              <Descriptions.Item label="Booking">{refundModal?.booking || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Клиент">{refundModal?.client || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Доступно к возврату">{formatSom(refundModal?.refundableAmount || 0)}</Descriptions.Item>
             </Descriptions>
             <Form form={refundForm} layout="vertical">
               <Form.Item
@@ -463,13 +464,13 @@ const BusinessPaymentsPage = ({ embedded = false }) => {
                     validator: (_, value) => {
                       const numberValue = Number(value || 0);
                       if (numberValue <= 0) return Promise.reject(new Error('Сумма должна быть больше нуля'));
-                      if (numberValue > Number(refundModal.refundableAmount || 0)) return Promise.reject(new Error('Сумма больше доступной к возврату'));
+                      if (numberValue > Number(refundModal?.refundableAmount || 0)) return Promise.reject(new Error('Сумма больше доступной к возврату'));
                       return Promise.resolve();
                     },
                   },
                 ]}
               >
-                <InputNumber min={1} max={Number(refundModal.refundableAmount || 0)} style={{ width: '100%' }} addonAfter="KGS" />
+                <InputNumber min={1} max={Number(refundModal?.refundableAmount || 0)} style={{ width: '100%' }} addonAfter="KGS" />
               </Form.Item>
               <Form.Item label="Причина" name="reason" rules={[{ required: true, message: 'Укажите причину' }]}>
                 <Select
@@ -490,7 +491,7 @@ const BusinessPaymentsPage = ({ embedded = false }) => {
               Возврат создаст отдельную транзакцию, а исходный платёж останется в Cashbox history.
             </Text>
           </Space>
-        ) : null}
+        )}
       </Modal>
     </main>
   );

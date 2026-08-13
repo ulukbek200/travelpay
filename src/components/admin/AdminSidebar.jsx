@@ -218,7 +218,7 @@ export default function AdminSidebar({
       />
 
       <div className="tp-admin-sidebar-account">
-        <Avatar src={user?.avatar} icon={<UserOutlined />} />
+        <Avatar src={String(user?.avatar || '').trim() || null} icon={<UserOutlined />} />
         {!collapsed && (
           <div className="tp-admin-sidebar-account__copy">
             <strong>{profileTitle}</strong>

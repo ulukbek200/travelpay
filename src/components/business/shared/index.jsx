@@ -21,6 +21,7 @@ import {
 import { formatBusinessDate, formatBusinessDateTime, formatBusinessTime } from '../../../utils/dateTime';
 
 const { Text, Title, Paragraph } = Typography;
+const safeSrc = (value) => String(value || '').trim() || null;
 
 const statusColors = {
   NEW: 'blue',
@@ -92,7 +93,7 @@ export function DateTime({ value, mode = 'datetime', empty = '—' }) {
 
 export function UserAvatar({ user, name, size = 34 }) {
   const displayName = name || user?.name || user?.fullName || user?.email || 'U';
-  return <Avatar size={size} src={user?.avatar || user?.photo} icon={<UserOutlined />}>{String(displayName).slice(0, 1).toUpperCase()}</Avatar>;
+  return <Avatar size={size} src={safeSrc(user?.avatar || user?.photo)} icon={<UserOutlined />}>{String(displayName).slice(0, 1).toUpperCase()}</Avatar>;
 }
 
 export function ClientAvatar({ client, size = 34 }) {
@@ -122,7 +123,7 @@ export function ErrorState({ title = 'Что-то пошло не так', descr
     <Alert
       type="error"
       showIcon
-      message={title}
+      title={title}
       description={friendly}
       action={onRetry ? <Button size="small" onClick={onRetry}>Повторить</Button> : null}
     />
@@ -184,14 +185,15 @@ export function SearchInput({ value, onChange, placeholder = 'Поиск', allow
   );
 }
 
-export function EntityDrawer({ title, open, onClose, width = 720, extra, children, footer, ...rest }) {
+export function EntityDrawer({ title, open, onClose, width = 720, size, extra, children, footer, ...rest }) {
   return (
     <Drawer
-      destroyOnClose
+      destroyOnHidden
+      forceRender
       title={title}
       open={open}
       onClose={onClose}
-      width={width}
+      size={size ?? width}
       extra={extra}
       footer={footer}
       className="tp-shared-entity-drawer"

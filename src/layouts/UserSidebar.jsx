@@ -48,7 +48,7 @@ const UserSidebar = () => {
 
   const content = (isCompact = false) => <><div className={`tp-user-sidebar__identity${isCompact ? ' is-compact' : ''}`}><Avatar size={isCompact ? 42 : 48} src={user?.avatar || DEFAULT_AVATAR} icon={<UserOutlined />} />{!isCompact && <div className="tp-user-sidebar__identity-copy"><Text strong>{user?.name || 'Путешественник'}</Text><Text type="secondary">{user?.email || 'Личный кабинет'}</Text></div>}</div>{navigation(isCompact)}</>;
 
-  if (!screens.md) return <><Button className="tp-user-sidebar__mobile-trigger" type="primary" shape="circle" icon={<MenuOutlined />} aria-label="Открыть разделы кабинета" onClick={() => setOpen(true)} /><Drawer open={open} onClose={() => setOpen(false)} placement="left" width={304} className="tp-user-sidebar__drawer" title="Личный кабинет"><aside className="tp-user-sidebar tp-user-sidebar--drawer">{content()}</aside></Drawer></>;
+  if (!screens.md) return <><Button className="tp-user-sidebar__mobile-trigger" type="primary" shape="circle" icon={<MenuOutlined />} aria-label="Открыть разделы кабинета" onClick={() => setOpen(true)} /><Drawer open={open} onClose={() => setOpen(false)} placement="left" size={304} className="tp-user-sidebar__drawer" title="Личный кабинет"><aside className="tp-user-sidebar tp-user-sidebar--drawer">{content()}</aside></Drawer></>;
   return <aside className={`tp-user-sidebar${compact ? ' tp-user-sidebar--compact' : ''}`}>{content(compact)}</aside>;
 };
 

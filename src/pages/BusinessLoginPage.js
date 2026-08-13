@@ -201,7 +201,7 @@ const BusinessLoginPage = () => {
           <Alert
             type={isRejected ? 'warning' : 'info'}
             showIcon
-            message={isRejected ? 'Заявка компании отклонена' : 'Нужна оплата подписки'}
+            title={isRejected ? 'Заявка компании отклонена' : 'Нужна оплата подписки'}
             description={companyState.message || 'Оплатите подписку и отправьте чек на проверку.'}
           />
 

@@ -137,7 +137,7 @@ export default function BusinessLandingHeader() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         placement="right"
-        width="min(340px, 92vw)"
+        size="min(340px, 92vw)"
         closeIcon={<CloseOutlined />}
         title="TravelPay Business"
       >

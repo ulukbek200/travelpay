@@ -617,7 +617,7 @@ const ProfilePage = () => {
                       </div>
 
                       {tourBookingsLoading ? (
-                        <Alert type="info" showIcon message="Загружаем ваши туры..." />
+                        <Alert type="info" showIcon title="Загружаем ваши туры..." />
                       ) : activeTourBookings.length ? activeTourBookings.map((booking) => {
                         const meta = getTourBookingMeta(booking);
                         const canCancel = canCancelTourBooking(booking);
